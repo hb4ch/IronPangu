@@ -1,0 +1,17 @@
+[package]
+name = "pangu-scheduler"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+
+[dependencies]
+pangu-model.workspace = true
+pangu-ir.workspace = true
+pangu-runtime.workspace = true
+pangu-transfer.workspace = true
+serde.workspace = true
+
+[dev-dependencies]
+pangu-dsl.workspace = true
+pangu-compiler.workspace = true

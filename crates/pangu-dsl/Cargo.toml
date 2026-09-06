@@ -1,0 +1,9 @@
+[package]
+name = "pangu-dsl"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+
+[dependencies]
+pangu-model.workspace = true

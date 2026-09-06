@@ -2,6 +2,8 @@
 
 Status: proposed design • 6 September 2026
 
+Implementation update: a CPU-only Rust wiring skeleton now implements the small DSL, structural rank plans, binary cache, mock startup/graph lifecycle, scheduling and PD ownership protocol. See the [README](../README.md) and [NPU-agent handoff](npu-handoff.md). Native kernels and real model inference remain unimplemented; the full design below is the target architecture.
+
 ## 1. Objective and success boundary
 
 Iron Pangu experiments with an LLM inference engine written in Rust, using C++ only where CANN interfaces or Ascend C device kernels require it. Huawei Ascend is the only accelerator backend. Model architecture and parallelism are expressed in a typed DSL, then compiled into executable inference plans containing kernels, memory operations, synchronization, and communication primitives.

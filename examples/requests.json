@@ -1,0 +1,6 @@
+[
+  {"id": 1, "prompt": [10, 11, 12, 13, 14, 15, 16], "max_new_tokens": 8, "submit_at": 0},
+  {"id": 2, "prompt": [20, 21, 22], "max_new_tokens": 5, "submit_at": 1},
+  {"id": 3, "prompt": [30, 31, 32, 33, 34], "max_new_tokens": 4, "submit_at": 3},
+  {"id": 4, "prompt": [40, 41], "max_new_tokens": 4, "submit_at": 2, "cancel_at": 3}
+]
