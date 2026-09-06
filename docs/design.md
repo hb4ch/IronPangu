@@ -156,7 +156,24 @@ Compilation stages:
 7. Plan liveness, scratch reuse, KV/state pools, transfer buffers, and graph-stable allocations. Insert stream events and ownership barriers.
 8. Emit per-rank execution programs, generated C++ launch code where needed, compiled Ascend C kernels, a state-transfer schema, and a readable execution trace.
 
-The output can be a compact Rust-executed instruction tape plus generated native kernels; generating an entire C++ model is unnecessary. Code generation means materializing an executable specialized program, not merely printing configuration. Artifact keys include DSL/config/weight hashes, compiler version, mesh, dtype, CANN/kernel versions and SoC. Captured graph handles are process-local runtime objects, not portable serialized artifacts.
+Compilation runs at server startup, before serving requests. The Rust DSL compiler emits a binary per-rank execution plan and any required native device binaries. The plan is a typed instruction tape executed by the Rust runtime; it is not an entire model translated into C++. Existing compatible vendor kernels are linked/referenced, while custom kernels are specialized from Ascend C templates and compiled through the vendor toolchain. Triton-Ascend and TileLang-Ascend are not dependencies of this design.
+
+This is a startup JIT: compile on a cache miss, or load a validated binary artifact on a cache hit. Artifact keys include DSL/config/weight hashes, template source hashes, compiler version and flags, mesh, dtype, bucket specifications, CANN/kernel versions and SoC. Write cache entries atomically and validate their compatibility before loading. Compilation failure prevents readiness; there is no Python compilation or execution fallback. Qualifying a vendor compiler invocation that satisfies the project's no-Python startup constraint is a hardware/toolchain gate.
+
+### Startup compilation and readiness
+
+The startup sequence is mandatory and completes before request admission:
+
+1. Validate the model, parallelism plan, target manifest and complete supported batch/context bucket set.
+2. Compile the DSL to per-rank binary plans and compile missing Ascend C specializations, or load matching cached artifacts.
+3. Load weights and kernel binaries; allocate stable KV/state/metadata/workspace buffers; establish streams, communicators and PD transport resources.
+4. Warm up each required specialization outside capture, using disposable request state.
+5. Capture every configured decode bucket with ACL Graph, then replay each graph with validation inputs. Reset validation state before admitting real requests.
+6. Mark a worker group ready only after all its ranks pass validation. Enable PD request admission only when the required prefill and decode groups and their transfer path are ready.
+
+“Graph compilation” here means startup ACL Graph capture and runtime preparation of the compiled execution program. It is distinct from native kernel compilation. Captured graph handles are process-local runtime objects and must be recreated on each process start, even when compiled binaries come from cache. Prefill plans are compiled at startup too; prefill graph capture is optional in the first demo.
+
+No kernel compilation or first-use graph capture occurs in the serving path. Dynamic values such as token positions, sequence lengths and page tables remain runtime metadata. Requests exceeding the configured supported capacities receive an explicit capacity error; they do not trigger compilation. Changing model, mesh or bucket configuration requires preparing and validating a new worker instance before routing requests to it. Record compilation/cache-load, warmup, capture and validation times separately as startup metrics.
 
 IR state effects use versioned handles: `read(state@t)` and `write(state@t+1)`. Communication tokens and stream events are dependencies in the same graph. Verify no state has simultaneous writers, no rank skips a required collective, no read precedes its producer/receive, and padded rows cannot mutate live state. Emit compile-time diagnostics for non-divisible shards, unsupported GQA layouts, incompatible PD schemas and graph-unsafe operators.
 
@@ -253,7 +270,7 @@ All tests and load generators are Rust or C++. Use pinned externally produced re
 | Paged attention | Noncontiguous pages; tail/page boundaries; multi-request isolation; allocation and reclamation under churn |
 | PD | Local continuation vs transferred continuation, including all hybrid state; multi-rank readiness; duplicate/stale handoff and cancellation tests |
 | Scheduling | New requests join before older ones finish; long prompts split and interleave; budget/memory bounds; no starvation or double token consumption |
-| Graph | Replay counters and device trace; changed tokens/lengths/pages and reused request slots; bucket transitions; zero hidden eager decode fallbacks |
+| Graph | All configured buckets captured and validated before readiness; replay counters and device trace; changed tokens/lengths/pages and reused request slots; bucket transitions; zero serving-path compilation/capture or hidden eager decode fallbacks |
 | Parallelism | TP=2, TP+SP and CP=2 compared with unsharded execution; communication derived from DSL; at least one distributed PD E2E run |
 
 Before testing, fix numerical thresholds per dtype/operator against the independent reference. Proposed initial BF16 full-model screening: normalized logit RMSE ≤1e-2 and cosine similarity ≥0.999, subject to calibration documented before acceptance; these are design targets, not observed accuracy. Require exact greedy matches on a selected stable-margin fixture set and investigate near-tie divergences with logits, rather than requiring universal bitwise identity across reduction orders. Recurrent-state drift needs long-sequence tests, not only a single step.
