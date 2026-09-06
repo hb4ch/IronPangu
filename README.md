@@ -46,3 +46,5 @@ cargo test --workspace
 Tests exercise malformed DSL, artifact corruption/cache invalidation, generated communication layouts, startup failures, graph readiness, chunk invariance, continuous admission, noncontiguous pages, cancellation during handoff, stale epochs, capacity exhaustion and resource reclamation.
 
 Read the [NPU-agent handoff](docs/npu-handoff.md), [design](docs/design.md), and [primary-source research](docs/research.md).
+
+For the planned HTTP/chat integration, see the [vLLM Rust frontend guide](docs/vllm-frontend.md). The frontend is not connected yet.
