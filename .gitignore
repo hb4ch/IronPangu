@@ -1,3 +1,11 @@
 /target/
 /.pangu-cache/
 *.tmp
+/.cross/
+/.deploy/
+/*.log
+/*.tar.gz
+/*-arm64
+/vendor/*.tar.gz
+/frontend/target/
+/vendor/rust/target/

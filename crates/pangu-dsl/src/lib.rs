@@ -84,10 +84,48 @@ pub fn parse(source: &str) -> Result<Spec> {
     spec.validate()?;
     Ok(spec)
 }
+/// The checkpoint-bound language requires an explicit, versioned math contract.
+/// The remaining fields retain the strict structural DSL syntax.
+pub fn parse_checkpoint(source: &str) -> Result<Spec> {
+    let mut found = false;
+    let mut body = String::new();
+    for line in source.lines() {
+        let raw = line.split('#').next().unwrap_or("").trim();
+        if let Some((key, value)) = raw.split_once('=')
+            && key.trim() == "contract"
+        {
+            if found || value.trim() != "qwen35_text_v1" {
+                return Err(invalid("duplicate or unsupported checkpoint contract"));
+            }
+            found = true;
+            continue;
+        }
+        body.push_str(line);
+        body.push('\n');
+    }
+    if !found {
+        return Err(invalid("checkpoint DSL requires contract = qwen35_text_v1"));
+    }
+    parse(&body)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
     const EXAMPLE: &str = include_str!("../../../examples/qwen35-2b.pangu");
+    #[test]
+    fn checkpoint_contract_is_required_and_versioned() {
+        assert!(parse_checkpoint(EXAMPLE).is_err());
+        assert!(parse_checkpoint(&format!("contract = qwen35_text_v1\n{EXAMPLE}")).is_ok());
+        assert!(parse_checkpoint(&format!("contract = unknown\n{EXAMPLE}")).is_err());
+        assert!(
+            parse_checkpoint(&format!(
+                "contract = qwen35_text_v1\ncontract = qwen35_text_v1\n{EXAMPLE}"
+            ))
+            .is_err()
+        );
+        assert!(parse(&format!("contract = qwen35_text_v1\n{EXAMPLE}")).is_err());
+    }
     #[test]
     fn parses_and_rejects() {
         assert_eq!(parse(EXAMPLE).unwrap().model.layers.len(), 24);

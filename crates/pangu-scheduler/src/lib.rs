@@ -1,4 +1,6 @@
 //! Bounded-channel mock serving loop. Device computations are intentionally synthetic.
+pub mod live;
+
 use pangu_ir::Artifact;
 use pangu_model::{Error, Result, Role, invalid};
 use pangu_runtime::{HybridState, StepInput, Trace, WorkerGroup, trace};

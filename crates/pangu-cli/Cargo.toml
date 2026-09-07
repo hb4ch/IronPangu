@@ -1,4 +1,5 @@
 [package]
+workspace = "../.."
 name = "pangu-cli"
 version.workspace = true
 edition.workspace = true
@@ -17,3 +18,6 @@ serde_json.workspace = true
 [[bin]]
 name = "pangu"
 path = "src/main.rs"
+
+[target.'cfg(unix)'.dependencies]
+libloading = "0.8.9"

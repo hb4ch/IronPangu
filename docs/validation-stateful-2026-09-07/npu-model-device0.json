@@ -1,0 +1,1854 @@
+{
+  "bound_weights": 320,
+  "device": 0,
+  "native_sha256": "024221eb489eed5c4e3ec4273f676b17522e9296e3e418ae59fdd341239dfa88",
+  "program": {
+    "batch": 1,
+    "blocks": [
+      {
+        "bindings": [
+          {
+            "name": "model.language_model.layers.0.input_layernorm.weight",
+            "transform": "OnePlusFp32"
+          },
+          {
+            "name": "model.language_model.layers.0.post_attention_layernorm.weight",
+            "transform": "OnePlusFp32"
+          },
+          {
+            "name": "model.language_model.layers.0.mlp.gate_proj.weight",
+            "transform": "Identity"
+          },
+          {
+            "name": "model.language_model.layers.0.mlp.up_proj.weight",
+            "transform": "Identity"
+          },
+          {
+            "name": "model.language_model.layers.0.mlp.down_proj.weight",
+            "transform": "Identity"
+          },
+          {
+            "name": "model.language_model.layers.0.linear_attn.in_proj_qkv.weight",
+            "transform": "Identity"
+          },
+          {
+            "name": "model.language_model.layers.0.linear_attn.in_proj_z.weight",
+            "transform": "Identity"
+          },
+          {
+            "name": "model.language_model.layers.0.linear_attn.in_proj_a.weight",
+            "transform": "Identity"
+          },
+          {
+            "name": "model.language_model.layers.0.linear_attn.in_proj_b.weight",
+            "transform": "Identity"
+          },
+          {
+            "name": "model.language_model.layers.0.linear_attn.conv1d.weight",
+            "transform": "Identity"
+          },
+          {
+            "name": "model.language_model.layers.0.linear_attn.A_log",
+            "transform": "Identity"
+          },
+          {
+            "name": "model.language_model.layers.0.linear_attn.dt_bias",
+            "transform": "Identity"
+          },
+          {
+            "name": "model.language_model.layers.0.linear_attn.norm.weight",
+            "transform": "Identity"
+          },
+          {
+            "name": "model.language_model.layers.0.linear_attn.out_proj.weight",
+            "transform": "Identity"
+          }
+        ],
+        "kind": "Delta",
+        "layer": 0
+      },
+      {
+        "bindings": [
+          {
+            "name": "model.language_model.layers.1.input_layernorm.weight",
+            "transform": "OnePlusFp32"
+          },
+          {
+            "name": "model.language_model.layers.1.post_attention_layernorm.weight",
+            "transform": "OnePlusFp32"
+          },
+          {
+            "name": "model.language_model.layers.1.mlp.gate_proj.weight",
+            "transform": "Identity"
+          },
+          {
+            "name": "model.language_model.layers.1.mlp.up_proj.weight",
+            "transform": "Identity"
+          },
+          {
+            "name": "model.language_model.layers.1.mlp.down_proj.weight",
+            "transform": "Identity"
+          },
+          {
+            "name": "model.language_model.layers.1.linear_attn.in_proj_qkv.weight",
+            "transform": "Identity"
+          },
+          {
+            "name": "model.language_model.layers.1.linear_attn.in_proj_z.weight",
+            "transform": "Identity"
+          },
+          {
+            "name": "model.language_model.layers.1.linear_attn.in_proj_a.weight",
+            "transform": "Identity"
+          },
+          {
+            "name": "model.language_model.layers.1.linear_attn.in_proj_b.weight",
+            "transform": "Identity"
+          },
+          {
+            "name": "model.language_model.layers.1.linear_attn.conv1d.weight",
+            "transform": "Identity"
+          },
+          {
+            "name": "model.language_model.layers.1.linear_attn.A_log",
+            "transform": "Identity"
+          },
+          {
+            "name": "model.language_model.layers.1.linear_attn.dt_bias",
+            "transform": "Identity"
+          },
+          {
+            "name": "model.language_model.layers.1.linear_attn.norm.weight",
+            "transform": "Identity"
+          },
+          {
+            "name": "model.language_model.layers.1.linear_attn.out_proj.weight",
+            "transform": "Identity"
+          }
+        ],
+        "kind": "Delta",
+        "layer": 1
+      },
+      {
+        "bindings": [
+          {
+            "name": "model.language_model.layers.2.input_layernorm.weight",
+            "transform": "OnePlusFp32"
+          },
+          {
+            "name": "model.language_model.layers.2.post_attention_layernorm.weight",
+            "transform": "OnePlusFp32"
+          },
+          {
+            "name": "model.language_model.layers.2.mlp.gate_proj.weight",
+            "transform": "Identity"
+          },
+          {
+            "name": "model.language_model.layers.2.mlp.up_proj.weight",
+            "transform": "Identity"
+          },
+          {
+            "name": "model.language_model.layers.2.mlp.down_proj.weight",
+            "transform": "Identity"
+          },
+          {
+            "name": "model.language_model.layers.2.linear_attn.in_proj_qkv.weight",
+            "transform": "Identity"
+          },
+          {
+            "name": "model.language_model.layers.2.linear_attn.in_proj_z.weight",
+            "transform": "Identity"
+          },
+          {
+            "name": "model.language_model.layers.2.linear_attn.in_proj_a.weight",
+            "transform": "Identity"
+          },
+          {
+            "name": "model.language_model.layers.2.linear_attn.in_proj_b.weight",
+            "transform": "Identity"
+          },
+          {
+            "name": "model.language_model.layers.2.linear_attn.conv1d.weight",
+            "transform": "Identity"
+          },
+          {
+            "name": "model.language_model.layers.2.linear_attn.A_log",
+            "transform": "Identity"
+          },
+          {
+            "name": "model.language_model.layers.2.linear_attn.dt_bias",
+            "transform": "Identity"
+          },
+          {
+            "name": "model.language_model.layers.2.linear_attn.norm.weight",
+            "transform": "Identity"
+          },
+          {
+            "name": "model.language_model.layers.2.linear_attn.out_proj.weight",
+            "transform": "Identity"
+          }
+        ],
+        "kind": "Delta",
+        "layer": 2
+      },
+      {
+        "bindings": [
+          {
+            "name": "model.language_model.layers.3.input_layernorm.weight",
+            "transform": "OnePlusFp32"
+          },
+          {
+            "name": "model.language_model.layers.3.post_attention_layernorm.weight",
+            "transform": "OnePlusFp32"
+          },
+          {
+            "name": "model.language_model.layers.3.mlp.gate_proj.weight",
+            "transform": "Identity"
+          },
+          {
+            "name": "model.language_model.layers.3.mlp.up_proj.weight",
+            "transform": "Identity"
+          },
+          {
+            "name": "model.language_model.layers.3.mlp.down_proj.weight",
+            "transform": "Identity"
+          },
+          {
+            "name": "model.language_model.layers.3.self_attn.q_proj.weight",
+            "transform": "Identity"
+          },
+          {
+            "name": "model.language_model.layers.3.self_attn.k_proj.weight",
+            "transform": "Identity"
+          },
+          {
+            "name": "model.language_model.layers.3.self_attn.v_proj.weight",
+            "transform": "Identity"
+          },
+          {
+            "name": "model.language_model.layers.3.self_attn.o_proj.weight",
+            "transform": "Identity"
+          },
+          {
+            "name": "model.language_model.layers.3.self_attn.q_norm.weight",
+            "transform": "OnePlusFp32"
+          },
+          {
+            "name": "model.language_model.layers.3.self_attn.k_norm.weight",
+            "transform": "OnePlusFp32"
+          }
+        ],
+        "kind": "Full",
+        "layer": 3
+      },
+      {
+        "bindings": [
+          {
+            "name": "model.language_model.layers.4.input_layernorm.weight",
+            "transform": "OnePlusFp32"
+          },
+          {
+            "name": "model.language_model.layers.4.post_attention_layernorm.weight",
+            "transform": "OnePlusFp32"
+          },
+          {
+            "name": "model.language_model.layers.4.mlp.gate_proj.weight",
+            "transform": "Identity"
+          },
+          {
+            "name": "model.language_model.layers.4.mlp.up_proj.weight",
+            "transform": "Identity"
+          },
+          {
+            "name": "model.language_model.layers.4.mlp.down_proj.weight",
+            "transform": "Identity"
+          },
+          {
+            "name": "model.language_model.layers.4.linear_attn.in_proj_qkv.weight",
+            "transform": "Identity"
+          },
+          {
+            "name": "model.language_model.layers.4.linear_attn.in_proj_z.weight",
+            "transform": "Identity"
+          },
+          {
+            "name": "model.language_model.layers.4.linear_attn.in_proj_a.weight",
+            "transform": "Identity"
+          },
+          {
+            "name": "model.language_model.layers.4.linear_attn.in_proj_b.weight",
+            "transform": "Identity"
+          },
+          {
+            "name": "model.language_model.layers.4.linear_attn.conv1d.weight",
+            "transform": "Identity"
+          },
+          {
+            "name": "model.language_model.layers.4.linear_attn.A_log",
+            "transform": "Identity"
+          },
+          {
+            "name": "model.language_model.layers.4.linear_attn.dt_bias",
+            "transform": "Identity"
+          },
+          {
+            "name": "model.language_model.layers.4.linear_attn.norm.weight",
+            "transform": "Identity"
+          },
+          {
+            "name": "model.language_model.layers.4.linear_attn.out_proj.weight",
+            "transform": "Identity"
+          }
+        ],
+        "kind": "Delta",
+        "layer": 4
+      },
+      {
+        "bindings": [
+          {
+            "name": "model.language_model.layers.5.input_layernorm.weight",
+            "transform": "OnePlusFp32"
+          },
+          {
+            "name": "model.language_model.layers.5.post_attention_layernorm.weight",
+            "transform": "OnePlusFp32"
+          },
+          {
+            "name": "model.language_model.layers.5.mlp.gate_proj.weight",
+            "transform": "Identity"
+          },
+          {
+            "name": "model.language_model.layers.5.mlp.up_proj.weight",
+            "transform": "Identity"
+          },
+          {
+            "name": "model.language_model.layers.5.mlp.down_proj.weight",
+            "transform": "Identity"
+          },
+          {
+            "name": "model.language_model.layers.5.linear_attn.in_proj_qkv.weight",
+            "transform": "Identity"
+          },
+          {
+            "name": "model.language_model.layers.5.linear_attn.in_proj_z.weight",
+            "transform": "Identity"
+          },
+          {
+            "name": "model.language_model.layers.5.linear_attn.in_proj_a.weight",
+            "transform": "Identity"
+          },
+          {
+            "name": "model.language_model.layers.5.linear_attn.in_proj_b.weight",
+            "transform": "Identity"
+          },
+          {
+            "name": "model.language_model.layers.5.linear_attn.conv1d.weight",
+            "transform": "Identity"
+          },
+          {
+            "name": "model.language_model.layers.5.linear_attn.A_log",
+            "transform": "Identity"
+          },
+          {
+            "name": "model.language_model.layers.5.linear_attn.dt_bias",
+            "transform": "Identity"
+          },
+          {
+            "name": "model.language_model.layers.5.linear_attn.norm.weight",
+            "transform": "Identity"
+          },
+          {
+            "name": "model.language_model.layers.5.linear_attn.out_proj.weight",
+            "transform": "Identity"
+          }
+        ],
+        "kind": "Delta",
+        "layer": 5
+      },
+      {
+        "bindings": [
+          {
+            "name": "model.language_model.layers.6.input_layernorm.weight",
+            "transform": "OnePlusFp32"
+          },
+          {
+            "name": "model.language_model.layers.6.post_attention_layernorm.weight",
+            "transform": "OnePlusFp32"
+          },
+          {
+            "name": "model.language_model.layers.6.mlp.gate_proj.weight",
+            "transform": "Identity"
+          },
+          {
+            "name": "model.language_model.layers.6.mlp.up_proj.weight",
+            "transform": "Identity"
+          },
+          {
+            "name": "model.language_model.layers.6.mlp.down_proj.weight",
+            "transform": "Identity"
+          },
+          {
+            "name": "model.language_model.layers.6.linear_attn.in_proj_qkv.weight",
+            "transform": "Identity"
+          },
+          {
+            "name": "model.language_model.layers.6.linear_attn.in_proj_z.weight",
+            "transform": "Identity"
+          },
+          {
+            "name": "model.language_model.layers.6.linear_attn.in_proj_a.weight",
+            "transform": "Identity"
+          },
+          {
+            "name": "model.language_model.layers.6.linear_attn.in_proj_b.weight",
+            "transform": "Identity"
+          },
+          {
+            "name": "model.language_model.layers.6.linear_attn.conv1d.weight",
+            "transform": "Identity"
+          },
+          {
+            "name": "model.language_model.layers.6.linear_attn.A_log",
+            "transform": "Identity"
+          },
+          {
+            "name": "model.language_model.layers.6.linear_attn.dt_bias",
+            "transform": "Identity"
+          },
+          {
+            "name": "model.language_model.layers.6.linear_attn.norm.weight",
+            "transform": "Identity"
+          },
+          {
+            "name": "model.language_model.layers.6.linear_attn.out_proj.weight",
+            "transform": "Identity"
+          }
+        ],
+        "kind": "Delta",
+        "layer": 6
+      },
+      {
+        "bindings": [
+          {
+            "name": "model.language_model.layers.7.input_layernorm.weight",
+            "transform": "OnePlusFp32"
+          },
+          {
+            "name": "model.language_model.layers.7.post_attention_layernorm.weight",
+            "transform": "OnePlusFp32"
+          },
+          {
+            "name": "model.language_model.layers.7.mlp.gate_proj.weight",
+            "transform": "Identity"
+          },
+          {
+            "name": "model.language_model.layers.7.mlp.up_proj.weight",
+            "transform": "Identity"
+          },
+          {
+            "name": "model.language_model.layers.7.mlp.down_proj.weight",
+            "transform": "Identity"
+          },
+          {
+            "name": "model.language_model.layers.7.self_attn.q_proj.weight",
+            "transform": "Identity"
+          },
+          {
+            "name": "model.language_model.layers.7.self_attn.k_proj.weight",
+            "transform": "Identity"
+          },
+          {
+            "name": "model.language_model.layers.7.self_attn.v_proj.weight",
+            "transform": "Identity"
+          },
+          {
+            "name": "model.language_model.layers.7.self_attn.o_proj.weight",
+            "transform": "Identity"
+          },
+          {
+            "name": "model.language_model.layers.7.self_attn.q_norm.weight",
+            "transform": "OnePlusFp32"
+          },
+          {
+            "name": "model.language_model.layers.7.self_attn.k_norm.weight",
+            "transform": "OnePlusFp32"
+          }
+        ],
+        "kind": "Full",
+        "layer": 7
+      },
+      {
+        "bindings": [
+          {
+            "name": "model.language_model.layers.8.input_layernorm.weight",
+            "transform": "OnePlusFp32"
+          },
+          {
+            "name": "model.language_model.layers.8.post_attention_layernorm.weight",
+            "transform": "OnePlusFp32"
+          },
+          {
+            "name": "model.language_model.layers.8.mlp.gate_proj.weight",
+            "transform": "Identity"
+          },
+          {
+            "name": "model.language_model.layers.8.mlp.up_proj.weight",
+            "transform": "Identity"
+          },
+          {
+            "name": "model.language_model.layers.8.mlp.down_proj.weight",
+            "transform": "Identity"
+          },
+          {
+            "name": "model.language_model.layers.8.linear_attn.in_proj_qkv.weight",
+            "transform": "Identity"
+          },
+          {
+            "name": "model.language_model.layers.8.linear_attn.in_proj_z.weight",
+            "transform": "Identity"
+          },
+          {
+            "name": "model.language_model.layers.8.linear_attn.in_proj_a.weight",
+            "transform": "Identity"
+          },
+          {
+            "name": "model.language_model.layers.8.linear_attn.in_proj_b.weight",
+            "transform": "Identity"
+          },
+          {
+            "name": "model.language_model.layers.8.linear_attn.conv1d.weight",
+            "transform": "Identity"
+          },
+          {
+            "name": "model.language_model.layers.8.linear_attn.A_log",
+            "transform": "Identity"
+          },
+          {
+            "name": "model.language_model.layers.8.linear_attn.dt_bias",
+            "transform": "Identity"
+          },
+          {
+            "name": "model.language_model.layers.8.linear_attn.norm.weight",
+            "transform": "Identity"
+          },
+          {
+            "name": "model.language_model.layers.8.linear_attn.out_proj.weight",
+            "transform": "Identity"
+          }
+        ],
+        "kind": "Delta",
+        "layer": 8
+      },
+      {
+        "bindings": [
+          {
+            "name": "model.language_model.layers.9.input_layernorm.weight",
+            "transform": "OnePlusFp32"
+          },
+          {
+            "name": "model.language_model.layers.9.post_attention_layernorm.weight",
+            "transform": "OnePlusFp32"
+          },
+          {
+            "name": "model.language_model.layers.9.mlp.gate_proj.weight",
+            "transform": "Identity"
+          },
+          {
+            "name": "model.language_model.layers.9.mlp.up_proj.weight",
+            "transform": "Identity"
+          },
+          {
+            "name": "model.language_model.layers.9.mlp.down_proj.weight",
+            "transform": "Identity"
+          },
+          {
+            "name": "model.language_model.layers.9.linear_attn.in_proj_qkv.weight",
+            "transform": "Identity"
+          },
+          {
+            "name": "model.language_model.layers.9.linear_attn.in_proj_z.weight",
+            "transform": "Identity"
+          },
+          {
+            "name": "model.language_model.layers.9.linear_attn.in_proj_a.weight",
+            "transform": "Identity"
+          },
+          {
+            "name": "model.language_model.layers.9.linear_attn.in_proj_b.weight",
+            "transform": "Identity"
+          },
+          {
+            "name": "model.language_model.layers.9.linear_attn.conv1d.weight",
+            "transform": "Identity"
+          },
+          {
+            "name": "model.language_model.layers.9.linear_attn.A_log",
+            "transform": "Identity"
+          },
+          {
+            "name": "model.language_model.layers.9.linear_attn.dt_bias",
+            "transform": "Identity"
+          },
+          {
+            "name": "model.language_model.layers.9.linear_attn.norm.weight",
+            "transform": "Identity"
+          },
+          {
+            "name": "model.language_model.layers.9.linear_attn.out_proj.weight",
+            "transform": "Identity"
+          }
+        ],
+        "kind": "Delta",
+        "layer": 9
+      },
+      {
+        "bindings": [
+          {
+            "name": "model.language_model.layers.10.input_layernorm.weight",
+            "transform": "OnePlusFp32"
+          },
+          {
+            "name": "model.language_model.layers.10.post_attention_layernorm.weight",
+            "transform": "OnePlusFp32"
+          },
+          {
+            "name": "model.language_model.layers.10.mlp.gate_proj.weight",
+            "transform": "Identity"
+          },
+          {
+            "name": "model.language_model.layers.10.mlp.up_proj.weight",
+            "transform": "Identity"
+          },
+          {
+            "name": "model.language_model.layers.10.mlp.down_proj.weight",
+            "transform": "Identity"
+          },
+          {
+            "name": "model.language_model.layers.10.linear_attn.in_proj_qkv.weight",
+            "transform": "Identity"
+          },
+          {
+            "name": "model.language_model.layers.10.linear_attn.in_proj_z.weight",
+            "transform": "Identity"
+          },
+          {
+            "name": "model.language_model.layers.10.linear_attn.in_proj_a.weight",
+            "transform": "Identity"
+          },
+          {
+            "name": "model.language_model.layers.10.linear_attn.in_proj_b.weight",
+            "transform": "Identity"
+          },
+          {
+            "name": "model.language_model.layers.10.linear_attn.conv1d.weight",
+            "transform": "Identity"
+          },
+          {
+            "name": "model.language_model.layers.10.linear_attn.A_log",
+            "transform": "Identity"
+          },
+          {
+            "name": "model.language_model.layers.10.linear_attn.dt_bias",
+            "transform": "Identity"
+          },
+          {
+            "name": "model.language_model.layers.10.linear_attn.norm.weight",
+            "transform": "Identity"
+          },
+          {
+            "name": "model.language_model.layers.10.linear_attn.out_proj.weight",
+            "transform": "Identity"
+          }
+        ],
+        "kind": "Delta",
+        "layer": 10
+      },
+      {
+        "bindings": [
+          {
+            "name": "model.language_model.layers.11.input_layernorm.weight",
+            "transform": "OnePlusFp32"
+          },
+          {
+            "name": "model.language_model.layers.11.post_attention_layernorm.weight",
+            "transform": "OnePlusFp32"
+          },
+          {
+            "name": "model.language_model.layers.11.mlp.gate_proj.weight",
+            "transform": "Identity"
+          },
+          {
+            "name": "model.language_model.layers.11.mlp.up_proj.weight",
+            "transform": "Identity"
+          },
+          {
+            "name": "model.language_model.layers.11.mlp.down_proj.weight",
+            "transform": "Identity"
+          },
+          {
+            "name": "model.language_model.layers.11.self_attn.q_proj.weight",
+            "transform": "Identity"
+          },
+          {
+            "name": "model.language_model.layers.11.self_attn.k_proj.weight",
+            "transform": "Identity"
+          },
+          {
+            "name": "model.language_model.layers.11.self_attn.v_proj.weight",
+            "transform": "Identity"
+          },
+          {
+            "name": "model.language_model.layers.11.self_attn.o_proj.weight",
+            "transform": "Identity"
+          },
+          {
+            "name": "model.language_model.layers.11.self_attn.q_norm.weight",
+            "transform": "OnePlusFp32"
+          },
+          {
+            "name": "model.language_model.layers.11.self_attn.k_norm.weight",
+            "transform": "OnePlusFp32"
+          }
+        ],
+        "kind": "Full",
+        "layer": 11
+      },
+      {
+        "bindings": [
+          {
+            "name": "model.language_model.layers.12.input_layernorm.weight",
+            "transform": "OnePlusFp32"
+          },
+          {
+            "name": "model.language_model.layers.12.post_attention_layernorm.weight",
+            "transform": "OnePlusFp32"
+          },
+          {
+            "name": "model.language_model.layers.12.mlp.gate_proj.weight",
+            "transform": "Identity"
+          },
+          {
+            "name": "model.language_model.layers.12.mlp.up_proj.weight",
+            "transform": "Identity"
+          },
+          {
+            "name": "model.language_model.layers.12.mlp.down_proj.weight",
+            "transform": "Identity"
+          },
+          {
+            "name": "model.language_model.layers.12.linear_attn.in_proj_qkv.weight",
+            "transform": "Identity"
+          },
+          {
+            "name": "model.language_model.layers.12.linear_attn.in_proj_z.weight",
+            "transform": "Identity"
+          },
+          {
+            "name": "model.language_model.layers.12.linear_attn.in_proj_a.weight",
+            "transform": "Identity"
+          },
+          {
+            "name": "model.language_model.layers.12.linear_attn.in_proj_b.weight",
+            "transform": "Identity"
+          },
+          {
+            "name": "model.language_model.layers.12.linear_attn.conv1d.weight",
+            "transform": "Identity"
+          },
+          {
+            "name": "model.language_model.layers.12.linear_attn.A_log",
+            "transform": "Identity"
+          },
+          {
+            "name": "model.language_model.layers.12.linear_attn.dt_bias",
+            "transform": "Identity"
+          },
+          {
+            "name": "model.language_model.layers.12.linear_attn.norm.weight",
+            "transform": "Identity"
+          },
+          {
+            "name": "model.language_model.layers.12.linear_attn.out_proj.weight",
+            "transform": "Identity"
+          }
+        ],
+        "kind": "Delta",
+        "layer": 12
+      },
+      {
+        "bindings": [
+          {
+            "name": "model.language_model.layers.13.input_layernorm.weight",
+            "transform": "OnePlusFp32"
+          },
+          {
+            "name": "model.language_model.layers.13.post_attention_layernorm.weight",
+            "transform": "OnePlusFp32"
+          },
+          {
+            "name": "model.language_model.layers.13.mlp.gate_proj.weight",
+            "transform": "Identity"
+          },
+          {
+            "name": "model.language_model.layers.13.mlp.up_proj.weight",
+            "transform": "Identity"
+          },
+          {
+            "name": "model.language_model.layers.13.mlp.down_proj.weight",
+            "transform": "Identity"
+          },
+          {
+            "name": "model.language_model.layers.13.linear_attn.in_proj_qkv.weight",
+            "transform": "Identity"
+          },
+          {
+            "name": "model.language_model.layers.13.linear_attn.in_proj_z.weight",
+            "transform": "Identity"
+          },
+          {
+            "name": "model.language_model.layers.13.linear_attn.in_proj_a.weight",
+            "transform": "Identity"
+          },
+          {
+            "name": "model.language_model.layers.13.linear_attn.in_proj_b.weight",
+            "transform": "Identity"
+          },
+          {
+            "name": "model.language_model.layers.13.linear_attn.conv1d.weight",
+            "transform": "Identity"
+          },
+          {
+            "name": "model.language_model.layers.13.linear_attn.A_log",
+            "transform": "Identity"
+          },
+          {
+            "name": "model.language_model.layers.13.linear_attn.dt_bias",
+            "transform": "Identity"
+          },
+          {
+            "name": "model.language_model.layers.13.linear_attn.norm.weight",
+            "transform": "Identity"
+          },
+          {
+            "name": "model.language_model.layers.13.linear_attn.out_proj.weight",
+            "transform": "Identity"
+          }
+        ],
+        "kind": "Delta",
+        "layer": 13
+      },
+      {
+        "bindings": [
+          {
+            "name": "model.language_model.layers.14.input_layernorm.weight",
+            "transform": "OnePlusFp32"
+          },
+          {
+            "name": "model.language_model.layers.14.post_attention_layernorm.weight",
+            "transform": "OnePlusFp32"
+          },
+          {
+            "name": "model.language_model.layers.14.mlp.gate_proj.weight",
+            "transform": "Identity"
+          },
+          {
+            "name": "model.language_model.layers.14.mlp.up_proj.weight",
+            "transform": "Identity"
+          },
+          {
+            "name": "model.language_model.layers.14.mlp.down_proj.weight",
+            "transform": "Identity"
+          },
+          {
+            "name": "model.language_model.layers.14.linear_attn.in_proj_qkv.weight",
+            "transform": "Identity"
+          },
+          {
+            "name": "model.language_model.layers.14.linear_attn.in_proj_z.weight",
+            "transform": "Identity"
+          },
+          {
+            "name": "model.language_model.layers.14.linear_attn.in_proj_a.weight",
+            "transform": "Identity"
+          },
+          {
+            "name": "model.language_model.layers.14.linear_attn.in_proj_b.weight",
+            "transform": "Identity"
+          },
+          {
+            "name": "model.language_model.layers.14.linear_attn.conv1d.weight",
+            "transform": "Identity"
+          },
+          {
+            "name": "model.language_model.layers.14.linear_attn.A_log",
+            "transform": "Identity"
+          },
+          {
+            "name": "model.language_model.layers.14.linear_attn.dt_bias",
+            "transform": "Identity"
+          },
+          {
+            "name": "model.language_model.layers.14.linear_attn.norm.weight",
+            "transform": "Identity"
+          },
+          {
+            "name": "model.language_model.layers.14.linear_attn.out_proj.weight",
+            "transform": "Identity"
+          }
+        ],
+        "kind": "Delta",
+        "layer": 14
+      },
+      {
+        "bindings": [
+          {
+            "name": "model.language_model.layers.15.input_layernorm.weight",
+            "transform": "OnePlusFp32"
+          },
+          {
+            "name": "model.language_model.layers.15.post_attention_layernorm.weight",
+            "transform": "OnePlusFp32"
+          },
+          {
+            "name": "model.language_model.layers.15.mlp.gate_proj.weight",
+            "transform": "Identity"
+          },
+          {
+            "name": "model.language_model.layers.15.mlp.up_proj.weight",
+            "transform": "Identity"
+          },
+          {
+            "name": "model.language_model.layers.15.mlp.down_proj.weight",
+            "transform": "Identity"
+          },
+          {
+            "name": "model.language_model.layers.15.self_attn.q_proj.weight",
+            "transform": "Identity"
+          },
+          {
+            "name": "model.language_model.layers.15.self_attn.k_proj.weight",
+            "transform": "Identity"
+          },
+          {
+            "name": "model.language_model.layers.15.self_attn.v_proj.weight",
+            "transform": "Identity"
+          },
+          {
+            "name": "model.language_model.layers.15.self_attn.o_proj.weight",
+            "transform": "Identity"
+          },
+          {
+            "name": "model.language_model.layers.15.self_attn.q_norm.weight",
+            "transform": "OnePlusFp32"
+          },
+          {
+            "name": "model.language_model.layers.15.self_attn.k_norm.weight",
+            "transform": "OnePlusFp32"
+          }
+        ],
+        "kind": "Full",
+        "layer": 15
+      },
+      {
+        "bindings": [
+          {
+            "name": "model.language_model.layers.16.input_layernorm.weight",
+            "transform": "OnePlusFp32"
+          },
+          {
+            "name": "model.language_model.layers.16.post_attention_layernorm.weight",
+            "transform": "OnePlusFp32"
+          },
+          {
+            "name": "model.language_model.layers.16.mlp.gate_proj.weight",
+            "transform": "Identity"
+          },
+          {
+            "name": "model.language_model.layers.16.mlp.up_proj.weight",
+            "transform": "Identity"
+          },
+          {
+            "name": "model.language_model.layers.16.mlp.down_proj.weight",
+            "transform": "Identity"
+          },
+          {
+            "name": "model.language_model.layers.16.linear_attn.in_proj_qkv.weight",
+            "transform": "Identity"
+          },
+          {
+            "name": "model.language_model.layers.16.linear_attn.in_proj_z.weight",
+            "transform": "Identity"
+          },
+          {
+            "name": "model.language_model.layers.16.linear_attn.in_proj_a.weight",
+            "transform": "Identity"
+          },
+          {
+            "name": "model.language_model.layers.16.linear_attn.in_proj_b.weight",
+            "transform": "Identity"
+          },
+          {
+            "name": "model.language_model.layers.16.linear_attn.conv1d.weight",
+            "transform": "Identity"
+          },
+          {
+            "name": "model.language_model.layers.16.linear_attn.A_log",
+            "transform": "Identity"
+          },
+          {
+            "name": "model.language_model.layers.16.linear_attn.dt_bias",
+            "transform": "Identity"
+          },
+          {
+            "name": "model.language_model.layers.16.linear_attn.norm.weight",
+            "transform": "Identity"
+          },
+          {
+            "name": "model.language_model.layers.16.linear_attn.out_proj.weight",
+            "transform": "Identity"
+          }
+        ],
+        "kind": "Delta",
+        "layer": 16
+      },
+      {
+        "bindings": [
+          {
+            "name": "model.language_model.layers.17.input_layernorm.weight",
+            "transform": "OnePlusFp32"
+          },
+          {
+            "name": "model.language_model.layers.17.post_attention_layernorm.weight",
+            "transform": "OnePlusFp32"
+          },
+          {
+            "name": "model.language_model.layers.17.mlp.gate_proj.weight",
+            "transform": "Identity"
+          },
+          {
+            "name": "model.language_model.layers.17.mlp.up_proj.weight",
+            "transform": "Identity"
+          },
+          {
+            "name": "model.language_model.layers.17.mlp.down_proj.weight",
+            "transform": "Identity"
+          },
+          {
+            "name": "model.language_model.layers.17.linear_attn.in_proj_qkv.weight",
+            "transform": "Identity"
+          },
+          {
+            "name": "model.language_model.layers.17.linear_attn.in_proj_z.weight",
+            "transform": "Identity"
+          },
+          {
+            "name": "model.language_model.layers.17.linear_attn.in_proj_a.weight",
+            "transform": "Identity"
+          },
+          {
+            "name": "model.language_model.layers.17.linear_attn.in_proj_b.weight",
+            "transform": "Identity"
+          },
+          {
+            "name": "model.language_model.layers.17.linear_attn.conv1d.weight",
+            "transform": "Identity"
+          },
+          {
+            "name": "model.language_model.layers.17.linear_attn.A_log",
+            "transform": "Identity"
+          },
+          {
+            "name": "model.language_model.layers.17.linear_attn.dt_bias",
+            "transform": "Identity"
+          },
+          {
+            "name": "model.language_model.layers.17.linear_attn.norm.weight",
+            "transform": "Identity"
+          },
+          {
+            "name": "model.language_model.layers.17.linear_attn.out_proj.weight",
+            "transform": "Identity"
+          }
+        ],
+        "kind": "Delta",
+        "layer": 17
+      },
+      {
+        "bindings": [
+          {
+            "name": "model.language_model.layers.18.input_layernorm.weight",
+            "transform": "OnePlusFp32"
+          },
+          {
+            "name": "model.language_model.layers.18.post_attention_layernorm.weight",
+            "transform": "OnePlusFp32"
+          },
+          {
+            "name": "model.language_model.layers.18.mlp.gate_proj.weight",
+            "transform": "Identity"
+          },
+          {
+            "name": "model.language_model.layers.18.mlp.up_proj.weight",
+            "transform": "Identity"
+          },
+          {
+            "name": "model.language_model.layers.18.mlp.down_proj.weight",
+            "transform": "Identity"
+          },
+          {
+            "name": "model.language_model.layers.18.linear_attn.in_proj_qkv.weight",
+            "transform": "Identity"
+          },
+          {
+            "name": "model.language_model.layers.18.linear_attn.in_proj_z.weight",
+            "transform": "Identity"
+          },
+          {
+            "name": "model.language_model.layers.18.linear_attn.in_proj_a.weight",
+            "transform": "Identity"
+          },
+          {
+            "name": "model.language_model.layers.18.linear_attn.in_proj_b.weight",
+            "transform": "Identity"
+          },
+          {
+            "name": "model.language_model.layers.18.linear_attn.conv1d.weight",
+            "transform": "Identity"
+          },
+          {
+            "name": "model.language_model.layers.18.linear_attn.A_log",
+            "transform": "Identity"
+          },
+          {
+            "name": "model.language_model.layers.18.linear_attn.dt_bias",
+            "transform": "Identity"
+          },
+          {
+            "name": "model.language_model.layers.18.linear_attn.norm.weight",
+            "transform": "Identity"
+          },
+          {
+            "name": "model.language_model.layers.18.linear_attn.out_proj.weight",
+            "transform": "Identity"
+          }
+        ],
+        "kind": "Delta",
+        "layer": 18
+      },
+      {
+        "bindings": [
+          {
+            "name": "model.language_model.layers.19.input_layernorm.weight",
+            "transform": "OnePlusFp32"
+          },
+          {
+            "name": "model.language_model.layers.19.post_attention_layernorm.weight",
+            "transform": "OnePlusFp32"
+          },
+          {
+            "name": "model.language_model.layers.19.mlp.gate_proj.weight",
+            "transform": "Identity"
+          },
+          {
+            "name": "model.language_model.layers.19.mlp.up_proj.weight",
+            "transform": "Identity"
+          },
+          {
+            "name": "model.language_model.layers.19.mlp.down_proj.weight",
+            "transform": "Identity"
+          },
+          {
+            "name": "model.language_model.layers.19.self_attn.q_proj.weight",
+            "transform": "Identity"
+          },
+          {
+            "name": "model.language_model.layers.19.self_attn.k_proj.weight",
+            "transform": "Identity"
+          },
+          {
+            "name": "model.language_model.layers.19.self_attn.v_proj.weight",
+            "transform": "Identity"
+          },
+          {
+            "name": "model.language_model.layers.19.self_attn.o_proj.weight",
+            "transform": "Identity"
+          },
+          {
+            "name": "model.language_model.layers.19.self_attn.q_norm.weight",
+            "transform": "OnePlusFp32"
+          },
+          {
+            "name": "model.language_model.layers.19.self_attn.k_norm.weight",
+            "transform": "OnePlusFp32"
+          }
+        ],
+        "kind": "Full",
+        "layer": 19
+      },
+      {
+        "bindings": [
+          {
+            "name": "model.language_model.layers.20.input_layernorm.weight",
+            "transform": "OnePlusFp32"
+          },
+          {
+            "name": "model.language_model.layers.20.post_attention_layernorm.weight",
+            "transform": "OnePlusFp32"
+          },
+          {
+            "name": "model.language_model.layers.20.mlp.gate_proj.weight",
+            "transform": "Identity"
+          },
+          {
+            "name": "model.language_model.layers.20.mlp.up_proj.weight",
+            "transform": "Identity"
+          },
+          {
+            "name": "model.language_model.layers.20.mlp.down_proj.weight",
+            "transform": "Identity"
+          },
+          {
+            "name": "model.language_model.layers.20.linear_attn.in_proj_qkv.weight",
+            "transform": "Identity"
+          },
+          {
+            "name": "model.language_model.layers.20.linear_attn.in_proj_z.weight",
+            "transform": "Identity"
+          },
+          {
+            "name": "model.language_model.layers.20.linear_attn.in_proj_a.weight",
+            "transform": "Identity"
+          },
+          {
+            "name": "model.language_model.layers.20.linear_attn.in_proj_b.weight",
+            "transform": "Identity"
+          },
+          {
+            "name": "model.language_model.layers.20.linear_attn.conv1d.weight",
+            "transform": "Identity"
+          },
+          {
+            "name": "model.language_model.layers.20.linear_attn.A_log",
+            "transform": "Identity"
+          },
+          {
+            "name": "model.language_model.layers.20.linear_attn.dt_bias",
+            "transform": "Identity"
+          },
+          {
+            "name": "model.language_model.layers.20.linear_attn.norm.weight",
+            "transform": "Identity"
+          },
+          {
+            "name": "model.language_model.layers.20.linear_attn.out_proj.weight",
+            "transform": "Identity"
+          }
+        ],
+        "kind": "Delta",
+        "layer": 20
+      },
+      {
+        "bindings": [
+          {
+            "name": "model.language_model.layers.21.input_layernorm.weight",
+            "transform": "OnePlusFp32"
+          },
+          {
+            "name": "model.language_model.layers.21.post_attention_layernorm.weight",
+            "transform": "OnePlusFp32"
+          },
+          {
+            "name": "model.language_model.layers.21.mlp.gate_proj.weight",
+            "transform": "Identity"
+          },
+          {
+            "name": "model.language_model.layers.21.mlp.up_proj.weight",
+            "transform": "Identity"
+          },
+          {
+            "name": "model.language_model.layers.21.mlp.down_proj.weight",
+            "transform": "Identity"
+          },
+          {
+            "name": "model.language_model.layers.21.linear_attn.in_proj_qkv.weight",
+            "transform": "Identity"
+          },
+          {
+            "name": "model.language_model.layers.21.linear_attn.in_proj_z.weight",
+            "transform": "Identity"
+          },
+          {
+            "name": "model.language_model.layers.21.linear_attn.in_proj_a.weight",
+            "transform": "Identity"
+          },
+          {
+            "name": "model.language_model.layers.21.linear_attn.in_proj_b.weight",
+            "transform": "Identity"
+          },
+          {
+            "name": "model.language_model.layers.21.linear_attn.conv1d.weight",
+            "transform": "Identity"
+          },
+          {
+            "name": "model.language_model.layers.21.linear_attn.A_log",
+            "transform": "Identity"
+          },
+          {
+            "name": "model.language_model.layers.21.linear_attn.dt_bias",
+            "transform": "Identity"
+          },
+          {
+            "name": "model.language_model.layers.21.linear_attn.norm.weight",
+            "transform": "Identity"
+          },
+          {
+            "name": "model.language_model.layers.21.linear_attn.out_proj.weight",
+            "transform": "Identity"
+          }
+        ],
+        "kind": "Delta",
+        "layer": 21
+      },
+      {
+        "bindings": [
+          {
+            "name": "model.language_model.layers.22.input_layernorm.weight",
+            "transform": "OnePlusFp32"
+          },
+          {
+            "name": "model.language_model.layers.22.post_attention_layernorm.weight",
+            "transform": "OnePlusFp32"
+          },
+          {
+            "name": "model.language_model.layers.22.mlp.gate_proj.weight",
+            "transform": "Identity"
+          },
+          {
+            "name": "model.language_model.layers.22.mlp.up_proj.weight",
+            "transform": "Identity"
+          },
+          {
+            "name": "model.language_model.layers.22.mlp.down_proj.weight",
+            "transform": "Identity"
+          },
+          {
+            "name": "model.language_model.layers.22.linear_attn.in_proj_qkv.weight",
+            "transform": "Identity"
+          },
+          {
+            "name": "model.language_model.layers.22.linear_attn.in_proj_z.weight",
+            "transform": "Identity"
+          },
+          {
+            "name": "model.language_model.layers.22.linear_attn.in_proj_a.weight",
+            "transform": "Identity"
+          },
+          {
+            "name": "model.language_model.layers.22.linear_attn.in_proj_b.weight",
+            "transform": "Identity"
+          },
+          {
+            "name": "model.language_model.layers.22.linear_attn.conv1d.weight",
+            "transform": "Identity"
+          },
+          {
+            "name": "model.language_model.layers.22.linear_attn.A_log",
+            "transform": "Identity"
+          },
+          {
+            "name": "model.language_model.layers.22.linear_attn.dt_bias",
+            "transform": "Identity"
+          },
+          {
+            "name": "model.language_model.layers.22.linear_attn.norm.weight",
+            "transform": "Identity"
+          },
+          {
+            "name": "model.language_model.layers.22.linear_attn.out_proj.weight",
+            "transform": "Identity"
+          }
+        ],
+        "kind": "Delta",
+        "layer": 22
+      },
+      {
+        "bindings": [
+          {
+            "name": "model.language_model.layers.23.input_layernorm.weight",
+            "transform": "OnePlusFp32"
+          },
+          {
+            "name": "model.language_model.layers.23.post_attention_layernorm.weight",
+            "transform": "OnePlusFp32"
+          },
+          {
+            "name": "model.language_model.layers.23.mlp.gate_proj.weight",
+            "transform": "Identity"
+          },
+          {
+            "name": "model.language_model.layers.23.mlp.up_proj.weight",
+            "transform": "Identity"
+          },
+          {
+            "name": "model.language_model.layers.23.mlp.down_proj.weight",
+            "transform": "Identity"
+          },
+          {
+            "name": "model.language_model.layers.23.self_attn.q_proj.weight",
+            "transform": "Identity"
+          },
+          {
+            "name": "model.language_model.layers.23.self_attn.k_proj.weight",
+            "transform": "Identity"
+          },
+          {
+            "name": "model.language_model.layers.23.self_attn.v_proj.weight",
+            "transform": "Identity"
+          },
+          {
+            "name": "model.language_model.layers.23.self_attn.o_proj.weight",
+            "transform": "Identity"
+          },
+          {
+            "name": "model.language_model.layers.23.self_attn.q_norm.weight",
+            "transform": "OnePlusFp32"
+          },
+          {
+            "name": "model.language_model.layers.23.self_attn.k_norm.weight",
+            "transform": "OnePlusFp32"
+          }
+        ],
+        "kind": "Full",
+        "layer": 23
+      }
+    ],
+    "context": 128,
+    "embedding": "model.language_model.embed_tokens.weight",
+    "final_norm": {
+      "name": "model.language_model.norm.weight",
+      "transform": "OnePlusFp32"
+    },
+    "key": "473d1dccd4f8a40362e73033e4beab36303f1dc2a49e3aa417d90eb18552cdbb",
+    "page_tokens": 128,
+    "source_key": "822cb949a731fa96b53690988a9a4ff3e18794e80f4660dbb038b19a571c0b90"
+  },
+  "results": [
+    {
+      "cpu_reference_max_error": 0.234375,
+      "cpu_reference_relative_l2": 0.014173926473071693,
+      "cpu_reference_top1": 5328,
+      "graph_eager_logits": "bitwise_equal",
+      "graph_eager_states": "bitwise_equal",
+      "input_token": 1,
+      "position": 0,
+      "top5": [
+        [
+          5328,
+          9.5625
+        ],
+        [
+          40,
+          9.375
+        ],
+        [
+          3710,
+          9.1875
+        ],
+        [
+          32,
+          8.875
+        ],
+        [
+          760,
+          8.8125
+        ]
+      ]
+    },
+    {
+      "cpu_reference_max_error": 0.15625,
+      "cpu_reference_relative_l2": 0.01133793217454721,
+      "cpu_reference_top1": 220,
+      "graph_eager_logits": "bitwise_equal",
+      "graph_eager_states": "bitwise_equal",
+      "input_token": 2,
+      "position": 1,
+      "top5": [
+        [
+          220,
+          12.125
+        ],
+        [
+          198,
+          10.875
+        ],
+        [
+          965,
+          10.0625
+        ],
+        [
+          57491,
+          10.0
+        ],
+        [
+          561,
+          9.9375
+        ]
+      ]
+    },
+    {
+      "cpu_reference_max_error": 0.125,
+      "cpu_reference_relative_l2": 0.014600611264402232,
+      "cpu_reference_top1": 16,
+      "graph_eager_logits": "bitwise_equal",
+      "graph_eager_states": "bitwise_equal",
+      "input_token": 3,
+      "position": 2,
+      "top5": [
+        [
+          16,
+          12.75
+        ],
+        [
+          198,
+          12.25
+        ],
+        [
+          220,
+          11.875
+        ],
+        [
+          18,
+          11.8125
+        ],
+        [
+          1,
+          11.6875
+        ]
+      ]
+    }
+  ],
+  "rust_sha256": "6fce870e1cb4986967b1b822fa29ad5035fff43bb52cfe3a90dff43397f9c10a",
+  "scope": "full-model scalar Rust CPU/eager/graph qualification on supplied token IDs; no serving readiness",
+  "weight_sha256": {
+    "model.language_model.embed_tokens.weight": "b222b11204158144e369ae8fca02cab9cb63b0a8cde1dd59dd4d0c60690824ed",
+    "model.language_model.layers.0.input_layernorm.weight": "e3bfb63b03722ec637ed4ea2cc552d68a87e661bbba1e889f721858b34162877",
+    "model.language_model.layers.0.linear_attn.A_log": "4482c77a3cbbb4d1f3c777090048fa1e7abd89ac4e8055bf6a04c1596fdfb500",
+    "model.language_model.layers.0.linear_attn.conv1d.weight": "0dbb863f97d7ac62ca2e452e0fe1487edb5d954e2380192102aa1ace8f40642a",
+    "model.language_model.layers.0.linear_attn.dt_bias": "e636c88bee625312e5f3dc657e1ac60c1f5fbd5ef2d35ad4a82f0fc7dd7a1aa1",
+    "model.language_model.layers.0.linear_attn.in_proj_a.weight": "14c322ad93e1e4973693f6a6c45fbab9c0db21ce017d9aaf1b7223b9eab30213",
+    "model.language_model.layers.0.linear_attn.in_proj_b.weight": "f97c79e98e849443535310f89c19266801ae5724b319c2495265eae635c5053f",
+    "model.language_model.layers.0.linear_attn.in_proj_qkv.weight": "46dffa9a1b42e089b4c0271a110ff7efe8a8574a390cfa45d399cb5e7a2ca3fa",
+    "model.language_model.layers.0.linear_attn.in_proj_z.weight": "62d9c8a20dc8abfc55b21520805db7a280f385d3cc20e234348772d4f52275fa",
+    "model.language_model.layers.0.linear_attn.norm.weight": "4f50f78402c71ebebcadcb6259c2883b4f0a441c17cacee8f626e5c9ad7118b7",
+    "model.language_model.layers.0.linear_attn.out_proj.weight": "e0f911be79a8903db2418e802c0bbb77a21b87e978b292dfb9a0c515fdc9e7cb",
+    "model.language_model.layers.0.mlp.down_proj.weight": "fbafb4be6b6a3e93fb969b1679f7430a824cd912db98a83a7c4b9658e511d766",
+    "model.language_model.layers.0.mlp.gate_proj.weight": "6d99f0ade7791154ee7806b24444ead0d3dcb67b203dcd9304faae9cd69a2c42",
+    "model.language_model.layers.0.mlp.up_proj.weight": "e603e29e2effc8e110dca2d2b1d20a5b9fe399ef7d4c48c289a9febb95472f5e",
+    "model.language_model.layers.0.post_attention_layernorm.weight": "f17354499a755348654fb5b053a80613eedb97c3335a7a05c9272d944fd1957d",
+    "model.language_model.layers.1.input_layernorm.weight": "5af3ae5d7da151a0cee246369f21ac6727b9bf04d2762dda2228c381bfbf0fc7",
+    "model.language_model.layers.1.linear_attn.A_log": "15de45458cc3ef42ee99e5d2129a2c4efaa57ea5866629a25dfed93610e7667d",
+    "model.language_model.layers.1.linear_attn.conv1d.weight": "b85b12df59f87a04b6bc5f14218c75d106be9cf885414a3fb2469a95cdbf870c",
+    "model.language_model.layers.1.linear_attn.dt_bias": "18913186830b331f363326d34dd57e05d08e8bd2cc9b470d7526eb0e2ba16d87",
+    "model.language_model.layers.1.linear_attn.in_proj_a.weight": "b1774071cc86f325728991ffe515fce098820602df12a3da37e12bf4802a4083",
+    "model.language_model.layers.1.linear_attn.in_proj_b.weight": "de883c013e08b04b4faf697f2cb583d33f0bbb16df1f22871d4108597b80c508",
+    "model.language_model.layers.1.linear_attn.in_proj_qkv.weight": "b61eb16e1d856f9318ac43c2c6a0084a314f6d73984eae8e9d20fda6526f3343",
+    "model.language_model.layers.1.linear_attn.in_proj_z.weight": "8c1f46b92610c092ced4b189f6aa32f96da61b2c4a5c07d940da186ab7929ca0",
+    "model.language_model.layers.1.linear_attn.norm.weight": "eec32c46bcec19bcff55f6cc4334710f6e025bdeea3ff0d123f594b546b2871e",
+    "model.language_model.layers.1.linear_attn.out_proj.weight": "f2d6ce1bcd56b92224d2041d702061f0caf7c78da23837bb12ba95a21bf435fa",
+    "model.language_model.layers.1.mlp.down_proj.weight": "52c616f306ce21f3eb19f643b1cb47c1418e9df2b390cfa421958a3a6d7fff68",
+    "model.language_model.layers.1.mlp.gate_proj.weight": "b97bad2813fc8e411581dea9c66e8ae2609d839043221a8527599e3c42557491",
+    "model.language_model.layers.1.mlp.up_proj.weight": "6b972a1adb17f0c1dc3bc5b14c534279132a93e81635c00b1f1d07c86cf8ce34",
+    "model.language_model.layers.1.post_attention_layernorm.weight": "e290450f2364ef5117847a04bd642c142bb9f586b7c43688a2db8dacf1705093",
+    "model.language_model.layers.10.input_layernorm.weight": "7997b620e6f07b724defc47bbc4682071d39b29383895f4c651635b37331537d",
+    "model.language_model.layers.10.linear_attn.A_log": "75a0544078f374bd418970084a62edd15c3ccbf603adbc8b63af1d744858e25b",
+    "model.language_model.layers.10.linear_attn.conv1d.weight": "2041dc832e1386acabfc2919d4e4981e21b69e3b8359be7f04d5f98d9de9843e",
+    "model.language_model.layers.10.linear_attn.dt_bias": "e87d3691cde8e526cf2f5a67c161948b56b925c16eb809b6afb4ce233fd89e48",
+    "model.language_model.layers.10.linear_attn.in_proj_a.weight": "77704dba9f4121a34d12bcfb40cf4d42e3f05ca5365d6c3c973b568bab97415c",
+    "model.language_model.layers.10.linear_attn.in_proj_b.weight": "0a142d106cbdd4177ffcce080dd529fa7d0f6ff484f1f0598feeec60ce52f9b1",
+    "model.language_model.layers.10.linear_attn.in_proj_qkv.weight": "190f6552423a94c281e6a1509d909341c021f9f7268e0dd4dd8acaaa44db0883",
+    "model.language_model.layers.10.linear_attn.in_proj_z.weight": "2d505044d24928b53ed9bd71caf2719ea2cecf0e30b28c4cdc7220ad7e1d92d0",
+    "model.language_model.layers.10.linear_attn.norm.weight": "550a5b0c4feb476cb5df12bebca72f61963bdd57fdff7f036455fe9f957b2258",
+    "model.language_model.layers.10.linear_attn.out_proj.weight": "7645434ae2d83b380fd76751f9cd39de00475f1e8182a63d6252b9e4712d6499",
+    "model.language_model.layers.10.mlp.down_proj.weight": "831990d65da684781263d1e8f115d38708b9ae3ae6ef692da30e0e955b665d66",
+    "model.language_model.layers.10.mlp.gate_proj.weight": "d3be353de057c4cffd295f0f7e4a875d181fc8d2443b0b8f61012547d99d4bcf",
+    "model.language_model.layers.10.mlp.up_proj.weight": "b077aebe691927110e12ebcad0faa3af7fe52b67a902e521261f229ebdb4cab7",
+    "model.language_model.layers.10.post_attention_layernorm.weight": "79d632859c67fd3a2b9029c6413be3f14b6f7ae21e25a2a7f5bc709c15c76541",
+    "model.language_model.layers.11.input_layernorm.weight": "87c745a05e895c15eb846d6e600bd826a01bb7a8eca934c24da530ab282cbcce",
+    "model.language_model.layers.11.mlp.down_proj.weight": "61b7d814a1cbaae6fcb82a1763cfb4e8b436efdd86bfc7c0c3a918618594a676",
+    "model.language_model.layers.11.mlp.gate_proj.weight": "af7cf7cc816c8945900bed793dc78c1285bb5479f9e0437ab1ae3c14620b32ef",
+    "model.language_model.layers.11.mlp.up_proj.weight": "3a8b12e4886ac6393ca9629ed3585ced72a60b9dd8c9f69e61bf85c92725caed",
+    "model.language_model.layers.11.post_attention_layernorm.weight": "b6a6ca5e1b917de24f9cb2acc16c9fdc5d333b1f895c93eb1008c8a7e3ed60e6",
+    "model.language_model.layers.11.self_attn.k_norm.weight": "8a93169fa0217b8827aaef9e557f7f1598066a6a1ac6ebcf02e625a381978899",
+    "model.language_model.layers.11.self_attn.k_proj.weight": "c33d405b256196b9f83955bad81e26d123dd617592123d88add0b461898434cf",
+    "model.language_model.layers.11.self_attn.o_proj.weight": "11c08cb4a2773aaf3953906e01adf3854c2fcffc1d37de8953d85f58c27b480d",
+    "model.language_model.layers.11.self_attn.q_norm.weight": "fb4ad1f6be473e43b4e65ae286ff4d8dcf70a1f4ff9be3b5d4540e28ef2b2bc0",
+    "model.language_model.layers.11.self_attn.q_proj.weight": "893ee925e13e95dad166aaa9a40cd3e18fea7609b0c2f0bdbd9011687a2d5ef7",
+    "model.language_model.layers.11.self_attn.v_proj.weight": "9e88de399f10a9b249888a36b767738f75e723507f5743a870e1a9c7a1c43c9b",
+    "model.language_model.layers.12.input_layernorm.weight": "8fec4534665bc8e466f13312b451271a7e3e40e7267a68adcfe2df6ff109c5bb",
+    "model.language_model.layers.12.linear_attn.A_log": "bfd90b69aa114b4569c3aeea7fd124ba58527e3e3fa9e0814f2b07c6c72155de",
+    "model.language_model.layers.12.linear_attn.conv1d.weight": "97c4dbd33e20b9f17a02f2d1ddafd109aad8ad22106efa01820b12e7dd21c2c4",
+    "model.language_model.layers.12.linear_attn.dt_bias": "43754ce38b72e2ac27c8c18c7665a342e1e4da53d3cdf4b3f7b762caac681b36",
+    "model.language_model.layers.12.linear_attn.in_proj_a.weight": "1d6f61dcb404c19b31bed52765525c421f397ad875e9c9ad5267f8ce52474a25",
+    "model.language_model.layers.12.linear_attn.in_proj_b.weight": "52f7cf08c6d4a2b5fb9971b34b9eea2b4dca4e39536c5630faef191aefa06b85",
+    "model.language_model.layers.12.linear_attn.in_proj_qkv.weight": "a7ed0524c646a8ac14c9828a8fe7010e338acf191b5600fc1faa1542f62c4280",
+    "model.language_model.layers.12.linear_attn.in_proj_z.weight": "f4731452f782d4cf0fce81756f5fb735a25c6dff1e66012ae7c7a67ea2db2b9c",
+    "model.language_model.layers.12.linear_attn.norm.weight": "2da8625aa4ba9a8a8f77daad56d42befe01fe4eff0d27f2c83cc8f9a409f8511",
+    "model.language_model.layers.12.linear_attn.out_proj.weight": "440d65b53159e33d6affedaff31da28f02ebf57cd17978a17fa1c7dabb0153aa",
+    "model.language_model.layers.12.mlp.down_proj.weight": "5a8f0e5639246a5988929bb59b8f755d43466c8ff48bc31aa573b0dbd513b515",
+    "model.language_model.layers.12.mlp.gate_proj.weight": "5de0da4116d84e241475acaf4144559a3ba8a2685e90474658ebb800f0e98a64",
+    "model.language_model.layers.12.mlp.up_proj.weight": "1d45f814297e4b0db312ef09edf3b3009babb190a5f6719e9ad584b09eceec5e",
+    "model.language_model.layers.12.post_attention_layernorm.weight": "8021600bfd0b1986038a3ecee494c9b915bd0abc5093d6efc4e297b8059857f8",
+    "model.language_model.layers.13.input_layernorm.weight": "ac038236a35153c889550b45d5c53d1bf88e4951784ed89b388960c13e3a5ad1",
+    "model.language_model.layers.13.linear_attn.A_log": "5dfe0d4a32753e3e28b7047a6801ea0cc631aa24f960fe91f0b5b9883e1a27b4",
+    "model.language_model.layers.13.linear_attn.conv1d.weight": "72db85bb463e8e2cb2d52e3f9c52f662cdad67859f0e4a150dde8c5edfce5fbc",
+    "model.language_model.layers.13.linear_attn.dt_bias": "9c724d53b30733d09bb1751b642b040bcf5a2f5194802e76adcb537628271a37",
+    "model.language_model.layers.13.linear_attn.in_proj_a.weight": "dc36a44628363f311d582d57c0eb240e621b0ade08a15c23c4897fa6be6b7629",
+    "model.language_model.layers.13.linear_attn.in_proj_b.weight": "8da48cf67e78af75812ff4484e3f3461c1ab578d4e7a2fa420c6bb2c6343e8d1",
+    "model.language_model.layers.13.linear_attn.in_proj_qkv.weight": "271510b3ff2aa1e484de7429f21a46c5c1f5b6451eda5dee5d9a5a13688c495b",
+    "model.language_model.layers.13.linear_attn.in_proj_z.weight": "0c0050d27192d98baf5c8877769c0cc39df5b1cae3bcb798fc83556f425161e6",
+    "model.language_model.layers.13.linear_attn.norm.weight": "b7c5270786b478f584439d1b6f754ada85718ce64e3f025979af940c5384040d",
+    "model.language_model.layers.13.linear_attn.out_proj.weight": "25c4f9d55868a0ec30838187438de1fa1d067e5e38ad91f01aa583eb7a82b5be",
+    "model.language_model.layers.13.mlp.down_proj.weight": "e76555d8e71d251bb9ef8470b9f9e93ad9a43c7804bd12508935eae157793784",
+    "model.language_model.layers.13.mlp.gate_proj.weight": "dc77fbc93f6e302ad76e29ce95122dbbd673d25bab801809cb1b96ed4f8a976c",
+    "model.language_model.layers.13.mlp.up_proj.weight": "3de2efbeca400d094cb7f4022b3315e8618bf74bcb0132690326af647e45d6ea",
+    "model.language_model.layers.13.post_attention_layernorm.weight": "12670ef9c6b792aa9a89977f4701d486c25109b0f5797ba834571e3fa05a6f0f",
+    "model.language_model.layers.14.input_layernorm.weight": "3285ae17b6b4bde3e39315ada084a61d5774283e288406a4010460966c0235f9",
+    "model.language_model.layers.14.linear_attn.A_log": "8ce43753027865d5b21b2ae246552c7a2c8a3956a3fccf0644d44a9e790b39ef",
+    "model.language_model.layers.14.linear_attn.conv1d.weight": "13b7aa0e1610ebadd77414cdde4c2334e2c0e065e3d3d386f6026b94dc09a8b4",
+    "model.language_model.layers.14.linear_attn.dt_bias": "e7762b937bc09ac9d9f40430e42966f6b3cd886d15684ae1dddbe76f7e7b3c57",
+    "model.language_model.layers.14.linear_attn.in_proj_a.weight": "f0af553826a1cef8f59e2d5d07ca887bbf02313671f71d206dd7c7e1d0193fa2",
+    "model.language_model.layers.14.linear_attn.in_proj_b.weight": "ed7af3086549b043b248792a82f03ec06417101a423798aa4182d7c8f21bfe76",
+    "model.language_model.layers.14.linear_attn.in_proj_qkv.weight": "12030386395a6fae19461ace56c9724b9b95a5e55b9e549069e5e7fed808290a",
+    "model.language_model.layers.14.linear_attn.in_proj_z.weight": "ec4c7c98f67da0e38be959fe5537b10c80fec583ddef46f11e2481463953a546",
+    "model.language_model.layers.14.linear_attn.norm.weight": "5e413a67cfccd4744be88f415500134ea9f40ff244d4e534f9a9a6d85bb201c4",
+    "model.language_model.layers.14.linear_attn.out_proj.weight": "e67f1263f175412013a5c18d3a748f0291bc359fbea2acce7b5b4b9073bdf1d4",
+    "model.language_model.layers.14.mlp.down_proj.weight": "940e90100facbeac9f5fc9e3d95174fa3aeeff515deb6b9a9d12a3b2c1d4e850",
+    "model.language_model.layers.14.mlp.gate_proj.weight": "88899ce0fe96b9bf380a34b20b93d834e80234af4f5f9803a3899e741850468c",
+    "model.language_model.layers.14.mlp.up_proj.weight": "73065a4e797b1f4977e655199518ec22fd6003eff5e92598dedf8f165e794265",
+    "model.language_model.layers.14.post_attention_layernorm.weight": "5122fe4b7999f990bae36cc02d1e690c53c2e9f61db635ac7d82aa9c79e63fd8",
+    "model.language_model.layers.15.input_layernorm.weight": "fb9d32155ec023f637a3fa5174f943e2ac11ab15a5e646e21d039609873de99a",
+    "model.language_model.layers.15.mlp.down_proj.weight": "2a0740d602e774068b1b7ce94acf7040568951e6320d053cfb39beaf7013dd12",
+    "model.language_model.layers.15.mlp.gate_proj.weight": "6bd2e1cb929516090a3175e7e9d5e68e6b3ac6fa15717cfb719d10b5340e1e9c",
+    "model.language_model.layers.15.mlp.up_proj.weight": "e7cc2d3df9ce93449fbe4249033fa912e3cb2b0ba51acb7bcf8aa85b98f2deed",
+    "model.language_model.layers.15.post_attention_layernorm.weight": "94c5ccc630b54a7f20abcaf29c723f1b32c81b819dcfbfd8a9c6f8611b7e6c6f",
+    "model.language_model.layers.15.self_attn.k_norm.weight": "71e483cfdc483f687d3534789c901c0181d05903e1efa37fb9367da9f7b80de1",
+    "model.language_model.layers.15.self_attn.k_proj.weight": "90a9d8c07ea4d81cf7dc014e0810aa03d00028993b1cfdd658e02435fa7e453b",
+    "model.language_model.layers.15.self_attn.o_proj.weight": "5fe3d59c88cce0ad7149d29a85eebf75b5595806b82a026d358037ed80cdeb86",
+    "model.language_model.layers.15.self_attn.q_norm.weight": "015c0eaccc2bc91c2ecafa04c735dcff5f85eebe9a11504a4c9bbdcb63fd96b9",
+    "model.language_model.layers.15.self_attn.q_proj.weight": "98c2b7dfebd62ff39a53430815cad7426ef0a379e781ef4223b75b994b97e61b",
+    "model.language_model.layers.15.self_attn.v_proj.weight": "7968920c391294da060de906b8a9aeda0cef1d23ecfb7e76933e0fbb46c1f1d2",
+    "model.language_model.layers.16.input_layernorm.weight": "b928b515a786a407c6bae979a2a5862b9aad8b0546fc668c587240327288c76d",
+    "model.language_model.layers.16.linear_attn.A_log": "ef7c814097bef4653a568631a54b636d0fe77eee189de9a1849acfcdac1ebdf7",
+    "model.language_model.layers.16.linear_attn.conv1d.weight": "a8e778adcae6b4547025dee62eb666c27a3d52ea2d7c6a9597f3109bd531e8a7",
+    "model.language_model.layers.16.linear_attn.dt_bias": "4a92c394a658f8274ecee82f0d52dbb9b25d192bef11eca605323411c3a86b5b",
+    "model.language_model.layers.16.linear_attn.in_proj_a.weight": "67176b5165c1e83ced1008cd692aca72605fcc25c5a4d8dddee84f2dbd684e35",
+    "model.language_model.layers.16.linear_attn.in_proj_b.weight": "4da221ca3895b7463848e86edcf66e95f7ad953072299e4265c45884b06ba30d",
+    "model.language_model.layers.16.linear_attn.in_proj_qkv.weight": "bf13007d78878780a8c98ca02dda696ff5f7983d87c9125392e6119a012fac46",
+    "model.language_model.layers.16.linear_attn.in_proj_z.weight": "21a2c3545b38981ea8c8f915408f68f6118aa58555cb3c42d92c13f1783b5eaf",
+    "model.language_model.layers.16.linear_attn.norm.weight": "9f14ca3dba4e27145c242c1d9ad9d7495494bc09232b13bd3f7f95fe68a8dfb0",
+    "model.language_model.layers.16.linear_attn.out_proj.weight": "e17faead406abeec5be4a72f5172a11874be36711d985098a12c049675b851de",
+    "model.language_model.layers.16.mlp.down_proj.weight": "ecec71d062a2bfee0db19c739425b1df9f8d4f08ace36e05c26ff24cf13c359a",
+    "model.language_model.layers.16.mlp.gate_proj.weight": "6968ace6ea211ae8254187d7b3715556e7667139defe84a457c2979c402e964a",
+    "model.language_model.layers.16.mlp.up_proj.weight": "ea55bbfd8808efc466bc9faff4c25f7e83b5aa67b79596f9b230f737cbb987c2",
+    "model.language_model.layers.16.post_attention_layernorm.weight": "195a2be81fd0722f4c2bd08d4029570d867c3fca9d20e4788d147d6e55b30054",
+    "model.language_model.layers.17.input_layernorm.weight": "392f26dd41de8c44d98b74071633ca35ef828e1b84572c85d3960a2b749f229e",
+    "model.language_model.layers.17.linear_attn.A_log": "41f02b444b27120e60a926f7ff0d3354f2082de2077a0661542a69b39f4f5a8d",
+    "model.language_model.layers.17.linear_attn.conv1d.weight": "0ed2fa94280cbb6cc3c356f7aafa003dc24691a55f83979ac71f82c1bc5e9776",
+    "model.language_model.layers.17.linear_attn.dt_bias": "1483dc36e0d4c5b3b1b1fab0d46f52d73626d919f97990f5d00a00f1ce9cdb24",
+    "model.language_model.layers.17.linear_attn.in_proj_a.weight": "8ef4219dc1fcaafd2c01aa413994ff0fac7b301b15d5f345002055846ab27304",
+    "model.language_model.layers.17.linear_attn.in_proj_b.weight": "a796b6ca05d9b6247a072159defc7b81977665d556540fd673c82dd68f5726ac",
+    "model.language_model.layers.17.linear_attn.in_proj_qkv.weight": "e6e52cb035cfcb5546ced86d56284bf9665dd23624ae237a8ee528154a667e0d",
+    "model.language_model.layers.17.linear_attn.in_proj_z.weight": "a9378a8cc6f64d0c290d87b0a72de46cb3fd76427e5dde6793f02fd657804641",
+    "model.language_model.layers.17.linear_attn.norm.weight": "1f873a3de6443868a0ed0832e9d043a13e7d305db0ad09e8a0dcd250c3877d13",
+    "model.language_model.layers.17.linear_attn.out_proj.weight": "202f70a8280a453a7b1cc86bca2b49e5cc7d31fc85ca76ace3a9b8c992116cf5",
+    "model.language_model.layers.17.mlp.down_proj.weight": "b7526700b7a1dfc2a7b1590f13caf865e4719d98f93c9d34f6866562ab17bfb6",
+    "model.language_model.layers.17.mlp.gate_proj.weight": "3a15563c252737c0dd77364c991d762836ccc1770bbf28201c1a5acd0a05ecad",
+    "model.language_model.layers.17.mlp.up_proj.weight": "425d4447fde40f2999d60a00164824dcb4dedcbdbd111fad100149c91403fc99",
+    "model.language_model.layers.17.post_attention_layernorm.weight": "4b0f2a96fabb0266b804eb7500b7e7a87da4e09413e700a05ff56d02e045a5f5",
+    "model.language_model.layers.18.input_layernorm.weight": "8380fb994d998668b2d71112c313055756caf6370a6ccad82806f8ce50ffcc9d",
+    "model.language_model.layers.18.linear_attn.A_log": "9cc766a67e76adb514802e577dd4b970622c2c13c4901b570b41a3c21b3a2528",
+    "model.language_model.layers.18.linear_attn.conv1d.weight": "edb4a45020e57df66bc8aede37c94adbdfca71cb652b91ff7a98d86ffb071965",
+    "model.language_model.layers.18.linear_attn.dt_bias": "dc6990dad5fc85a1cfe7984150dbbf8817b3a5b49f0125fe6227920f62acdb91",
+    "model.language_model.layers.18.linear_attn.in_proj_a.weight": "e2eb4341cccdb1e91fd353d7d62729b4ceaff6b8821802f5f1474bdd52a42945",
+    "model.language_model.layers.18.linear_attn.in_proj_b.weight": "127ce42e88b0d6a66461336b4c9b021c852a06a7e6c954ad56f50f7ca17ac34f",
+    "model.language_model.layers.18.linear_attn.in_proj_qkv.weight": "f78ef7215368f3b9c7d2f98c5843e59515e828cd639a463e4119413b3155f39f",
+    "model.language_model.layers.18.linear_attn.in_proj_z.weight": "aa8d0fdd8093f4da3d62f852f0bb10e28f94b93bcbf43b5db69b70acf0aa73ed",
+    "model.language_model.layers.18.linear_attn.norm.weight": "b0398ae1bcc65574d3d260101bacde3cb8c08a38ed7eeb0573c43a588a93cc46",
+    "model.language_model.layers.18.linear_attn.out_proj.weight": "99a565a65c37b9df6a1d7f4555988b20b645c2f872dd22f3283aafe42b1688a8",
+    "model.language_model.layers.18.mlp.down_proj.weight": "f25b8b89409f154d4d19a63c943a4de20b44e59f893ad8e5a389c4f1c286225b",
+    "model.language_model.layers.18.mlp.gate_proj.weight": "3c7f709da9a9c68a7ae4851da6ff958217fa50c1234d19abda42b44d80abf5e5",
+    "model.language_model.layers.18.mlp.up_proj.weight": "24dac7a2c51a0e7bdee210d89150de29af7bd9f7f9a3e8946d72fcd4a3621aca",
+    "model.language_model.layers.18.post_attention_layernorm.weight": "e35729c42912ac46d13abb438a8d2c5559059733e5c1e3757211f47fde8003e9",
+    "model.language_model.layers.19.input_layernorm.weight": "4a2959bf621d06cd946a21f23725ff45d5bcd90c27e97fea3f71d00b1fc6d653",
+    "model.language_model.layers.19.mlp.down_proj.weight": "f97bad6786f6754457e242349c05202372833b3683acfde66ad2a8cc0dfd58bc",
+    "model.language_model.layers.19.mlp.gate_proj.weight": "611f7e8aafa9372345b83fa09bf3779b76e23e7053d8fc1196d66da341e99fc6",
+    "model.language_model.layers.19.mlp.up_proj.weight": "3e79c0077af2951d33d2f5ad87f66d48f38dfb7b69d78f9508b0a64ec402d38d",
+    "model.language_model.layers.19.post_attention_layernorm.weight": "015c7adc98bebf80f889f9c85d950ee1b2cd07927ac5f0c3d013dd5f82ae98df",
+    "model.language_model.layers.19.self_attn.k_norm.weight": "a91d7a1e54d6fbb44611121def662e7eb48c9c25d1cfef3fbaf43138672623ab",
+    "model.language_model.layers.19.self_attn.k_proj.weight": "58b7885afa1c4e35ed89efd0e113d77aa11f9968b7961fa81e812d95b2d3e25a",
+    "model.language_model.layers.19.self_attn.o_proj.weight": "0badbcb1f87de67c021fd67ca689771bdb3973d271233af03312876b462e6b13",
+    "model.language_model.layers.19.self_attn.q_norm.weight": "2cbaa36a64f329670728a9c0fdba339e2218ab28231af1cae7c2b86f2734543f",
+    "model.language_model.layers.19.self_attn.q_proj.weight": "53ad82c202ac9255527e629730b8f43f62324beba4fb2aba202073dad95c901e",
+    "model.language_model.layers.19.self_attn.v_proj.weight": "1b5b0f93c3415912070f13a57be0df3bc22edbea950ad73d47d4d0ddc34df54e",
+    "model.language_model.layers.2.input_layernorm.weight": "6cc5d174105e42f7f5a8cd8fc879f58c7ca5b1f12c739439e4dff0b7ead126c8",
+    "model.language_model.layers.2.linear_attn.A_log": "781d084f073c8a3ebd3396ab099b4ac3b3bb7114d0bf212ca87169f31d27885c",
+    "model.language_model.layers.2.linear_attn.conv1d.weight": "980cdd8d9fbb095545d78ea1892b1e280c594b9abd913f122e3ab4c8d4b080c0",
+    "model.language_model.layers.2.linear_attn.dt_bias": "e8d37a57b9c1d3bd93fda4e54bf47fdd8bb3665bc65f873610f80e72e971a308",
+    "model.language_model.layers.2.linear_attn.in_proj_a.weight": "b2b3658dcdc3238beb7c63c6930f2a59571edbbcc280290b03985bdaa15ba5d3",
+    "model.language_model.layers.2.linear_attn.in_proj_b.weight": "3cb8872125515b45bbe7a9794274226ff268c50b6a6c26184432f5622dc9783e",
+    "model.language_model.layers.2.linear_attn.in_proj_qkv.weight": "0880d586bc3c443b53f50704f0d8d8101b698ccc37438e8de87a38e55e7435b9",
+    "model.language_model.layers.2.linear_attn.in_proj_z.weight": "d766bff8f0c70876075651eddce2cbd46a859ff931fc5a2a50df3c51203459da",
+    "model.language_model.layers.2.linear_attn.norm.weight": "20f4308a37e2ff666dea7128b2ea21ffdc85e435202d63533667e3e71b3e1647",
+    "model.language_model.layers.2.linear_attn.out_proj.weight": "e86ca2312080932b7921bd04d47b43d2b6f9dc51a7eb4bb0e45e72f72a9e9e88",
+    "model.language_model.layers.2.mlp.down_proj.weight": "8d563be4c3b516977ce033a6fc05a74c366c0907e5e1774a4cf4b08aad4c5244",
+    "model.language_model.layers.2.mlp.gate_proj.weight": "2872f4e4d5e782e6d209ffa42c513b946e1304d80654a770d7536c6c2a39f117",
+    "model.language_model.layers.2.mlp.up_proj.weight": "4c72dd115d5b0aba4c374f26ad41377bcc471091991a1802f8fc1f4d79d0094e",
+    "model.language_model.layers.2.post_attention_layernorm.weight": "c1021c6dd34c1533d4d1df34e210119c0ff713b0ae00f528388a95b4595144e9",
+    "model.language_model.layers.20.input_layernorm.weight": "b3780e3763652f8ca8dca01954ce6061ec5727fe7822333f2fb0efb0e020f379",
+    "model.language_model.layers.20.linear_attn.A_log": "a4399b6fd4ea455f220f0be63018baef58abf7668096c5de65a9045c4934d240",
+    "model.language_model.layers.20.linear_attn.conv1d.weight": "2bee671abdd09fe99af9392e05702da5b28ac890c59ced83e9e7f19c59f17c4c",
+    "model.language_model.layers.20.linear_attn.dt_bias": "d6db6002651afad27ed117c689c4aa0b7cd31cdd161dbe2aad6bdb7494de1006",
+    "model.language_model.layers.20.linear_attn.in_proj_a.weight": "74ebd603b4375b2446588d34a44f4ad274b4a858e3c766d0d6cb214e2b72f9e6",
+    "model.language_model.layers.20.linear_attn.in_proj_b.weight": "337c69cc143817cc14ca5a0cf15fe2aefdb171fbe852aee6f4a395b05e60c521",
+    "model.language_model.layers.20.linear_attn.in_proj_qkv.weight": "829ce64450ca251881604c9997d81530718430b46d9af6331c480df395784117",
+    "model.language_model.layers.20.linear_attn.in_proj_z.weight": "18facaaff0e268a9f66207ab851c14b7e70cc7d70a8900aed4c3cbce0f658308",
+    "model.language_model.layers.20.linear_attn.norm.weight": "caa04f42f58d857250c48ddf2fc26ff94cd3ebc1180005f084229fd1eeded45f",
+    "model.language_model.layers.20.linear_attn.out_proj.weight": "f6bc192d2f6031400e656d6d278a95edc8b959bc534c72b71f7f92f4263d972c",
+    "model.language_model.layers.20.mlp.down_proj.weight": "9810c9f0d2ef0144bbb5ccfaed90a29cd8d310daa87769b83b5144693a5b8d0d",
+    "model.language_model.layers.20.mlp.gate_proj.weight": "f2a4c8834037a98948f5a3faeacd07ec69634fd2cbd67815acb61330cedf9260",
+    "model.language_model.layers.20.mlp.up_proj.weight": "9d1a4eeb16e759aecd0b6e0992bdf291deac389d8f4d58c538239cfc11125d11",
+    "model.language_model.layers.20.post_attention_layernorm.weight": "96859ff75dcc3d881fbfbc66f6b3e5ee9d98da515bc7b98cf4d5deead9c03b41",
+    "model.language_model.layers.21.input_layernorm.weight": "e37ef484b8670665d341e17beec46704eea381cc06d73a8d2f7a973663d2484b",
+    "model.language_model.layers.21.linear_attn.A_log": "2ca5c3eec997d9c6512b49162a0c1c1df985bfdde74cc48dd87e0192c886ece2",
+    "model.language_model.layers.21.linear_attn.conv1d.weight": "371c9f9936c7927ce21873008a2648fc5392e8061a706fd084aec8862808ea7c",
+    "model.language_model.layers.21.linear_attn.dt_bias": "ca47b78e7f36ceb1858ee14106117bbfdd0091d931f5c0ee103e0e73d0ad0056",
+    "model.language_model.layers.21.linear_attn.in_proj_a.weight": "0cd79e27eaf70e189ddaf3d27085e1297a7e5d082832899d4a47536f2031b4e1",
+    "model.language_model.layers.21.linear_attn.in_proj_b.weight": "cfe92b13b1adfcd48a2ab62ed00011d21286aaeb7cbb1a327487fd4ffc4fc88d",
+    "model.language_model.layers.21.linear_attn.in_proj_qkv.weight": "4b5b63767e5ef1b5d6a254bbf0d0c2eec5a77cdaea460254c36632d7d40c1e0d",
+    "model.language_model.layers.21.linear_attn.in_proj_z.weight": "51380289c187362c4624b6f59cc7a70497073efe9019a429c0f4b724c3e680e3",
+    "model.language_model.layers.21.linear_attn.norm.weight": "bfdab1f4fd963f8974cd21aed497b8a59a7b1d785d721ad57fa1497853ad8122",
+    "model.language_model.layers.21.linear_attn.out_proj.weight": "f3766e816dc71f2462fbe60a9b160749018d9d54ba40af32fa1ad4428d2cd546",
+    "model.language_model.layers.21.mlp.down_proj.weight": "d39a4e133fd6677a2e0a8e750e9a7de40c6522f670223b436b9ec62a98f27d3a",
+    "model.language_model.layers.21.mlp.gate_proj.weight": "1ef4cda836b8f59d124209666328ab250a68512ddc84c422468c340dd9a53876",
+    "model.language_model.layers.21.mlp.up_proj.weight": "164b4b2c748b53de877322bf13dd9b7ac79b945bd16823a1987759f33388b163",
+    "model.language_model.layers.21.post_attention_layernorm.weight": "d58118e0ea476a9fc75a61d24e29020ce57e96d051c225ce75f9aa6c93f15419",
+    "model.language_model.layers.22.input_layernorm.weight": "200054aa1f291af399fd311094ca7415efffa59bec62ce28b361acabbdf8c67a",
+    "model.language_model.layers.22.linear_attn.A_log": "0b40237234ad3b31c576f860f13afbc0351cfcd5983f82808f0b3751011bfc21",
+    "model.language_model.layers.22.linear_attn.conv1d.weight": "24acf6c4cedf70395be2a14a1353bfcac118e44f22f8f6b9fec08669080a5e12",
+    "model.language_model.layers.22.linear_attn.dt_bias": "15ea3e278cf1ca2581eee255982522f7ba9094f266195b8571f060f7456f99c9",
+    "model.language_model.layers.22.linear_attn.in_proj_a.weight": "6a1c2622b4c1b80552fabe488e55aa8b5b480b4219e933c98cf9c2d28a34875b",
+    "model.language_model.layers.22.linear_attn.in_proj_b.weight": "4721d68db574022e1d74fc65f8c04b6ec57a9b9041c1d2dc3ea36948e264d214",
+    "model.language_model.layers.22.linear_attn.in_proj_qkv.weight": "5247f1d6ce03d3734eed07115e813ddafb88fbc7cf10d742d0e3088fddf0012f",
+    "model.language_model.layers.22.linear_attn.in_proj_z.weight": "9b456cc9abd48ed59e3259675609df503ed1e19231db604d2d9ac32ee67c77da",
+    "model.language_model.layers.22.linear_attn.norm.weight": "103693cd2355d67641dde1ebcbacc8f10bf935311d5bddf8d0ae9e034abc826b",
+    "model.language_model.layers.22.linear_attn.out_proj.weight": "54889f324c27a4ba0bc95ed5d4ea90c78c662863937e6fd96361af8052b2edb2",
+    "model.language_model.layers.22.mlp.down_proj.weight": "e8e44d2dc77b8f8c295e68fe5ef45daea93fd811c8baff69fc89bbb9c800f646",
+    "model.language_model.layers.22.mlp.gate_proj.weight": "af96af626863d66052e54984b64d60d8597cd7485d6bad8c7a8874b89f9cb62c",
+    "model.language_model.layers.22.mlp.up_proj.weight": "a1a240256fa99ce03bc2ba7d4ee74607dc02b0d44d128460c20a85fe3d0e2446",
+    "model.language_model.layers.22.post_attention_layernorm.weight": "e7ca2bcd59ead448871f2c5d63c8365108e2c7ae6fe37e52d37dcdeda98007fd",
+    "model.language_model.layers.23.input_layernorm.weight": "fdc9d0c7b47d967d646d3b4bd8e5f5606ef46839f5b21e68b63c40b10b0ad824",
+    "model.language_model.layers.23.mlp.down_proj.weight": "1706e50833fffb25da45ad958af043a688e5ef495d45f33fa4b1ab623c696719",
+    "model.language_model.layers.23.mlp.gate_proj.weight": "e81596bd42c14407a8cb01a6606d7497c7bc41fde5aa0d02bfe408e4886ec539",
+    "model.language_model.layers.23.mlp.up_proj.weight": "7ef2456a3a376e2d1a2223f8bbeb8d6d059b5822ae54abcc2957ba50968d61bc",
+    "model.language_model.layers.23.post_attention_layernorm.weight": "72a235413e983f39082d677cce90f28b18516b2aa3f5de96a92d59707598d4c0",
+    "model.language_model.layers.23.self_attn.k_norm.weight": "2a4412bc2388b7d4b7aca3a0b221cec7da8ca0f9fa56f031a5ea731e8103812a",
+    "model.language_model.layers.23.self_attn.k_proj.weight": "b5715481b0ae057107c6347c111a4e5f3e6f208026ab69c684a8b7ad98e7bcea",
+    "model.language_model.layers.23.self_attn.o_proj.weight": "c029c09d7de1f3c8e6e6a2ba2ac2acc49dd7fdac25ea3d17e16955672a5c1420",
+    "model.language_model.layers.23.self_attn.q_norm.weight": "a365f9f976d7b19e6476c69ccad2fd0fb5c98f2594c18f9c709c2946b595b9f0",
+    "model.language_model.layers.23.self_attn.q_proj.weight": "564f38709761782757f8526db670ce280feb3a825c2ee0c7e3957da0ff669eab",
+    "model.language_model.layers.23.self_attn.v_proj.weight": "fefe8d1ea50fdd010b85555616bf7e23ae1c9ec7d9f1bd20c49ff0aabdbc050a",
+    "model.language_model.layers.3.input_layernorm.weight": "7b46cfe3e4d98916a4c70d31f5fa9c168010df40a211d74c68163b96ade2d7bf",
+    "model.language_model.layers.3.mlp.down_proj.weight": "a138c4ee2a138f4dbdc566b90b2a3f6b41885968d7f56152aaf17850948cb994",
+    "model.language_model.layers.3.mlp.gate_proj.weight": "4bc8463b2620b2ed63cd1645c8c7f3215dae965eaa29285614f2e452ea7eff93",
+    "model.language_model.layers.3.mlp.up_proj.weight": "42b97a0894f3bebf8cb2dd6b04fbe1265a3a9ad0d09689a3dc22adf68e536781",
+    "model.language_model.layers.3.post_attention_layernorm.weight": "6219784d60aa412f70db8047c6783be3a65b50d7ddb1eaac48f0bfe5a914785f",
+    "model.language_model.layers.3.self_attn.k_norm.weight": "b556287b9856486717f5657500a6a91f0ac930d77785f34c4f5fcde0cff42df9",
+    "model.language_model.layers.3.self_attn.k_proj.weight": "15f30a4c354f9c5a13c0f5119137d777cc066ba8de4cc9a06279154b1d1b5040",
+    "model.language_model.layers.3.self_attn.o_proj.weight": "12cb7bbe0aac40843d5e5a60cfb44ba2d33aa49538166a00f34fed862f457153",
+    "model.language_model.layers.3.self_attn.q_norm.weight": "256d2ba957ffe155e7c776679526382e67b773115072a3bc090f89dc5fe0e902",
+    "model.language_model.layers.3.self_attn.q_proj.weight": "17bd3cd9059fbc52c07bbcbf23c01493e3ead9103d61f7de3744267ce2a9d664",
+    "model.language_model.layers.3.self_attn.v_proj.weight": "ee3ca5d4f337e84bb8d758b337c5b0ba1d9b493f87a7c822f91efe32e1e87845",
+    "model.language_model.layers.4.input_layernorm.weight": "6b1305e743d990ac66f30172e228875008542caa3c3a538e6cf1f2e01bcc3de1",
+    "model.language_model.layers.4.linear_attn.A_log": "b9e9efba2091a9547891ceddc5a1a22632a88e61f825cc96f70967ee67987abb",
+    "model.language_model.layers.4.linear_attn.conv1d.weight": "3a5edcc6012490543ec7adffa72f5dc0d634d01daf00d2ad7d12701c08cfa574",
+    "model.language_model.layers.4.linear_attn.dt_bias": "5d3727994cc196d54e30d9f2fe7650bb114d26b0d84b8e16bb997594fe9a9a47",
+    "model.language_model.layers.4.linear_attn.in_proj_a.weight": "8e1bcc66cc350cc3b528d49e45db73f8aa64196c9186be7b96671602911de55d",
+    "model.language_model.layers.4.linear_attn.in_proj_b.weight": "df1edf4c302648c1bc8d21e3254eabdb446eedddf4680fb94af0627b13d0fbae",
+    "model.language_model.layers.4.linear_attn.in_proj_qkv.weight": "756b00fde299ad8cb89cc7e3bc2fefea55caa557c59577ee3e4dc597b4c22986",
+    "model.language_model.layers.4.linear_attn.in_proj_z.weight": "a9069127346a27a60c44220816d00e88b2ebfd1e6b78f378630732fd813bee00",
+    "model.language_model.layers.4.linear_attn.norm.weight": "abe5f7723e4063a06c3295851378bea38b6fa390051ec6c8dc8bc187e0be5abe",
+    "model.language_model.layers.4.linear_attn.out_proj.weight": "e129d8a847e81deec03a3172e35847e96fe36b65e493252d02a9975154a80765",
+    "model.language_model.layers.4.mlp.down_proj.weight": "3cb61e31712524a85150e137e50f147a119f6eeb5d4d08e01d1555235567e216",
+    "model.language_model.layers.4.mlp.gate_proj.weight": "cce2d092aac96501e8c1059320cf491529d230824bc128c1474cd90a73010cc6",
+    "model.language_model.layers.4.mlp.up_proj.weight": "5b2e8cf1a82340ca8c73ec32b3eba3c903bdfb822ac375fd321626599e70c4bd",
+    "model.language_model.layers.4.post_attention_layernorm.weight": "0fed6b0f32fb9091a5544c4e35417525b81cece9d15d9573ded230fe8180912d",
+    "model.language_model.layers.5.input_layernorm.weight": "4b57061a179cc79fdd34f4739ca245340f7cd869b321732d86214c3fd9689227",
+    "model.language_model.layers.5.linear_attn.A_log": "aace4fd4c63edde89659d960efa011ba6827a08deac5d1fbd7862e21f203f945",
+    "model.language_model.layers.5.linear_attn.conv1d.weight": "6a96a8d3a6844f214f99be387dd3310d22aed168cadc17b63bbfbcc6e31665ec",
+    "model.language_model.layers.5.linear_attn.dt_bias": "6fe6c9bfd67a4d740c6f9c0b8f681a5d1b69a4d871387ae0b16f10ff495a1e46",
+    "model.language_model.layers.5.linear_attn.in_proj_a.weight": "d5b54187f62d02a9ce5ce3f577d39fea6b3c34b9e2d7b26a17fa97711ff91b1e",
+    "model.language_model.layers.5.linear_attn.in_proj_b.weight": "9d5889180c7110360a984a5aff4c9d2583c2bbb6302f4d8256aebbda105a6d45",
+    "model.language_model.layers.5.linear_attn.in_proj_qkv.weight": "630bb4c0836035cd088dfe481c39bcba33408ce336cf6d86f9a5234b5a94b985",
+    "model.language_model.layers.5.linear_attn.in_proj_z.weight": "4dededb063ef279d023a110824101ef881cd5fa7b8da3096663aedd15606315b",
+    "model.language_model.layers.5.linear_attn.norm.weight": "c89336e8839655e81ce774f0e4186acda89c89838e5c009e381c7c2ebe316261",
+    "model.language_model.layers.5.linear_attn.out_proj.weight": "e6f7e89657a74e0875d57bad961970381ae8890cd8c1a31985f6873fb0e13db9",
+    "model.language_model.layers.5.mlp.down_proj.weight": "927f6a1ee56109d7628af07bb98aee5d9da206ec48c119a0ec3bd9229966af1a",
+    "model.language_model.layers.5.mlp.gate_proj.weight": "474480047a340d40b990ca327d6815959ebce5eae52bbb71a61300d838a897c1",
+    "model.language_model.layers.5.mlp.up_proj.weight": "eab1326f81bf7b42e89713341a908342a19a7b9b6344a975910cd5ce4461f67d",
+    "model.language_model.layers.5.post_attention_layernorm.weight": "96ccb75760f45063f17a7bdcc007711f0c0759a52a2c76c85e02e2ef73361c12",
+    "model.language_model.layers.6.input_layernorm.weight": "e47e02a99b802db0ffe38ac5c68ea78846d553ee9292d07c24e33e1dfb7a4cd5",
+    "model.language_model.layers.6.linear_attn.A_log": "0a957f0de5bee42c0d81f532eacabb48900a6add61e6b7e1bea31d2e895003f1",
+    "model.language_model.layers.6.linear_attn.conv1d.weight": "efbfa2e17bcc9c0f499cb1b89ab15a6d73df5a7e29558e19bc711d8b494d1490",
+    "model.language_model.layers.6.linear_attn.dt_bias": "d37df7f14b1a187738807dc9ea9e2d44375d97fc9fe3315502d372cf091b8c5c",
+    "model.language_model.layers.6.linear_attn.in_proj_a.weight": "52f14c73f4717f7dae16520f30fac7ff4d44ff04a5ecfc7c65fbe0eca401d483",
+    "model.language_model.layers.6.linear_attn.in_proj_b.weight": "d447fc0d9b69df8cbfb9fc18dbb1ef09cf3a04f9b26b42b8133db40e4e5db3c1",
+    "model.language_model.layers.6.linear_attn.in_proj_qkv.weight": "7f45dda9ed134ce3dfac66244e405c1a77d434813ed5e8d2a32ab2328008f93c",
+    "model.language_model.layers.6.linear_attn.in_proj_z.weight": "caad2dcf88a042b143134665fded2abfec67201852191aa1e427425325ec2e6c",
+    "model.language_model.layers.6.linear_attn.norm.weight": "1dbd80a775198548b85ac5e9777d7382f8f3496a5b12668d4d2045e2ea108026",
+    "model.language_model.layers.6.linear_attn.out_proj.weight": "e95ee48c56c06fbaba0097f63051255aa03329f8bafaa7acd3a7b0682028d32e",
+    "model.language_model.layers.6.mlp.down_proj.weight": "eb996efac8daa7cfb82071ab089971815c6850880c773d668b56129bfd5ec97f",
+    "model.language_model.layers.6.mlp.gate_proj.weight": "1cc63fc0e88a613ec0ed2d88f4cf50eb2d3f49987279019028222550d39e27a9",
+    "model.language_model.layers.6.mlp.up_proj.weight": "81728fd9e73c3b37611c4da161563aca5b02959bb744ecd0ec4f2b733175ad7e",
+    "model.language_model.layers.6.post_attention_layernorm.weight": "ce8c75f0b4a14e3f52a1e78f5b436d0b0361fbe98ebd4a2ce4d14fe62e6ef4de",
+    "model.language_model.layers.7.input_layernorm.weight": "be3e1e6b8cae5cf8fbd000a32bfb6d9674ae3b06e3e61938f93be21b1135c89a",
+    "model.language_model.layers.7.mlp.down_proj.weight": "cfada4d94cdf789368502214a885d43e868911085eafa8e910d0fe74685d2bb0",
+    "model.language_model.layers.7.mlp.gate_proj.weight": "9004eb6e93ebeb0bda99c0d1b8c16dbc8394270acdae560e15b953c00e28ca0e",
+    "model.language_model.layers.7.mlp.up_proj.weight": "ca466edd36a7ee66de9add5435c3a92b77d18f4f58bc53d375949a65513c198f",
+    "model.language_model.layers.7.post_attention_layernorm.weight": "a1ce79e8a1ce822e5bcaf8f107f2b2b64dd18ad3c6d13cf58b6c88921ecb95ee",
+    "model.language_model.layers.7.self_attn.k_norm.weight": "f0248333e3268cd1fb2455e7e91168b918013487a6a072ef81150adca49abeb6",
+    "model.language_model.layers.7.self_attn.k_proj.weight": "891853407a35859f39f1fb6802731633785f362cddc13fbfa84b9644a1a0dd6f",
+    "model.language_model.layers.7.self_attn.o_proj.weight": "5235de8f611a59b653a6b67f7a87679d2a2c706ad1ca97a5ab04fa08e77b31e7",
+    "model.language_model.layers.7.self_attn.q_norm.weight": "bc4679c47e87cc56a120272dfe5096b40e6e981321f7f68de2d295bcc9d0ff65",
+    "model.language_model.layers.7.self_attn.q_proj.weight": "a32ab06743c3a8ddcb9066f6377049e3285b43abd2348b102128dd8781a6163c",
+    "model.language_model.layers.7.self_attn.v_proj.weight": "cbd6bca33b68cc33c1035109c907dc4b0f9d938174853d1ec1af929b3610657f",
+    "model.language_model.layers.8.input_layernorm.weight": "501f70c982e65a41b749c1e287cc32ec309a4976dab154ea794eff42fece3c74",
+    "model.language_model.layers.8.linear_attn.A_log": "0e971bbb22a84d72515c8c96cb61a954f0420c6ae27ad86f4644c1ec36a35966",
+    "model.language_model.layers.8.linear_attn.conv1d.weight": "d415ffa2aafb8db7e675a2ac3a07b62f9b9c6772a7313d015af165cc9c818099",
+    "model.language_model.layers.8.linear_attn.dt_bias": "95bc686e8303ba8e14580bdd3ab59d6d0b1f7b4dafcc706470022c28c912ba56",
+    "model.language_model.layers.8.linear_attn.in_proj_a.weight": "982b66a7c4dc37e9d0f4a1455917b08232c5ca33babb27307e4100c1747089fa",
+    "model.language_model.layers.8.linear_attn.in_proj_b.weight": "d64f1111835e0b78eebe805e689736af3422ab201e49255ef54ce840f5100242",
+    "model.language_model.layers.8.linear_attn.in_proj_qkv.weight": "365cee4c374cea9680d23e09e992ad0ee5ea52079d798c9a3ee8ff7ddcb4b576",
+    "model.language_model.layers.8.linear_attn.in_proj_z.weight": "d1dcd3b6cdb82af0e07e460549a65ee5ab6532f39a2001fd28e7cb3fac02ff55",
+    "model.language_model.layers.8.linear_attn.norm.weight": "2372238cfad37d704085b15936764ad93bc6d1a99208faf0035c74374120ee37",
+    "model.language_model.layers.8.linear_attn.out_proj.weight": "3a34787f2fd3a8e3aa2af092a2fed6fd7bce4231614f14140fb25f472725691a",
+    "model.language_model.layers.8.mlp.down_proj.weight": "a529054373b69823fa95dec92871a26848c2df3ccf18b38ecb4e222c2c85cf31",
+    "model.language_model.layers.8.mlp.gate_proj.weight": "2cf8f52549b378feeebb396e203915c3d817e405d6b4cfeabe55f63d19e37af3",
+    "model.language_model.layers.8.mlp.up_proj.weight": "9e696beeb572962666038adad1317856251ebd7e1e4d32dcbbbbf5d45d407610",
+    "model.language_model.layers.8.post_attention_layernorm.weight": "f57b039e85bde99d1877ad51174662527a955328f0dc241ceff5a3f6936240a6",
+    "model.language_model.layers.9.input_layernorm.weight": "aa8f8424fcdeef93f64c30d43971c4d15511674dbcc0ecaa96a99592b3ec5033",
+    "model.language_model.layers.9.linear_attn.A_log": "094d17dcbed01395cf5326dd0cbbfa74dec1172b8634f5c453df98806294c324",
+    "model.language_model.layers.9.linear_attn.conv1d.weight": "4a0a71dee24bad7ddf568b8944e99526968f18a587a0e1d4f9fc731248e00a22",
+    "model.language_model.layers.9.linear_attn.dt_bias": "200f4d92dca5291fcf29e1d3dd1060673a7259b8b44f19b12b7fd98f408226fe",
+    "model.language_model.layers.9.linear_attn.in_proj_a.weight": "425a31fb0ab3cdc506204ee095af5bb01ac7838f35fde850344ec0f55d0d27b4",
+    "model.language_model.layers.9.linear_attn.in_proj_b.weight": "253deb5df2903f9fcbecf6ed4b4fb968f06f7b3e52cc7eb5c725a8f918e52be5",
+    "model.language_model.layers.9.linear_attn.in_proj_qkv.weight": "a2af52e3eab1bfbab43c6959466630bf1af68bb303f83977e7367619e02fd962",
+    "model.language_model.layers.9.linear_attn.in_proj_z.weight": "ef9ac0225762c432041a5433187f2b17d23bf0564e709125b447bd28fb4ca04a",
+    "model.language_model.layers.9.linear_attn.norm.weight": "5b2afb056b5efcae865c4fd7497f725447598fb49324e680a4bf276d83c91c1b",
+    "model.language_model.layers.9.linear_attn.out_proj.weight": "d486f070bb4b9545c1ec968c5cfecd29cc21574aa9fb299e33ae3ad30d454189",
+    "model.language_model.layers.9.mlp.down_proj.weight": "6196ee5c7d96fe9c71d8adc0c9e87f752474f6819330fd92c5e74e597b510933",
+    "model.language_model.layers.9.mlp.gate_proj.weight": "9c6d9f3a62999fc7807d327a0b81d4f47129ac97d44b4b2396ee863b7ba0da19",
+    "model.language_model.layers.9.mlp.up_proj.weight": "b47d4c93d3056bde74c3405c6236cf6e544771a6330faca412cd61a488facffa",
+    "model.language_model.layers.9.post_attention_layernorm.weight": "da906ac0a93e2f5321b4153b7e40ce676e0cbd1ab348f398222c3eb6a17a0f66",
+    "model.language_model.norm.weight": "0df050ad8e61ea06a06b50c0eb0ae6975d97fb5712dfb0dec2d0b154c0676dd5"
+  }
+}

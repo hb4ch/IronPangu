@@ -1,0 +1,28 @@
+{
+  "date": "2026-09-07",
+  "remote": "root@7.156.99.58",
+  "container": "ironpangu-dev",
+  "checkpoint": "/data/p00603624/models/qwen35",
+  "rust_build": "local WSL cross compilation to aarch64-unknown-linux-gnu using container sysroot",
+  "npu_execution": false,
+  "format": "ironpangu.typed-plan.v1",
+  "executable": false,
+  "plan_key": "822cb949a731fa96b53690988a9a4ff3e18794e80f4660dbb038b19a571c0b90",
+  "plan_sha256": "38e24d8417dc943ce9f6ee34353725e3a2b0323fac03a38fa080b691ac781850",
+  "compiler_sha256": "24c2506282321ffe1bf788bfc71db670845f2d3cbe6a0daf8204b50533df2864",
+  "metadata_sha256": "8d499e1c64d4063c7a4fffb19df3015d4edf061d987d1ae37a96037bfb922222",
+  "text_tensor_count": 320,
+  "operation_count": 640,
+  "excluded": {
+    "mtp": 15,
+    "vision": 297
+  },
+  "text_weight_bytes": 3763655360,
+  "state_bytes_per_request": 19537920,
+  "kv_bytes_per_128_token_page": 1572864,
+  "workspace_tests": 25,
+  "frontend_tests": 2,
+  "clippy": "passed with -D warnings",
+  "deterministic_repeat": "byte-for-byte identical inside Docker",
+  "payload_integrity": "not checked; headers only"
+}

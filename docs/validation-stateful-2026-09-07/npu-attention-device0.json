@@ -1,0 +1,61 @@
+{
+  "batch": 2,
+  "context_bucket": 12,
+  "device": 0,
+  "k_norm_sha256": "b556287b9856486717f5657500a6a91f0ac930d77785f34c4f5fcde0cff42df9",
+  "native_sha256": "ed8a15d3717a6e682329a470153665985a89ab0fd5e753b851cd9627a2aa2191",
+  "page_maps": [
+    [
+      4,
+      1,
+      5
+    ],
+    [
+      0,
+      3,
+      2
+    ]
+  ],
+  "page_tokens": 4,
+  "physical_pages": 6,
+  "q_norm_sha256": "256d2ba957ffe155e7c776679526382e67b773115072a3bc090f89dc5fe0e902",
+  "results": [
+    {
+      "graph_eager": "bitwise_equal",
+      "max_error": 0.0,
+      "position": 0,
+      "relative_l2": 0.0
+    },
+    {
+      "graph_eager": "bitwise_equal",
+      "max_error": 0.0,
+      "position": 1,
+      "relative_l2": 0.0
+    },
+    {
+      "graph_eager": "bitwise_equal",
+      "max_error": 0.0,
+      "position": 2,
+      "relative_l2": 0.0
+    },
+    {
+      "graph_eager": "bitwise_equal",
+      "max_error": 0.0,
+      "position": 3,
+      "relative_l2": 0.0
+    },
+    {
+      "graph_eager": "bitwise_equal",
+      "max_error": 0.0,
+      "position": 4,
+      "relative_l2": 0.0
+    },
+    {
+      "graph_eager": "bitwise_equal",
+      "max_error": 0.0,
+      "position": 5,
+      "relative_l2": 0.0
+    }
+  ],
+  "scope": "QK normalization, partial RoPE, paged causal GQA and output gating"
+}

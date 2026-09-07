@@ -1,70 +1,47 @@
-# Connecting the vLLM Rust frontend
+# vLLM Rust frontend integration
 
-## Current status
+Iron Pangu now includes an optional server using the **vLLM v0.25.1 Rust frontend**, pinned to `752a3a504485790a2e8491cacbb35c137339ad34`. The upstream Rust source and license are in `vendor/`. `frontend/` is a separate Cargo workspace so the original CPU-only core build stays small and independent of CANN.
 
-**There is no vLLM frontend integration in Iron Pangu yet.** The current CLI supports `compile`, `inspect` and `demo`. It has no HTTP listener, vLLM handshake endpoint or live token stream. The executable skeleton deliberately deferred these pieces.
-
-Today you can run the orchestration demo:
-
-```sh
-cargo run -p pangu-cli -- demo examples/qwen35-2b.pangu examples/requests.json
-```
-
-This produces mock token IDs and a final JSON report, not a chat service. The steps below are an implementation guide, not commands for an already available integration.
-
-## Upstream boundary
-
-The official vLLM Rust CLI's managed `serve` example launches a Python engine beside the Rust frontend. Its separate `frontend` command connects to an existing vLLM engine endpoint. Neither command can currently connect to Iron Pangu. [Upstream CLI guide](https://github.com/vllm-project/vllm/blob/main/rust/src/cmd/examples/README.md)
-
-In the inspected source, `vllm-llm::Llm` owns a concrete `EngineCoreClient` and exposes generation streams, abort and shutdown. It is not a generic backend trait that our runtime can implement unchanged. [LLM facade](https://github.com/vllm-project/vllm/blob/main/rust/src/llm/src/lib.rs)
-
-The HTTP server constructs that engine client and then the LLM, text and chat layers. Its router-extension hook adds routes; it does not replace engine construction. [Server construction](https://github.com/vllm-project/vllm/blob/main/rust/src/server/src/lib.rs)
-
-Sources inspected on 6 September 2026. These are moving `main` links; pin an upstream commit and record it before modifying/reusing code.
-
-## Recommended integration
-
-Adapt the Rust frontend at its tokenized generation boundary:
+## Implemented path
 
 ```text
-OpenAI-compatible HTTP request
-  → reused/adapted Rust chat templates and tokenizer
-  → Iron Pangu generation adapter
-  → persistent Rust scheduler
-  → P workers → hybrid-state handoff → D workers
-  → token events → incremental detokenization → SSE response
+vLLM Rust HTTP / chat templates / tokenizer
+  -> vllm-llm::GenerationBackend
+  -> persistent Iron Pangu scheduler thread
+  -> mock P workers -> full mock hybrid-state handoff -> mock D workers
+  -> bounded token stream -> vLLM incremental decoding / SSE
 ```
 
-Keep the HTTP/chat/tokenization layer separate from the DSL compiler and Ascend implementation. Start by connecting it to the mock backend; replace that backend only after the NPU implementation passes its tests. No frontend feature should start a Python engine.
+`serve_with_backend` injects generation directly. No engine-core handshake, Python engine, managed launcher, or per-request engine startup occurs. The engine-core protocol crate remains a Rust type dependency. Core-only administration endpoints reject calls when no engine-core client exists.
 
-A vLLM wire-protocol compatibility server is another possible approach, but it requires implementing the pinned engine's handshake, request/output encodings, lifecycle and administrative semantics. Avoid taking on that compatibility surface for the first integration. A small maintained fork adapting the generation facade is the proposed first approach.
+The server supports `--mock` (advertising `ironpangu-mock`) and `--native DSL CHECKPOINT LIB DEVICE [PORT]` (advertising `ironpangu-qwen35`). Native mode runs real weights through a dedicated ACL thread, with one active request and context 128. See [native deployment and validation](npu-native-milestone.md). The scheduler path described below is the separate synthetic mock mode.
 
-## Work required in Iron Pangu
+The scheduler initializes P/D workers once, performs token-budgeted prefill and continuous decode, publishes the first token after commit/ACK, and tracks independent request IDs. Dropping the output stream requests cancellation; bounded output queues abort slow consumers instead of blocking shared scheduling. Unexpected stream closure becomes an error. Shutdown retires active requests and closes workers. Ordinary requests use deterministic mock generation with `temperature=0`; unsupported sampling options return HTTP 400.
 
-1. **Make the scheduler persistent.** Refactor `run_mock(artifact, Vec<Request>, capacity)` into a long-lived engine with bounded `Submit`, `Cancel` and `Shutdown` commands. Keep the fixture runner as a test client. Initialize workers once, rather than once per HTTP request.
-2. **Stream engine events.** Emit token events when they become available, plus terminal finish/error events. Preserve the existing rule that the first output token is published only after PD commit/ACK. Replace fixture `submit_at`/`cancel_at` ticks with real channel commands in the serving adapter.
-3. **Expose a narrow frontend contract.** Proposed operations are submit(token IDs, request ID, generation limits), cancel(request ID), readiness and shutdown. Submission returns a request-scoped event receiver. These operations do not yet exist as a public API.
-4. **Preserve identity and backpressure.** Map external string IDs to internal request/attempt IDs. Cancel on disconnect or dropped response stream. A full event queue must not block the shared scheduler indefinitely: abort the affected request and fence its state before reclamation. Repeated cancellation is harmless.
-5. **Publish readiness only after startup.** DSL/native compilation, warmup, all-bucket graph capture/validation and required P/D readiness precede request admission. Never compile/capture inside an HTTP handler. Return an explicit unavailable response if the engine failed startup.
+## Build and validation
 
-The current `Request` contains token IDs and limits, and `Report` collects all results. Wrapping `run_mock` in one blocking task per HTTP request would create independent engines and lose cross-request batching; that is not the intended adapter.
+See [remote development](remote-development.md) for local ARM64 cross-compilation and Docker-only remote execution. The image-specific sysroot is required for the full frontend.
 
-## Work required in the frontend fork
+Local checks:
 
-- Pin the vLLM revision, preserve license notices, and replace concrete engine-client construction with an injected generation service. Adapt downstream stream/output types where they depend on vLLM engine-core types; this is not necessarily a single-file change.
-- Retain suitable Rust HTTP, chat-template, tokenization, incremental decoding and SSE code. Supply model metadata from the pinned Qwen checkpoint and the Iron Pangu capability description, without requesting it from a Python engine.
-- Remove the managed-Python launcher from the Iron Pangu executable. Audit the selected dependency graph and renderer/parser paths: the upstream workspace lists Python-related crates, which does not by itself prove every frontend build requires them. [Workspace manifest](https://github.com/vllm-project/vllm/blob/main/rust/Cargo.toml)
-- Initially support text-only, one completion per request, a bounded output length and the backend's actual decoding mode. The mock is deterministic synthetic output; a real greedy decoder remains NPU work. Reject unsupported sampling, logprobs, tools and multimodal requests explicitly rather than accepting parameters that have no effect.
-- Map token limits, EOS, finish reasons, errors and usage consistently. Test incremental Unicode decoding and chat-template token IDs. Do not report synthetic mock responses as Qwen-generated text.
+```sh
+cargo fmt --all --check
+cargo clippy --workspace --all-targets -- -D warnings
+cargo test --workspace
+cargo clippy --manifest-path frontend/Cargo.toml --all-targets -- -D warnings
+cargo test --manifest-path frontend/Cargo.toml
+```
 
-## Acceptance checklist
+Container acceptance client:
 
-- Multiple HTTP requests share one ready engine and enter/leave batches independently.
-- SSE emits incremental output before completion; non-streaming responses collect the same events.
-- Client disconnect, cancellation during PD transfer, capacity exhaustion and shutdown reclaim all state.
-- Startup failures prevent admission; no request triggers kernel compilation or graph capture.
-- Tokenizer/chat-template fixtures match the pinned checkpoint; unsupported parameters fail clearly.
-- No Python process starts and no Python interpreter is loaded by the selected frontend dependency path.
-- Run these tests with mock mode first, then separately establish real Ascend inference correctness.
+```sh
+./pangu-server --smoke-test http://127.0.0.1:18080
+```
 
-See [NPU integration responsibilities](npu-handoff.md) for the hardware boundary. This guide adds no frontend dependency or executable HTTP server to the repository.
+It checks readiness, chat, SSE/collected agreement, concurrent requests and unsupported options through the actual vLLM Rust routes.
+
+## Remaining integration work
+
+Connect an explicitly selected hardware scheduler to the same generation interface after implementing and qualifying checkpoint loading, Qwen math, typed state regions and NPU transport. Replace mock completion fences with actual device visibility guarantees. Add real tokenizer/template golden fixtures when checkpoint metadata arrives. Performance, NPU graph execution, numerical correctness and real PD remain unvalidated.
+
+Keep frontend and hardware readiness coupled: no requests before all supported graph buckets and required P/D workers are ready, and no automatic mock/eager fallback on hardware failure.

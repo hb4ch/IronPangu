@@ -428,3 +428,8 @@ mod cache_tests {
         fs::remove_dir_all(dir).unwrap();
     }
 }
+
+pub mod bound;
+pub mod checkpoint;
+
+pub mod lower;

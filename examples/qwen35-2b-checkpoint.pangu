@@ -1,0 +1,21 @@
+# Checkpoint-bound Qwen3.5-2B text program. Native linking is a separate stage.
+contract = qwen35_text_v1
+# Dimensions are assertions against the checkpoint; the named contract fixes math semantics.
+model = Qwen3.5-2B-text
+hidden = 2048
+intermediate = 6144
+vocab = 248320
+query_heads = 8
+kv_heads = 2
+head_dim = 256
+delta_heads = 16
+delta_dim = 128
+conv_width = 4
+layers = delta delta delta full delta delta delta full delta delta delta full delta delta delta full delta delta delta full delta delta delta full
+# Mesh fields: TP CP SP
+prefill = 1 1 false
+decode = 1 1 false
+page_tokens = 128
+token_budget = 1024
+batch_buckets = 1 2 4 8
+context_buckets = 128 512 2048 8192

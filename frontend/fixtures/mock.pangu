@@ -1,0 +1,19 @@
+# Metadata only: model math, tokenizer and weight loading are not implemented.
+model = IronPangu-test-only
+hidden = 2048
+intermediate = 6144
+vocab = 32
+query_heads = 8
+kv_heads = 2
+head_dim = 256
+delta_heads = 16
+delta_dim = 128
+conv_width = 4
+layers = delta delta delta full delta delta delta full delta delta delta full delta delta delta full delta delta delta full delta delta delta full
+# Mesh fields: TP CP SP
+prefill = 1 1 false
+decode = 1 1 false
+page_tokens = 128
+token_budget = 4
+batch_buckets = 1 2 4 8
+context_buckets = 128 512 2048 8192

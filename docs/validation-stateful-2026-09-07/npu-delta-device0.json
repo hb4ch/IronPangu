@@ -1,0 +1,42 @@
+{
+  "cases": [
+    {
+      "bh": 2,
+      "chunk_ends": [
+        2,
+        3,
+        6
+      ],
+      "dk": 128,
+      "dv": 64,
+      "graph_eager": "bitwise_equal",
+      "max_output_error": 0.0,
+      "max_state_error": 7.450580596923828e-9,
+      "minimum_decay": -80,
+      "state_dtype": "FP32",
+      "state_layout": "head,key,value",
+      "tokens": 6
+    },
+    {
+      "bh": 16,
+      "chunk_ends": [
+        2,
+        3,
+        6
+      ],
+      "dk": 128,
+      "dv": 128,
+      "graph_eager": "bitwise_equal",
+      "max_output_error": 0.0,
+      "max_state_error": 7.450580596923828e-9,
+      "minimum_decay": -80,
+      "state_dtype": "FP32",
+      "state_layout": "head,key,value",
+      "tokens": 6
+    }
+  ],
+  "device": 0,
+  "native_sha256": "ed8a15d3717a6e682329a470153665985a89ab0fd5e753b851cd9627a2aa2191",
+  "rust_sha256": "86ebff71d4d690daaa093528bb8f8f98bbc5fafda80944fa178569a7f865f254",
+  "scope": "prepared FP32 recurrence primitive; no complete model inference"
+}

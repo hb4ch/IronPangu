@@ -1,8 +1,8 @@
 # Iron Pangu: an Ascend-native inference compiler and runtime
 
-Status: proposed design • 6 September 2026
+Status: target design, with partial implementation updates through 7 September 2026
 
-Implementation update: a CPU-only Rust wiring skeleton now implements the small DSL, structural rank plans, binary cache, mock startup/graph lifecycle, scheduling and PD ownership protocol. See the [README](../README.md) and [NPU-agent handoff](npu-handoff.md). Native kernels and real model inference remain unimplemented; the full design below is the target architecture.
+Implementation update: native single-request Qwen3.5-2B text inference now runs through the vLLM 0.25.1 Rust frontend, with qualified ACLNN operators and full-model graph replay. See the [native milestone](npu-native-milestone.md) for validation and limits. The separate mock scheduler covers structural rank plans and PD ownership; native PD, continuous batching and distributed execution remain outstanding. The full design below is the target architecture.
 
 ## 1. Objective and success boundary
 
@@ -39,7 +39,7 @@ The exact Ascend SKU, number of devices, host architecture, network topology, fi
 
 Use the experimental vLLM Rust frontend as a candidate source for API, request lifecycle, tokenization, streaming, and client infrastructure. It is not sufficient merely to put a Rust HTTP server in front of a Python inference engine. Evaluate the precise upstream revision and retain useful Rust modules behind an Iron Pangu engine interface; replace the engine-core connection with our Rust scheduler/runtime. Audit dependencies and preserve upstream license notices when reusing code.
 
-Reproduce the relevant vLLM serving semantics: token-budgeted chunked prefill, iteration-level continuous batching, and block-managed attention state. Reusing its Python scheduler or Ascend Python execution backend is incompatible with the execution constraint. A fork of frontend modules or a small independent Rust gateway is acceptable if the experimental interfaces are too coupled; neither changes the DSL/runtime design. Upstream references and exact boundaries are recorded in the research note accompanying this document.
+Reproduce the relevant vLLM serving semantics: token-budgeted chunked prefill, iteration-level continuous batching, and block-managed attention state. Reusing its Python scheduler or Ascend Python execution backend is incompatible with the execution constraint. The implementation now pins the vLLM 0.25.1 Rust frontend and injects the Iron Pangu backend. The serving frontend must remain this Rust frontend; a separate gateway or Python engine is outside the user-approved scope. Upstream references and exact boundaries are recorded in the research note accompanying this document.
 
 The upstream CLI explicitly starts a headless Python engine beside the Rust frontend. See the [CLI source](https://github.com/vllm-project/vllm/blob/main/rust/src/cmd/examples/README.md) and [experimental roadmap](https://github.com/vllm-project/vllm/issues/44280). The [research note](research.md) also records current upstream GDN disaggregation support; that support does not establish an Ascend or Python-free implementation.
 

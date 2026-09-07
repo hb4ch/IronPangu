@@ -1,5 +1,7 @@
 # NPU-node agent handoff
 
+**Current update:** full-model native inference and Rust HTTP serving are now qualified within a single-request, context-128 scope. Read [the native milestone](npu-native-milestone.md) first. The earlier-stage description below is historical; native PD and the general `AscendBackend` integration remain outstanding.
+
 ## What works today
 
 The Rust skeleton runs token-ID requests through a real parser, compiler, binary cache, startup state machine, bounded worker queues, logical page/slot allocator, PD ownership protocol and iteration scheduler. Its backend is explicitly synthetic. Do not interpret passing tests or generated tokens as Qwen correctness, actual paged attention, real graph capture, or real TP/CP execution.
@@ -51,3 +53,15 @@ The first structural compiler uses replicated embedding/vocabulary head/sampling
 6. Keep CPU tests passing. Add hardware tests behind an explicit feature/test target requiring the NPU environment. Never gate CPU builds on CANN installation.
 
 Deferred beyond this skeleton: HTTP, tokenizer/chat templates, actual safetensors parsing, distributed process supervision, real network control messages, optimized sampling and performance benchmarking. These need implementation in addition to filling kernel bodies for a genuine model-serving demo.
+
+## 7 September 2026 code-first bring-up
+
+Read [remote development](remote-development.md) for the current Docker image, local cross-build, and verified commands. `frontend/` now adapts the pinned vLLM 0.25.1 Rust frontend to `pangu-scheduler::live::LiveScheduler` through an in-process generation trait. Its only constructor is explicitly mock. `native/` now contains an installed-header-checked C++ ACL ABI and graph-copy qualification probe; it is not yet an implementation of `AscendBackend` or `RegisteredTransport`. No weights or NPU execution were used in these checks.
+
+## Checkpoint-bound compilation (7 September 2026)
+
+The supplied checkpoint is `/data/p00603624/models/qwen35`. [DSL and compilation](dsl-compilation.md) documents the implemented metadata binder and typed mathematical IR. `compile-checkpoint` validates 320 text tensors and emits 640 typed operations, with `executable=false`. Only TP=CP=1 is bound; the earlier distributed mock programs remain structural. Do not feed this JSON to the mock artifact loader or claim native linkage. The native adapter must preserve the new key-major FP32 recurrent layout and three-value convolution history (or explicitly convert to its physical layout); older structural state descriptors are not interchangeable.
+
+## Native operator milestone
+
+See [NPU bring-up](npu-bringup.md) and its two machine-readable reports. BF16 checkpoint matrix projections and FP32-computed zero-centered RMSNorm now pass eager/reference and graph/eager tests on devices 0 and 1. The C++ ABI exposes prepared operations with persistent executors/workspaces. These operations are not yet linked into the typed full-model graph or `AscendBackend`; recurrence, convolution, paged attention, real hybrid state transfer and complete serving remain outstanding.

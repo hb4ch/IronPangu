@@ -1,0 +1,44 @@
+{
+  "batch": 1,
+  "device": 0,
+  "layer": 0,
+  "native_sha256": "ed8a15d3717a6e682329a470153665985a89ab0fd5e753b851cd9627a2aa2191",
+  "operations": 18,
+  "results": [
+    {
+      "graph_eager": "bitwise_equal",
+      "max_error": 0.0,
+      "relative_l2": 0.0,
+      "token": 0
+    },
+    {
+      "graph_eager": "bitwise_equal",
+      "max_error": 0.00390625,
+      "relative_l2": 0.0010851327251694767,
+      "token": 1
+    },
+    {
+      "graph_eager": "bitwise_equal",
+      "max_error": 0.00390625,
+      "relative_l2": 0.0009504276244880371,
+      "token": 2
+    }
+  ],
+  "scope": "complete first delta decoder layer; not full model inference",
+  "weights": {
+    "input_layernorm.weight": "e3bfb63b03722ec637ed4ea2cc552d68a87e661bbba1e889f721858b34162877",
+    "linear_attn.A_log": "4482c77a3cbbb4d1f3c777090048fa1e7abd89ac4e8055bf6a04c1596fdfb500",
+    "linear_attn.conv1d.weight": "0dbb863f97d7ac62ca2e452e0fe1487edb5d954e2380192102aa1ace8f40642a",
+    "linear_attn.dt_bias": "e636c88bee625312e5f3dc657e1ac60c1f5fbd5ef2d35ad4a82f0fc7dd7a1aa1",
+    "linear_attn.in_proj_a.weight": "14c322ad93e1e4973693f6a6c45fbab9c0db21ce017d9aaf1b7223b9eab30213",
+    "linear_attn.in_proj_b.weight": "f97c79e98e849443535310f89c19266801ae5724b319c2495265eae635c5053f",
+    "linear_attn.in_proj_qkv.weight": "46dffa9a1b42e089b4c0271a110ff7efe8a8574a390cfa45d399cb5e7a2ca3fa",
+    "linear_attn.in_proj_z.weight": "62d9c8a20dc8abfc55b21520805db7a280f385d3cc20e234348772d4f52275fa",
+    "linear_attn.norm.weight": "4f50f78402c71ebebcadcb6259c2883b4f0a441c17cacee8f626e5c9ad7118b7",
+    "linear_attn.out_proj.weight": "e0f911be79a8903db2418e802c0bbb77a21b87e978b292dfb9a0c515fdc9e7cb",
+    "mlp.down_proj.weight": "fbafb4be6b6a3e93fb969b1679f7430a824cd912db98a83a7c4b9658e511d766",
+    "mlp.gate_proj.weight": "6d99f0ade7791154ee7806b24444ead0d3dcb67b203dcd9304faae9cd69a2c42",
+    "mlp.up_proj.weight": "e603e29e2effc8e110dca2d2b1d20a5b9fe399ef7d4c48c289a9febb95472f5e",
+    "post_attention_layernorm.weight": "f17354499a755348654fb5b053a80613eedb97c3335a7a05c9272d944fd1957d"
+  }
+}
