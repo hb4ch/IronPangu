@@ -218,7 +218,9 @@ extern "C" int32_t pangu_acl_random_fill(pangu_acl_session *s, uint64_t buffer,
     check(aclnnInplaceUniformGetWorkspaceSize(t, 0.0, 1.0, seed, 0, &bytes,
                                               &executor),
           "prepare request RNG");
-    void *workspace = bytes ? b.temp(bytes) : nullptr;
+    void *workspace = s->dedicated_workspaces
+                          ? (bytes ? b.temp(bytes) : nullptr)
+                          : s->acquire_workspace(bytes);
     check(aclnnInplaceUniform(workspace, bytes, executor, s->stream),
           "generate request RNG");
     check(aclrtSynchronizeStream(s->stream), "request RNG completion");

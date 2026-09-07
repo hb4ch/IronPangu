@@ -1,0 +1,141 @@
+{
+  "tensor_parallel_rank": 1,
+  "tensor_parallel_world": 2,
+  "status": "passed",
+  "max_model_len": 2048,
+  "max_num_seqs": 4,
+  "memory_utilization": 0.9,
+  "memory_reserve_bytes": 268435456,
+  "source_weight_bytes": 3763655360,
+  "resident_weight_bytes": 2391145152,
+  "kv_cache_bytes": 100712448,
+  "recurrent_and_conv_bytes": 78151680,
+  "other_buffer_bytes": 31223396,
+  "temporary_bytes": 598634904,
+  "workspace_bytes": 33555968,
+  "observed_peak_bytes": 4263858176,
+  "non_weight_observed_bytes": 1872713024,
+  "untracked_runtime_and_allocator_bytes": 1026240324,
+  "remaining_budget_bytes": 54952583987,
+  "full_context_graph_eager": "bitwise_equal",
+  "measurement_note": "HBM free-memory differences and allocation/phase watermarks, not an exact trace of short-lived CANN allocations. Baseline includes context/communicator creation; concurrent device users can affect measurements. Fixed batch with sequential per-request prefill; last-position dry run uses synthetic cache state.",
+  "stages": [
+    {
+      "name": "context_initialized",
+      "stats": {
+        "total_bytes": 65796046848,
+        "free_bytes": 65626038272,
+        "observed_peak_bytes": 0,
+        "buffer_bytes": 0,
+        "temporary_bytes": 0,
+        "workspace_bytes": 0,
+        "graphs": 0,
+        "budget_bytes": 0
+      }
+    },
+    {
+      "name": "budget_set",
+      "stats": {
+        "total_bytes": 65796046848,
+        "free_bytes": 65626038272,
+        "observed_peak_bytes": 0,
+        "buffer_bytes": 0,
+        "temporary_bytes": 0,
+        "workspace_bytes": 0,
+        "graphs": 0,
+        "budget_bytes": 59216442163
+      }
+    },
+    {
+      "name": "weights_loaded",
+      "stats": {
+        "total_bytes": 65796046848,
+        "free_bytes": 62931623936,
+        "observed_peak_bytes": 2694414336,
+        "buffer_bytes": 2391145152,
+        "temporary_bytes": 0,
+        "workspace_bytes": 0,
+        "graphs": 0,
+        "budget_bytes": 59216442163
+      }
+    },
+    {
+      "name": "operators_prepared",
+      "stats": {
+        "total_bytes": 65796046848,
+        "free_bytes": 62029848576,
+        "observed_peak_bytes": 3596189696,
+        "buffer_bytes": 2583320612,
+        "temporary_bytes": 461562104,
+        "workspace_bytes": 0,
+        "graphs": 0,
+        "budget_bytes": 59216442163
+      }
+    },
+    {
+      "name": "model_graph_qualified",
+      "stats": {
+        "total_bytes": 65796046848,
+        "free_bytes": 61555118080,
+        "observed_peak_bytes": 4070920192,
+        "buffer_bytes": 2583320612,
+        "temporary_bytes": 461562104,
+        "workspace_bytes": 16777728,
+        "graphs": 1,
+        "budget_bytes": 59216442163
+      }
+    },
+    {
+      "name": "sampler_graphs_qualified",
+      "stats": {
+        "total_bytes": 65796046848,
+        "free_bytes": 61366374400,
+        "observed_peak_bytes": 4259663872,
+        "buffer_bytes": 2601232676,
+        "temporary_bytes": 598634904,
+        "workspace_bytes": 33555968,
+        "graphs": 9,
+        "budget_bytes": 59216442163
+      }
+    },
+    {
+      "name": "full_context_dry_run",
+      "stats": {
+        "total_bytes": 65796046848,
+        "free_bytes": 61366374400,
+        "observed_peak_bytes": 4263858176,
+        "buffer_bytes": 2601232676,
+        "temporary_bytes": 598634904,
+        "workspace_bytes": 33555968,
+        "graphs": 9,
+        "budget_bytes": 59216442163
+      }
+    },
+    {
+      "name": "inactive_lanes_qualified",
+      "stats": {
+        "total_bytes": 65796046848,
+        "free_bytes": 61366374400,
+        "observed_peak_bytes": 4263858176,
+        "buffer_bytes": 2601232676,
+        "temporary_bytes": 598634904,
+        "workspace_bytes": 33555968,
+        "graphs": 9,
+        "budget_bytes": 59216442163
+      }
+    },
+    {
+      "name": "profile_reset",
+      "stats": {
+        "total_bytes": 65796046848,
+        "free_bytes": 61366374400,
+        "observed_peak_bytes": 4263858176,
+        "buffer_bytes": 2601232676,
+        "temporary_bytes": 598634904,
+        "workspace_bytes": 33555968,
+        "graphs": 9,
+        "budget_bytes": 59216442163
+      }
+    }
+  ]
+}

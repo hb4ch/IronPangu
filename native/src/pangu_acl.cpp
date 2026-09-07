@@ -68,6 +68,36 @@ struct pangu_acl_session {
     uint64_t bytes;
   };
   std::map<uint64_t, Buffer> buffers;
+  // Execution is serialized on this session's stream. Blocks are never moved
+  // or freed while a captured graph can still reference them.
+  std::vector<Buffer> workspace_pool;
+  bool dedicated_workspaces = [] {
+    const char *mode = std::getenv("PANGU_DEDICATED_WORKSPACES");
+    return mode && std::string(mode) == "1";
+  }();
+  void *acquire_workspace(uint64_t bytes) {
+    if (!bytes)
+      return nullptr;
+    Buffer *best = nullptr;
+    for (auto &block : workspace_pool)
+      if (block.bytes >= bytes && (!best || block.bytes < best->bytes))
+        best = &block;
+    if (best)
+      return best->ptr;
+    check_allocation(bytes);
+    void *ptr = nullptr;
+    check(aclrtMalloc(&ptr, bytes, ACL_MEM_MALLOC_HUGE_FIRST),
+          "workspace pool allocate");
+    try {
+      workspace_pool.push_back({ptr, bytes});
+    } catch (...) {
+      aclrtFree(ptr);
+      throw;
+    }
+    if (memory_budget)
+      observe_memory();
+    return ptr;
+  }
   std::map<uint64_t, aclmdlRI> graphs;
   uint64_t memory_budget = 0, memory_reserve = 0;
   uint64_t baseline_free = 0, minimum_free = UINT64_MAX;
@@ -154,14 +184,33 @@ struct pangu_acl_session {
                                    std::to_string(&stage - stages.data()));
         workspace_bytes = std::max(workspace_bytes, stage.bytes);
       }
-      if (owner)
+      if (owner && owner->dedicated_workspaces) {
         owner->check_allocation(workspace_bytes);
-      if (workspace_bytes)
-        check(
-            aclrtMalloc(&workspace, workspace_bytes, ACL_MEM_MALLOC_HUGE_FIRST),
-            "workspace allocate");
-      if (owner && owner->memory_budget)
-        owner->observe_memory();
+        if (workspace_bytes)
+          check(aclrtMalloc(&workspace, workspace_bytes,
+                            ACL_MEM_MALLOC_HUGE_FIRST),
+                "dedicated workspace allocate");
+        if (owner->memory_budget)
+          owner->observe_memory();
+      }
+    }
+    uint64_t unbound_workspace_bytes() const {
+      uint64_t bytes = workspace ? 0 : workspace_bytes;
+      for (auto *child : children)
+        bytes = std::max(bytes, child->unbound_workspace_bytes());
+      return bytes;
+    }
+    void bind_workspace(void *ptr) {
+      // Previously bound addresses may already be embedded in a graph.
+      if (!workspace && workspace_bytes)
+        workspace = ptr;
+      for (auto *child : children)
+        child->bind_workspace(ptr);
+    }
+    void finalize_workspace() {
+      if (!owner || owner->dedicated_workspaces)
+        return;
+      bind_workspace(owner->acquire_workspace(unbound_workspace_bytes()));
     }
     ~Linear() {
       for (auto &stage : stages)
@@ -173,7 +222,7 @@ struct pangu_acl_session {
         aclDestroyScalar(scalar);
       for (auto *array : arrays)
         aclDestroyIntArray(array);
-      if (workspace)
+      if (workspace && owner && owner->dedicated_workspaces)
         aclrtFree(workspace);
       for (auto *ptr : temporaries)
         aclrtFree(ptr);
@@ -390,8 +439,11 @@ int32_t pangu_acl_memory_snapshot(pangu_acl_session *s,
     for (auto &[id, op] : s->operations) {
       (void)id;
       out->temporary_bytes += op->temporary_bytes;
-      out->workspace_bytes += op->workspace_bytes;
+      if (s->dedicated_workspaces)
+        out->workspace_bytes += op->workspace_bytes;
     }
+    for (const auto &block : s->workspace_pool)
+      out->workspace_bytes += block.bytes;
     s->check_allocation(0);
   });
 }
@@ -612,6 +664,7 @@ int32_t pangu_acl_operation_execute(pangu_acl_session *s, uint64_t operation) {
     if (it == s->operations.end())
       throw std::runtime_error("unknown linear operation");
     auto &op = *it->second;
+    op.finalize_workspace();
     check(op.run(s->stream), "linear execute");
     check(aclrtSynchronizeStream(s->stream), "linear fence");
   });
@@ -626,6 +679,7 @@ int32_t pangu_acl_operation_capture(pangu_acl_session *s, uint64_t operation,
     if (it == s->operations.end())
       throw std::runtime_error("unknown linear operation");
     auto &op = *it->second;
+    op.finalize_workspace();
     check(op.run(s->stream), "linear warmup");
     check(aclrtSynchronizeStream(s->stream), "linear warmup fence");
     check(aclmdlRICaptureBegin(s->stream, ACL_MODEL_RI_CAPTURE_MODE_GLOBAL),
@@ -1612,6 +1666,9 @@ int32_t pangu_acl_close(pangu_acl_session *s) {
       s->graphs.erase(it);
     }
     s->operations.clear();
+    for (const auto &block : s->workspace_pool)
+      aclrtFree(block.ptr);
+    s->workspace_pool.clear();
     if (s->communicator) {
       auto result = HcclCommDestroy(s->communicator);
       if (result != HCCL_SUCCESS)
