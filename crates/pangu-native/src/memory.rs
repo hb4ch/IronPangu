@@ -41,12 +41,28 @@ pub struct MemoryStats {
     pub graphs: u64,
     pub budget_bytes: u64,
 }
+#[repr(C)]
+#[derive(Debug, Default, Clone, Serialize)]
+pub struct AllocationStats {
+    pub scratch_pool_bytes: u64,
+    pub layer_pool_bytes: u64,
+    pub snapshot_pool_bytes: u64,
+    pub owned_temporary_bytes: u64,
+    pub logical_scratch_bytes: u64,
+    pub logical_workspace_bytes: u64,
+    pub workspace_blocks: u64,
+    pub owned_buffers: u64,
+    pub buffer_views: u64,
+    pub dedicated_activations: u64,
+    pub dedicated_workspaces: u64,
+}
 type Snapshot = unsafe extern "C" fn(SessionPtr, *mut MemoryStats) -> i32;
 type SetBudget = unsafe extern "C" fn(SessionPtr, u64, u64) -> i32;
 #[derive(Debug, Clone, Serialize)]
 pub struct MemoryStage {
     pub name: String,
     pub stats: MemoryStats,
+    pub allocations: AllocationStats,
 }
 #[derive(Debug, Clone, Serialize)]
 pub struct MemoryProfile {
@@ -69,6 +85,9 @@ pub struct MemoryProfile {
     pub untracked_runtime_and_allocator_bytes: u64,
     pub remaining_budget_bytes: u64,
     pub full_context_graph_eager: String,
+    pub startup_logits_sha256: String,
+    pub startup_state_sha256: Vec<String>,
+    pub full_context_logits_sha256: String,
     pub measurement_note: String,
     pub stages: Vec<MemoryStage>,
     #[serde(skip)]
@@ -102,6 +121,9 @@ impl MemoryProfile {
             untracked_runtime_and_allocator_bytes: 0,
             remaining_budget_bytes: 0,
             full_context_graph_eager: "pending".into(),
+            startup_logits_sha256: String::new(),
+            startup_state_sha256: vec![],
+            full_context_logits_sha256: String::new(),
             measurement_note: "HBM free-memory differences and allocation/phase watermarks, not an exact trace of short-lived CANN allocations. Baseline includes context/communicator creation; concurrent device users can affect measurements. Fixed batch with sequential per-request prefill; last-position dry run uses synthetic cache state.".into(),
             stages: vec![],
             path: options.profile_path.clone(),
@@ -134,9 +156,19 @@ impl MemoryProfile {
         };
         let mut stats = MemoryStats::default();
         s.api.check(unsafe { query(s.ptr, &mut stats) })?;
+        type AllocationSnapshot = unsafe extern "C" fn(SessionPtr, *mut AllocationStats) -> i32;
+        let query: AllocationSnapshot = unsafe {
+            *s.api
+                ._library
+                .get(b"pangu_acl_allocation_snapshot\0")
+                .map_err(|e| invalid(e.to_string()))?
+        };
+        let mut allocations = AllocationStats::default();
+        s.api.check(unsafe { query(s.ptr, &mut allocations) })?;
         self.stages.push(MemoryStage {
             name: name.into(),
             stats: stats.clone(),
+            allocations,
         });
         self.save()?;
         Ok(stats)

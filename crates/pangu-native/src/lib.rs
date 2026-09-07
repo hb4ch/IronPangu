@@ -1,4 +1,5 @@
 //! Fixed-lane native graph engine. Devices and all resources stay on one thread.
+mod activation;
 mod ffi;
 mod memory;
 pub use memory::{MemoryProfile, StartupOptions};
@@ -259,7 +260,10 @@ impl<'a> Engine<'a> {
             let append = s.allocate(batch * 8)?;
             let table = s.allocate(batch * context * 8)?;
             let mask = s.allocate(batch * context * 4)?;
-            let mut hidden = s.allocate(batch * 4096)?;
+            // Values remain live through the consuming layer, including its
+            // residual path. Adjacent input/output intervals must not alias.
+            let hidden_handles = activation::bind_hidden(&s, program.blocks.len(), batch * 4096)?;
+            let mut hidden = hidden_handles[0];
             let mut ops = vec![];
             let mut op = 0;
             api.check(embed(
@@ -276,12 +280,12 @@ impl<'a> Engine<'a> {
             let slots_per_lane = context.div_ceil(program.page_tokens) * program.page_tokens + 1;
             let slots = batch * slots_per_lane;
             let mut states = vec![];
-            for item in &program.blocks {
+            for (layer_index, item) in program.blocks.iter().enumerate() {
                 let mut bindings = vec![];
                 for b in &item.bindings {
                     bindings.push(upload(&s, dir, c, b, &mut cache, &mut hashes)?);
                 }
-                let output = s.allocate(batch * 4096)?;
+                let output = hidden_handles[layer_index + 1];
                 let mut a = 0;
                 let mut b = 0;
                 let mut op = 0;
@@ -333,7 +337,7 @@ impl<'a> Engine<'a> {
                 hidden = output;
             }
             let gamma = upload(&s, dir, c, &program.final_norm, &mut cache, &mut hashes)?;
-            let normalized = s.allocate(batch * 4096)?;
+            let normalized = hidden_handles[program.blocks.len() + 1];
             let logits = s.allocate(batch * 248320 * 2)?;
             let mut norm = 0;
             api.check((api.norm_prepare)(
@@ -431,6 +435,11 @@ impl<'a> Engine<'a> {
                     return Err(invalid("native startup graph state mismatch"));
                 }
             }
+            profile.startup_logits_sha256 = sha(&eager
+                .iter()
+                .flat_map(|v| v.to_le_bytes())
+                .collect::<Vec<_>>());
+            profile.startup_state_sha256 = expected.iter().map(|bytes| sha(bytes)).collect();
             profile.record(&s, "model_graph_qualified")?;
             let mut sampler_logits = Vec::new();
             let mut samplers = Vec::new();
@@ -488,6 +497,10 @@ impl<'a> Engine<'a> {
                 )?;
                 sampler.draw(&s)?;
             }
+            profile.full_context_logits_sha256 = sha(&full_eager
+                .iter()
+                .flat_map(|v| v.to_le_bytes())
+                .collect::<Vec<_>>());
             profile.record(&s, "full_context_dry_run")?;
             let mut engine = Self {
                 session: s,

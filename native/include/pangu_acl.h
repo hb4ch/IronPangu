@@ -20,10 +20,24 @@ typedef struct pangu_acl_memory_stats {
 } pangu_acl_memory_stats;
 int32_t pangu_acl_memory_snapshot(pangu_acl_session *,
                                   pangu_acl_memory_stats *);
+/* Additive ABI: physical pool ownership and logical aliased demand. */
+typedef struct pangu_acl_allocation_stats {
+  uint64_t scratch_pool_bytes, layer_pool_bytes, snapshot_pool_bytes;
+  uint64_t owned_temporary_bytes, logical_scratch_bytes,
+      logical_workspace_bytes;
+  uint64_t workspace_blocks, owned_buffers, buffer_views;
+  uint64_t dedicated_activations, dedicated_workspaces;
+} pangu_acl_allocation_stats;
+int32_t pangu_acl_allocation_snapshot(pangu_acl_session *,
+                                      pangu_acl_allocation_stats *);
 int32_t pangu_acl_set_memory_budget(pangu_acl_session *, uint64_t bytes,
                                     uint64_t reserve);
 int32_t pangu_acl_allocate(pangu_acl_session *, uint64_t bytes,
                            uint64_t *handle);
+/* Non-owning aligned region; parent storage remains session-owned. */
+int32_t pangu_acl_buffer_view(pangu_acl_session *, uint64_t parent,
+                              uint64_t offset, uint64_t bytes,
+                              uint64_t *handle);
 int32_t pangu_acl_write(pangu_acl_session *, uint64_t handle, uint64_t offset,
                         const void *, uint64_t bytes);
 int32_t pangu_acl_read(pangu_acl_session *, uint64_t handle, uint64_t offset,

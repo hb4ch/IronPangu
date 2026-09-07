@@ -23,9 +23,9 @@ extern "C" int32_t pangu_acl_sampler_prepare(
       return b.tensor(s->region(id, 0, bytes), {1, vocab}, dtype);
     };
     auto scratch = [&](aclDataType dtype = ACL_FLOAT) {
-      return b.tensor(b.temp(vocab * (dtype == ACL_INT64  ? 8
-                                      : dtype == ACL_BOOL ? 1
-                                                          : 4)),
+      return b.tensor(b.op->scratch(vocab * (dtype == ACL_INT64  ? 8
+                                             : dtype == ACL_BOOL ? 1
+                                                                 : 4)),
                       {1, vocab}, dtype);
     };
     auto constant = [&](float value) {
@@ -102,7 +102,7 @@ extern "C" int32_t pangu_acl_sampler_prepare(
           "sampler greedy argmax");
     } else {
       auto *scaled = mul(processed, param(0));
-      void *sorted_ptr = b.temp(vocab * 4);
+      void *sorted_ptr = b.op->scratch(vocab * 4);
       auto *sorted = b.tensor(sorted_ptr, {1, vocab}, ACL_FLOAT);
       auto *indices = scratch(ACL_INT64);
       b.step(
@@ -114,7 +114,7 @@ extern "C" int32_t pangu_acl_sampler_prepare(
           "sampler stable sort");
       auto *k_index =
           b.tensor(s->region(rng, 0, 24), {1, 1}, ACL_INT64, {1, 1}, 2, {3});
-      auto *threshold = b.tensor(b.temp(4), {1, 1}, ACL_FLOAT);
+      auto *threshold = b.tensor(b.op->scratch(4), {1, 1}, ACL_FLOAT);
       b.step(
           aclnnGather,
           [&](auto *n, auto *e) {
@@ -126,7 +126,7 @@ extern "C" int32_t pangu_acl_sampler_prepare(
       auto *topk = where(ge(sorted, threshold), sorted, neg_inf);
       auto *maximum =
           b.tensor(sorted_ptr, {1, 1}, ACL_FLOAT, {vocab, 1}, 0, {1, vocab});
-      auto *min_threshold = b.tensor(b.temp(4), {1, 1}, ACL_FLOAT);
+      auto *min_threshold = b.tensor(b.op->scratch(4), {1, 1}, ACL_FLOAT);
       b.add(maximum, param(3), min_threshold);
       auto *filtered = where(ge(sorted, min_threshold), topk, neg_inf);
       auto *probs = scratch();
@@ -160,8 +160,8 @@ extern "C" int32_t pangu_acl_sampler_prepare(
                                                n, e);
           },
           "sampler nucleus distribution");
-      auto *selected = b.tensor(b.temp(8), {1, 1}, ACL_INT64);
-      auto *uniform = b.tensor(b.temp(4), {1, 1}, ACL_FLOAT);
+      auto *selected = b.tensor(b.op->scratch(8), {1, 1}, ACL_INT64);
+      auto *uniform = b.tensor(b.op->scratch(4), {1, 1}, ACL_FLOAT);
       auto *random_values = b.tensor(s->region(random, 0, random_count * 4),
                                      {1, random_count}, ACL_FLOAT);
       auto *random_index = b.tensor(s->region(rng, 8, 8), {1, 1}, ACL_INT64);
@@ -172,7 +172,7 @@ extern "C" int32_t pangu_acl_sampler_prepare(
                                                uniform, n, e);
           },
           "sampler random draw");
-      void *cdf_ptr = b.temp(vocab * 4);
+      void *cdf_ptr = b.op->scratch(vocab * 4);
       auto *cdf = b.tensor(cdf_ptr, {1, vocab}, ACL_FLOAT);
       b.step(
           aclnnCumsum,
@@ -183,7 +183,7 @@ extern "C" int32_t pangu_acl_sampler_prepare(
           "sampler categorical cdf");
       auto *total = b.tensor(cdf_ptr, {1, 1}, ACL_FLOAT, {vocab, 1}, vocab - 1,
                              {1, vocab});
-      auto *draw = b.tensor(b.temp(4), {1, 1}, ACL_FLOAT);
+      auto *draw = b.tensor(b.op->scratch(4), {1, 1}, ACL_FLOAT);
       b.mul(uniform, total, draw);
       auto *crossed = b.cast(gt(cdf, draw), {1, vocab}, ACL_FLOAT);
       b.step(

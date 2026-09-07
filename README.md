@@ -59,3 +59,5 @@ See [remote build and run instructions](docs/remote-development.md). The origina
 Checkpoint-aware compilation is now available through `pangu compile-checkpoint`: see [the DSL/compiler guide](docs/dsl-compilation.md) and [the checkpoint program](examples/qwen35-2b-checkpoint.pangu). It validates the supplied Qwen3.5-2B tensor schema and emits a typed, non-executable mathematical plan. Native linking and numerical execution remain separate work.
 
 See [NPU sampling](docs/npu-sampling.md) for the model-card defaults, supported controls and seeded validation.
+
+See [activation memory management](docs/npu-activation-memory.md) for stable workspace pools, Rust live-interval planning, C++ activation reuse and dedicated/pooled NPU qualification.

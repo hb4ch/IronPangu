@@ -1,0 +1,310 @@
+{
+  "tensor_parallel_rank": 0,
+  "tensor_parallel_world": 2,
+  "status": "passed",
+  "max_model_len": 2048,
+  "max_num_seqs": 4,
+  "memory_utilization": 0.9,
+  "memory_reserve_bytes": 268435456,
+  "source_weight_bytes": 3763655360,
+  "resident_weight_bytes": 2391145152,
+  "kv_cache_bytes": 100712448,
+  "recurrent_and_conv_bytes": 78151680,
+  "other_buffer_bytes": 20739044,
+  "temporary_bytes": 56263112,
+  "workspace_bytes": 33555968,
+  "observed_peak_bytes": 3531329536,
+  "non_weight_observed_bytes": 1140184384,
+  "untracked_runtime_and_allocator_bytes": 850762132,
+  "remaining_budget_bytes": 55677562880,
+  "full_context_graph_eager": "bitwise_equal",
+  "startup_logits_sha256": "b7656cff34575147fe0a4fb894228dca0c0c301ee81490ae86fca28b349ac6d8",
+  "startup_state_sha256": [
+    "8b1ef57b852782fb4b4cb1ebd27e6205ab20a38dbbea4033463014a47310fa26",
+    "43f3d8cbeaf8de5e1fd7ff1d361297643cea1986db77a955f2aa0379d8040940",
+    "c43ed82468aa2704bfa22311a4b97ae3b2d03b31500257cc527c5f3ee1c55dab",
+    "6e300bfcd488fcf774f45967c16cbce2f57fa3027a1f171584b6dd4927077c5d",
+    "92311486021ce279550ae8af71da0c1ec96b8f1aebec9f6a5e0043d4f03e2954",
+    "d9d8ce2bf233abe08cd3dac8dfe752de03479d1891d698edffcc01fa41e21fe9",
+    "0b637c31424f2b860b450282fc710d03e995627be74b248f0b5599f53c337465",
+    "26e178ef66c89d7385ed26c3b5ebf96adbe4a4040cd164b9377ef02c5eab4a08",
+    "6de1bc6addc2467d249e1e6787e5fbf6f6d78c6674708cb44d61abdb9ad1936d",
+    "bcf9a5905ed7135ebc21c809b6d13a75ee5c42077258a4071759bd7802d89408",
+    "67139aaf51006fc5577ccc7a0840103775606534712b600b1bdd7910f674b66d",
+    "ed639718ea665d367c557ca69b657eb422a39d07c9b43ea1232cb1c4a82a126c",
+    "3f7440dc8f436e8acf83ca405771b42a53e6d7c3d103a00b8fa89a1a96ab143a",
+    "b38764f93bccdb8b0fba8bab31f1b8db68c514c61c04dd3afb0aa40489fc29e6",
+    "142dce1e09d65cfe56197dc6efa7a8eadcebb791c5377a2ffce539572d2eae1b",
+    "1b87a660142ea05e082a48d3ffaac42101e7210373637e9de1dbcf9a8ddea1ac",
+    "4a705f499938379be73b5a28e2fb67da756f762bee6dc58ce0a3b1bd3ea089ae",
+    "34c7cef83c2f466470ba096848c44b0b2de921b63c2a9bfd9c46d5552064b954",
+    "d5206a34ef31be6c0c68be85567efaa423f529037bc137b9ad6c2ad35d2e8bea",
+    "8198f864d9752f404073bcf22c080224c22374009b7f296bd8f7f0cd47125265",
+    "f0bf2fd93b2fdc0be70ce5caacdd6fc07c5fab96112b7dbf6e5ca23a3a28c834",
+    "2e7b089dc4bca2334f3616ca7e1236904776ebbbc37faf49a1099b3dabb71b63",
+    "c28a5ffa5cf380053ad4aa7e9332eda30b6fa2fd743941cc10d071336d4590c0",
+    "6972b52f8a93fb549089f6c7776ad74995c5ca9f6d3f555815728d726b1498f9",
+    "eb4cbd6d0c050dd54a7b148a2e5abe544e7b4c7704e25933221835e383e38ced",
+    "e16668e791352e18869ee1081a5a4ee179a362d6311ae20da194215bba82e777",
+    "cfa473c16d0935b05405e68cdb92f3664ee197892a037c2d2f167e4424abd999",
+    "075597c2a3b3af26b358f9cfd0ba422e4d8613b4b109e37dbf1d102c7acc5217",
+    "04a11ec75e0f4ded9109e7ce854e4c939456bb02c6c299e4b56640339a26be33",
+    "fc38f82fef3c3183c09f617eea708844ba9486b9049fcdbdc90ac7fc39b421a2",
+    "e6d5fddb51947961162df1be20f9c5db86c6c42046cf21b50047359cd83cb370",
+    "33038d3367c4a2e8de5c54fe2c45fb56deeebe80e7516aa2194102c717eccee5",
+    "ec116c07f6b7425ee490ba06a2b593f2130f9dd28e906d95e87541b80e527801",
+    "bd5455cd4e33a4fc2e6d6f479fa8c6b1b15f9f006511a0d146423fef33fa8677",
+    "2142352515dde96e62880f3def475a646426f72e93119e935ab3b6d7ff81d5bd",
+    "1a7d5cdb7f3abe2665b2e458dafef186a88c130d2db21fa920ec5cd56bcb01ce",
+    "577a82fd0bcc159e65e04b9cb25818cb5b4ab9b17b294f67dbfcc4f456980641",
+    "99ac8e5c08a8cc25981be1843cacca35d67cf414fa0c1d6ec70fe36c68db4035",
+    "da097a70db1b9959ff66779cb0933b246a37f26204df3626b701fcf66907116f",
+    "56c17401a9aaa83385b2766951270c755609d3d27fb590fabb479271da156363",
+    "e75017b114fc492332a22acf5e53645416c33a1b34364844a5a3c824e9981bf3",
+    "954a0c9755107ca7818d9767a04baa246e1d64a24a0dba451c9278f307625bcd",
+    "22bd85cac4dd47a98b01305bbc96652a6ede273bd6b27a2477023f05ab02c77c",
+    "6f584a1967f6286af4752e57e759c87e08e6d9548f1618db6eb56ce795e16502",
+    "0a415da09942c997b101b9cdb45bf5f7b042314d28508ebd63f79048952ba4b8",
+    "39e74995bf7ff04a24bda7d8cb084c4f1826ec01859a0d1a6b54fb439ca3c100",
+    "d18d1269da88b99b8f03e64037ea346d605de6294a4379f513fb7ed0320aa28a",
+    "bd03ce1d1c3944f1d81c0b9ff6e248fd26c5a5b47d4552238f29f6c332d701d6"
+  ],
+  "full_context_logits_sha256": "c30a9f03c168f5722ae82da2e12ab8a7d98390089e1adfca976407483846dd92",
+  "measurement_note": "HBM free-memory differences and allocation/phase watermarks, not an exact trace of short-lived CANN allocations. Baseline includes context/communicator creation; concurrent device users can affect measurements. Fixed batch with sequential per-request prefill; last-position dry run uses synthetic cache state.",
+  "stages": [
+    {
+      "name": "context_initialized",
+      "stats": {
+        "total_bytes": 65787658240,
+        "free_bytes": 65343782912,
+        "observed_peak_bytes": 0,
+        "buffer_bytes": 0,
+        "temporary_bytes": 0,
+        "workspace_bytes": 0,
+        "graphs": 0,
+        "budget_bytes": 0
+      },
+      "allocations": {
+        "scratch_pool_bytes": 0,
+        "layer_pool_bytes": 0,
+        "snapshot_pool_bytes": 0,
+        "owned_temporary_bytes": 0,
+        "logical_scratch_bytes": 0,
+        "logical_workspace_bytes": 0,
+        "workspace_blocks": 0,
+        "owned_buffers": 0,
+        "buffer_views": 0,
+        "dedicated_activations": 0,
+        "dedicated_workspaces": 0
+      }
+    },
+    {
+      "name": "budget_set",
+      "stats": {
+        "total_bytes": 65787658240,
+        "free_bytes": 65343782912,
+        "observed_peak_bytes": 0,
+        "buffer_bytes": 0,
+        "temporary_bytes": 0,
+        "workspace_bytes": 0,
+        "graphs": 0,
+        "budget_bytes": 59208892416
+      },
+      "allocations": {
+        "scratch_pool_bytes": 0,
+        "layer_pool_bytes": 0,
+        "snapshot_pool_bytes": 0,
+        "owned_temporary_bytes": 0,
+        "logical_scratch_bytes": 0,
+        "logical_workspace_bytes": 0,
+        "workspace_blocks": 0,
+        "owned_buffers": 0,
+        "buffer_views": 0,
+        "dedicated_activations": 0,
+        "dedicated_workspaces": 0
+      }
+    },
+    {
+      "name": "weights_loaded",
+      "stats": {
+        "total_bytes": 65787658240,
+        "free_bytes": 62646767616,
+        "observed_peak_bytes": 2697015296,
+        "buffer_bytes": 2391145152,
+        "temporary_bytes": 0,
+        "workspace_bytes": 0,
+        "graphs": 0,
+        "budget_bytes": 59208892416
+      },
+      "allocations": {
+        "scratch_pool_bytes": 0,
+        "layer_pool_bytes": 0,
+        "snapshot_pool_bytes": 0,
+        "owned_temporary_bytes": 0,
+        "logical_scratch_bytes": 0,
+        "logical_workspace_bytes": 0,
+        "workspace_blocks": 0,
+        "owned_buffers": 320,
+        "buffer_views": 0,
+        "dedicated_activations": 0,
+        "dedicated_workspaces": 0
+      }
+    },
+    {
+      "name": "operators_prepared",
+      "stats": {
+        "total_bytes": 65787658240,
+        "free_bytes": 62351069184,
+        "observed_peak_bytes": 2992713728,
+        "buffer_bytes": 2572836260,
+        "temporary_bytes": 36149112,
+        "workspace_bytes": 0,
+        "graphs": 0,
+        "budget_bytes": 59208892416
+      },
+      "allocations": {
+        "scratch_pool_bytes": 31797296,
+        "layer_pool_bytes": 709248,
+        "snapshot_pool_bytes": 4341760,
+        "owned_temporary_bytes": 10056,
+        "logical_scratch_bytes": 383400368,
+        "logical_workspace_bytes": 1326924032,
+        "workspace_blocks": 0,
+        "owned_buffers": 376,
+        "buffer_views": 500,
+        "dedicated_activations": 0,
+        "dedicated_workspaces": 0
+      }
+    },
+    {
+      "name": "model_graph_qualified",
+      "stats": {
+        "total_bytes": 65787658240,
+        "free_bytes": 61879304192,
+        "observed_peak_bytes": 3466403840,
+        "buffer_bytes": 2572836260,
+        "temporary_bytes": 36149112,
+        "workspace_bytes": 16777728,
+        "graphs": 1,
+        "budget_bytes": 59208892416
+      },
+      "allocations": {
+        "scratch_pool_bytes": 31797296,
+        "layer_pool_bytes": 709248,
+        "snapshot_pool_bytes": 4341760,
+        "owned_temporary_bytes": 10056,
+        "logical_scratch_bytes": 383400368,
+        "logical_workspace_bytes": 1326924032,
+        "workspace_blocks": 1,
+        "owned_buffers": 376,
+        "buffer_views": 500,
+        "dedicated_activations": 0,
+        "dedicated_workspaces": 0
+      }
+    },
+    {
+      "name": "sampler_graphs_qualified",
+      "stats": {
+        "total_bytes": 65787658240,
+        "free_bytes": 61816647680,
+        "observed_peak_bytes": 3527135232,
+        "buffer_bytes": 2590748324,
+        "temporary_bytes": 56263112,
+        "workspace_bytes": 33555968,
+        "graphs": 9,
+        "budget_bytes": 59208892416
+      },
+      "allocations": {
+        "scratch_pool_bytes": 51911232,
+        "layer_pool_bytes": 709248,
+        "snapshot_pool_bytes": 4341760,
+        "owned_temporary_bytes": 10120,
+        "logical_scratch_bytes": 520473104,
+        "logical_workspace_bytes": 1394039040,
+        "workspace_blocks": 2,
+        "owned_buffers": 412,
+        "buffer_views": 500,
+        "dedicated_activations": 0,
+        "dedicated_workspaces": 0
+      }
+    },
+    {
+      "name": "full_context_dry_run",
+      "stats": {
+        "total_bytes": 65787658240,
+        "free_bytes": 61812453376,
+        "observed_peak_bytes": 3531329536,
+        "buffer_bytes": 2590748324,
+        "temporary_bytes": 56263112,
+        "workspace_bytes": 33555968,
+        "graphs": 9,
+        "budget_bytes": 59208892416
+      },
+      "allocations": {
+        "scratch_pool_bytes": 51911232,
+        "layer_pool_bytes": 709248,
+        "snapshot_pool_bytes": 4341760,
+        "owned_temporary_bytes": 10120,
+        "logical_scratch_bytes": 520473104,
+        "logical_workspace_bytes": 1394039040,
+        "workspace_blocks": 2,
+        "owned_buffers": 412,
+        "buffer_views": 500,
+        "dedicated_activations": 0,
+        "dedicated_workspaces": 0
+      }
+    },
+    {
+      "name": "inactive_lanes_qualified",
+      "stats": {
+        "total_bytes": 65787658240,
+        "free_bytes": 61812453376,
+        "observed_peak_bytes": 3531329536,
+        "buffer_bytes": 2590748324,
+        "temporary_bytes": 56263112,
+        "workspace_bytes": 33555968,
+        "graphs": 9,
+        "budget_bytes": 59208892416
+      },
+      "allocations": {
+        "scratch_pool_bytes": 51911232,
+        "layer_pool_bytes": 709248,
+        "snapshot_pool_bytes": 4341760,
+        "owned_temporary_bytes": 10120,
+        "logical_scratch_bytes": 520473104,
+        "logical_workspace_bytes": 1394039040,
+        "workspace_blocks": 2,
+        "owned_buffers": 412,
+        "buffer_views": 500,
+        "dedicated_activations": 0,
+        "dedicated_workspaces": 0
+      }
+    },
+    {
+      "name": "profile_reset",
+      "stats": {
+        "total_bytes": 65787658240,
+        "free_bytes": 61812453376,
+        "observed_peak_bytes": 3531329536,
+        "buffer_bytes": 2590748324,
+        "temporary_bytes": 56263112,
+        "workspace_bytes": 33555968,
+        "graphs": 9,
+        "budget_bytes": 59208892416
+      },
+      "allocations": {
+        "scratch_pool_bytes": 51911232,
+        "layer_pool_bytes": 709248,
+        "snapshot_pool_bytes": 4341760,
+        "owned_temporary_bytes": 10120,
+        "logical_scratch_bytes": 520473104,
+        "logical_workspace_bytes": 1394039040,
+        "workspace_blocks": 2,
+        "owned_buffers": 412,
+        "buffer_views": 500,
+        "dedicated_activations": 0,
+        "dedicated_workspaces": 0
+      }
+    }
+  ]
+}

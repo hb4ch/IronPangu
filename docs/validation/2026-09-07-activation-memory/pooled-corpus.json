@@ -1,0 +1,203 @@
+{
+  "status": "passed",
+  "reference": "dedicated-corpus.json",
+  "outputs": [
+    {
+      "choices": [
+        {
+          "index": 0,
+          "text": " Paris.\nA. True\nB. False\n\n<think>",
+          "finish_reason": "length"
+        }
+      ],
+      "usage": {
+        "prompt_tokens": 5,
+        "total_tokens": 17,
+        "completion_tokens": 12
+      }
+    },
+    {
+      "choices": [
+        {
+          "index": 0,
+          "text": ", in a magical land of numbers, there lived a group",
+          "finish_reason": "length"
+        }
+      ],
+      "usage": {
+        "prompt_tokens": 4,
+        "total_tokens": 16,
+        "completion_tokens": 12
+      }
+    },
+    {
+      "choices": [
+        {
+          "index": 0,
+          "text": "\n\nAddition is the process of combining quantities or amounts to",
+          "finish_reason": "length"
+        }
+      ],
+      "usage": {
+        "prompt_tokens": 7,
+        "total_tokens": 19,
+        "completion_tokens": 12
+      }
+    },
+    {
+      "choices": [
+        {
+          "index": 0,
+          "text": ":\nred, blue, green\n\n<think>\nThinking Process",
+          "finish_reason": "length"
+        }
+      ],
+      "usage": {
+        "prompt_tokens": 484,
+        "total_tokens": 496,
+        "completion_tokens": 12
+      }
+    },
+    {
+      "choices": [
+        {
+          "index": 0,
+          "text": " Paris, but Paris is the capital of France. Is it",
+          "finish_reason": "length"
+        }
+      ],
+      "usage": {
+        "prompt_tokens": 5,
+        "total_tokens": 17,
+        "completion_tokens": 12
+      }
+    },
+    {
+      "choices": [
+        {
+          "index": 0,
+          "text": ", in the wonderful world of physics, there was a very",
+          "finish_reason": "length"
+        }
+      ],
+      "usage": {
+        "prompt_tokens": 4,
+        "total_tokens": 16,
+        "completion_tokens": 12
+      }
+    },
+    {
+      "choices": [
+        {
+          "index": 0,
+          "text": "\n\n<think>\nThinking Process:\n\n1.  **An",
+          "finish_reason": "length"
+        }
+      ],
+      "usage": {
+        "prompt_tokens": 7,
+        "total_tokens": 19,
+        "completion_tokens": 12
+      }
+    },
+    {
+      "choices": [
+        {
+          "index": 0,
+          "text": " the same as the colors of a typical 8-bit color",
+          "finish_reason": "length"
+        }
+      ],
+      "usage": {
+        "prompt_tokens": 484,
+        "total_tokens": 496,
+        "completion_tokens": 12
+      }
+    },
+    {
+      "choices": [
+        {
+          "index": 0,
+          "text": " Paris. The capital of Germany is Berlin. The capital of",
+          "finish_reason": "length"
+        }
+      ],
+      "usage": {
+        "prompt_tokens": 5,
+        "total_tokens": 17,
+        "completion_tokens": 12
+      }
+    },
+    {
+      "choices": [
+        {
+          "index": 0,
+          "text": ", in a magical land called the Kingdom of Numbers, there",
+          "finish_reason": "length"
+        }
+      ],
+      "usage": {
+        "prompt_tokens": 4,
+        "total_tokens": 16,
+        "completion_tokens": 12
+      }
+    },
+    {
+      "choices": [
+        {
+          "index": 0,
+          "text": "\n\n<think>\n\n</think>\n\nAddition is the mathematical operation of",
+          "finish_reason": "length"
+        }
+      ],
+      "usage": {
+        "prompt_tokens": 7,
+        "total_tokens": 19,
+        "completion_tokens": 12
+      }
+    },
+    {
+      "choices": [
+        {
+          "index": 0,
+          "text": " red, blue, green, and yellow.\n\nThe colors",
+          "finish_reason": "length"
+        }
+      ],
+      "usage": {
+        "prompt_tokens": 484,
+        "total_tokens": 496,
+        "completion_tokens": 12
+      }
+    }
+  ],
+  "mixed_requests": 60,
+  "process_memory_mib": [
+    [
+      3487,
+      3481
+    ],
+    [
+      3487,
+      3481
+    ],
+    [
+      3487,
+      3481
+    ],
+    [
+      3487,
+      3481
+    ],
+    [
+      3487,
+      3481
+    ]
+  ],
+  "memory_range_mib": [
+    0,
+    0
+  ],
+  "median_request_seconds": 5.375185702985618,
+  "p95_request_seconds": 16.076376368990168
+}
