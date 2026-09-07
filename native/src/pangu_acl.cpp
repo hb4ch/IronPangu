@@ -11,6 +11,7 @@
 #include <aclnnop/aclnn_reduce_sum.h>
 #include <aclnnop/aclnn_rms_norm.h>
 #include <aclnnop/aclnn_rsqrt.h>
+#include <aclnnop/aclnn_s_where.h>
 #include <aclnnop/aclnn_scatter_nd_update.h>
 #include <aclnnop/aclnn_sigmoid.h>
 #include <aclnnop/aclnn_silu.h>
@@ -20,6 +21,10 @@
 #include <aclnnop/aclnn_sub.h>
 #include <algorithm>
 #include <cmath>
+#include <cstdlib>
+#include <exception>
+#include <hccl/hccl.h>
+#include <hccl/hccl_comm.h>
 #include <limits>
 #include <map>
 #include <memory>
@@ -55,6 +60,8 @@ template <class F> int32_t boundary(F f) noexcept {
 struct pangu_acl_session {
   aclrtContext context = nullptr;
   aclrtStream stream = nullptr;
+  HcclComm communicator = nullptr;
+  uint32_t tp_rank = 0, tp_world = 1;
   std::thread::id thread = std::this_thread::get_id();
   struct Buffer {
     void *ptr;
@@ -62,6 +69,28 @@ struct pangu_acl_session {
   };
   std::map<uint64_t, Buffer> buffers;
   std::map<uint64_t, aclmdlRI> graphs;
+  uint64_t memory_budget = 0, memory_reserve = 0;
+  uint64_t baseline_free = 0, minimum_free = UINT64_MAX;
+  std::pair<uint64_t, uint64_t> observe_memory() {
+    size_t free = 0, total = 0;
+    check(aclrtGetMemInfo(ACL_HBM_MEM, &free, &total), "HBM memory info");
+    minimum_free = std::min(minimum_free, uint64_t(free));
+    return {free, total};
+  }
+  void check_allocation(uint64_t bytes) {
+    if (!memory_budget)
+      return;
+    auto [free, total] = observe_memory();
+    (void)total;
+    auto used = baseline_free > free ? baseline_free - free : 0;
+    if (used > memory_budget || bytes > memory_budget - used ||
+        free < memory_reserve || bytes > free - memory_reserve)
+      throw std::runtime_error(
+          "HBM budget exceeded: observed_used=" + std::to_string(used) +
+          " allocation=" + std::to_string(bytes) +
+          " budget=" + std::to_string(memory_budget) +
+          "; reduce --max-model-len or increase --gpu-memory-utilization");
+  }
   struct Linear {
     std::vector<aclTensor *> tensors;
     std::vector<aclScalar *> scalars;
@@ -70,12 +99,28 @@ struct pangu_acl_session {
     using Launch = aclnnStatus (*)(void *, uint64_t, aclOpExecutor *,
                                    aclrtStream);
     struct Stage {
+      std::string name;
       aclOpExecutor *executor = nullptr;
       uint64_t bytes = 0;
       Launch launch = nullptr;
     };
     std::vector<Stage> stages;
+    struct DeviceCopy {
+      void *dst;
+      const void *src;
+      uint64_t bytes;
+    };
+    std::vector<DeviceCopy> copies;
+    struct Gather {
+      void *send;
+      void *receive;
+      uint64_t count;
+      HcclComm comm;
+    };
+    std::vector<Gather> gathers;
     std::vector<void *> temporaries;
+    uint64_t temporary_bytes = 0;
+    pangu_acl_session *owner = nullptr;
     void *workspace = nullptr;
     uint64_t workspace_bytes = 0;
     aclnnStatus run(aclrtStream stream) {
@@ -88,8 +133,18 @@ struct pangu_acl_session {
         auto status =
             stage.launch(workspace, stage.bytes, stage.executor, stream);
         if (status != ACL_SUCCESS)
-          return status;
+          throw std::runtime_error(stage.name + ": " + std::to_string(status));
       }
+      for (const auto &gather : gathers) {
+        auto result = HcclAllGather(gather.send, gather.receive, gather.count,
+                                    HCCL_DATA_TYPE_BFP16, gather.comm, stream);
+        if (result != HCCL_SUCCESS)
+          throw std::runtime_error("TP allgather: " + std::to_string(result));
+      }
+      for (const auto &copy : copies)
+        check(aclrtMemcpyAsync(copy.dst, copy.bytes, copy.src, copy.bytes,
+                               ACL_MEMCPY_DEVICE_TO_DEVICE, stream),
+              "captured state copy");
       return ACL_SUCCESS;
     }
     void prepare_workspace() {
@@ -99,10 +154,14 @@ struct pangu_acl_session {
                                    std::to_string(&stage - stages.data()));
         workspace_bytes = std::max(workspace_bytes, stage.bytes);
       }
+      if (owner)
+        owner->check_allocation(workspace_bytes);
       if (workspace_bytes)
         check(
             aclrtMalloc(&workspace, workspace_bytes, ACL_MEM_MALLOC_HUGE_FIRST),
             "workspace allocate");
+      if (owner && owner->memory_budget)
+        owner->observe_memory();
     }
     ~Linear() {
       for (auto &stage : stages)
@@ -145,13 +204,18 @@ struct Composite {
   pangu_acl_session *session;
   std::unique_ptr<pangu_acl_session::Linear> op =
       std::make_unique<pangu_acl_session::Linear>();
-  explicit Composite(pangu_acl_session *s) : session(s) { s->enter(); }
+  explicit Composite(pangu_acl_session *s) : session(s) {
+    s->enter();
+    op->owner = s;
+  }
   void *temp(uint64_t bytes) {
+    session->check_allocation(bytes);
     void *ptr = nullptr;
     check(aclrtMalloc(&ptr, bytes, ACL_MEM_MALLOC_HUGE_FIRST),
           "composite allocation");
     try {
       op->temporaries.push_back(ptr);
+      op->temporary_bytes += bytes;
     } catch (...) {
       aclrtFree(ptr);
       throw;
@@ -206,6 +270,7 @@ struct Composite {
     op->stages.emplace_back();
     auto &stage = op->stages.back();
     stage.launch = launch;
+    stage.name = name;
     check(query(&stage.bytes, &stage.executor), name);
     check(aclSetAclOpExecutorRepeatable(stage.executor),
           (std::string("retain ") + name).c_str());
@@ -287,6 +352,49 @@ int32_t pangu_acl_open(int32_t device, pangu_acl_session **out) {
     }
   });
 }
+int32_t pangu_acl_set_memory_budget(pangu_acl_session *s, uint64_t bytes,
+                                    uint64_t reserve) {
+  return boundary([&] {
+    if (!s || !bytes)
+      throw std::runtime_error("invalid memory budget");
+    s->enter();
+    auto [free, total] = s->observe_memory();
+    if (bytes > total || free <= reserve)
+      throw std::runtime_error("insufficient free HBM for memory reserve");
+    s->memory_budget = std::min(bytes, free - reserve);
+    s->memory_reserve = reserve;
+    s->baseline_free = free;
+    s->minimum_free = free;
+  });
+}
+int32_t pangu_acl_memory_snapshot(pangu_acl_session *s,
+                                  pangu_acl_memory_stats *out) {
+  return boundary([&] {
+    if (!s || !out)
+      throw std::runtime_error("invalid memory snapshot");
+    s->enter();
+    check(aclrtSynchronizeStream(s->stream), "memory snapshot fence");
+    auto [free, total] = s->observe_memory();
+    *out = {};
+    out->free_bytes = free;
+    out->total_bytes = total;
+    out->observed_peak_bytes = s->baseline_free > s->minimum_free
+                                   ? s->baseline_free - s->minimum_free
+                                   : 0;
+    out->budget_bytes = s->memory_budget;
+    out->graphs = s->graphs.size();
+    for (auto &[id, b] : s->buffers) {
+      (void)id;
+      out->buffer_bytes += b.bytes;
+    }
+    for (auto &[id, op] : s->operations) {
+      (void)id;
+      out->temporary_bytes += op->temporary_bytes;
+      out->workspace_bytes += op->workspace_bytes;
+    }
+    s->check_allocation(0);
+  });
+}
 int32_t pangu_acl_allocate(pangu_acl_session *s, uint64_t bytes,
                            uint64_t *handle) {
   return boundary([&] {
@@ -294,12 +402,15 @@ int32_t pangu_acl_allocate(pangu_acl_session *s, uint64_t bytes,
         bytes > std::numeric_limits<size_t>::max())
       throw std::runtime_error("invalid allocation");
     s->enter();
+    s->check_allocation(bytes);
     void *ptr = nullptr;
     check(aclrtMalloc(&ptr, bytes, ACL_MEM_MALLOC_HUGE_FIRST), "aclrtMalloc");
     try {
       auto id = s->next++;
       s->buffers.emplace(id, pangu_acl_session::Buffer{ptr, bytes});
       *handle = id;
+      if (s->memory_budget)
+        s->observe_memory();
     } catch (...) {
       aclrtFree(ptr);
       throw;
@@ -374,9 +485,48 @@ int32_t pangu_acl_replay(pangu_acl_session *s, uint64_t graph) {
       throw std::runtime_error("unknown graph");
     check(aclmdlRIExecuteAsync(it->second, s->stream), "graph replay");
     check(aclrtSynchronizeStream(s->stream), "replay fence");
+    s->check_allocation(0);
   });
 }
 
+int32_t pangu_acl_device_count(uint32_t *count) {
+  return boundary([&] {
+    if (!count)
+      throw std::runtime_error("null device count");
+    check(aclrtGetDeviceCount(count), "TP device count");
+  });
+}
+uint64_t pangu_acl_tp_root_size(void) { return sizeof(HcclRootInfo); }
+int32_t pangu_acl_tp_root(void *bytes, uint64_t size) {
+  return boundary([&] {
+    if (!bytes || size != sizeof(HcclRootInfo))
+      throw std::runtime_error("invalid TP root buffer");
+    const char *mode = std::getenv("HCCL_OP_EXPANSION_MODE");
+    if (!mode || std::string(mode) != "HOST")
+      throw std::runtime_error(
+          "TP ACL graph requires HCCL_OP_EXPANSION_MODE=HOST on this CANN "
+          "image");
+    auto result = HcclGetRootInfo(static_cast<HcclRootInfo *>(bytes));
+    if (result != HCCL_SUCCESS)
+      throw std::runtime_error("TP root: " + std::to_string(result));
+  });
+}
+int32_t pangu_acl_tp_init(pangu_acl_session *s, uint32_t world, uint32_t rank,
+                          const void *root, uint64_t size) {
+  return boundary([&] {
+    if (!s || !root || size != sizeof(HcclRootInfo) || world < 2 || world > 8 ||
+        rank >= world || s->communicator)
+      throw std::runtime_error("invalid TP communicator");
+    s->enter();
+    // Qualified HOST expansion is selected before HCCL root creation.
+    auto result = HcclCommInitRootInfo(
+        world, static_cast<const HcclRootInfo *>(root), rank, &s->communicator);
+    if (result != HCCL_SUCCESS)
+      throw std::runtime_error("TP init: " + std::to_string(result));
+    s->tp_world = world;
+    s->tp_rank = rank;
+  });
+}
 int32_t pangu_acl_linear_prepare(pangu_acl_session *s, uint64_t x, uint64_t w,
                                  uint64_t y, int64_t m, int64_t n, int64_t k,
                                  uint64_t *operation) {
@@ -386,6 +536,7 @@ int32_t pangu_acl_linear_prepare(pangu_acl_session *s, uint64_t x, uint64_t w,
       throw std::runtime_error("invalid linear arguments");
     s->enter();
     auto op = std::make_unique<pangu_acl_session::Linear>();
+    op->owner = s;
     auto tensor = [&](void *ptr, int64_t rows, int64_t cols, bool transpose) {
       int64_t storage[] = {rows, cols};
       int64_t shape[] = {transpose ? cols : rows, transpose ? rows : cols};
@@ -403,8 +554,41 @@ int32_t pangu_acl_linear_prepare(pangu_acl_session *s, uint64_t x, uint64_t w,
       return t;
     };
     auto *a = tensor(s->region(x, 0, uint64_t(m) * k * 2), m, k, false);
-    auto *b = tensor(s->region(w, 0, uint64_t(n) * k * 2), n, k, true);
-    auto *out = tensor(s->region(y, 0, uint64_t(m) * n * 2), m, n, false);
+    if (n % s->tp_world)
+      throw std::runtime_error("matmul output width is not divisible by TP");
+    int64_t local_n = n / s->tp_world;
+    // Embedding remains replicated for lookup and is sliced only for the tied
+    // LM head.
+    uint64_t weight_offset = s->buffers.at(w).bytes == uint64_t(n) * k * 2
+                                 ? uint64_t(s->tp_rank) * local_n * k * 2
+                                 : 0;
+    auto *b = tensor(s->region(w, weight_offset, uint64_t(local_n) * k * 2),
+                     local_n, k, true);
+    void *result = s->region(y, 0, uint64_t(m) * n * 2);
+    void *local_result = result;
+    if (s->tp_world > 1) {
+      auto temporary = [&](uint64_t bytes) {
+        s->check_allocation(bytes);
+        void *ptr = nullptr;
+        check(aclrtMalloc(&ptr, bytes, ACL_MEM_MALLOC_HUGE_FIRST),
+              "TP temporary");
+        op->temporaries.push_back(ptr);
+        op->temporary_bytes += bytes;
+        return ptr;
+      };
+      local_result = temporary(uint64_t(m) * local_n * 2);
+      auto *gathered = static_cast<char *>(temporary(uint64_t(m) * n * 2));
+      op->gathers.push_back(
+          {local_result, gathered, uint64_t(m) * local_n, s->communicator});
+      // HCCL returns [rank, batch, local_n]; restore canonical [batch, n].
+      for (uint32_t rank = 0; rank < s->tp_world; ++rank)
+        for (int64_t row = 0; row < m; ++row)
+          op->copies.push_back(
+              {static_cast<char *>(result) + (row * n + rank * local_n) * 2,
+               gathered + (rank * m + row) * local_n * 2,
+               uint64_t(local_n) * 2});
+    }
+    auto *out = tensor(local_result, m, local_n, false);
     op->stages.resize(1);
     auto &stage = op->stages[0];
     stage.launch = aclnnMatmul;
@@ -446,13 +630,23 @@ int32_t pangu_acl_operation_capture(pangu_acl_session *s, uint64_t operation,
     check(aclrtSynchronizeStream(s->stream), "linear warmup fence");
     check(aclmdlRICaptureBegin(s->stream, ACL_MODEL_RI_CAPTURE_MODE_GLOBAL),
           "linear capture begin");
-    auto status = op.run(s->stream);
+    aclnnStatus status = ACL_SUCCESS;
+    std::exception_ptr capture_error;
+    try {
+      status = op.run(s->stream);
+    } catch (...) {
+      capture_error = std::current_exception();
+    }
+    // Close capture even when an ACLNN/HCCL launch throws. Never reuse a failed
+    // session.
     aclmdlRI model = nullptr;
     auto end = aclmdlRICaptureEnd(s->stream, &model);
-    if (status != ACL_SUCCESS || end != ACL_SUCCESS) {
+    if (capture_error || status != ACL_SUCCESS || end != ACL_SUCCESS) {
       s->poisoned = true;
       if (model)
         aclmdlRIDestroy(model);
+      if (capture_error)
+        std::rethrow_exception(capture_error);
       check(status, "captured linear");
       check(end, "linear capture end");
     }
@@ -483,12 +677,15 @@ int32_t pangu_acl_rms_prepare(pangu_acl_session *s, uint64_t x, uint64_t gamma,
       throw std::runtime_error("invalid RMS arguments");
     s->enter();
     auto op = std::make_unique<pangu_acl_session::Linear>();
+    op->owner = s;
     auto temp = [&](uint64_t bytes) {
+      s->check_allocation(bytes);
       void *ptr = nullptr;
       check(aclrtMalloc(&ptr, bytes, ACL_MEM_MALLOC_HUGE_FIRST),
             "RMS temporary");
       try {
         op->temporaries.push_back(ptr);
+        op->temporary_bytes += bytes;
       } catch (...) {
         aclrtFree(ptr);
         throw;
@@ -696,6 +893,7 @@ int32_t pangu_acl_sequence_prepare(pangu_acl_session *s, const uint64_t *ids,
       throw std::runtime_error("invalid sequence");
     s->enter();
     auto op = std::make_unique<pangu_acl_session::Linear>();
+    op->owner = s;
     for (uint64_t i = 0; i < count; ++i) {
       auto it = s->operations.find(ids[i]);
       if (it == s->operations.end())
@@ -1223,6 +1421,181 @@ int32_t pangu_acl_model_layer_prepare(
     checked(pangu_acl_sequence_prepare(s, ops.data(), ops.size(), operation));
   });
 }
+int32_t pangu_acl_embedding_batch_prepare(pangu_acl_session *s, uint64_t weight,
+                                          uint64_t ids, uint64_t out,
+                                          int64_t vocab, int64_t width,
+                                          int64_t batch, uint64_t *operation) {
+  return boundary([&] {
+    if (!s || !operation || vocab <= 0 || vocab > 1048576 || width <= 0 ||
+        width > 16384 || batch < 1 || batch > 64)
+      throw std::runtime_error("invalid embedding dimensions");
+    Composite b(s);
+    auto *w = b.tensor(s->region(weight, 0, vocab * width * 2), {vocab, width},
+                       ACL_BF16);
+    auto *i = b.tensor(s->region(ids, 0, batch * 8), {batch}, ACL_INT64);
+    auto *y = b.tensor(s->region(out, 0, batch * width * 2), {batch, width},
+                       ACL_BF16);
+    b.step(
+        aclnnEmbedding,
+        [&](auto *n, auto *e) {
+          return aclnnEmbeddingGetWorkspaceSize(w, i, y, n, e);
+        },
+        "token embedding");
+    *operation = b.finish();
+  });
+}
+int32_t pangu_acl_model_layer_batch_prepare(
+    pangu_acl_session *s, int32_t kind, const uint64_t *w, uint64_t count,
+    uint64_t input, uint64_t output, uint64_t positions, uint64_t append,
+    uint64_t table, uint64_t mask, int64_t slots, int64_t context,
+    int64_t batch, uint64_t active, uint64_t *state_a, uint64_t *state_b,
+    uint64_t *operation) {
+  return boundary([&] {
+    if (batch < 1 || batch > 64 || !s || !w || !state_a || !state_b ||
+        !operation ||
+        !((kind == 0 && count == 14) || (kind == 1 && count == 11)))
+      throw std::runtime_error("invalid model layer bindings");
+    s->enter();
+    std::vector<uint64_t> ops;
+    auto checked = [](int status) {
+      if (status)
+        throw std::runtime_error(last_error);
+    };
+    auto alloc = [&](uint64_t bytes) {
+      uint64_t id = 0;
+      checked(pangu_acl_allocate(s, bytes * batch, &id));
+      return id;
+    };
+    auto emit = [&](auto build) {
+      uint64_t id = 0;
+      checked(build(&id));
+      ops.push_back(id);
+    };
+    auto linear = [&](uint64_t x, uint64_t weight, uint64_t y, int64_t n,
+                      int64_t k) {
+      emit([&](auto *id) {
+        return pangu_acl_linear_prepare(s, x, weight, y, batch, n, k, id);
+      });
+    };
+    auto point = [&](uint64_t a, uint64_t b, uint64_t y, int64_t n,
+                     int32_t mode) {
+      emit([&](auto *id) {
+        return pangu_acl_pointwise_prepare(s, a, b, y, batch * n, mode, id);
+      });
+    };
+    std::vector<uint64_t> restore_ops;
+    auto preserve = [&](uint64_t state, int64_t width, aclDataType dtype) {
+      Composite before(s), after(s);
+      auto bytes = uint64_t(batch * width * (dtype == ACL_FLOAT ? 4 : 2));
+      auto *saved_ptr = before.temp(bytes);
+      before.op->copies.push_back(
+          {saved_ptr, s->region(state, 0, bytes), bytes});
+      ops.push_back(before.finish());
+      auto *current =
+          after.tensor(s->region(state, 0, bytes), {batch, width}, dtype);
+      auto *old = after.tensor(saved_ptr, {batch, width}, dtype);
+      auto *condition =
+          after.tensor(s->region(active, 0, batch), {batch, 1}, ACL_BOOL);
+      auto *selected_ptr = after.temp(bytes);
+      auto *selected = after.tensor(selected_ptr, {batch, width}, dtype);
+      after.step(
+          aclnnSWhere,
+          [&](auto *n, auto *e) {
+            return aclnnSWhereGetWorkspaceSize(condition, current, old,
+                                               selected, n, e);
+          },
+          "preserve inactive recurrent lanes");
+      after.op->copies.push_back(
+          {s->region(state, 0, bytes), selected_ptr, bytes});
+      restore_ops.push_back(after.finish());
+    };
+    auto normed = alloc(2048 * 2);
+    emit([&](auto *id) {
+      return pangu_acl_rms_prepare(s, input, w[0], normed, batch, 2048, id);
+    });
+    auto attn = alloc(2048 * 2);
+    if (kind == 0) {
+      auto qkv = alloc(6144 * 2), z = alloc(2048 * 2), a = alloc(16 * 2),
+           b = alloc(16 * 2), conv = alloc(6144 * 2);
+      auto q = alloc(2048 * 2), k = alloc(2048 * 2), v = alloc(2048 * 2),
+           g = alloc(16 * 4), beta = alloc(16 * 2), core = alloc(2048 * 2),
+           gated = alloc(2048 * 2);
+      *state_a = alloc(6144 * 3 * 2);
+      *state_b = alloc(16 * 128 * 128 * 4);
+      preserve(*state_a, 6144 * 3, ACL_BF16);
+      preserve(*state_b, 16 * 128 * 128, ACL_FLOAT);
+      linear(normed, w[5], qkv, 6144, 2048);
+      linear(normed, w[6], z, 2048, 2048);
+      linear(normed, w[7], a, 16, 2048);
+      linear(normed, w[8], b, 16, 2048);
+      emit([&](auto *id) {
+        return pangu_acl_conv_prepare(s, qkv, w[9], *state_a, conv, batch, 6144,
+                                      id);
+      });
+      emit([&](auto *id) {
+        return pangu_acl_delta_transforms_prepare(s, conv, a, b, w[10], w[11],
+                                                  q, k, v, g, beta, batch, id);
+      });
+      emit([&](auto *id) {
+        return pangu_acl_delta_prepare(s, q, k, v, g, beta, *state_b, core,
+                                       batch * 16, 128, 128, id);
+      });
+      emit([&](auto *id) {
+        return pangu_acl_gated_rms_prepare(s, core, z, w[12], gated, batch * 16,
+                                           128, id);
+      });
+      linear(gated, w[13], attn, 2048, 2048);
+    } else {
+      auto qp = alloc(4096 * 2), ki = alloc(512 * 2), vi = alloc(512 * 2),
+           q = alloc(2048 * 2), k = alloc(512 * 2), gate = alloc(2048 * 2),
+           att = alloc(2048 * 2);
+      *state_a = alloc((slots / batch) * 512 * 2);
+      *state_b = alloc((slots / batch) * 512 * 2);
+      linear(normed, w[5], qp, 4096, 2048);
+      linear(normed, w[6], ki, 512, 2048);
+      linear(normed, w[7], vi, 512, 2048);
+      emit([&](auto *id) {
+        return pangu_acl_attention_qk_prepare(s, qp, ki, w[9], w[10], positions,
+                                              q, k, gate, batch, id);
+      });
+      emit([&](auto *id) {
+        return pangu_acl_paged_attention_prepare(
+            s, q, k, vi, gate, *state_a, *state_b, append, table, mask, att,
+            batch, slots, context, id);
+      });
+      linear(att, w[8], attn, 2048, 2048);
+    }
+    auto residual = alloc(2048 * 2), ff = alloc(2048 * 2),
+         gate = alloc(6144 * 2), up = alloc(6144 * 2), act = alloc(6144 * 2),
+         product = alloc(6144 * 2), down = alloc(2048 * 2);
+    point(input, attn, residual, 2048, 0);
+    emit([&](auto *id) {
+      return pangu_acl_rms_prepare(s, residual, w[1], ff, batch, 2048, id);
+    });
+    linear(ff, w[2], gate, 6144, 2048);
+    linear(ff, w[3], up, 6144, 2048);
+    point(gate, 0, act, 6144, 2);
+    point(act, up, product, 6144, 1);
+    linear(product, w[4], down, 2048, 6144);
+    point(residual, down, output, 2048, 0);
+    ops.insert(ops.end(), restore_ops.begin(), restore_ops.end());
+    checked(pangu_acl_sequence_prepare(s, ops.data(), ops.size(), operation));
+  });
+}
+int32_t pangu_acl_copy_region(pangu_acl_session *s, uint64_t src,
+                              uint64_t src_offset, uint64_t dst,
+                              uint64_t dst_offset, uint64_t bytes) {
+  return boundary([&] {
+    if (!s)
+      throw std::runtime_error("null copy session");
+    s->enter();
+    check(aclrtMemcpyAsync(s->region(dst, dst_offset, bytes), bytes,
+                           s->region(src, src_offset, bytes), bytes,
+                           ACL_MEMCPY_DEVICE_TO_DEVICE, s->stream),
+          "copy region");
+    check(aclrtSynchronizeStream(s->stream), "copy region fence");
+  });
+}
 int32_t pangu_acl_close(pangu_acl_session *s) {
   return boundary([&] {
     if (!s)
@@ -1239,6 +1612,12 @@ int32_t pangu_acl_close(pangu_acl_session *s) {
       s->graphs.erase(it);
     }
     s->operations.clear();
+    if (s->communicator) {
+      auto result = HcclCommDestroy(s->communicator);
+      if (result != HCCL_SUCCESS)
+        throw std::runtime_error("TP destroy: " + std::to_string(result));
+      s->communicator = nullptr;
+    }
     while (!s->buffers.empty()) {
       auto it = s->buffers.begin();
       check(aclrtFree(it->second.ptr), "buffer free");
@@ -1260,3 +1639,5 @@ int32_t pangu_acl_close(pangu_acl_session *s) {
   });
 }
 }
+
+#include "sampler.inc"

@@ -2,7 +2,7 @@
 
 An experimental Rust LLM inference compiler/runtime for Huawei Ascend. Model architecture and parallelism are expressed in a DSL. Necessary C++/Ascend C implementations will live behind hardware interfaces; no Python is required by this workspace.
 
-**Current milestone: native single-request Qwen3.5-2B text inference through the vLLM 0.25.1 Rust frontend.** All 24 layers execute on Ascend, with eager/graph and independent CPU checks. Serving currently supports greedy decoding and context 128; native PD and continuous batching remain unimplemented. See [native validation and deployment](docs/npu-native-milestone.md).
+**Current milestone: native continuously batched Qwen3.5-2B text inference through the vLLM 0.25.1 Rust frontend.** All 24 layers execute on Ascend, with eager/graph and independent CPU checks. Serving supports greedy and seeded non-greedy NPU sampling with configurable context and startup HBM profiling ([controls](docs/npu-memory-profile.md)); native continuous batching supports mixed prefill/decode ([controls](docs/npu-continuous-batching.md)); DSL-configured TP=2 is qualified ([details](docs/npu-tensor-parallel.md)); native PD remains unimplemented. See [native validation and deployment](docs/npu-native-milestone.md).
 
 ## Run
 
@@ -30,7 +30,7 @@ The commands above select **mock**. Native checkpoint loading, CANN execution an
 | `pangu-transfer` | PD protocol, leases, logical page/slot ownership, hardware transport contract |
 | `pangu-scheduler` | Chunked prefill, continuous decode batching, cancellation and reclamation |
 | `pangu-cli` | Compile, inspect, mock demos and native qualification probes |
-| `pangu-native` | Thread-affine single-request native checkpoint runner |
+| `pangu-native` | Thread-affine batched checkpoint runner with NPU sampling, HBM profiling and DSL TP |
 
 The real DSL subset uses required `key = value` declarations, space-separated ordered layers/buckets, and `TP CP SP` mesh fields. `#` starts a comment. Unknown/duplicate fields, loops, inheritance and expressions are rejected. See the [example](examples/qwen35-2b.pangu). For a distributed structural demo use `prefill = 2 2 true` and `decode = 2 1 false`; the checked-in [distributed example](examples/qwen35-2b-distributed.pangu) has these settings.
 
@@ -57,3 +57,5 @@ An optional server now lives in `frontend/`, using vendored vLLM **0.25.1 Rust f
 See [remote build and run instructions](docs/remote-development.md). The original CLI demo and all Ascend `NotImplemented` boundaries remain explicit; real checkpoint inference is still pending.
 
 Checkpoint-aware compilation is now available through `pangu compile-checkpoint`: see [the DSL/compiler guide](docs/dsl-compilation.md) and [the checkpoint program](examples/qwen35-2b-checkpoint.pangu). It validates the supplied Qwen3.5-2B tensor schema and emits a typed, non-executable mathematical plan. Native linking and numerical execution remain separate work.
+
+See [NPU sampling](docs/npu-sampling.md) for the model-card defaults, supported controls and seeded validation.

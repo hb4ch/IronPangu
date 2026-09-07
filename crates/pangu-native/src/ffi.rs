@@ -78,6 +78,8 @@ impl Api {
     }
 }
 pub(crate) struct Session<'a> {
+    pub(crate) rank: u32,
+    pub(crate) world: u32,
     pub(crate) api: &'a Api,
     pub(crate) ptr: SessionPtr,
     pub(crate) _thread: PhantomData<Rc<()>>,
@@ -87,10 +89,34 @@ impl<'a> Session<'a> {
         let mut ptr = std::ptr::null_mut();
         api.check(unsafe { (api.open)(device, &mut ptr) })?;
         Ok(Self {
+            rank: 0,
+            world: 1,
             api,
             ptr,
             _thread: PhantomData,
         })
+    }
+    pub(crate) fn init_parallel(&mut self, config: &crate::parallel::ParallelConfig) -> Result<()> {
+        type Init = unsafe extern "C" fn(SessionPtr, u32, u32, *const c_void, u64) -> i32;
+        let init: Init = unsafe {
+            *self
+                .api
+                ._library
+                .get(b"pangu_acl_tp_init\0")
+                .map_err(|e| invalid(e.to_string()))?
+        };
+        self.api.check(unsafe {
+            init(
+                self.ptr,
+                config.world,
+                config.rank,
+                config.root.as_ptr().cast(),
+                config.root.len() as u64,
+            )
+        })?;
+        self.rank = config.rank;
+        self.world = config.world;
+        Ok(())
     }
     pub(crate) fn allocate(&self, bytes: usize) -> Result<u64> {
         let mut id = 0;

@@ -1,3 +1,5 @@
+#[path = "native_worker.rs"]
+mod worker;
 use futures::Stream;
 use std::{
     path::PathBuf,
@@ -11,8 +13,8 @@ use std::{
 use tokio::sync::{mpsc, oneshot};
 use vllm_engine_core_client::protocol::dtype::ModelDtype;
 use vllm_llm::{
-    BackendMetadata, Error, FinishReason, GenerateOutput, GenerateOutputStream, GeneratePromptInfo,
-    GenerateRequest, GenerationBackend, Result,
+    BackendMetadata, Error, GenerateOutput, GenerateOutputStream, GenerateRequest,
+    GenerationBackend, Result,
 };
 fn error(message: impl Into<String>) -> Error {
     Error::Backend {
@@ -24,7 +26,7 @@ struct Job {
     tx: mpsc::Sender<Result<GenerateOutput>>,
     cancel: Arc<AtomicBool>,
 }
-type Active = Arc<Mutex<Option<(String, Arc<AtomicBool>)>>>;
+type Active = Arc<Mutex<std::collections::BTreeMap<String, Arc<AtomicBool>>>>;
 pub struct Backend {
     tx: mpsc::Sender<Job>,
     active: Active,
@@ -32,6 +34,7 @@ pub struct Backend {
     healthy: Arc<AtomicBool>,
     finished: tokio::sync::Mutex<Option<oneshot::Receiver<()>>>,
     context: usize,
+    defaults: vllm_engine_core_client::protocol::sampling::EngineCoreSamplingParams,
 }
 struct Guard {
     healthy: Arc<AtomicBool>,
@@ -51,12 +54,24 @@ impl Backend {
         dir: PathBuf,
         library: PathBuf,
         device: i32,
+        options: pangu_native::StartupOptions,
+        max_num_batched_tokens: usize,
     ) -> anyhow::Result<Arc<Self>> {
-        let context = plan.spec.context_buckets[0];
-        let (tx, mut rx) = mpsc::channel::<Job>(1);
+        options.validate()?;
+        anyhow::ensure!(
+            max_num_batched_tokens > 0,
+            "max-num-batched-tokens must be positive"
+        );
+        let defaults = crate::native_sampling::defaults(&dir)?;
+        eprintln!(
+            "native sampling defaults: temperature={} top_k={} top_p={} presence_penalty={}",
+            defaults.temperature, defaults.top_k, defaults.top_p, defaults.presence_penalty
+        );
+        let context = options.max_model_len;
+        let (tx, mut rx) = mpsc::channel::<Job>(options.max_num_seqs * 4);
         let (ready_tx, ready_rx) = oneshot::channel();
         let (done, finished) = oneshot::channel();
-        let active: Active = Arc::new(Mutex::new(None));
+        let active: Active = Arc::new(Mutex::new(std::collections::BTreeMap::new()));
         let stop = Arc::new(AtomicBool::new(false));
         let healthy = Arc::new(AtomicBool::new(false));
         let (worker_active, worker_stop, worker_health) =
@@ -70,33 +85,19 @@ impl Backend {
                 };
                 let mut ready = Some(ready_tx);
                 let result =
-                    pangu_native::with_engine(&plan, &dir, &library, device, context, |engine| {
+                    pangu_native::with_serving_engine(&plan, &dir, &library, device, &options, |engine| {
                         eprintln!(
                             "native program {} weights {} context {}",
                             engine.program_key, engine.weight_digest, context
                         );
+                        let memory=&engine.memory_profile;
+                        eprintln!("HBM profile passed: context={} weights={} non_weight_observed={} KV={} temporary={} workspace={} peak={} remaining_budget={} bytes",
+                            context,memory.resident_weight_bytes,memory.non_weight_observed_bytes,memory.kv_cache_bytes,memory.temporary_bytes,memory.workspace_bytes,memory.observed_peak_bytes,memory.remaining_budget_bytes);
                         worker_health.store(true, Ordering::Release);
                         if ready.take().unwrap().send(Ok(())).is_err() {
                             return Ok(());
                         }
-                        while !worker_stop.load(Ordering::Acquire) {
-                            // Polling permits shutdown without another command or an async runtime on this thread.
-                            let job = match rx.try_recv() {
-                                Ok(job) => job,
-                                Err(mpsc::error::TryRecvError::Empty) => {
-                                    std::thread::sleep(std::time::Duration::from_millis(2));
-                                    continue;
-                                }
-                                Err(mpsc::error::TryRecvError::Disconnected) => break,
-                            };
-                            let result = generate(engine, &job, &worker_stop);
-                            *worker_active.lock().unwrap() = None;
-                            if let Err(e) = result {
-                                let _ = job.tx.try_send(Err(error(e.to_string())));
-                                return Err(e); // An ACL failure invalidates serving readiness.
-                            }
-                        }
-                        Ok(())
+                        worker::run(engine, &mut rx, &worker_active, &worker_stop, max_num_batched_tokens)
                     });
                 if let Some(ready) = ready {
                     let _ = ready.send(Err(result
@@ -118,62 +119,9 @@ impl Backend {
             healthy,
             finished: tokio::sync::Mutex::new(Some(finished)),
             context,
+            defaults,
         }))
     }
-}
-fn generate(
-    engine: &mut pangu_native::Engine<'_>,
-    job: &Job,
-    stop: &AtomicBool,
-) -> pangu_model::Result<()> {
-    let cancelled =
-        || job.cancel.load(Ordering::Acquire) || stop.load(Ordering::Acquire) || job.tx.is_closed();
-    if cancelled() {
-        return Ok(());
-    }
-    engine.reset()?;
-    let mut next = 0;
-    for &token in &job.req.prompt_token_ids {
-        if cancelled() {
-            return Ok(());
-        }
-        next = engine.step(token)?;
-    }
-    let p = &job.req.sampling_params;
-    for i in 0..p.max_tokens {
-        if cancelled() {
-            return Ok(());
-        }
-        let finish = if p.eos_token_id == Some(next) {
-            Some(FinishReason::stop_eos())
-        } else if p.stop_token_ids.contains(&next) {
-            Some(FinishReason::Stop(Some(
-                vllm_engine_core_client::protocol::output::StopReason::TokenId(next),
-            )))
-        } else if i + 1 == p.max_tokens {
-            Some(FinishReason::Length)
-        } else {
-            None
-        };
-        let terminal = finish.is_some();
-        let output = GenerateOutput {
-            request_id: job.req.request_id.clone(),
-            prompt_info: (i == 0).then(|| GeneratePromptInfo {
-                prompt_token_ids: job.req.prompt_token_ids.clone().into(),
-                prompt_logprobs: None,
-            }),
-            token_ids: vec![next],
-            logprobs: None,
-            finish_reason: finish,
-            cached_token_count: 0,
-            kv_transfer_params: None,
-        };
-        if job.tx.try_send(Ok(output)).is_err() || terminal {
-            return Ok(());
-        }
-        next = engine.step(next)?;
-    }
-    Ok(())
 }
 struct Output {
     rx: mpsc::Receiver<Result<GenerateOutput>>,
@@ -197,11 +145,16 @@ impl Drop for Backend {
 }
 #[async_trait::async_trait]
 impl GenerationBackend for Backend {
+    fn default_sampling_params(
+        &self,
+    ) -> Option<vllm_engine_core_client::protocol::sampling::EngineCoreSamplingParams> {
+        Some(self.defaults.clone())
+    }
     fn metadata(&self) -> BackendMetadata {
         BackendMetadata {
             max_model_len: self.context as u32,
             model_dtype: ModelDtype::BFloat16,
-            version: "0.25.1 / IronPangu native experimental single-request".into(),
+            version: "0.25.1 / IronPangu native continuous batching".into(),
             healthy: self.healthy.load(Ordering::Acquire) && !self.stop.load(Ordering::Acquire),
         }
     }
@@ -209,13 +162,11 @@ impl GenerationBackend for Backend {
         if !self.metadata().healthy {
             return Err(error("native engine is not ready"));
         }
-        crate::backend::validate(&req)?;
+        crate::native_sampling::validate(&req)?;
         validate_capacity(&req, self.context)?;
         let mut active = self.active.lock().unwrap();
-        if active.is_some() {
-            return Err(error(
-                "native experimental backend allows one active request",
-            ));
+        if active.contains_key(&req.request_id) {
+            return Err(error("duplicate active request id"));
         }
         let id = req.request_id.clone();
         let cancel = Arc::new(AtomicBool::new(false));
@@ -227,14 +178,15 @@ impl GenerationBackend for Backend {
                 cancel: cancel.clone(),
             })
             .map_err(|_| error("native engine stopped or busy"))?;
-        *active = Some((id.clone(), cancel.clone()));
+        active.insert(id.clone(), cancel.clone());
         Ok(GenerateOutputStream::from_stream(id, Output { rx, cancel }))
     }
     async fn abort(&self, ids: &[String]) -> Result<()> {
-        if let Some((id, cancel)) = self.active.lock().unwrap().as_ref()
-            && ids.contains(id)
-        {
-            cancel.store(true, Ordering::Release);
+        let active = self.active.lock().unwrap();
+        for id in ids {
+            if let Some(cancel) = active.get(id) {
+                cancel.store(true, Ordering::Release);
+            }
         }
         Ok(())
     }

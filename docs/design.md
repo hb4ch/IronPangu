@@ -183,6 +183,8 @@ IR state effects use versioned handles: `read(state@t)` and `write(state@t+1)`. 
 
 ### Tensor parallelism
 
+The September 7 native baseline now supports output-row sharding with an AllGather after every linear projection; attention/state remain replicated. See [qualified implementation](npu-tensor-parallel.md). The paragraph below describes the subsequent optimized layout target.
+
 Use column-sharded Q/K/V and MLP up/gate projections, followed by row-sharded attention output and MLP down projections. Reduce partial row-projection outputs with AllReduce, or ReduceScatter when the consumer is sequence-sharded. Shard linear-attention channels/heads and their recurrence and convolution state consistently. Grouped heads require compatible Q/K/value grouping; initially reject TP sizes that cannot preserve this relation rather than silently changing it. Replicated small tensors must be declared.
 
 For vocabulary projection, initially gather sharded logits to a sampling rank and broadcast the selected token. This costs bandwidth but gives simple, testable greedy semantics. Distributed top-k/sampling can follow. HCCL provides the relevant standard collectives; exact capture compatibility is a target qualification item. [C7]

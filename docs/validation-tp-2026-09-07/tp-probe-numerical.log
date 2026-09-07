@@ -1,0 +1,4 @@
+rank=0 sharded_weights=0 CPU/eager/graph exact; three changing inputs passed
+rank=1 sharded_weights=0 CPU/eager/graph exact; three changing inputs passed
+rank=0 sharded_weights=1 CPU/eager/graph exact; three changing inputs passed
+rank=1 sharded_weights=1 CPU/eager/graph exact; three changing inputs passed

@@ -10,3 +10,5 @@ license.workspace = true
 pangu-model.workspace = true
 pangu-compiler.workspace = true
 libloading = "0.8.9"
+serde.workspace = true
+serde_json.workspace = true

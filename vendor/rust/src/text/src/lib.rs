@@ -147,6 +147,10 @@ impl TextLlm {
         };
 
         let sampling_hints = self.backend.sampling_hints()?;
+        if let Some(defaults) = self.llm.default_sampling_params() {
+            apply_backend_sampling_defaults(&mut request.sampling_params, &sampling_hints, defaults);
+        }
+
         let sampling_limits = SamplingLimits {
             max_model_len: self.max_model_len,
             max_logprobs: self.max_logprobs,
@@ -179,5 +183,36 @@ impl TextLlm {
     pub async fn shutdown(self) -> Result<()> {
         self.llm.shutdown().await?;
         Ok(())
+    }
+}
+
+/// Preserve explicit request values, then checkpoint hints, then backend defaults.
+fn apply_backend_sampling_defaults(
+    p: &mut SamplingParams,
+    hints: &SamplingHints,
+    defaults: vllm_engine_core_client::protocol::sampling::EngineCoreSamplingParams,
+) {
+    p.temperature = p.temperature.or(hints.default_temperature).or(Some(defaults.temperature));
+    p.top_k = p.top_k.or(hints.default_top_k).or(Some(defaults.top_k));
+    p.top_p = p.top_p.or(hints.default_top_p).or(Some(defaults.top_p));
+    p.min_p = p.min_p.or(hints.default_min_p).or(Some(defaults.min_p));
+    p.repetition_penalty = p.repetition_penalty.or(hints.default_repetition_penalty).or(Some(defaults.repetition_penalty));
+    p.frequency_penalty = p.frequency_penalty.or(Some(defaults.frequency_penalty));
+    p.presence_penalty = p.presence_penalty.or(Some(defaults.presence_penalty));
+}
+
+#[cfg(test)]
+mod sampling_default_tests {
+    use super::*;
+    #[test]
+    fn request_then_checkpoint_then_backend_defaults() {
+        let mut p = SamplingParams { temperature: Some(0.0), presence_penalty: Some(0.0), ..Default::default() };
+        let hints = SamplingHints { default_top_k: Some(7), ..Default::default() };
+        let defaults = vllm_engine_core_client::protocol::sampling::EngineCoreSamplingParams {
+            temperature: 1.0, top_k: 20, top_p: 0.9, presence_penalty: 2.0, ..Default::default()
+        };
+        apply_backend_sampling_defaults(&mut p, &hints, defaults);
+        expect_test::expect![["(Some(0.0), Some(7), Some(0.9), Some(0.0))"]]
+            .assert_eq(&format!("{:?}", (p.temperature,p.top_k,p.top_p,p.presence_penalty)));
     }
 }

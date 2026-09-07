@@ -1,0 +1,48 @@
+{
+  "status": "failed",
+  "max_model_len": 2050,
+  "memory_utilization": 0.001,
+  "memory_reserve_bytes": 268435456,
+  "source_weight_bytes": 3763655360,
+  "resident_weight_bytes": 0,
+  "kv_cache_bytes": 0,
+  "recurrent_and_conv_bytes": 0,
+  "other_buffer_bytes": 0,
+  "temporary_bytes": 0,
+  "workspace_bytes": 0,
+  "observed_peak_bytes": 0,
+  "non_weight_observed_bytes": 0,
+  "untracked_runtime_and_allocator_bytes": 0,
+  "remaining_budget_bytes": 0,
+  "full_context_graph_eager": "pending",
+  "measurement_note": "HBM free-memory differences and allocation/phase watermarks, not an exact trace of short-lived CANN allocations. Baseline includes context creation; concurrent device users can affect measurements. Batch=1 sequential prefill; last-position dry run uses synthetic cache state.",
+  "stages": [
+    {
+      "name": "context_initialized",
+      "stats": {
+        "total_bytes": 65796046848,
+        "free_bytes": 65636405248,
+        "observed_peak_bytes": 0,
+        "buffer_bytes": 0,
+        "temporary_bytes": 0,
+        "workspace_bytes": 0,
+        "graphs": 0,
+        "budget_bytes": 0
+      }
+    },
+    {
+      "name": "budget_set",
+      "stats": {
+        "total_bytes": 65796046848,
+        "free_bytes": 65636405248,
+        "observed_peak_bytes": 0,
+        "buffer_bytes": 0,
+        "temporary_bytes": 0,
+        "workspace_bytes": 0,
+        "graphs": 0,
+        "budget_bytes": 65796046
+      }
+    }
+  ],
+  "error": "Invalid(\"weights alone require 3763655360 bytes, exceeding HBM budget 65796046\")"
+}

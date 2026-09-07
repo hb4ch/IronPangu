@@ -1,0 +1,10 @@
+native sampling defaults: temperature=1 top_k=20 top_p=1 presence_penalty=2
+TP rank=1 ready weights=2391145152 peak=5788352512
+TP world=2 devices=0..1 captured matmul output shards + HCCL allgather
+native program 1b54ffd95f11d72e589218d7b0882c2f932247f6b3e11dde6655fd5aa1c8801e weights fb5a5219c7022bfb5d5788f3928eed2bf0c157c6db4e6eb24917a289eb775282 context 2048
+HBM profile passed: context=2048 weights=2391145152 non_weight_observed=3394319680 KV=100712448 temporary=598634904 workspace=1394039040 peak=5785464832 remaining_budget=52487077888 bytes
+vLLM Rust frontend 0.25.1; ironpangu-qwen35; loopback only
+batch max_active=1 capacity=4 token_budget=16
+batch max_active=2 capacity=4 token_budget=16
+batch mixed_round=1 prefill=1 decode=1 active=2 tick_tokens=2 budget=16
+batch max_active=4 capacity=4 token_budget=16

@@ -12,6 +12,16 @@ typedef struct pangu_acl_session pangu_acl_session;
 uint32_t pangu_acl_abi_version(void);
 const char *pangu_acl_last_error(void);
 int32_t pangu_acl_open(int32_t device, pangu_acl_session **out);
+/* Observed HBM watermark includes runtime allocations visible at samples;
+ * it is not an exact hardware trace of transient allocation peaks. */
+typedef struct pangu_acl_memory_stats {
+  uint64_t total_bytes, free_bytes, observed_peak_bytes, buffer_bytes;
+  uint64_t temporary_bytes, workspace_bytes, graphs, budget_bytes;
+} pangu_acl_memory_stats;
+int32_t pangu_acl_memory_snapshot(pangu_acl_session *,
+                                  pangu_acl_memory_stats *);
+int32_t pangu_acl_set_memory_budget(pangu_acl_session *, uint64_t bytes,
+                                    uint64_t reserve);
 int32_t pangu_acl_allocate(pangu_acl_session *, uint64_t bytes,
                            uint64_t *handle);
 int32_t pangu_acl_write(pangu_acl_session *, uint64_t handle, uint64_t offset,
@@ -97,7 +107,41 @@ int32_t pangu_acl_model_layer_prepare(
     uint64_t table, uint64_t mask, int64_t slots, int64_t context,
     uint64_t *state_a, uint64_t *state_b, uint64_t *operation);
 /* On failure the session remains owned by the caller; do not free it. */
+/* Fixed batch graph: unique physical cache ranges per slot, boolean active[B].
+ */
+int32_t pangu_acl_embedding_batch_prepare(pangu_acl_session *, uint64_t,
+                                          uint64_t, uint64_t, int64_t, int64_t,
+                                          int64_t, uint64_t *);
+int32_t pangu_acl_model_layer_batch_prepare(pangu_acl_session *, int32_t,
+                                            const uint64_t *, uint64_t,
+                                            uint64_t, uint64_t, uint64_t,
+                                            uint64_t, uint64_t, uint64_t,
+                                            int64_t, int64_t, int64_t, uint64_t,
+                                            uint64_t *, uint64_t *, uint64_t *);
+int32_t pangu_acl_copy_region(pangu_acl_session *, uint64_t, uint64_t, uint64_t,
+                              uint64_t, uint64_t);
+int32_t pangu_acl_device_count(uint32_t *);
+uint64_t pangu_acl_tp_root_size(void);
+int32_t pangu_acl_tp_root(void *, uint64_t);
+int32_t pangu_acl_tp_init(pangu_acl_session *, uint32_t, uint32_t, const void *,
+                          uint64_t);
 int32_t pangu_acl_close(pangu_acl_session *);
+/* Params FP32[8]: inverse temperature, reserved, top_p, log(min_p),
+ * repetition penalty, inverse repetition penalty, frequency, presence.
+ * Counts/seen/mask FP32[vocab], controls INT64[3]: reserved, draw index,
+ * top_k-1. Random FP32[random_count] is generated on device once per request.
+ * Output INT64[1]; probabilities FP32[vocab] in sorted-logit order.
+ * Caller validates finite ranges and controls. Greedy ignores stochastic
+ * filters. */
+int32_t pangu_acl_sampler_prepare(pangu_acl_session *, uint64_t logits,
+                                  uint64_t params, uint64_t counts,
+                                  uint64_t seen, uint64_t mask,
+                                  uint64_t controls, uint64_t random,
+                                  uint64_t output, uint64_t probabilities,
+                                  int64_t vocab, int64_t random_count,
+                                  int32_t greedy, uint64_t *operation);
+int32_t pangu_acl_random_fill(pangu_acl_session *, uint64_t buffer,
+                              int64_t count, uint64_t seed);
 #ifdef __cplusplus
 }
 #endif

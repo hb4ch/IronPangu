@@ -1,0 +1,5 @@
+{
+  "max_model_len": 128,
+  "status": "failed",
+  "error": "Invalid(\"TP ranks exceed visible local devices\")"
+}

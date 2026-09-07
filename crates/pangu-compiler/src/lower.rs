@@ -33,8 +33,15 @@ pub struct Program {
     pub page_tokens: usize,
 }
 /// Native fusion only accepts the complete canonical graph, not arbitrary edited node lists.
-/// This first lowering is a one-token, one-request reference runner. No serving readiness implied.
+/// Compatibility entry point for one lane. No serving readiness is implied.
 pub fn lower(plan: &Plan, context: usize) -> Result<Program> {
+    lower_batch(plan, context, 1)
+}
+/// Fixed-lane native graph with one token per selected sequence per replay.
+pub fn lower_batch(plan: &Plan, context: usize, batch: usize) -> Result<Program> {
+    if batch == 0 || batch > 64 {
+        return Err(invalid("native batch must be in 1..=64"));
+    }
     if &bound::compile(&plan.spec, plan.checkpoint.clone())? != plan {
         return Err(invalid("native lowering requires canonical typed plan"));
     }
@@ -103,7 +110,7 @@ pub fn lower(plan: &Plan, context: usize) -> Result<Program> {
             name: format!("{PREFIX}norm.weight"),
             transform: Transform::OnePlusFp32,
         },
-        batch: 1,
+        batch,
         context,
         page_tokens: plan.spec.page_tokens,
     };
@@ -111,4 +118,17 @@ pub fn lower(plan: &Plan, context: usize) -> Result<Program> {
     bytes.extend_from_slice(include_bytes!("lower.rs"));
     result.key = sha(&bytes);
     Ok(result)
+}
+
+/// Explicit runtime context specialization preserves the checkpoint's canonical math.
+pub fn specialize_context(plan: &Plan, context: usize) -> Result<Plan> {
+    if context == 0 || context > crate::checkpoint::MAX_MODEL_LEN {
+        return Err(invalid("context exceeds checkpoint positional limit"));
+    }
+    if &bound::compile(&plan.spec, plan.checkpoint.clone())? != plan {
+        return Err(invalid("context specialization requires canonical plan"));
+    }
+    let mut spec = plan.spec.clone();
+    spec.context_buckets = vec![context];
+    bound::compile(&spec, plan.checkpoint.clone())
 }

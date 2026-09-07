@@ -144,6 +144,8 @@ dependencies = [
  "libloading",
  "pangu-compiler",
  "pangu-model",
+ "serde",
+ "serde_json",
 ]
 
 [[package]]

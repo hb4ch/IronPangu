@@ -11,6 +11,7 @@ use std::{
 };
 
 const MAX_JSON: u64 = 16 * 1024 * 1024;
+pub const MAX_MODEL_LEN: usize = 262144;
 pub const PREFIX: &str = "model.language_model.";
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
 pub enum Dtype {

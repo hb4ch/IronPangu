@@ -2378,6 +2378,8 @@ dependencies = [
  "libloading",
  "pangu-compiler",
  "pangu-model",
+ "serde",
+ "serde_json",
 ]
 
 [[package]]
@@ -2415,6 +2417,7 @@ dependencies = [
  "pangu-model",
  "pangu-native",
  "pangu-scheduler",
+ "rand",
  "reqwest",
  "serde_json",
  "tokio",

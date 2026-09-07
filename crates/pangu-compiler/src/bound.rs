@@ -228,10 +228,11 @@ pub fn compile(spec: &Spec, checkpoint: Checkpoint) -> Result<Plan> {
     }
     if [&spec.prefill, &spec.decode]
         .iter()
-        .any(|m| m.tp != 1 || m.cp != 1 || m.sp)
+        .any(|m| ![1, 2].contains(&m.tp) || m.cp != 1 || m.sp)
+        || spec.prefill.tp != spec.decode.tp
     {
         return Err(invalid(
-            "checkpoint-bound lowering currently requires TP=CP=1 and SP=false; distributed v1 mock plans are not executable lowering",
+            "checkpoint-bound lowering requires matching TP in 1/2, CP=1 and SP=false",
         ));
     }
     if spec.max_context() > 262144 {
@@ -874,6 +875,13 @@ mod bound_tests {
         let mut s = spec();
         s.prefill.tp = 2;
         s.decode.tp = 2;
+        let tp = compile(&s, checkpoint()).unwrap();
+        assert_ne!(tp.key, p.key);
+        assert_eq!(crate::lower::lower_batch(&tp, 128, 4).unwrap().batch, 4);
+        s.decode.tp = 1;
+        assert!(compile(&s, checkpoint()).is_err());
+        s.prefill.tp = 3;
+        s.decode.tp = 3;
         assert!(compile(&s, checkpoint()).is_err());
         let mut s = spec();
         s.model.layers[0] = Layer::Full;
@@ -943,5 +951,17 @@ mod bound_tests {
         let mut edited = p;
         edited.nodes.swap(0, 1);
         assert!(crate::lower::lower(&edited, 128).is_err());
+    }
+    #[test]
+    fn runtime_context_specialization_preserves_canonical_math() {
+        let p = compile(&spec(), checkpoint()).unwrap();
+        let selected = crate::lower::specialize_context(&p, 2050).unwrap();
+        assert_eq!(selected.spec.context_buckets, vec![2050]);
+        assert_eq!(crate::lower::lower(&selected, 2050).unwrap().context, 2050);
+        assert_ne!(selected.key, p.key);
+        assert!(crate::lower::specialize_context(&p, 262145).is_err());
+        let mut bad = p;
+        bad.nodes.swap(0, 1);
+        assert!(crate::lower::specialize_context(&bad, 2048).is_err());
     }
 }

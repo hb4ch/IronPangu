@@ -1,0 +1,9 @@
+native sampling defaults: temperature=1 top_k=20 top_p=1 presence_penalty=2
+native program e56e57eeb8f76360f9be913693b3496279635c4778b23f955988433f1ae708dd weights fb5a5219c7022bfb5d5788f3928eed2bf0c157c6db4e6eb24917a289eb775282 context 2048
+HBM profile passed: context=2048 weights=3763862208 non_weight_observed=2977273152 KV=100712448 temporary=588791448 workspace=1394039040 peak=6741135360 remaining_budget=52475306803 bytes
+vLLM Rust frontend 0.25.1; ironpangu-qwen35; loopback only
+batch max_active=1 capacity=4 token_budget=2
+batch max_active=2 capacity=4 token_budget=2
+batch mixed_round=1 prefill=1 decode=1 active=2 tick_tokens=2 budget=2
+batch max_active=4 capacity=4 token_budget=2
+batch mixed_round=256 prefill=1 decode=1 active=2 tick_tokens=2 budget=2

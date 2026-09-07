@@ -1,0 +1,128 @@
+{
+  "tensor_parallel_rank": 0,
+  "tensor_parallel_world": 1,
+  "status": "passed",
+  "max_model_len": 128,
+  "max_num_seqs": 1,
+  "memory_utilization": 0.9,
+  "memory_reserve_bytes": 268435456,
+  "source_weight_bytes": 3763655360,
+  "resident_weight_bytes": 3763862208,
+  "kv_cache_bytes": 1585152,
+  "recurrent_and_conv_bytes": 19537920,
+  "other_buffer_bytes": 7775129,
+  "temporary_bytes": 123283260,
+  "workspace_bytes": 1342449408,
+  "observed_peak_bytes": 5878161408,
+  "non_weight_observed_bytes": 2114299200,
+  "untracked_runtime_and_allocator_bytes": 619668331,
+  "remaining_budget_bytes": 53338280755,
+  "full_context_graph_eager": "bitwise_equal",
+  "measurement_note": "HBM free-memory differences and allocation/phase watermarks, not an exact trace of short-lived CANN allocations. Baseline includes context/communicator creation; concurrent device users can affect measurements. Fixed batch with sequential per-request prefill; last-position dry run uses synthetic cache state.",
+  "stages": [
+    {
+      "name": "context_initialized",
+      "stats": {
+        "total_bytes": 65796046848,
+        "free_bytes": 65633992704,
+        "observed_peak_bytes": 0,
+        "buffer_bytes": 0,
+        "temporary_bytes": 0,
+        "workspace_bytes": 0,
+        "graphs": 0,
+        "budget_bytes": 0
+      }
+    },
+    {
+      "name": "budget_set",
+      "stats": {
+        "total_bytes": 65796046848,
+        "free_bytes": 65633992704,
+        "observed_peak_bytes": 0,
+        "buffer_bytes": 0,
+        "temporary_bytes": 0,
+        "workspace_bytes": 0,
+        "graphs": 0,
+        "budget_bytes": 59216442163
+      }
+    },
+    {
+      "name": "weights_loaded",
+      "stats": {
+        "total_bytes": 65796046848,
+        "free_bytes": 61553090560,
+        "observed_peak_bytes": 4080902144,
+        "buffer_bytes": 3763862208,
+        "temporary_bytes": 0,
+        "workspace_bytes": 0,
+        "graphs": 0,
+        "budget_bytes": 59216442163
+      }
+    },
+    {
+      "name": "operators_prepared",
+      "stats": {
+        "total_bytes": 65796046848,
+        "free_bytes": 59846008832,
+        "observed_peak_bytes": 5787983872,
+        "buffer_bytes": 3788290073,
+        "temporary_bytes": 89015060,
+        "workspace_bytes": 1325670656,
+        "graphs": 0,
+        "budget_bytes": 59216442163
+      }
+    },
+    {
+      "name": "model_graph_qualified",
+      "stats": {
+        "total_bytes": 65796046848,
+        "free_bytes": 59816648704,
+        "observed_peak_bytes": 5817344000,
+        "buffer_bytes": 3788290073,
+        "temporary_bytes": 89015060,
+        "workspace_bytes": 1325670656,
+        "graphs": 1,
+        "budget_bytes": 59216442163
+      }
+    },
+    {
+      "name": "sampler_graphs_qualified",
+      "stats": {
+        "total_bytes": 65796046848,
+        "free_bytes": 59755831296,
+        "observed_peak_bytes": 5878161408,
+        "buffer_bytes": 3792760409,
+        "temporary_bytes": 123283260,
+        "workspace_bytes": 1342449408,
+        "graphs": 3,
+        "budget_bytes": 59216442163
+      }
+    },
+    {
+      "name": "full_context_dry_run",
+      "stats": {
+        "total_bytes": 65796046848,
+        "free_bytes": 59755831296,
+        "observed_peak_bytes": 5878161408,
+        "buffer_bytes": 3792760409,
+        "temporary_bytes": 123283260,
+        "workspace_bytes": 1342449408,
+        "graphs": 3,
+        "budget_bytes": 59216442163
+      }
+    },
+    {
+      "name": "profile_reset",
+      "stats": {
+        "total_bytes": 65796046848,
+        "free_bytes": 59755831296,
+        "observed_peak_bytes": 5878161408,
+        "buffer_bytes": 3792760409,
+        "temporary_bytes": 123283260,
+        "workspace_bytes": 1342449408,
+        "graphs": 3,
+        "budget_bytes": 59216442163
+      }
+    }
+  ]
+}

@@ -9,6 +9,7 @@ Upstream license is preserved in `LICENSE`.
 Local adaptations:
 
 - `vllm-llm`: in-process `GenerationBackend`, backend metadata, a backend-neutral stream with explicit early-close errors, and unsupported-request errors.
+- Backend sampling defaults are merged before request lowering, preserving explicit fields and checkpoint hints.
 - `vllm-text` / `vllm-chat`: metadata independent of an engine-core connection; optional administration client; request-error classification.
 - `vllm-server`: `serve_with_backend`; existing routes, chat processing and SSE implementation retained. Engine-core-only administration returns an explicit unsupported error for the local backend.
 - Cargo package workspace anchors keep this snapshot separate from Iron Pangu's core workspace.

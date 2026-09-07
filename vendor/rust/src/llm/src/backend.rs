@@ -12,6 +12,9 @@ pub struct BackendMetadata {
 #[async_trait::async_trait]
 pub trait GenerationBackend: Send + Sync {
     fn metadata(&self) -> BackendMetadata;
+    /// Fallbacks for omitted HTTP sampling fields; explicit requests always win.
+    fn default_sampling_params(&self) -> Option<vllm_engine_core_client::protocol::sampling::EngineCoreSamplingParams> { None }
+
     async fn generate(&self, request: GenerateRequest) -> Result<GenerateOutputStream>;
     async fn abort(&self, request_ids: &[String]) -> Result<()>;
     async fn shutdown(&self) -> Result<()>;

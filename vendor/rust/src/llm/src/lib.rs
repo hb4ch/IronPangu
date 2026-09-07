@@ -84,6 +84,10 @@ impl Llm {
             stats_logger: None, inflight: InflightRequests::new() }
     }
 
+    pub fn default_sampling_params(&self) -> Option<vllm_engine_core_client::protocol::sampling::EngineCoreSamplingParams> {
+        self.backend.as_ref().and_then(|backend| backend.default_sampling_params())
+    }
+
     pub fn metadata(&self) -> BackendMetadata {
         if let Some(backend) = &self.backend { return backend.metadata(); }
         let client = self.client.as_ref().expect("constructor guarantees a backend");
