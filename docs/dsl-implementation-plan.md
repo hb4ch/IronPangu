@@ -135,7 +135,20 @@ Tests and exit gate:
 
 An ABI-conforming mock proves protocol integration, not the safety or accuracy of arbitrary device code.
 
-## 8. Phase F — general graph lowering and runtime integration
+## 8. Phase F — physical planning, binary execution and runtime integration
+
+Implementation update, 2026-09-08: `inferfabric-plan` and CLI `plan`/`explain`/`execute` provide a locally verified CPU path from logical JSON through typed/optimized IR to a binary physical plan, with real arithmetic and state continuity. All stage dumps and HTML explanation are implemented. The new text parser and general native path remain outstanding. See [physical planning](physical-planning.md) and [all IRs](ir-reference.md).
+
+Split this phase into explicit delivery boundaries:
+
+1. Logical/type/effect checks and an optimized graph, independent of target launch handles.
+2. A target-specific physical DAG with kernel choices, layout/placement, memory assignments, workspace bounds and data/effect/reuse dependencies.
+3. A versioned verified binary bundle and a loader/executor that never calls the planner.
+4. `explain`/HTML visualization and complete IR dumps from produced artifacts.
+5. Native general-graph adapter integration, followed by separately authorized device qualification.
+
+The CPU subset covers the first four boundaries with static f32 primitives, rank 0/stream 0, constant folding, dead-node elimination, deterministic kernel selection and interval allocation. Native fusion/sharding/collective/event planning and foreign implementation selection are not inferred from that CPU result.
+
 
 Replace fixed-layer execution as the only route with a typed call-sequence program supporting buffers, views, parameters, state accesses, operation calls, events and explicit collectives. Add verification of lifetimes, offsets, layouts, effects and output coverage before linking. Retain the Qwen optimized block path as a verified fusion of the same semantic graph.
 

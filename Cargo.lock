@@ -69,9 +69,11 @@ dependencies = [
  "inferfabric-dsl",
  "inferfabric-ir",
  "inferfabric-model",
+ "inferfabric-plan",
  "inferfabric-runtime",
  "inferfabric-scheduler",
  "libloading",
+ "serde",
  "serde_json",
 ]
 
@@ -118,6 +120,16 @@ dependencies = [
  "libloading",
  "serde",
  "serde_json",
+]
+
+[[package]]
+name = "inferfabric-plan"
+version = "0.1.0"
+dependencies = [
+ "inferfabric-model",
+ "serde",
+ "serde_json",
+ "sha2",
 ]
 
 [[package]]

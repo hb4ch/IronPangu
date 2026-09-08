@@ -1,0 +1,304 @@
+{
+  "version": 1,
+  "name": "Stateful residual DAG",
+  "target": "cpu-f32-v1",
+  "policy": "deterministic-cpu-v1",
+  "alignment": 64,
+  "arena_bytes": 192,
+  "buffers": [
+    {
+      "value": {
+        "name": "x",
+        "shape": [
+          2,
+          2
+        ],
+        "storage": "input",
+        "initial": null
+      },
+      "offset": null,
+      "lifetime": null
+    },
+    {
+      "value": {
+        "name": "weights",
+        "shape": [
+          2,
+          2
+        ],
+        "storage": "constant",
+        "initial": [
+          1.0,
+          2.0,
+          3.0,
+          4.0
+        ]
+      },
+      "offset": null,
+      "lifetime": null
+    },
+    {
+      "value": {
+        "name": "bias",
+        "shape": [
+          2,
+          2
+        ],
+        "storage": "constant",
+        "initial": [
+          1.0,
+          -1.0,
+          2.0,
+          -2.0
+        ]
+      },
+      "offset": null,
+      "lifetime": null
+    },
+    {
+      "value": {
+        "name": "history",
+        "shape": [
+          2,
+          2
+        ],
+        "storage": "state",
+        "initial": [
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ]
+      },
+      "offset": null,
+      "lifetime": null
+    },
+    {
+      "value": {
+        "name": "project",
+        "shape": [
+          2,
+          2
+        ],
+        "storage": "arena",
+        "initial": null
+      },
+      "offset": 0,
+      "lifetime": [
+        0,
+        1
+      ]
+    },
+    {
+      "value": {
+        "name": "biased",
+        "shape": [
+          2,
+          2
+        ],
+        "storage": "arena",
+        "initial": null
+      },
+      "offset": 64,
+      "lifetime": [
+        1,
+        2
+      ]
+    },
+    {
+      "value": {
+        "name": "activated",
+        "shape": [
+          2,
+          2
+        ],
+        "storage": "arena",
+        "initial": null
+      },
+      "offset": 0,
+      "lifetime": [
+        2,
+        4
+      ]
+    },
+    {
+      "value": {
+        "name": "scale",
+        "shape": [
+          2,
+          2
+        ],
+        "storage": "constant",
+        "initial": [
+          2.0,
+          2.0,
+          2.0,
+          2.0
+        ]
+      },
+      "offset": null,
+      "lifetime": null
+    },
+    {
+      "value": {
+        "name": "residual",
+        "shape": [
+          2,
+          2
+        ],
+        "storage": "arena",
+        "initial": null
+      },
+      "offset": 64,
+      "lifetime": [
+        3,
+        4
+      ]
+    },
+    {
+      "value": {
+        "name": "merged",
+        "shape": [
+          2,
+          2
+        ],
+        "storage": "arena",
+        "initial": null
+      },
+      "offset": 128,
+      "lifetime": [
+        4,
+        5
+      ]
+    },
+    {
+      "value": {
+        "name": "result",
+        "shape": [
+          2,
+          2
+        ],
+        "storage": "arena",
+        "initial": null
+      },
+      "offset": 0,
+      "lifetime": [
+        5,
+        6
+      ]
+    }
+  ],
+  "steps": [
+    {
+      "name": "project",
+      "kernel": "matmul_f32_v1",
+      "inputs": [
+        0,
+        1
+      ],
+      "output": 4,
+      "rank": 0,
+      "stream": 0,
+      "dependencies": [],
+      "reuse_dependencies": [],
+      "selection_reason": "qualified deterministic CPU implementation; no timing-based cost model"
+    },
+    {
+      "name": "biased",
+      "kernel": "add_f32_v1",
+      "inputs": [
+        4,
+        2
+      ],
+      "output": 5,
+      "rank": 0,
+      "stream": 0,
+      "dependencies": [
+        0
+      ],
+      "reuse_dependencies": [],
+      "selection_reason": "qualified deterministic CPU implementation; no timing-based cost model"
+    },
+    {
+      "name": "activated",
+      "kernel": "relu_f32_v1",
+      "inputs": [
+        5
+      ],
+      "output": 6,
+      "rank": 0,
+      "stream": 0,
+      "dependencies": [
+        1
+      ],
+      "reuse_dependencies": [
+        1
+      ],
+      "selection_reason": "qualified deterministic CPU implementation; no timing-based cost model"
+    },
+    {
+      "name": "residual",
+      "kernel": "mul_f32_v1",
+      "inputs": [
+        0,
+        7
+      ],
+      "output": 8,
+      "rank": 0,
+      "stream": 0,
+      "dependencies": [],
+      "reuse_dependencies": [
+        2
+      ],
+      "selection_reason": "qualified deterministic CPU implementation; no timing-based cost model"
+    },
+    {
+      "name": "merged",
+      "kernel": "add_f32_v1",
+      "inputs": [
+        6,
+        8
+      ],
+      "output": 9,
+      "rank": 0,
+      "stream": 0,
+      "dependencies": [
+        2,
+        3
+      ],
+      "reuse_dependencies": [],
+      "selection_reason": "qualified deterministic CPU implementation; no timing-based cost model"
+    },
+    {
+      "name": "result",
+      "kernel": "add_f32_v1",
+      "inputs": [
+        9,
+        3
+      ],
+      "output": 10,
+      "rank": 0,
+      "stream": 0,
+      "dependencies": [
+        4
+      ],
+      "reuse_dependencies": [
+        1,
+        4
+      ],
+      "selection_reason": "qualified deterministic CPU implementation; no timing-based cost model"
+    }
+  ],
+  "outputs": [
+    10
+  ],
+  "updates": {
+    "3": 10
+  },
+  "removed_nodes": [
+    "unused"
+  ],
+  "folded_nodes": [
+    "scale"
+  ]
+}

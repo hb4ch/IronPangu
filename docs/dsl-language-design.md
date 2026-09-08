@@ -1,6 +1,6 @@
 # InferFabric language v1: model graphs and extensible kernels
 
-Status: proposed design, 2026-09-08. No parser, kernel adapter, or device capability described here is implemented by this document. This proposal replaces the current line-oriented model description. Implementation sequence: [DSL implementation plan](dsl-implementation-plan.md).
+Status: proposed language design, 2026-09-08. The separate [physical planning path](physical-planning.md) now has a locally verified CPU implementation. No parser, kernel adapter, or device capability described here is implemented by this document. This proposal replaces the current line-oriented model description. Implementation sequence: [DSL implementation plan](dsl-implementation-plan.md).
 
 ## 1. Decision and scope
 
@@ -333,3 +333,12 @@ Reviewed 2026-09-08. These describe upstream systems, not tested InferFabric ada
 - Local implementation anchors: [parser](../crates/inferfabric-dsl/src/lib.rs), [model](../crates/inferfabric-model/src/lib.rs), [bound graph](../crates/inferfabric-compiler/src/bound.rs), [lowering](../crates/inferfabric-compiler/src/lower.rs), [native FFI](../crates/inferfabric-native/src/ffi.rs).
 
 No NPU execution is required to review this design or implement its lexer, syntax DOM, semantic checks and mock ABI tests. Native numerical, graph-capture and distributed qualification remain separate work that requires future machine time.
+
+
+## 11. Physical planning and binary execution contract
+
+The user-facing `plan` declaration supplies constraints; a compiler-generated `PhysicalPlan` fixes the execution DAG. Adopt the pipeline and loader contract in [physical planning](physical-planning.md), with a complete [IR catalog](ir-reference.md). Logical operations and state effects are separated from selected kernels, placement, memory offsets and communication.
+
+Planning includes specialization, simplification, implementation/fusion/layout selection, partitioning, scheduling, workspace reconciliation and lifetime allocation. Memory reuse creates ordering dependencies. Binary emission follows verification and freezes those choices. `execute` binds inputs, state, allocations and process-local launch resources; it cannot re-elaborate the model or silently select another implementation. Future JIT creates a new verified bundle through this same boundary.
+
+The local commands `plan`, `explain`, and `execute` currently consume the CPU logical JSON/physical binary formats. This establishes the planning/execution boundary before the new text parser exists. It does not implement all four foreign-kernel adapters or native Qwen binary execution. Preserve these scope distinctions during frontend and native integration.

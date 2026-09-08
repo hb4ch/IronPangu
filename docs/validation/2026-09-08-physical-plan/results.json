@@ -1,0 +1,56 @@
+[
+  {
+    "outputs": {
+      "result": [
+        10.0,
+        13.0,
+        2.0,
+        2.0
+      ]
+    },
+    "state": {
+      "history": [
+        10.0,
+        13.0,
+        2.0,
+        2.0
+      ]
+    },
+    "executed_steps": [
+      "project",
+      "biased",
+      "activated",
+      "residual",
+      "merged",
+      "result"
+    ],
+    "arena_bytes": 192
+  },
+  {
+    "outputs": {
+      "result": [
+        20.0,
+        26.0,
+        4.0,
+        4.0
+      ]
+    },
+    "state": {
+      "history": [
+        20.0,
+        26.0,
+        4.0,
+        4.0
+      ]
+    },
+    "executed_steps": [
+      "project",
+      "biased",
+      "activated",
+      "residual",
+      "merged",
+      "result"
+    ],
+    "arena_bytes": 192
+  }
+]

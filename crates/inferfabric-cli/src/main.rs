@@ -1,5 +1,6 @@
 #[cfg(unix)]
 mod npu_probe;
+mod physical;
 use inferfabric_ir::Target;
 use inferfabric_model::{Result, invalid};
 use inferfabric_scheduler::{Capacity, Request};
@@ -13,6 +14,7 @@ fn main() {
 fn run() -> Result<()> {
     let args = env::args().skip(1).collect::<Vec<_>>();
     match args.first().map(String::as_str) {
+        Some("plan" | "explain" | "execute") => return physical::run(&args),
         #[cfg(unix)]
         Some("npu-model-probe") if args.len() == 7 => {
             let device = args[4].parse().map_err(|_| invalid("invalid device ID"))?;
@@ -146,7 +148,7 @@ fn run() -> Result<()> {
         }
         _ => {
             return Err(invalid(
-                "usage: inferfabric npu-model-probe DSL CHECKPOINT LIBRARY DEVICE TOKENS_JSON REPORT | npu-delta-probe LIBRARY DEVICE REPORT | npu-conv-probe CHECKPOINT LIBRARY DEVICE REPORT | npu-layer-probe CHECKPOINT LIBRARY DEVICE REPORT | npu-attention-probe CHECKPOINT LIBRARY DEVICE REPORT | npu-math-probe DSL CHECKPOINT LIBRARY DEVICE REPORT | compile-checkpoint MODEL.inferfabric CHECKPOINT_DIR OUTPUT.json | compile MODEL.inferfabric OUTPUT | inspect ARTIFACT | demo MODEL.inferfabric REQUESTS.json",
+                "usage: inferfabric plan GRAPH.json OUTPUT.ifplan [--dump-ir DIR] | explain PLAN.ifplan [--html OUTPUT.html] | execute PLAN.ifplan INPUTS.json REPORT.json | npu-model-probe DSL CHECKPOINT LIBRARY DEVICE TOKENS_JSON REPORT | npu-delta-probe LIBRARY DEVICE REPORT | npu-conv-probe CHECKPOINT LIBRARY DEVICE REPORT | npu-layer-probe CHECKPOINT LIBRARY DEVICE REPORT | npu-attention-probe CHECKPOINT LIBRARY DEVICE REPORT | npu-math-probe DSL CHECKPOINT LIBRARY DEVICE REPORT | compile-checkpoint MODEL.inferfabric CHECKPOINT_DIR OUTPUT.json | compile MODEL.inferfabric OUTPUT | inspect ARTIFACT | demo MODEL.inferfabric REQUESTS.json",
             ));
         }
     }

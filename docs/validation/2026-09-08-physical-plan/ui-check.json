@@ -1,0 +1,8 @@
+{
+  "nodes": 12,
+  "buffer_rows": 11,
+  "selected_kernel": "matmul_f32_v1",
+  "reuse_toggle": "passed",
+  "search": "passed",
+  "arena_bytes": 192
+}

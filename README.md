@@ -154,3 +154,16 @@ Run local checks with `cargo fmt --all --check`, `cargo test --workspace`, and `
 Further reading: [sampling](docs/npu-sampling.md), [context and HBM profiling](docs/npu-memory-profile.md), [continuous batching](docs/npu-continuous-batching.md), [tensor parallelism](docs/npu-tensor-parallel.md), [activation memory](docs/npu-activation-memory.md), and the [target architecture](docs/design.md). The README describes current implementation scope; older design and bring-up notes also contain historical milestones and future targets.
 
 Proposed DSL v1: [language design](docs/dsl-language-design.md) and [implementation plan](docs/dsl-implementation-plan.md). These specify future syntax and extension interfaces; the current parser still accepts the legacy format.
+
+
+## Physical plan / execute workflow
+
+A locally verified CPU path now compiles a logical tensor DAG into a frozen binary plan and executes it without its source. It includes shape checks, constant folding, dead-node removal, explicit kernel selection, memory reuse dependencies, persistent state, complete IR dumps, and interactive HTML explanation. This path currently accepts logical JSON with static f32 primitives; it does not replace Ascend serving or implement the proposed DSL v1 parser.
+
+```sh
+cargo run -p inferfabric-cli -- plan examples/physical-plan/residual-state.logical.json .deploy/demo.ifplan --dump-ir .deploy/demo-ir
+cargo run -p inferfabric-cli -- explain .deploy/demo.ifplan --html .deploy/demo-plan.html
+cargo run -p inferfabric-cli -- execute .deploy/demo.ifplan examples/physical-plan/inputs.json .deploy/demo-results.json
+```
+
+See [physical planning and execution](docs/physical-planning.md) and the [complete IR reference](docs/ir-reference.md), with recorded examples of every produced stage.

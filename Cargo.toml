@@ -19,3 +19,5 @@ inferfabric-compiler = { path = "crates/inferfabric-compiler" }
 inferfabric-runtime = { path = "crates/inferfabric-runtime" }
 inferfabric-transfer = { path = "crates/inferfabric-transfer" }
 inferfabric-scheduler = { path = "crates/inferfabric-scheduler" }
+
+inferfabric-plan = { path = "crates/inferfabric-plan" }

@@ -7,6 +7,7 @@ rust-version.workspace = true
 license.workspace = true
 
 [dependencies]
+inferfabric-plan.workspace = true
 inferfabric-model.workspace = true
 inferfabric-dsl.workspace = true
 inferfabric-ir.workspace = true
@@ -14,6 +15,7 @@ inferfabric-compiler.workspace = true
 inferfabric-runtime.workspace = true
 inferfabric-scheduler.workspace = true
 serde_json.workspace = true
+serde.workspace = true
 
 [[bin]]
 name = "inferfabric"

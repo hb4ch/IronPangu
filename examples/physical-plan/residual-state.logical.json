@@ -1,0 +1,153 @@
+{
+  "version": 1,
+  "name": "Stateful residual DAG",
+  "inputs": [
+    {
+      "name": "x",
+      "shape": [
+        2,
+        2
+      ]
+    }
+  ],
+  "constants": [
+    {
+      "name": "weights",
+      "shape": [
+        2,
+        2
+      ],
+      "data": [
+        1,
+        2,
+        3,
+        4
+      ]
+    },
+    {
+      "name": "bias",
+      "shape": [
+        2,
+        2
+      ],
+      "data": [
+        1,
+        -1,
+        2,
+        -2
+      ]
+    },
+    {
+      "name": "scale_a",
+      "shape": [
+        2,
+        2
+      ],
+      "data": [
+        1,
+        1,
+        1,
+        1
+      ]
+    },
+    {
+      "name": "scale_b",
+      "shape": [
+        2,
+        2
+      ],
+      "data": [
+        1,
+        1,
+        1,
+        1
+      ]
+    }
+  ],
+  "states": [
+    {
+      "name": "history",
+      "shape": [
+        2,
+        2
+      ],
+      "data": [
+        0,
+        0,
+        0,
+        0
+      ]
+    }
+  ],
+  "nodes": [
+    {
+      "name": "project",
+      "op": "matmul",
+      "inputs": [
+        "x",
+        "weights"
+      ]
+    },
+    {
+      "name": "biased",
+      "op": "add",
+      "inputs": [
+        "project",
+        "bias"
+      ]
+    },
+    {
+      "name": "activated",
+      "op": "relu",
+      "inputs": [
+        "biased"
+      ]
+    },
+    {
+      "name": "scale",
+      "op": "add",
+      "inputs": [
+        "scale_a",
+        "scale_b"
+      ]
+    },
+    {
+      "name": "residual",
+      "op": "mul",
+      "inputs": [
+        "x",
+        "scale"
+      ]
+    },
+    {
+      "name": "merged",
+      "op": "add",
+      "inputs": [
+        "activated",
+        "residual"
+      ]
+    },
+    {
+      "name": "result",
+      "op": "add",
+      "inputs": [
+        "merged",
+        "history"
+      ]
+    },
+    {
+      "name": "unused",
+      "op": "mul",
+      "inputs": [
+        "project",
+        "project"
+      ]
+    }
+  ],
+  "outputs": [
+    "result"
+  ],
+  "updates": {
+    "history": "result"
+  }
+}

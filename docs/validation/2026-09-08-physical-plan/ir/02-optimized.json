@@ -1,0 +1,186 @@
+{
+  "version": 1,
+  "name": "Stateful residual DAG",
+  "values": [
+    {
+      "name": "x",
+      "shape": [
+        2,
+        2
+      ],
+      "storage": "input",
+      "initial": null
+    },
+    {
+      "name": "weights",
+      "shape": [
+        2,
+        2
+      ],
+      "storage": "constant",
+      "initial": [
+        1.0,
+        2.0,
+        3.0,
+        4.0
+      ]
+    },
+    {
+      "name": "bias",
+      "shape": [
+        2,
+        2
+      ],
+      "storage": "constant",
+      "initial": [
+        1.0,
+        -1.0,
+        2.0,
+        -2.0
+      ]
+    },
+    {
+      "name": "history",
+      "shape": [
+        2,
+        2
+      ],
+      "storage": "state",
+      "initial": [
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "name": "project",
+      "shape": [
+        2,
+        2
+      ],
+      "storage": "arena",
+      "initial": null
+    },
+    {
+      "name": "biased",
+      "shape": [
+        2,
+        2
+      ],
+      "storage": "arena",
+      "initial": null
+    },
+    {
+      "name": "activated",
+      "shape": [
+        2,
+        2
+      ],
+      "storage": "arena",
+      "initial": null
+    },
+    {
+      "name": "scale",
+      "shape": [
+        2,
+        2
+      ],
+      "storage": "constant",
+      "initial": [
+        2.0,
+        2.0,
+        2.0,
+        2.0
+      ]
+    },
+    {
+      "name": "residual",
+      "shape": [
+        2,
+        2
+      ],
+      "storage": "arena",
+      "initial": null
+    },
+    {
+      "name": "merged",
+      "shape": [
+        2,
+        2
+      ],
+      "storage": "arena",
+      "initial": null
+    },
+    {
+      "name": "result",
+      "shape": [
+        2,
+        2
+      ],
+      "storage": "arena",
+      "initial": null
+    }
+  ],
+  "nodes": [
+    {
+      "name": "project",
+      "op": "matmul",
+      "inputs": [
+        0,
+        1
+      ],
+      "output": 4
+    },
+    {
+      "name": "biased",
+      "op": "add",
+      "inputs": [
+        4,
+        2
+      ],
+      "output": 5
+    },
+    {
+      "name": "activated",
+      "op": "relu",
+      "inputs": [
+        5
+      ],
+      "output": 6
+    },
+    {
+      "name": "residual",
+      "op": "mul",
+      "inputs": [
+        0,
+        7
+      ],
+      "output": 8
+    },
+    {
+      "name": "merged",
+      "op": "add",
+      "inputs": [
+        6,
+        8
+      ],
+      "output": 9
+    },
+    {
+      "name": "result",
+      "op": "add",
+      "inputs": [
+        9,
+        3
+      ],
+      "output": 10
+    }
+  ],
+  "outputs": [
+    10
+  ],
+  "updates": {
+    "3": 10
+  }
+}

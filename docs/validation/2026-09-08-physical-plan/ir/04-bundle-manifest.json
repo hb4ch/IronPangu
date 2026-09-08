@@ -1,0 +1,17 @@
+{
+  "device_qualified": false,
+  "format": "IFPLAN01",
+  "kernel_abi": "built-in CPU f32 v1",
+  "native_device_objects": [],
+  "payload_bytes": 2789,
+  "requires_planner": false,
+  "requires_source": false,
+  "runtime_bindings": [
+    "input arrays",
+    "owned state",
+    "arena base"
+  ],
+  "sha256": "eb66ca3321d62f98b5b137e4781ae017e64514ea18e2d3026f30fb374e8d5007",
+  "state_commit": "simultaneous after all steps succeed",
+  "target": "cpu-f32-v1"
+}

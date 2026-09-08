@@ -312,3 +312,10 @@ Before coding, supply the actual Ascend inventory and accessible model checkpoin
 - **[C7]** [Huawei HCCL communication primitives](https://www.hiascend.com/doc_center/source/zh/canncommercial/80RC3/developmentguide/hccl/hcclug/hcclug_000004.html). This reference establishes primitive semantics, not capture compatibility for a selected release.
 
 Local absolute links identify the inspected checkout. The implementation should retain revision-pinned upstream links and a compatibility manifest for portability.
+
+
+## Implementation update: explicit physical planning (8 September 2026)
+
+The SQL-style plan/execute boundary is specified in [physical planning](physical-planning.md). Model DSL and planning constraints produce a logical graph; the planner derives selected kernels, a physical DAG, launch schedule, memory offsets and dependencies; binary emission freezes the verified result. The executor loads and binds that artifact without reconstructing the model or rerunning optimization. Process-local pointers, communicators and graph handles are prepared from metadata rather than serialized directly.
+
+A local CPU implementation now supports `inferfabric plan`, `explain --html`, and `execute`, including stateful arithmetic and source-independent binary execution. The [IR reference](ir-reference.md) catalogs both this path and the existing rank/Qwen representations. This implementation does not switch the qualified native serving path to the new binary or implement the proposed DSL v1 parser. Native planning integration and JIT remain explicit follow-up work.
