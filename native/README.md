@@ -22,3 +22,5 @@ This ABI has not yet been wired into `AscendBackend`. The separate `inferfabric-
 Native ABI version 2 now includes prepared BF16 linear and weighted RMS operations, tested against real checkpoint weights on two devices. See [the NPU bring-up report](../docs/npu-bringup.md) for executor retention, graph lifetime, build commands, numerical scope and remaining work.
 
 See [the native milestone](../docs/npu-native-milestone.md) for full-model and HTTP qualification, FP32 recurrence, convolution, paged attention and current serving limits.
+
+`physical_plan_probe FIXTURE DEVICE` is an explicit hardware qualification executable for trusted fixtures emitted by `cargo run -p inferfabric-cli --example export_npu_fixture`. It tests planned arena reuse and state commits through ACLNN eager/captured execution. It is not a production plan loader or new serving backend. [Two-device qualification and reproduction](../docs/validation/2026-09-08-npu-planning/README.md).

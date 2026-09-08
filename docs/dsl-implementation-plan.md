@@ -211,3 +211,7 @@ Start with Phases A and B after design review. The next code change should produ
 Proposed decisions are already made in the design: braces and semicolons; named arguments; bounded compile-time composition; lossless CST plus typed AST; explicit state; external source files preferred; a separate plan; adapters behind one versioned native ABI. Review may revise these before the grammar fixtures are frozen.
 
 The major technical uncertainties are native export from the selected Triton/TileLang toolchains, exact PTO integration, generic graph/runtime migration and custom-state qualification. None blocks designing or implementing the parser and syntax DOM. No schedule estimate should hide these as ordinary parser work.
+
+### Authorized hardware qualification — 2026-09-08
+
+Following explicit machine availability, a limited Ascend qualification adapter exercised the implemented CPU planner's schedules/arena offsets and state semantics on devices 0 and 1, including ACL graph replay. The existing Qwen native path passed a separate full-model regression on both devices. [Results](validation/2026-09-08-npu-planning/README.md). This does not close Phases A–G or qualify the proposed v1 language/general native runtime; it provides hardware evidence for the currently implemented planning subset.

@@ -1,0 +1,46 @@
+Linux de5ac57c73f6 5.10.0-182.0.0.95.r2220_157.hce2.aarch64 #1 SMP Wed Jul 30 11:31:47 UTC 2025 aarch64 aarch64 aarch64 GNU/Linux
+c++ (GCC) 10.3.1
+Copyright (C) 2020 Free Software Foundation, Inc.
+This is free software; see the source for copying conditions.  There is NO
+warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+
+package_name=Ascend-cann-toolkit
+version=9.1.0
+innerversion=V100R001C11SPC001B243
+compatible_version=[V100R001C15],[V100R001C21],[V100R001C23],[V100R001C10]
+arch=aarch64
+os=linux
+path=/usr/local/Ascend/cann-9.1.0
+Version=9.1.0
+version_dir=cann
+required_package_runtime_version="9.1"
+required_package_ge-executor_version="9.1"
+required_package_metadef_version="9.1"
+required_package_bisheng-compiler_version="9.1"
+required_package_tbe-tik_version="9.1"
+timestamp=20260730_231653901
+Version=9.1.0
+version_dir=cann
+required_package_runtime_version=">=8.5"
+required_package_ge-executor_version=">=8.5"
+required_package_metadef_version=">=8.5"
+required_package_asc-devkit_version=">=8.5"
+required_package_bisheng-compiler_version=">=8.5"
+timestamp=20260730_231653901
++------------------------------------------------------------------------------------------------+
+| npu-smi 25.5.1                   Version: 25.5.1                                               |
++---------------------------+---------------+----------------------------------------------------+
+| NPU   Name                | Health        | Power(W)    Temp(C)           Hugepages-Usage(page)|
+| Chip  Phy-ID              | Bus-Id        | AICore(%)   Memory-Usage(MB)  HBM-Usage(MB)        |
++===========================+===============+====================================================+
+| 0     Ascend910           | OK            | 165.6       41                0    / 0             |
+| 0     0                   | 0000:9D:00.0  | 0           0    / 0          3147 / 65536         |
++------------------------------------------------------------------------------------------------+
+| 0     Ascend910           | OK            | -           41                0    / 0             |
+| 1     1                   | 0000:9F:00.0  | 0           0    / 0          2881 / 65536         |
++===========================+===============+====================================================+
++---------------------------+---------------+----------------------------------------------------+
+| NPU     Chip              | Process id    | Process name             | Process memory(MB)      |
++===========================+===============+====================================================+
+| No running processes found in NPU 0                                                            |
++===========================+===============+====================================================+

@@ -26,3 +26,8 @@ target_compile_options(sampler_probe PRIVATE -Wall -Wextra -Werror)
 add_executable(tp_probe probes/tp_probe.cpp)
 target_link_libraries(tp_probe PRIVATE inferfabric_acl pthread)
 target_compile_options(tp_probe PRIVATE -Wall -Wextra -Werror)
+
+add_executable(physical_plan_probe probes/physical_plan_probe.cpp)
+target_include_directories(physical_plan_probe PRIVATE "${ACL_INCLUDE}")
+target_link_libraries(physical_plan_probe PRIVATE "${ACL_LIBRARY}" "${OPAPI_LIBRARY}" "${NNOPBASE_LIBRARY}")
+target_compile_options(physical_plan_probe PRIVATE -Wall -Wextra -Werror)

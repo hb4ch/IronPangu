@@ -1,0 +1,1 @@
+{"version": 1, "name": "simultaneous-state-swap", "inputs": [], "constants": [{"name": "marker", "shape": [1], "data": [7]}], "states": [{"name": "a", "shape": [3], "data": [1, 2, 3]}, {"name": "b", "shape": [3], "data": [-1, -2, -3]}], "nodes": [], "outputs": ["marker"], "updates": {"a": "b", "b": "a"}}

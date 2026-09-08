@@ -90,3 +90,9 @@ Native follow-up work is explicit: adapt the general typed/effect IR; add qualif
 `explain-model TYPED-PLAN.json --html MODEL.html` renders the existing checkpoint-bound Qwen plan at model scale. A layer overview drills into exact typed operator DAGs; input boundaries preserve producer links across layers. Node details expose all attributes, symbolic tensor shapes, checkpoint weight descriptors and persistent state references. Global search and producer/consumer navigation include tied weights and state bindings. The complete typed plan is embedded and downloadable. See the [Qwen3.5-2B reference](validation/2026-09-08-qwen-plan/README.md).
 
 This complements `explain PLAN.ifplan`, which inspects the new executable CPU physical-plan format. It does not route Qwen through that CPU executor. The model inspector groups canonical operations by explicit layer-entry normalization bindings, validates graph equivalence, and displays logical memory formulas. Future native physical-plan export should enrich the same model navigation with selected kernels, fusion mapping, per-rank placement, arena lifetimes/offsets, workspace bounds and graph-capture regions. Those details must come from the actual planner/runtime descriptors.
+
+## Ascend planner qualification (2026-09-08)
+
+An explicit hardware test adapter now qualifies the CPU planner's emitted schedules, shapes, arena offsets and simultaneous state updates with ACLNN and ACL graph replay. Residual, rectangular matmul and state-swap cases passed on two Ascend devices. The existing full-Qwen path also passed separate scalar-reference/eager/graph checks. [Evidence and reproduction](validation/2026-09-08-npu-planning/README.md).
+
+The adapter is a test translation of verified CPU plan semantics, not a general Ascend binary backend. The proposed v1 text parser and native physical bundle/loader remain implementation work.
