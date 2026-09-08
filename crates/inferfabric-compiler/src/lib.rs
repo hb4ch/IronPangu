@@ -435,3 +435,4 @@ pub mod bound;
 pub mod checkpoint;
 
 pub mod lower;
+pub mod model_inspect;

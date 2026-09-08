@@ -342,3 +342,7 @@ The user-facing `plan` declaration supplies constraints; a compiler-generated `P
 Planning includes specialization, simplification, implementation/fusion/layout selection, partitioning, scheduling, workspace reconciliation and lifetime allocation. Memory reuse creates ordering dependencies. Binary emission follows verification and freezes those choices. `execute` binds inputs, state, allocations and process-local launch resources; it cannot re-elaborate the model or silently select another implementation. Future JIT creates a new verified bundle through this same boundary.
 
 The local commands `plan`, `explain`, and `execute` currently consume the CPU logical JSON/physical binary formats. This establishes the planning/execution boundary before the new text parser exists. It does not implement all four foreign-kernel adapters or native Qwen binary execution. Preserve these scope distinctions during frontend and native integration.
+
+### Full-model inspection implementation (2026-09-08)
+
+The checkpoint-bound Qwen3.5-2B mathematical plan now has a self-contained, offline visual inspector (`explain-model`). It provides a 24-layer overview, exact operator DAG drill-down, cross-layer SSA navigation, weight/state bindings, search and logical memory formulas. The [full-model reference](validation/2026-09-08-qwen-plan/README.md) records 640 operators. This is separate from the executable CPU physical-plan viewer; native physical schedule/arena export remains follow-up work.

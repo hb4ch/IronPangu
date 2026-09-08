@@ -1,0 +1,13 @@
+{
+  "groups": 26,
+  "operators": 640,
+  "dependency_edges": 929,
+  "weights": 320,
+  "states": 48,
+  "all_layers": "passed",
+  "state_consumer_navigation": "passed",
+  "cross_layer_navigation": "passed",
+  "tied_weight_consumers": "passed",
+  "global_search": "passed",
+  "fit_zoom": "passed"
+}

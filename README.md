@@ -167,3 +167,13 @@ cargo run -p inferfabric-cli -- execute .deploy/demo.ifplan examples/physical-pl
 ```
 
 See [physical planning and execution](docs/physical-planning.md) and the [complete IR reference](docs/ir-reference.md), with recorded examples of every produced stage.
+
+## Full-model visual inspection
+
+[Open the planned Qwen3.5-2B text model](docs/validation/2026-09-08-qwen-plan/model.html) in a browser: 24 layers, 640 typed operators, 320 weights and 48 state tensors. Navigate layer DAGs, follow tensor producers/consumers across layers, inspect shapes and checkpoint bindings, and search the whole model. The self-contained HTML includes downloadable typed IR and logical memory formulas.
+
+```sh
+cargo run -p inferfabric-cli -- explain-model model.typed-plan.json --html model.html
+```
+
+Input is the output of `compile-checkpoint`. This is inspection of the checkpoint-bound mathematical plan; final native allocations and kernel schedules are not yet exported. [Reference and validation](docs/validation/2026-09-08-qwen-plan/README.md).
