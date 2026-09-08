@@ -4,7 +4,7 @@
 
 Prepared operators query their workspace requirement without allocating it. Before the first eager execution or capture, the root sequence binds its unbound operators to a session-owned block sized to the largest requirement. Subsequent sequences reuse a suitable existing block or allocate a new stable block; previously bound addresses never change. Captured graphs are destroyed before the pool. Stream-serialized execution and synchronous public execution/replay boundaries are required for reuse.
 
-Request RNG also uses the pool after the preceding replay fence and completes before the next replay. `PANGU_DEDICATED_WORKSPACES=1` retains the original per-operator allocator for comparisons. `workspace_bytes` reports physical owned memory, including pooled blocks, rather than summing aliased logical requirements.
+Request RNG also uses the pool after the preceding replay fence and completes before the next replay. `INFERFABRIC_DEDICATED_WORKSPACES=1` retains the original per-operator allocator for comparisons. `workspace_bytes` reports physical owned memory, including pooled blocks, rather than summing aliased logical requirements.
 
 Qualified in Docker on Ascend A3, CANN 9.1.0, TP2, Qwen3.5-2B, context 2048, four sequences and 16 scheduled tokens. Native C++ builds with warnings treated as errors. Both ranks passed eager/graph bitwise comparison, full-context and inactive-lane state checks. The Rust frontend native, sampling and batching smoke tests passed, including 12 concurrent requests, isolated-baseline agreement, seeded penalties, mixed prefill/decode, cancellation and slot reuse.
 
@@ -23,7 +23,7 @@ The C++ composite boundary is a conservative lifetime boundary: all scratch with
 
 Pools reuse suitable blocks and retain older versions if a later prepared shape needs a larger block. No captured address moves. All graphs and repeatable executors are destroyed before pool storage, after the session stream fence. Each rank has its own pools; the serving worker serializes operations and graph replays. Adding overlapping execution streams requires a corresponding change to pool ownership or event dependencies.
 
-`PANGU_DEDICATED_ACTIVATIONS=1` disables tensor reuse in both Rust and C++. Set it together with `PANGU_DEDICATED_WORKSPACES=1` for the original allocation strategy. These are startup settings inherited by every rank. Allocation details in every profile stage distinguish physical scratch, layer and snapshot pools, owned temporaries, logical scratch/workspace demand, owned buffers and non-owning views. Profile fingerprints cover startup logits, every KV/recurrent/conv state region, and full-context logits.
+`INFERFABRIC_DEDICATED_ACTIVATIONS=1` disables tensor reuse in both Rust and C++. Set it together with `INFERFABRIC_DEDICATED_WORKSPACES=1` for the original allocation strategy. These are startup settings inherited by every rank. Allocation details in every profile stage distinguish physical scratch, layer and snapshot pools, owned temporaries, logical scratch/workspace demand, owned buffers and non-owning views. Profile fingerprints cover startup logits, every KV/recurrent/conv state region, and full-context logits.
 
 The planner is conservative rather than a minimum-memory solver: it does not alias values within a C++ composite or within a layer. This keeps internal ACLNN and HCCL lifetimes explicit while removing cross-operation and cross-layer retention. Fixed serving shapes bound request RNG storage; request setup reuses workspace and fences before replay.
 

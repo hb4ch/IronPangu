@@ -53,11 +53,11 @@ async fn main() -> anyhow::Result<()> {
         .as_str()
     {
         "--mock" => {
-            let spec = pangu_dsl::parse(&std::fs::read_to_string(&args[2])?)?;
-            let artifact = pangu_compiler::compile(&spec, &pangu_ir::Target::mock())?;
+            let spec = inferfabric_dsl::parse(&std::fs::read_to_string(&args[2])?)?;
+            let artifact = inferfabric_compiler::compile(&spec, &inferfabric_ir::Target::mock())?;
             (
                 backend::Backend::mock(artifact).await?,
-                "ironpangu-mock",
+                "inferfabric-mock",
                 args.get(4).map(|s| s.parse()).transpose()?.unwrap_or(8000),
             )
         }
@@ -66,11 +66,12 @@ async fn main() -> anyhow::Result<()> {
                 args.len() >= 6,
                 "--native requires DSL CHECKPOINT LIB DEVICE [PORT] [--max-model-len N] [--gpu-memory-utilization F] [--memory-profile FILE] [--profile-only] [--max-num-seqs N] [--max-num-batched-tokens N]"
             );
-            let spec = pangu_dsl::parse_checkpoint(&std::fs::read_to_string(&args[2])?)?;
-            let checkpoint = pangu_compiler::checkpoint::inspect(std::path::Path::new(&args[3]))?;
+            let spec = inferfabric_dsl::parse_checkpoint(&std::fs::read_to_string(&args[2])?)?;
+            let checkpoint =
+                inferfabric_compiler::checkpoint::inspect(std::path::Path::new(&args[3]))?;
             let native_args =
                 native_args::NativeArgs::parse(&args[6..], spec.max_context(), args[5].parse()?)?;
-            let plan = pangu_compiler::bound::compile(&spec, checkpoint)?;
+            let plan = inferfabric_compiler::bound::compile(&spec, checkpoint)?;
             let profile_path = native_args.startup.profile_path.clone();
             let engine = native_backend::Backend::native(
                 plan,
@@ -88,7 +89,7 @@ async fn main() -> anyhow::Result<()> {
                 }
                 return Ok(());
             }
-            (engine, "ironpangu-qwen35", native_args.port)
+            (engine, "inferfabric-qwen35", native_args.port)
         }
         _ => anyhow::bail!("select --mock or --native"),
     };

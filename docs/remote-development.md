@@ -1,10 +1,10 @@
 # Remote Docker development
 
-Validated on 2026-09-07. SSH: `root@7.156.99.58`. Remote project: `/data/p00603624/ironpangu`.
+Validated on 2026-09-07. SSH: `root@7.156.99.58`. Remote project: `/data/p00603624/inferfabric`.
 
 ## Container and compatibility
 
-Container `ironpangu-dev` uses:
+Container `inferfabric-dev` uses:
 
 ```
 registry-cbu.huawei.com/omniai_omniinfer_dev/ai-infra-infer-1.0.3-a3-arm-feature/vllm_0.25.1-202609021706-daily:0.0.1
@@ -36,7 +36,7 @@ From local PowerShell:
 
 ```powershell
 ./scripts/prepare-sysroot.ps1
-wsl -d Ubuntu -- bash -lc 'cd /mnt/d/omni/IronPangu && scripts/cross-frontend.sh'
+wsl -d Ubuntu -- bash -lc 'cd /mnt/d/omni/InferFabric && scripts/cross-frontend.sh'
 ./scripts/deploy.ps1
 ```
 
@@ -49,11 +49,11 @@ The deploy script copies the local Rust binary and source, compiles native code 
 Start the weight-independent synthetic fixture:
 
 ```sh
-ssh root@7.156.99.58 "docker exec -d ironpangu-dev bash -lc 'cd /data/p00603624/ironpangu && exec ./pangu-server --mock frontend/fixtures/mock.pangu frontend/fixtures/mock-tokenizer 18080 > frontend.log 2>&1'"
-ssh root@7.156.99.58 "docker exec ironpangu-dev /data/p00603624/ironpangu/pangu-server --smoke-test http://127.0.0.1:18080"
+ssh root@7.156.99.58 "docker exec -d inferfabric-dev bash -lc 'cd /data/p00603624/inferfabric && exec ./inferfabric-server --mock frontend/fixtures/mock.inferfabric frontend/fixtures/mock-tokenizer 18080 > frontend.log 2>&1'"
+ssh root@7.156.99.58 "docker exec inferfabric-dev /data/p00603624/inferfabric/inferfabric-server --smoke-test http://127.0.0.1:18080"
 ```
 
-The server binds container loopback only. Its public model name is `ironpangu-mock`. It uses the actual pinned vLLM Rust HTTP/chat/tokenizer/SSE implementation and a persistent Iron Pangu mock scheduler. The fixture vocabulary is intentionally synthetic, not Qwen tokenization or inference. Request `temperature=0`; unsupported sampling features are rejected.
+The server binds container loopback only. Its public model name is `inferfabric-mock`. It uses the actual pinned vLLM Rust HTTP/chat/tokenizer/SSE implementation and a persistent InferFabric mock scheduler. The fixture vocabulary is intentionally synthetic, not Qwen tokenization or inference. Request `temperature=0`; unsupported sampling features are rejected.
 
 Successful smoke output checks health, chat, stream/collected agreement, four concurrent requests, and HTTP 400 for unsupported sampling. `native-build/acl_graph_probe --abi` returned ABI version 1. The device graph probe takes an explicit device ID and must wait for a suitable compute-device assignment.
 
@@ -65,4 +65,4 @@ The real `AscendBackend` and registered transfer adapter remain unimplemented. T
 
 ## NPU execution enabled
 
-The user released the cards later on 7 September. `ironpangu-npu` now has explicit compute-device access to devices 0 and 1. [Native bring-up](npu-bringup.md) records successful checkpoint projection/RMSNorm numerical checks and graph-replay qualification on both devices. Native ABI version 2 adds prepared math operations. The earlier statements about occupied devices and no NPU execution describe the initial bring-up stage, not current status.
+The user released the cards later on 7 September. `inferfabric-npu` now has explicit compute-device access to devices 0 and 1. [Native bring-up](npu-bringup.md) records successful checkpoint projection/RMSNorm numerical checks and graph-replay qualification on both devices. Native ABI version 2 adds prepared math operations. The earlier statements about occupied devices and no NPU execution describe the initial bring-up stage, not current status.

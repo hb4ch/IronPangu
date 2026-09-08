@@ -1,1 +1,1 @@
-{"model":"ironpangu-mock","messages":[{"role":"user","content":"hello world"}],"temperature":0,"max_tokens":4}
+{"model":"inferfabric-mock","messages":[{"role":"user","content":"hello world"}],"temperature":0,"max_tokens":4}

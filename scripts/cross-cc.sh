@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 root=$(cd "$(dirname "$0")/.." && pwd)
-sysroot=${PANGU_SYSROOT:-$root/.cross/sysroot}
+sysroot=${INFERFABRIC_SYSROOT:-$root/.cross/sysroot}
 compiler=aarch64-linux-gnu-gcc
 extra=()
 if [[ ${0##*/} == *cxx* ]]; then

@@ -2,11 +2,11 @@
 
 **Current update:** full-model native inference and Rust HTTP serving are now qualified within a single-request, context-128 scope. Read [the native milestone](npu-native-milestone.md) first. The earlier-stage description below is historical; native PD and the general `AscendBackend` integration remain outstanding.
 
-Validated on 7 September 2026 against `/data/p00603624/models/qwen35`, inside `ironpangu-dev` on `root@7.156.99.58`. Rust was built locally under WSL and cross-compiled for ARM64. This stage reads metadata and emits a mathematical plan; it neither loads tensor payloads nor calls the NPU.
+Validated on 7 September 2026 against `/data/p00603624/models/qwen35`, inside `inferfabric-dev` on `root@7.156.99.58`. Rust was built locally under WSL and cross-compiled for ARM64. This stage reads metadata and emits a mathematical plan; it neither loads tensor payloads nor calls the NPU.
 
 ## Language and pipeline
 
-[The complete program](../examples/qwen35-2b-checkpoint.pangu) starts with:
+[The complete program](../examples/qwen35-2b-checkpoint.inferfabric) starts with:
 
 ```text
 contract = qwen35_text_v1
@@ -28,7 +28,7 @@ The implemented pipeline is:
 3. Read the index and each bounded safetensors header (maximum 16 MiB). Validate tensor sizes, checked byte ranges, contiguous storage, shard/index agreement and total payload size. Reject path traversal and shard symlinks outside the checkpoint directory.
 4. Bind exactly 320 expected text tensors by name, dtype, shape and absolute shard offset. Exclude only the recognized vision and MTP namespaces; reject other unexpected tensors.
 5. Emit 640 typed operations with explicit inputs, outputs, symbolic dimensions and state references. Check SSA dependencies, weight coverage, operation shapes/dtypes, Q/gate packing and state contracts.
-6. Write deterministic `ironpangu.typed-plan.v1` JSON, including metadata fingerprint, compiler-source-dependent key, state sizes and outstanding link requirements. `executable` is always false.
+6. Write deterministic `inferfabric.typed-plan.v1` JSON, including metadata fingerprint, compiler-source-dependent key, state sizes and outstanding link requirements. `executable` is always false.
 
 The existing executable-artifact loader does not accept this JSON. Native linking must produce a separate target-qualified bundle before the runtime can admit real requests. There is no automatic mock fallback and no Python engine integration. Serving remains exclusively through the pinned vLLM 0.25.1 Rust frontend.
 
@@ -83,11 +83,11 @@ export PATH=/home/p00603624/rust/cargo/bin:/usr/local/bin:/usr/bin:/bin
 bash scripts/cross-compiler.sh
 ```
 
-Copy `.deploy/pangu-compiler` and the checkpoint DSL to `/data/p00603624/ironpangu`, then execute through Docker:
+Copy `.deploy/inferfabric-compiler` and the checkpoint DSL to `/data/p00603624/inferfabric`, then execute through Docker:
 
 ```bash
-docker exec -w /data/p00603624/ironpangu ironpangu-dev \
-  ./pangu-compiler compile-checkpoint examples/qwen35-2b-checkpoint.pangu \
+docker exec -w /data/p00603624/inferfabric inferfabric-dev \
+  ./inferfabric-compiler compile-checkpoint examples/qwen35-2b-checkpoint.inferfabric \
   /data/p00603624/models/qwen35 qwen35.typed-plan.json
 ```
 

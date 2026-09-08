@@ -3,8 +3,8 @@
 The vLLM 0.25.1 Rust frontend accepts `--max-num-seqs N` (default 4, range 1..64) and `--max-num-batched-tokens N` (default 1024, positive). The first bounds resident sequences; the second bounds logical input tokens consumed in a scheduler iteration. Prompt chunks and decode tokens share that budget. Budgets smaller than the sequence limit are supported with round-robin selection. The waiting queue holds up to four times the sequence limit; excess admission returns a busy error. There is no Python engine.
 
 ```sh
-./pangu-native-server --native examples/qwen35-2b-checkpoint.pangu \
-  /data/p00603624/models/qwen35 native-build/libpangu_acl.so 0 18081 \
+./inferfabric-native-server --native examples/qwen35-2b-checkpoint.inferfabric \
+  /data/p00603624/models/qwen35 native-build/libinferfabric_acl.so 0 18081 \
   --max-model-len 2048 --max-num-seqs 4 --max-num-batched-tokens 16 \
   --gpu-memory-utilization 0.9
 ```
@@ -17,4 +17,4 @@ Startup HBM profiling covers all lanes, temporary state snapshots, sampler graph
 
 Device validation: four slots at context 2048 passed with token budgets 16 and 2. Twelve concurrent requests matched isolated outputs with greedy and seeded non-greedy sampling, repetition/presence/frequency penalties. Mixed prefill/decode, queued requests, cancellation in prefill/decode, slot reuse, chat, SSE and overflow checks passed. The exact-copy graph observed 6,741,135,360 bytes HBM growth, including 3,763,862,208 resident weight bytes. Reports are in `validation-batching-2026-09-07`.
 
-Inside the container, run `./pangu-native-server --batching-smoke-test http://127.0.0.1:18081`, plus the existing native and sampling smoke tests. Rust is cross-compiled locally; native C++ builds and NPU execution stay inside Docker.
+Inside the container, run `./inferfabric-native-server --batching-smoke-test http://127.0.0.1:18081`, plus the existing native and sampling smoke tests. Rust is cross-compiled locally; native C++ builds and NPU execution stay inside Docker.

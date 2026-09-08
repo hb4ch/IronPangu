@@ -12,10 +12,10 @@ license = "Apache-2.0"
 serde = { version = "1.0.228", features = ["derive"] }
 serde_json = "1.0.150"
 sha2 = "0.11.0"
-pangu-model = { path = "crates/pangu-model" }
-pangu-dsl = { path = "crates/pangu-dsl" }
-pangu-ir = { path = "crates/pangu-ir" }
-pangu-compiler = { path = "crates/pangu-compiler" }
-pangu-runtime = { path = "crates/pangu-runtime" }
-pangu-transfer = { path = "crates/pangu-transfer" }
-pangu-scheduler = { path = "crates/pangu-scheduler" }
+inferfabric-model = { path = "crates/inferfabric-model" }
+inferfabric-dsl = { path = "crates/inferfabric-dsl" }
+inferfabric-ir = { path = "crates/inferfabric-ir" }
+inferfabric-compiler = { path = "crates/inferfabric-compiler" }
+inferfabric-runtime = { path = "crates/inferfabric-runtime" }
+inferfabric-transfer = { path = "crates/inferfabric-transfer" }
+inferfabric-scheduler = { path = "crates/inferfabric-scheduler" }

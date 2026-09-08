@@ -1,0 +1,14 @@
+[package]
+workspace = "../.."
+name = "inferfabric-native"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+
+[dependencies]
+inferfabric-model.workspace = true
+inferfabric-compiler.workspace = true
+libloading = "0.8.9"
+serde.workspace = true
+serde_json.workspace = true

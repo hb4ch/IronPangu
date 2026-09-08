@@ -39,12 +39,12 @@ fn select_round(eligible: &[bool], cursor: &mut usize, remaining: usize) -> Vec<
     selected
 }
 pub(super) fn run(
-    engine: &mut pangu_native::EngineSet<'_, '_>,
+    engine: &mut inferfabric_native::EngineSet<'_, '_>,
     rx: &mut mpsc::Receiver<Job>,
     active: &Active,
     stop: &Arc<AtomicBool>,
     token_budget: usize,
-) -> pangu_model::Result<()> {
+) -> inferfabric_model::Result<()> {
     let mut slots: Vec<Option<Running>> = (0..engine.batch_capacity()).map(|_| None).collect();
     let mut cursor = 0;
     let mut ticks = 0u64;

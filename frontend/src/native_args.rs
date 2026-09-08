@@ -1,6 +1,6 @@
 use std::path::PathBuf;
 pub struct NativeArgs {
-    pub startup: pangu_native::StartupOptions,
+    pub startup: inferfabric_native::StartupOptions,
     pub port: u16,
     pub profile_only: bool,
     pub max_num_batched_tokens: usize,
@@ -8,7 +8,7 @@ pub struct NativeArgs {
 impl NativeArgs {
     pub fn parse(args: &[String], default_context: usize, device: i32) -> anyhow::Result<Self> {
         let mut options = Self {
-            startup: pangu_native::StartupOptions {
+            startup: inferfabric_native::StartupOptions {
                 max_model_len: default_context,
                 max_num_seqs: 4,
                 memory_utilization: 0.9,

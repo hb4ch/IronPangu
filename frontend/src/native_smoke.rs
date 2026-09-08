@@ -16,7 +16,7 @@ pub async fn run(base: &str) -> Result<()> {
         "not ready"
     );
     let url = format!("{base}/v1/chat/completions");
-    let body = json!({"model":"ironpangu-qwen35","messages":[{"role":"user","content":"What is 2 + 2? Answer briefly."}],"temperature":0,"max_tokens":16,"chat_template_kwargs":{"enable_thinking":false}});
+    let body = json!({"model":"inferfabric-qwen35","messages":[{"role":"user","content":"What is 2 + 2? Answer briefly."}],"temperature":0,"max_tokens":16,"chat_template_kwargs":{"enable_thinking":false}});
     let first: Value = client
         .post(&url)
         .json(&body)
@@ -60,7 +60,7 @@ pub async fn run(base: &str) -> Result<()> {
     }
     ensure!(done && terminal && text == "4", "SSE mismatch: {sse}");
     let completion_url = format!("{base}/v1/completions");
-    let different = json!({"model":"ironpangu-qwen35","prompt":"The capital of France is","temperature":0,"max_tokens":8});
+    let different = json!({"model":"inferfabric-qwen35","prompt":"The capital of France is","temperature":0,"max_tokens":8});
     let completion: Value = client
         .post(&completion_url)
         .json(&different)
@@ -113,7 +113,7 @@ pub async fn run(base: &str) -> Result<()> {
     let context = models["data"][0]["max_model_len"]
         .as_u64()
         .ok_or_else(|| anyhow::anyhow!("missing context metadata"))? as usize;
-    let oversized = json!({"model":"ironpangu-qwen35","prompt":vec![1u32;context + 1],"temperature":0,"max_tokens":1});
+    let oversized = json!({"model":"inferfabric-qwen35","prompt":vec![1u32;context + 1],"temperature":0,"max_tokens":1});
     ensure!(
         client
             .post(&completion_url)
@@ -126,7 +126,7 @@ pub async fn run(base: &str) -> Result<()> {
         "oversized prompt was accepted"
     );
     if context > 512 {
-        let request = json!({"model":"ironpangu-qwen35","prompt":vec![1u32;512],"temperature":0,"max_tokens":2,"ignore_eos":true});
+        let request = json!({"model":"inferfabric-qwen35","prompt":vec![1u32;512],"temperature":0,"max_tokens":2,"ignore_eos":true});
         let response: Value = client
             .post(&completion_url)
             .json(&request)
@@ -145,7 +145,7 @@ pub async fn run(base: &str) -> Result<()> {
         );
     }
     // Hold a streaming request while submitting another. The native admission policy is explicit.
-    let long = json!({"model":"ironpangu-qwen35","prompt":vec![1u32;80],"temperature":0,"max_tokens":40,"ignore_eos":true,"stream":true});
+    let long = json!({"model":"inferfabric-qwen35","prompt":vec![1u32;80],"temperature":0,"max_tokens":40,"ignore_eos":true,"stream":true});
     let pending = client
         .post(&completion_url)
         .json(&long)
@@ -192,7 +192,7 @@ pub async fn sampling(base: &str) -> Result<()> {
         ensure!(status.is_success(), "HTTP {status}: {text}");
         Ok(serde_json::from_str(&text)?)
     }
-    let body = json!({"model":"ironpangu-qwen35","prompt":"Once upon a time,","max_tokens":12,"seed":42,"temperature":1.1,"top_p":0.92,"top_k":20,"min_p":0.03,"presence_penalty":1.2,"frequency_penalty":0.2,"repetition_penalty":1.1});
+    let body = json!({"model":"inferfabric-qwen35","prompt":"Once upon a time,","max_tokens":12,"seed":42,"temperature":1.1,"top_p":0.92,"top_k":20,"min_p":0.03,"presence_penalty":1.2,"frequency_penalty":0.2,"repetition_penalty":1.1});
     let first = call(&client, &url, &body).await?;
     let second = call(&client, &url, &body).await?;
     ensure!(
@@ -232,8 +232,7 @@ pub async fn sampling(base: &str) -> Result<()> {
         done && collected == first["choices"][0]["text"].as_str().unwrap_or_default(),
         "seeded SSE mismatch"
     );
-    let defaults =
-        json!({"model":"ironpangu-qwen35","prompt":"Once upon a time,","max_tokens":12,"seed":314});
+    let defaults = json!({"model":"inferfabric-qwen35","prompt":"Once upon a time,","max_tokens":12,"seed":314});
     let inherited = call(&client, &url, &defaults).await?;
     let mut explicit = defaults.clone();
     for (k, v) in [
@@ -258,7 +257,7 @@ pub async fn sampling(base: &str) -> Result<()> {
     greedy["seed"] = json!(999);
     let g2 = call(&client, &url, &greedy).await?;
     ensure!(g1["choices"] == g2["choices"], "greedy depends on seed");
-    let stop = json!({"model":"ironpangu-qwen35","prompt":[1,2,3],"temperature":0,"presence_penalty":0,"max_tokens":4,"stop_token_ids":[16],"ignore_eos":true});
+    let stop = json!({"model":"inferfabric-qwen35","prompt":[1,2,3],"temperature":0,"presence_penalty":0,"max_tokens":4,"stop_token_ids":[16],"ignore_eos":true});
     let stopped = call(&client, &url, &stop).await?;
     ensure!(
         stopped["usage"]["completion_tokens"] == 1,

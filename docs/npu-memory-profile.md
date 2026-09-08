@@ -5,8 +5,8 @@ Native serving accepts `--max-model-len N` and `--gpu-memory-utilization F`. Con
 Run inside the NPU Docker container after locally cross-compiling the Rust frontend:
 
 ```sh
-./pangu-native-server --native examples/qwen35-2b-checkpoint.pangu \
-  /data/p00603624/models/qwen35 native-build/libpangu_acl.so 0 18081 \
+./inferfabric-native-server --native examples/qwen35-2b-checkpoint.inferfabric \
+  /data/p00603624/models/qwen35 native-build/libinferfabric_acl.so 0 18081 \
   --max-model-len 2048 --gpu-memory-utilization 0.9 \
   --memory-profile native-memory-profile-device0.json
 ```
@@ -21,7 +21,7 @@ Measurements use free-memory differences from the initialized ACL context and al
 
 Validation on 2026-09-07: context 2050 (outside the original buckets) passed with bitwise equal final-position logits. Observed HBM growth was 5,898,883,072 bytes: 3,763,862,208 resident weight bytes and 2,135,020,864 non-weight bytes. KV cache was 26,738,688 bytes and workspace was 1,342,449,408 bytes. A 0.001 utilization budget failed before weight upload; a direct native allocation probe rejected an allocation exceeding its 2 MiB budget. See the accompanying JSON reports in `validation-memory-2026-09-07`.
 
-HTTP qualification at context 2048 passed a real 512-token prompt with two generated tokens, context overflow rejection, chat/completion correctness, SSE agreement, state reset, admission rejection and disconnect recovery. Seeded sampling replay, four distinct seed outputs, greedy seed independence and minimum-token handling also passed. Rust workspace tests (31), frontend tests (5), and Clippy passed. Rust binaries were cross-compiled locally; ACL compilation and NPU tests ran inside `ironpangu-npu`.
+HTTP qualification at context 2048 passed a real 512-token prompt with two generated tokens, context overflow rejection, chat/completion correctness, SSE agreement, state reset, admission rejection and disconnect recovery. Seeded sampling replay, four distinct seed outputs, greedy seed independence and minimum-token handling also passed. Rust workspace tests (31), frontend tests (5), and Clippy passed. Rust binaries were cross-compiled locally; ACL compilation and NPU tests ran inside `inferfabric-npu`.
 
 Profiling now includes all `--max-num-seqs` lanes and per-rank TP allocations. Eight slots at context 8192 passed startup graph/state qualification, with observed HBM growth of 9,231,245,312 bytes. See `validation-batching-2026-09-07/batching-8-8192.json`.
 

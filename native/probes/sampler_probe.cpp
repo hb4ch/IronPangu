@@ -1,4 +1,4 @@
-#include "pangu_acl.h"
+#include "inferfabric_acl.h"
 #include <algorithm>
 #include <cmath>
 #include <cstring>
@@ -8,7 +8,7 @@
 #include <vector>
 void check(int status) {
   if (status)
-    throw std::runtime_error(pangu_acl_last_error());
+    throw std::runtime_error(inferfabric_acl_last_error());
 }
 uint16_t bf(float f) {
   uint32_t n;
@@ -22,7 +22,7 @@ float fp(uint16_t n) {
   return f;
 }
 struct Test {
-  pangu_acl_session *s = nullptr;
+  inferfabric_acl_session *s = nullptr;
   int64_t v;
   uint64_t logits, params, counts, seen, mask, rng, random, out, probs, op,
       greedy, graph;
@@ -32,14 +32,14 @@ struct Test {
   int64_t control[3] = {42, 0, 0};
   uint64_t alloc(size_t n) {
     uint64_t id;
-    check(pangu_acl_allocate(s, n, &id));
+    check(inferfabric_acl_allocate(s, n, &id));
     return id;
   }
   template <class T> void write(uint64_t id, const T *ptr, size_t n) {
-    check(pangu_acl_write(s, id, 0, ptr, n * sizeof(T)));
+    check(inferfabric_acl_write(s, id, 0, ptr, n * sizeof(T)));
   }
   Test(int device, int64_t vocab) : v(vocab), x(v), c(v), h(v), m(v) {
-    check(pangu_acl_open(device, &s));
+    check(inferfabric_acl_open(device, &s));
     logits = alloc(v * 2);
     params = alloc(32);
     counts = alloc(v * 4);
@@ -47,21 +47,21 @@ struct Test {
     mask = alloc(v * 4);
     rng = alloc(24);
     random = alloc(2048 * 4);
-    check(pangu_acl_random_fill(s, random, 2048, 42));
+    check(inferfabric_acl_random_fill(s, random, 2048, 42));
     out = alloc(8);
     probs = alloc(v * 4);
     control[2] = v - 1;
     upload();
-    check(pangu_acl_sampler_prepare(s, logits, params, counts, seen, mask, rng,
+    check(inferfabric_acl_sampler_prepare(s, logits, params, counts, seen, mask, rng,
                                     random, out, probs, v, 2048, 0, &op));
-    check(pangu_acl_sampler_prepare(s, logits, params, counts, seen, mask, rng,
+    check(inferfabric_acl_sampler_prepare(s, logits, params, counts, seen, mask, rng,
                                     random, out, probs, v, 2048, 1, &greedy));
-    check(pangu_acl_operation_execute(s, op));
-    check(pangu_acl_operation_capture(s, op, &graph));
+    check(inferfabric_acl_operation_execute(s, op));
+    check(inferfabric_acl_operation_capture(s, op, &graph));
   }
   ~Test() {
     if (s)
-      pangu_acl_close(s);
+      inferfabric_acl_close(s);
   }
   void upload() {
     write(logits, x.data(), x.size());
@@ -72,10 +72,10 @@ struct Test {
     write(rng, control, 3);
   }
   int64_t token(bool replay = true) {
-    check(replay ? pangu_acl_replay(s, graph)
-                 : pangu_acl_operation_execute(s, op));
+    check(replay ? inferfabric_acl_replay(s, graph)
+                 : inferfabric_acl_operation_execute(s, op));
     int64_t id;
-    check(pangu_acl_read(s, out, 0, &id, 8));
+    check(inferfabric_acl_read(s, out, 0, &id, 8));
     if (id < 0 || id >= v)
       throw std::runtime_error("invalid sample");
     return id;
@@ -94,9 +94,9 @@ struct Test {
     }
     auto best =
         std::max_element(expected.begin(), expected.end()) - expected.begin();
-    check(pangu_acl_operation_execute(s, greedy));
+    check(inferfabric_acl_operation_execute(s, greedy));
     int64_t greedy_id = -1;
-    check(pangu_acl_read(s, out, 0, &greedy_id, 8));
+    check(inferfabric_acl_read(s, out, 0, &greedy_id, 8));
     if (greedy_id != best)
       throw std::runtime_error("NPU greedy/reference mismatch");
     std::stable_sort(expected.begin(), expected.end(), std::greater<float>());
@@ -114,7 +114,7 @@ struct Test {
       accum += prob;
     }
     std::vector<float> got(v);
-    check(pangu_acl_read(s, probs, 0, got.data(), v * 4));
+    check(inferfabric_acl_read(s, probs, 0, got.data(), v * 4));
     double error = 0;
     for (int64_t i = 0; i < v; ++i) {
       if (!std::isfinite(got[i]))
@@ -176,13 +176,13 @@ int main(int argc, char **argv) {
       if (n < 390 || n > 635)
         throw std::runtime_error("uniform sampling frequency failure");
     std::vector<float> original(2048), regenerated(2048);
-    check(pangu_acl_read(t.s, t.random, 0, original.data(), 8192));
-    check(pangu_acl_random_fill(t.s, t.random, 2048, 42));
-    check(pangu_acl_read(t.s, t.random, 0, regenerated.data(), 8192));
+    check(inferfabric_acl_read(t.s, t.random, 0, original.data(), 8192));
+    check(inferfabric_acl_random_fill(t.s, t.random, 2048, 42));
+    check(inferfabric_acl_read(t.s, t.random, 0, regenerated.data(), 8192));
     if (original != regenerated)
       throw std::runtime_error("request seed reset mismatch");
-    check(pangu_acl_random_fill(t.s, t.random, 2048, 43));
-    check(pangu_acl_read(t.s, t.random, 0, regenerated.data(), 8192));
+    check(inferfabric_acl_random_fill(t.s, t.random, 2048, 43));
+    check(inferfabric_acl_read(t.s, t.random, 0, regenerated.data(), 8192));
     if (original == regenerated)
       throw std::runtime_error("RNG seed ignored");
     std::cout << "{\"device\":" << device << ",\"distribution_cases\":" << cases

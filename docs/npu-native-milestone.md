@@ -2,13 +2,13 @@
 
 **Sampling update:** non-greedy NPU decoding is now implemented. Read [NPU sampling](npu-sampling.md) for current defaults and supported controls; greedy-only statements below describe the earlier milestone.
 
-The supplied Qwen3.5-2B text checkpoint now runs all 24 layers on Ascend and serves real completions/chat through the vendored **vLLM 0.25.1 Rust frontend only**. Rust is cross-compiled locally in WSL; C++ builds and all accelerator execution take place in `ironpangu-npu` on `root@7.156.99.58`, under `/data/p00603624/ironpangu`. No Python inference engine is used.
+The supplied Qwen3.5-2B text checkpoint now runs all 24 layers on Ascend and serves real completions/chat through the vendored **vLLM 0.25.1 Rust frontend only**. Rust is cross-compiled locally in WSL; C++ builds and all accelerator execution take place in `inferfabric-npu` on `root@7.156.99.58`, under `/data/p00603624/inferfabric`. No Python inference engine is used.
 
 ## Qualified scope
 
-The compiler validates the versioned checkpoint DSL, emits a canonical typed mathematical plan, then `pangu-compiler::lower` maps that plan into ordered native block bindings. Lowering rejects edited/noncanonical graphs. An explicit runtime context override recompiles the canonical plan before lowering; see [startup memory profiling](npu-memory-profile.md). All 320 text tensors are bound; actual uploaded payloads are SHA-256 hashed. Norm weights are transformed once to FP32 `1 + weight` where required. The mathematical plan remains non-executable by itself: runtime loading, preparation and successful startup qualification are required.
+The compiler validates the versioned checkpoint DSL, emits a canonical typed mathematical plan, then `inferfabric-compiler::lower` maps that plan into ordered native block bindings. Lowering rejects edited/noncanonical graphs. An explicit runtime context override recompiles the canonical plan before lowering; see [startup memory profiling](npu-memory-profile.md). All 320 text tensors are bound; actual uploaded payloads are SHA-256 hashed. Norm weights are transformed once to FP32 `1 + weight` where required. The mathematical plan remains non-executable by itself: runtime loading, preparation and successful startup qualification are required.
 
-`pangu-native` owns one complete model on one dedicated device thread. The C++ ABI prepares embedding, 18 delta blocks, six full-attention blocks, final normalization and tied output projection. ACLNN descriptors/executors/workspaces and graph addresses persist across requests. Startup compares eager and graph logits and all 48 state regions, then clears state before reporting ready. Each token replay updates token/position/append/mask metadata without device allocation or recapture.
+`inferfabric-native` owns one complete model on one dedicated device thread. The C++ ABI prepares embedding, 18 delta blocks, six full-attention blocks, final normalization and tied output projection. ACLNN descriptors/executors/workspaces and graph addresses persist across requests. Startup compares eager and graph logits and all 48 state regions, then clears state before reporting ready. Each token replay updates token/position/append/mask metadata without device allocation or recapture.
 
 The experimental HTTP mode has **continuous batching, greedy/seeded non-greedy NPU sampling, configurable context and DSL-configured TP (CP=1, no SP)**. Prefill consumes tokens sequentially through the same graph; this is a correctness baseline, not optimized chunked prefill. State is reset between requests. Requests queue behind the configured resident sequence limit, stream drop cancels execution, unsupported sampling is rejected, and native failures stop readiness. The frontend may clamp requested output length to the remaining context before backend admission.
 
@@ -40,15 +40,15 @@ bash scripts/cross-frontend.sh
 Transfer sources and binaries to the remote workspace. Build the native library and launch **inside Docker**:
 
 ```bash
-docker exec ironpangu-npu bash -lc 'source /usr/local/Ascend/cann/set_env.sh && cd /data/p00603624/ironpangu && cmake -S native -B native-build && cmake --build native-build -j4'
-docker exec ironpangu-npu bash -lc 'source /usr/local/Ascend/cann/set_env.sh && cd /data/p00603624/ironpangu && ./pangu-native-server --native examples/qwen35-2b-checkpoint.pangu /data/p00603624/models/qwen35 native-build/libpangu_acl.so 0 18081 --max-model-len 2048'
+docker exec inferfabric-npu bash -lc 'source /usr/local/Ascend/cann/set_env.sh && cd /data/p00603624/inferfabric && cmake -S native -B native-build && cmake --build native-build -j4'
+docker exec inferfabric-npu bash -lc 'source /usr/local/Ascend/cann/set_env.sh && cd /data/p00603624/inferfabric && ./inferfabric-native-server --native examples/qwen35-2b-checkpoint.inferfabric /data/p00603624/models/qwen35 native-build/libinferfabric_acl.so 0 18081 --max-model-len 2048'
 ```
 
-The server binds `127.0.0.1:18081` **inside the container**, model name `ironpangu-qwen35`. The existing mock server on 18080 in `ironpangu-dev` is separate. The native debug build spends time hashing/uploading weights and preparing operators before readiness.
+The server binds `127.0.0.1:18081` **inside the container**, model name `inferfabric-qwen35`. The existing mock server on 18080 in `inferfabric-dev` is separate. The native debug build spends time hashing/uploading weights and preparing operators before readiness.
 
 ```bash
-docker exec ironpangu-npu bash -lc 'cd /data/p00603624/ironpangu && ./pangu-native-server --native-smoke-test http://127.0.0.1:18081'
-docker exec ironpangu-npu bash -lc 'source /usr/local/Ascend/cann/set_env.sh && cd /data/p00603624/ironpangu && ./pangu-npu npu-model-probe examples/qwen35-2b-checkpoint.pangu /data/p00603624/models/qwen35 native-build/libpangu_acl.so 0 examples/qualification-token-ids.json npu-model-device0.json'
+docker exec inferfabric-npu bash -lc 'cd /data/p00603624/inferfabric && ./inferfabric-native-server --native-smoke-test http://127.0.0.1:18081'
+docker exec inferfabric-npu bash -lc 'source /usr/local/Ascend/cann/set_env.sh && cd /data/p00603624/inferfabric && ./inferfabric-npu npu-model-probe examples/qwen35-2b-checkpoint.inferfabric /data/p00603624/models/qwen35 native-build/libinferfabric_acl.so 0 examples/qualification-token-ids.json npu-model-device0.json'
 ```
 
 Local validation: 28 workspace tests and three frontend tests pass; both workspaces pass Clippy with warnings denied, and ARM64 cross-builds pass. SIGINT shutdown was checked: the server exited and npu-smi reported no remaining accelerator processes before restart.

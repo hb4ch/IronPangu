@@ -1,0 +1,11 @@
+[package]
+workspace = "../.."
+name = "inferfabric-ir"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+
+[dependencies]
+inferfabric-model.workspace = true
+serde.workspace = true

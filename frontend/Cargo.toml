@@ -1,5 +1,5 @@
 [package]
-name = "pangu-server"
+name = "inferfabric-server"
 version = "0.1.0"
 edition = "2024"
 license = "Apache-2.0"
@@ -16,14 +16,14 @@ tokio-util = "0.7"
 vllm-server = { path = "../vendor/rust/src/server" }
 vllm-llm = { path = "../vendor/rust/src/llm" }
 vllm-engine-core-client = { path = "../vendor/rust/src/engine-core-client" }
-pangu-model = { path = "../crates/pangu-model" }
-pangu-dsl = { path = "../crates/pangu-dsl" }
-pangu-ir = { path = "../crates/pangu-ir" }
-pangu-compiler = { path = "../crates/pangu-compiler" }
-pangu-scheduler = { path = "../crates/pangu-scheduler" }
+inferfabric-model = { path = "../crates/inferfabric-model" }
+inferfabric-dsl = { path = "../crates/inferfabric-dsl" }
+inferfabric-ir = { path = "../crates/inferfabric-ir" }
+inferfabric-compiler = { path = "../crates/inferfabric-compiler" }
+inferfabric-scheduler = { path = "../crates/inferfabric-scheduler" }
 openssl = { version = "0.10", features = ["vendored"] }
 reqwest = { version = "0.12", default-features = false, features = ["json"] }
 
-pangu-native = { path = "../crates/pangu-native" }
+inferfabric-native = { path = "../crates/inferfabric-native" }
 
 rand = "0.9"

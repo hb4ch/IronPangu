@@ -32,21 +32,21 @@ Context 128 and one active request remain the current serving limits. Logprobs, 
 - Actual model HTTP tests: same-seed repeatability, four distinct outputs from four seeds, seeded SSE/collected agreement, omitted/default parameter agreement, greedy seed independence, and minimum-token suppression.
 - Existing native health/chat/completion/reset/cancellation/overlap tests pass. Local workspace tests, frontend tests and the vendored text-layer tests pass (67 text tests; one explicitly ignored).
 
-Rust is still compiled locally in WSL. C++ builds, RNG qualification and model execution run only inside `ironpangu-npu`.
+Rust is still compiled locally in WSL. C++ builds, RNG qualification and model execution run only inside `inferfabric-npu`.
 
 ```bash
 # Inside the NPU container after sourcing CANN:
 ./sampler-build/sampler_probe 0
 ./sampler-build/sampler_probe 1
-./pangu-native-server --sampling-smoke-test http://127.0.0.1:18081
-./pangu-native-server --native-smoke-test http://127.0.0.1:18081
+./inferfabric-native-server --sampling-smoke-test http://127.0.0.1:18081
+./inferfabric-native-server --native-smoke-test http://127.0.0.1:18081
 ```
 
 The existing SSH tunnel exposes the container API on this Windows machine at `http://127.0.0.1:18081/v1`. Example request body for `/chat/completions`:
 
 ```json
 {
-  "model": "ironpangu-qwen35",
+  "model": "inferfabric-qwen35",
   "messages": [{"role": "user", "content": "Invent a name for a tiny dragon."}],
   "max_tokens": 24,
   "seed": 42,

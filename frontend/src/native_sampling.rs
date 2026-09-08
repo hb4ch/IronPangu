@@ -1,7 +1,7 @@
 use vllm_engine_core_client::protocol::sampling::EngineCoreSamplingParams;
 use vllm_llm::{Error, GenerateRequest, Result};
-pub fn settings(p: &EngineCoreSamplingParams) -> pangu_native::Sampling {
-    pangu_native::Sampling {
+pub fn settings(p: &EngineCoreSamplingParams) -> inferfabric_native::Sampling {
+    inferfabric_native::Sampling {
         temperature: p.temperature,
         top_k: p.top_k,
         top_p: p.top_p,

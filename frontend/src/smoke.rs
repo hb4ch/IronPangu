@@ -16,7 +16,7 @@ pub async fn run(base: &str) -> Result<()> {
             .is_success(),
         "not ready"
     );
-    let body = json!({"model":"ironpangu-mock","messages":[{"role":"user","content":"hello world"}],"temperature":0,"max_tokens":4});
+    let body = json!({"model":"inferfabric-mock","messages":[{"role":"user","content":"hello world"}],"temperature":0,"max_tokens":4});
     let url = format!("{base}/v1/chat/completions");
     let response: Value = client
         .post(&url)

@@ -6,9 +6,9 @@ The first native checkpoint operations now execute on Ascend devices 0 and 1. Th
 
 ## Environment
 
-`ironpangu-npu` uses image `19cc2ebef117`, the same vLLM 0.25.1 ARM64 image as `ironpangu-dev`. It runs with Docker `runc`, explicit `/dev/davinci0` and `/dev/davinci1`, the three management devices, a 2 GiB shared-memory segment, and the existing `/data/p00603624` writable bind. Driver files and npu-smi are read-only mounts. It is not privileged and does not start a Python engine. The earlier management-only development container is preserved.
+`inferfabric-npu` uses image `19cc2ebef117`, the same vLLM 0.25.1 ARM64 image as `inferfabric-dev`. It runs with Docker `runc`, explicit `/dev/davinci0` and `/dev/davinci1`, the three management devices, a 2 GiB shared-memory segment, and the existing `/data/p00603624` writable bind. Driver files and npu-smi are read-only mounts. It is not privileged and does not start a Python engine. The earlier management-only development container is preserved.
 
-All C++ compilation and accelerator execution occurred inside `ironpangu-npu`. The Rust probe was release-cross-compiled locally in WSL using the extracted container sysroot. The native ABI is now version 2 and links the installed `libascendcl` and `libopapi`.
+All C++ compilation and accelerator execution occurred inside `inferfabric-npu`. The Rust probe was release-cross-compiled locally in WSL using the extracted container sysroot. The native ABI is now version 2 and links the installed `libascendcl` and `libopapi`.
 
 ## Implemented bridge
 
@@ -51,17 +51,17 @@ export PATH=/home/p00603624/rust/cargo/bin:/usr/local/bin:/usr/bin:/bin
 bash scripts/cross-npu-probe.sh
 ```
 
-Upload `.deploy/pangu-npu` and native sources into `/data/p00603624/ironpangu`. Build and run through Docker:
+Upload `.deploy/inferfabric-npu` and native sources into `/data/p00603624/inferfabric`. Build and run through Docker:
 
 ```bash
-docker exec ironpangu-npu bash -lc '
+docker exec inferfabric-npu bash -lc '
   source /usr/local/Ascend/cann/set_env.sh
-  cd /data/p00603624/ironpangu
+  cd /data/p00603624/inferfabric
   cmake -S native -B native-build
   cmake --build native-build -j4
   ./native-build/acl_graph_probe 0
-  ./pangu-npu npu-math-probe examples/qwen35-2b-checkpoint.pangu \
-    /data/p00603624/models/qwen35 native-build/libpangu_acl.so \
+  ./inferfabric-npu npu-math-probe examples/qwen35-2b-checkpoint.inferfabric \
+    /data/p00603624/models/qwen35 native-build/libinferfabric_acl.so \
     0 npu-math-device0.json
 '
 ```

@@ -1,20 +1,20 @@
 # vLLM Rust frontend integration
 
-Iron Pangu now includes an optional server using the **vLLM v0.25.1 Rust frontend**, pinned to `752a3a504485790a2e8491cacbb35c137339ad34`. The upstream Rust source and license are in `vendor/`. `frontend/` is a separate Cargo workspace so the original CPU-only core build stays small and independent of CANN.
+InferFabric now includes an optional server using the **vLLM v0.25.1 Rust frontend**, pinned to `752a3a504485790a2e8491cacbb35c137339ad34`. The upstream Rust source and license are in `vendor/`. `frontend/` is a separate Cargo workspace so the original CPU-only core build stays small and independent of CANN.
 
 ## Implemented path
 
 ```text
 vLLM Rust HTTP / chat templates / tokenizer
   -> vllm-llm::GenerationBackend
-  -> persistent Iron Pangu scheduler thread
+  -> persistent InferFabric scheduler thread
   -> mock P workers -> full mock hybrid-state handoff -> mock D workers
   -> bounded token stream -> vLLM incremental decoding / SSE
 ```
 
 `serve_with_backend` injects generation directly. No engine-core handshake, Python engine, managed launcher, or per-request engine startup occurs. The engine-core protocol crate remains a Rust type dependency. Core-only administration endpoints reject calls when no engine-core client exists.
 
-The server supports `--mock` (advertising `ironpangu-mock`) and `--native DSL CHECKPOINT LIB DEVICE [PORT]` (advertising `ironpangu-qwen35`). Native mode runs real weights through a dedicated ACL thread, with continuous admission, mixed prefill/decode and configurable context ([memory profiling controls](npu-memory-profile.md)). See [native deployment and validation](npu-native-milestone.md). See [continuous batching](npu-continuous-batching.md) and [DSL tensor parallelism](npu-tensor-parallel.md). The scheduler path described below is the separate synthetic mock mode.
+The server supports `--mock` (advertising `inferfabric-mock`) and `--native DSL CHECKPOINT LIB DEVICE [PORT]` (advertising `inferfabric-qwen35`). Native mode runs real weights through a dedicated ACL thread, with continuous admission, mixed prefill/decode and configurable context ([memory profiling controls](npu-memory-profile.md)). See [native deployment and validation](npu-native-milestone.md). See [continuous batching](npu-continuous-batching.md) and [DSL tensor parallelism](npu-tensor-parallel.md). The scheduler path described below is the separate synthetic mock mode.
 
 The scheduler initializes P/D workers once, performs token-budgeted prefill and continuous decode, publishes the first token after commit/ACK, and tracks independent request IDs. Dropping the output stream requests cancellation; bounded output queues abort slow consumers instead of blocking shared scheduling. Unexpected stream closure becomes an error. Shutdown retires active requests and closes workers. Ordinary requests use deterministic mock generation with `temperature=0`; unsupported sampling options return HTTP 400.
 
@@ -35,7 +35,7 @@ cargo test --manifest-path frontend/Cargo.toml
 Container acceptance client:
 
 ```sh
-./pangu-server --smoke-test http://127.0.0.1:18080
+./inferfabric-server --smoke-test http://127.0.0.1:18080
 ```
 
 It checks readiness, chat, SSE/collected agreement, concurrent requests and unsupported options through the actual vLLM Rust routes.

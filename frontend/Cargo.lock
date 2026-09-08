@@ -1763,6 +1763,103 @@ dependencies = [
 ]
 
 [[package]]
+name = "inferfabric-compiler"
+version = "0.1.0"
+dependencies = [
+ "inferfabric-ir",
+ "inferfabric-model",
+ "serde",
+ "serde_json",
+ "sha2 0.11.0",
+]
+
+[[package]]
+name = "inferfabric-dsl"
+version = "0.1.0"
+dependencies = [
+ "inferfabric-model",
+]
+
+[[package]]
+name = "inferfabric-ir"
+version = "0.1.0"
+dependencies = [
+ "inferfabric-model",
+ "serde",
+]
+
+[[package]]
+name = "inferfabric-model"
+version = "0.1.0"
+dependencies = [
+ "serde",
+]
+
+[[package]]
+name = "inferfabric-native"
+version = "0.1.0"
+dependencies = [
+ "inferfabric-compiler",
+ "inferfabric-model",
+ "libloading",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "inferfabric-runtime"
+version = "0.1.0"
+dependencies = [
+ "inferfabric-compiler",
+ "inferfabric-ir",
+ "inferfabric-model",
+ "serde",
+]
+
+[[package]]
+name = "inferfabric-scheduler"
+version = "0.1.0"
+dependencies = [
+ "inferfabric-ir",
+ "inferfabric-model",
+ "inferfabric-runtime",
+ "inferfabric-transfer",
+ "serde",
+]
+
+[[package]]
+name = "inferfabric-server"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "async-trait",
+ "futures",
+ "inferfabric-compiler",
+ "inferfabric-dsl",
+ "inferfabric-ir",
+ "inferfabric-model",
+ "inferfabric-native",
+ "inferfabric-scheduler",
+ "openssl",
+ "rand",
+ "reqwest",
+ "serde_json",
+ "tokio",
+ "tokio-util",
+ "vllm-engine-core-client",
+ "vllm-llm",
+ "vllm-server",
+]
+
+[[package]]
+name = "inferfabric-transfer"
+version = "0.1.0"
+dependencies = [
+ "inferfabric-model",
+ "inferfabric-runtime",
+]
+
+[[package]]
 name = "ipnet"
 version = "2.12.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2336,103 +2433,6 @@ dependencies = [
  "sha2 0.10.9",
  "thiserror 2.0.20",
  "zstd",
-]
-
-[[package]]
-name = "pangu-compiler"
-version = "0.1.0"
-dependencies = [
- "pangu-ir",
- "pangu-model",
- "serde",
- "serde_json",
- "sha2 0.11.0",
-]
-
-[[package]]
-name = "pangu-dsl"
-version = "0.1.0"
-dependencies = [
- "pangu-model",
-]
-
-[[package]]
-name = "pangu-ir"
-version = "0.1.0"
-dependencies = [
- "pangu-model",
- "serde",
-]
-
-[[package]]
-name = "pangu-model"
-version = "0.1.0"
-dependencies = [
- "serde",
-]
-
-[[package]]
-name = "pangu-native"
-version = "0.1.0"
-dependencies = [
- "libloading",
- "pangu-compiler",
- "pangu-model",
- "serde",
- "serde_json",
-]
-
-[[package]]
-name = "pangu-runtime"
-version = "0.1.0"
-dependencies = [
- "pangu-compiler",
- "pangu-ir",
- "pangu-model",
- "serde",
-]
-
-[[package]]
-name = "pangu-scheduler"
-version = "0.1.0"
-dependencies = [
- "pangu-ir",
- "pangu-model",
- "pangu-runtime",
- "pangu-transfer",
- "serde",
-]
-
-[[package]]
-name = "pangu-server"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "async-trait",
- "futures",
- "openssl",
- "pangu-compiler",
- "pangu-dsl",
- "pangu-ir",
- "pangu-model",
- "pangu-native",
- "pangu-scheduler",
- "rand",
- "reqwest",
- "serde_json",
- "tokio",
- "tokio-util",
- "vllm-engine-core-client",
- "vllm-llm",
- "vllm-server",
-]
-
-[[package]]
-name = "pangu-transfer"
-version = "0.1.0"
-dependencies = [
- "pangu-model",
- "pangu-runtime",
 ]
 
 [[package]]

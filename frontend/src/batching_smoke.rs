@@ -19,7 +19,7 @@ pub async fn run(base: &str) -> Result<()> {
     let url = format!("{base}/v1/completions");
     let requests: Vec<Value> = (0..4)
         .map(|i| {
-            json!({"model":"ironpangu-qwen35",
+            json!({"model":"inferfabric-qwen35",
         "prompt":vec![1u32+i;[5,37,181,257][i as usize]],"max_tokens":16,"ignore_eos":true,
         "temperature":if i==0 {0.0}else{0.8},"top_k":20,"top_p":0.9,"seed":42+i,
         "presence_penalty":0.7,"frequency_penalty":0.2,"repetition_penalty":1.1})
@@ -41,7 +41,7 @@ pub async fn run(base: &str) -> Result<()> {
         );
     }
     // Start a decode stream, observe its first event, then admit a longer prefill.
-    let decode = json!({"model":"ironpangu-qwen35","prompt":"Once upon a time","max_tokens":512,
+    let decode = json!({"model":"inferfabric-qwen35","prompt":"Once upon a time","max_tokens":512,
         "ignore_eos":true,"temperature":0.8,"seed":19,"stream":true});
     let response = client
         .post(&url)
@@ -66,8 +66,7 @@ pub async fn run(base: &str) -> Result<()> {
         "state leaked after cancellation"
     );
     // Cancel during long prefill before the first generated token.
-    let pending =
-        json!({"model":"ironpangu-qwen35","prompt":vec![2u32;1500],"max_tokens":16,"stream":true});
+    let pending = json!({"model":"inferfabric-qwen35","prompt":vec![2u32;1500],"max_tokens":16,"stream":true});
     drop(
         client
             .post(&url)

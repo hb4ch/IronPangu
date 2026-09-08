@@ -12,8 +12,8 @@ Local adaptations:
 - Backend sampling defaults are merged before request lowering, preserving explicit fields and checkpoint hints.
 - `vllm-text` / `vllm-chat`: metadata independent of an engine-core connection; optional administration client; request-error classification.
 - `vllm-server`: `serve_with_backend`; existing routes, chat processing and SSE implementation retained. Engine-core-only administration returns an explicit unsupported error for the local backend.
-- Cargo package workspace anchors keep this snapshot separate from Iron Pangu's core workspace.
+- Cargo package workspace anchors keep this snapshot separate from InferFabric's core workspace.
 
-The original Rust workspace includes command, managed-engine and Python-binding packages. They are not dependencies of `frontend/Cargo.toml` and are not built or launched by Iron Pangu. The deployed server uses the Rust HF/Jinja/tokenizer path with language-only configuration. No Python engine, interpreter embedding, or managed launcher is used. The Rust engine-core protocol crate remains a type dependency; the in-process path creates no engine-core connection.
+The original Rust workspace includes command, managed-engine and Python-binding packages. They are not dependencies of `frontend/Cargo.toml` and are not built or launched by InferFabric. The deployed server uses the Rust HF/Jinja/tokenizer path with language-only configuration. No Python engine, interpreter embedding, or managed launcher is used. The Rust engine-core protocol crate remains a type dependency; the in-process path creates no engine-core connection.
 
 The integration's resolved dependencies are pinned in `frontend/Cargo.lock`; the original workspace lockfile is retained separately. To review an upgrade, compare against the original tag and rerun stream, request-validation, and HTTP tests before changing this pin.

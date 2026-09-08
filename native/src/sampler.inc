@@ -9,8 +9,8 @@
 #include <aclnnop/aclnn_s_where.h>
 #include <aclnnop/aclnn_sort.h>
 #include <aclnnop/aclnn_uniform.h>
-extern "C" int32_t pangu_acl_sampler_prepare(
-    pangu_acl_session *s, uint64_t logits, uint64_t params, uint64_t counts,
+extern "C" int32_t inferfabric_acl_sampler_prepare(
+    inferfabric_acl_session *s, uint64_t logits, uint64_t params, uint64_t counts,
     uint64_t seen, uint64_t mask, uint64_t rng, uint64_t random,
     uint64_t output, uint64_t probabilities, int64_t vocab,
     int64_t random_count, int32_t greedy, uint64_t *operation) {
@@ -206,7 +206,7 @@ extern "C" int32_t pangu_acl_sampler_prepare(
 
 // CANN host-seeded RNG runs once per request, outside capture. The draw table
 // is consumed by a mutable device index; no per-token random-op preparation.
-extern "C" int32_t pangu_acl_random_fill(pangu_acl_session *s, uint64_t buffer,
+extern "C" int32_t inferfabric_acl_random_fill(inferfabric_acl_session *s, uint64_t buffer,
                                          int64_t count, uint64_t seed) {
   return boundary([&] {
     if (!s || count < 1 || count > 1048576)

@@ -1,5 +1,5 @@
 use futures::Stream;
-use pangu_scheduler::{
+use inferfabric_scheduler::{
     Capacity, Request,
     live::{Event, Finish, LiveScheduler},
 };
@@ -50,14 +50,14 @@ pub struct Backend {
     max_model_len: u32,
 }
 impl Backend {
-    pub async fn mock(artifact: pangu_ir::Artifact) -> anyhow::Result<Arc<Self>> {
+    pub async fn mock(artifact: inferfabric_ir::Artifact) -> anyhow::Result<Arc<Self>> {
         let max_model_len = artifact.spec.max_context() as u32;
         let (tx, mut rx) = mpsc::channel(64);
         let (ready_tx, ready_rx) = oneshot::channel();
         let healthy = Arc::new(AtomicBool::new(false));
         let alive = healthy.clone();
         std::thread::Builder::new()
-            .name("pangu-scheduler".into())
+            .name("inferfabric-scheduler".into())
             .spawn(move || {
                 let _health = HealthGuard(alive.clone());
                 let mut scheduler = match LiveScheduler::mock(artifact, Capacity::default()) {
@@ -257,7 +257,7 @@ impl GenerationBackend for Backend {
         BackendMetadata {
             max_model_len: self.max_model_len,
             model_dtype: ModelDtype::BFloat16,
-            version: "0.25.1 / IronPangu synthetic mock".into(),
+            version: "0.25.1 / InferFabric synthetic mock".into(),
             healthy: self.healthy.load(Ordering::Acquire),
         }
     }
@@ -370,8 +370,9 @@ mod tests {
     }
     #[tokio::test]
     async fn streams_terminal_metadata_and_shutdown() {
-        let spec = pangu_dsl::parse(include_str!("../fixtures/mock.pangu")).unwrap();
-        let artifact = pangu_compiler::compile(&spec, &pangu_ir::Target::mock()).unwrap();
+        let spec = inferfabric_dsl::parse(include_str!("../fixtures/mock.inferfabric")).unwrap();
+        let artifact =
+            inferfabric_compiler::compile(&spec, &inferfabric_ir::Target::mock()).unwrap();
         let backend = Backend::mock(artifact).await.unwrap();
         let mut stream = backend.generate(request("a")).await.unwrap();
         let mut count = 0;

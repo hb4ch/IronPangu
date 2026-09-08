@@ -50,11 +50,11 @@ impl Drop for Guard {
 }
 impl Backend {
     pub async fn native(
-        plan: pangu_compiler::bound::Plan,
+        plan: inferfabric_compiler::bound::Plan,
         dir: PathBuf,
         library: PathBuf,
         device: i32,
-        options: pangu_native::StartupOptions,
+        options: inferfabric_native::StartupOptions,
         max_num_batched_tokens: usize,
     ) -> anyhow::Result<Arc<Self>> {
         options.validate()?;
@@ -77,7 +77,7 @@ impl Backend {
         let (worker_active, worker_stop, worker_health) =
             (active.clone(), stop.clone(), healthy.clone());
         std::thread::Builder::new()
-            .name("pangu-native".into())
+            .name("inferfabric-native".into())
             .spawn(move || {
                 let _guard = Guard {
                     healthy: worker_health.clone(),
@@ -85,7 +85,7 @@ impl Backend {
                 };
                 let mut ready = Some(ready_tx);
                 let result =
-                    pangu_native::with_serving_engine(&plan, &dir, &library, device, &options, |engine| {
+                    inferfabric_native::with_serving_engine(&plan, &dir, &library, device, &options, |engine| {
                         eprintln!(
                             "native program {} weights {} context {}",
                             engine.program_key, engine.weight_digest, context
@@ -154,7 +154,7 @@ impl GenerationBackend for Backend {
         BackendMetadata {
             max_model_len: self.context as u32,
             model_dtype: ModelDtype::BFloat16,
-            version: "0.25.1 / IronPangu native continuous batching".into(),
+            version: "0.25.1 / InferFabric native continuous batching".into(),
             healthy: self.healthy.load(Ordering::Acquire) && !self.stop.load(Ordering::Acquire),
         }
     }

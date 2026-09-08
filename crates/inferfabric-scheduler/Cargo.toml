@@ -1,0 +1,18 @@
+[package]
+workspace = "../.."
+name = "inferfabric-scheduler"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+
+[dependencies]
+inferfabric-model.workspace = true
+inferfabric-ir.workspace = true
+inferfabric-runtime.workspace = true
+inferfabric-transfer.workspace = true
+serde.workspace = true
+
+[dev-dependencies]
+inferfabric-dsl.workspace = true
+inferfabric-compiler.workspace = true

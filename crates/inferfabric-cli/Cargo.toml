@@ -1,0 +1,23 @@
+[package]
+workspace = "../.."
+name = "inferfabric-cli"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+
+[dependencies]
+inferfabric-model.workspace = true
+inferfabric-dsl.workspace = true
+inferfabric-ir.workspace = true
+inferfabric-compiler.workspace = true
+inferfabric-runtime.workspace = true
+inferfabric-scheduler.workspace = true
+serde_json.workspace = true
+
+[[bin]]
+name = "inferfabric"
+path = "src/main.rs"
+
+[target.'cfg(unix)'.dependencies]
+libloading = "0.8.9"

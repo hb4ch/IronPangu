@@ -1,12 +1,12 @@
-# Iron Pangu: upstream research notes
+# InferFabric: upstream research notes
 
-Research date: 2026-09-06. Primary sources only. These notes establish upstream facts; they do not claim Iron Pangu implementation or Ascend validation.
+Research date: 2026-09-06. Primary sources only. These notes establish upstream facts; they do not claim InferFabric implementation or Ascend validation.
 
 ## Rust frontend boundary
 
 The experimental vLLM Rust frontend replaces the API-server process and uses the existing engine/core boundary. Its code has moved into vLLM's `rust/` directory; the feature-parity roadmap explicitly says it remains experimental. The existing engine is not thereby rewritten in Rust. [Roadmap](https://github.com/vllm-project/vllm/issues/44280)
 
-The CLI example explicitly launches a managed headless Python vLLM engine alongside the Rust HTTP frontend, or connects to an already running engine. Therefore a Python-free Iron Pangu needs its own Rust launcher, scheduler, cache manager, executor, sampling path, and Ascend backend. Reuse/adapt HTTP, tokenization, request, streaming, and cancellation code where separable; replace the engine client contract. This is a proposed engineering boundary, not an existing upstream capability. [CLI example](https://github.com/vllm-project/vllm/blob/main/rust/src/cmd/examples/README.md)
+The CLI example explicitly launches a managed headless Python vLLM engine alongside the Rust HTTP frontend, or connects to an already running engine. Therefore a Python-free InferFabric needs its own Rust launcher, scheduler, cache manager, executor, sampling path, and Ascend backend. Reuse/adapt HTTP, tokenization, request, streaming, and cancellation code where separable; replace the engine client contract. This is a proposed engineering boundary, not an existing upstream capability. [CLI example](https://github.com/vllm-project/vllm/blob/main/rust/src/cmd/examples/README.md)
 
 The original RFC motivates eliminating frontend CPU overhead and GIL restrictions, but removing Python does not itself prove lower device inference latency. Measure host scheduling/dispatch overhead separately. [RFC](https://github.com/vllm-project/vllm/issues/40846)
 
@@ -24,13 +24,13 @@ Design implication: paged KV applies to six full-attention layers. Eighteen GDN 
 
 vLLM V1 chunked prefill prioritizes decode tokens, fills remaining token budget with prefill, and splits a prefill that cannot fit. [Optimization guide](https://docs.vllm.ai/en/v0.22.1/configuration/optimization/)
 
-Iron Pangu should implement the semantics in Rust. In physically disaggregated mode, the P scheduler chunks/interleaves prefills and D continuously admits ready transferred requests at iteration boundaries. Mixed prefill/decode token packing matters for a colocated reference mode; it should not force prefill compute onto the disaggregated D pool. Continuous batching means dynamically admitting and retiring requests per iteration, not waiting for an entire fixed batch to complete. These are proposed design choices.
+InferFabric should implement the semantics in Rust. In physically disaggregated mode, the P scheduler chunks/interleaves prefills and D continuously admits ready transferred requests at iteration boundaries. Mixed prefill/decode token packing matters for a colocated reference mode; it should not force prefill compute onto the disaggregated D pool. Continuous batching means dynamically admitting and retiring requests per iteration, not waiting for an entire fixed batch to complete. These are proposed design choices.
 
 vLLM documents separate instances for P and D and a connector transferring cache/results. It motivates independent TTFT/ITL tuning and reduced prefill interference, and cautions against treating P/D as an automatic throughput improvement. [P/D guide](https://docs.vllm.ai/en/latest/features/disagg_prefill/)
 
 The April hybrid-disaggregation article describes distinct full-attention and recurrent-state layouts, homogeneous/heterogeneous TP transfer issues, and release-after-transfer completion. It still listed GDN as future work at that time. [April article](https://vllm.ai/blog/2026-04-21-hybrid-ssm-disagg)
 
-That limitation is historical: the August article explicitly reports Qwen3.5 GDN P/D support through PR #41869 and highlights async transfer/block-freeing races fixed in #48481 and #45357. Its performance evidence is a large MoE Qwen checkpoint on GB200/NVIDIA; neither its kernels, benchmarks, nor NIXL/CUDA path establish availability on Ascend or a Python-free backend. Use the state-lifetime lessons, not the hardware performance numbers, for Iron Pangu. [August article](https://vllm.ai/blog/2026-08-06-qwen35-25k-tps)
+That limitation is historical: the August article explicitly reports Qwen3.5 GDN P/D support through PR #41869 and highlights async transfer/block-freeing races fixed in #48481 and #45357. Its performance evidence is a large MoE Qwen checkpoint on GB200/NVIDIA; neither its kernels, benchmarks, nor NIXL/CUDA path establish availability on Ascend or a Python-free backend. Use the state-lifetime lessons, not the hardware performance numbers, for InferFabric. [August article](https://vllm.ai/blog/2026-08-06-qwen35-25k-tps)
 
 ## Parallelism design deductions
 

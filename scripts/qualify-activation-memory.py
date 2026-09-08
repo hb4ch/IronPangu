@@ -18,7 +18,7 @@ from pathlib import Path
 
 def memory():
     output = subprocess.check_output(['npu-smi', 'info'], text=True)
-    return [int(value) for value in re.findall(r'\|\s*\d+\s+\d+\s*\|\s*\d+\s*\|\s*pangu[^|]*\|\s*(\d+)\s*\|', output)]
+    return [int(value) for value in re.findall(r'\|\s*\d+\s+\d+\s*\|\s*\d+\s*\|\s*inferfabric[^|]*\|\s*(\d+)\s*\|', output)]
 
 
 def main():
@@ -30,7 +30,7 @@ def main():
     args = parser.parse_args()
     assert args.rounds >= 2
     prompts = ['The capital of France is', 'Once upon a time', 'Explain addition in one sentence.', 'red blue green ' * 160 + '\nThe colors are']
-    corpus = [dict(model='ironpangu-qwen35', prompt=prompts[i % 4], max_tokens=12,
+    corpus = [dict(model='inferfabric-qwen35', prompt=prompts[i % 4], max_tokens=12,
                    temperature=0 if i % 3 == 0 else 0.8, top_k=20, top_p=0.9,
                    seed=100+i, presence_penalty=0.3, frequency_penalty=0.1)
               for i in range(12)]

@@ -6,7 +6,7 @@
 
 The Rust skeleton runs token-ID requests through a real parser, compiler, binary cache, startup state machine, bounded worker queues, logical page/slot allocator, PD ownership protocol and iteration scheduler. Its backend is explicitly synthetic. Do not interpret passing tests or generated tokens as Qwen correctness, actual paged attention, real graph capture, or real TP/CP execution.
 
-`pangu-runtime::Backend` and `pangu-transfer::RegisteredTransport` are the hardware extension points. Their default methods return `Error::NotImplemented`. `AscendBackend` and `AscendTransport` deliberately implement none of the hardware methods. No C++ ABI has been guessed. The CLI only selects mock mode; preserve this explicit separation when adding an Ascend launcher.
+`inferfabric-runtime::Backend` and `inferfabric-transfer::RegisteredTransport` are the hardware extension points. Their default methods return `Error::NotImplemented`. `AscendBackend` and `AscendTransport` deliberately implement none of the hardware methods. No C++ ABI has been guessed. The CLI only selects mock mode; preserve this explicit separation when adding an Ascend launcher.
 
 ## Contracts to implement
 
@@ -56,7 +56,7 @@ Deferred beyond this skeleton: HTTP, tokenizer/chat templates, actual safetensor
 
 ## 7 September 2026 code-first bring-up
 
-Read [remote development](remote-development.md) for the current Docker image, local cross-build, and verified commands. `frontend/` now adapts the pinned vLLM 0.25.1 Rust frontend to `pangu-scheduler::live::LiveScheduler` through an in-process generation trait. Its only constructor is explicitly mock. `native/` now contains an installed-header-checked C++ ACL ABI and graph-copy qualification probe; it is not yet an implementation of `AscendBackend` or `RegisteredTransport`. No weights or NPU execution were used in these checks.
+Read [remote development](remote-development.md) for the current Docker image, local cross-build, and verified commands. `frontend/` now adapts the pinned vLLM 0.25.1 Rust frontend to `inferfabric-scheduler::live::LiveScheduler` through an in-process generation trait. Its only constructor is explicitly mock. `native/` now contains an installed-header-checked C++ ACL ABI and graph-copy qualification probe; it is not yet an implementation of `AscendBackend` or `RegisteredTransport`. No weights or NPU execution were used in these checks.
 
 ## Checkpoint-bound compilation (7 September 2026)
 

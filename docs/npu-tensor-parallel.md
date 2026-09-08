@@ -7,14 +7,14 @@ prefill = 2 1 false
 decode = 2 1 false
 ```
 
-Use `examples/qwen35-2b-tp2.pangu`. The device argument is the first local device; rank r uses device+r. The current DSL/compiler accepts matching TP widths 1 or 2, CP=1 and SP=false. Startup checks the visible device count. Only TP=2 on devices 0 and 1 is hardware-qualified here.
+Use `examples/qwen35-2b-tp2.inferfabric`. The device argument is the first local device; rank r uses device+r. The current DSL/compiler accepts matching TP widths 1 or 2, CP=1 and SP=false. Startup checks the visible device count. Only TP=2 on devices 0 and 1 is hardware-qualified here.
 
 ```sh
 export HCCL_OP_EXPANSION_MODE=HOST
 export HCCL_CONNECT_TIMEOUT=120
 export HCCL_EXEC_TIMEOUT=120
-./pangu-native-server --native examples/qwen35-2b-tp2.pangu \
-  /data/p00603624/models/qwen35 native-build/libpangu_acl.so 0 18081 \
+./inferfabric-native-server --native examples/qwen35-2b-tp2.inferfabric \
+  /data/p00603624/models/qwen35 native-build/libinferfabric_acl.so 0 18081 \
   --max-model-len 2048 --max-num-seqs 4 --max-num-batched-tokens 16 \
   --memory-profile tp2-memory.json
 ```

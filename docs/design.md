@@ -1,4 +1,4 @@
-# Iron Pangu: an Ascend-native inference compiler and runtime
+# InferFabric: an Ascend-native inference compiler and runtime
 
 Status: target design, with partial implementation updates through 7 September 2026
 
@@ -6,7 +6,7 @@ Implementation update: native single-request Qwen3.5-2B text inference now runs 
 
 ## 1. Objective and success boundary
 
-Iron Pangu experiments with an LLM inference engine written in Rust, using C++ only where CANN interfaces or Ascend C device kernels require it. Huawei Ascend is the only accelerator backend. Model architecture and parallelism are expressed in a typed DSL, then compiled into executable inference plans containing kernels, memory operations, synchronization, and communication primitives.
+InferFabric experiments with an LLM inference engine written in Rust, using C++ only where CANN interfaces or Ascend C device kernels require it. Huawei Ascend is the only accelerator backend. Model architecture and parallelism are expressed in a typed DSL, then compiled into executable inference plans containing kernels, memory operations, synchronization, and communication primitives.
 
 The first milestone is real end-to-end Qwen3.5-2B text generation: load the original checkpoint, tokenize a request, run chunked prefill on a prefill worker, transfer all continuation state to a separate decode worker, replay ACL Graph decode steps under continuous batching, and stream generated text. Full-attention layers use physically paged KV storage and page-table-aware attention. A readable answer alone is insufficient: numerical checks, state-transfer correctness, scheduling traces, and graph replay evidence are required.
 
@@ -37,9 +37,9 @@ The exact Ascend SKU, number of devices, host architecture, network topology, fi
 
 ## 3. vLLM relationship
 
-Use the experimental vLLM Rust frontend as a candidate source for API, request lifecycle, tokenization, streaming, and client infrastructure. It is not sufficient merely to put a Rust HTTP server in front of a Python inference engine. Evaluate the precise upstream revision and retain useful Rust modules behind an Iron Pangu engine interface; replace the engine-core connection with our Rust scheduler/runtime. Audit dependencies and preserve upstream license notices when reusing code.
+Use the experimental vLLM Rust frontend as a candidate source for API, request lifecycle, tokenization, streaming, and client infrastructure. It is not sufficient merely to put a Rust HTTP server in front of a Python inference engine. Evaluate the precise upstream revision and retain useful Rust modules behind an InferFabric engine interface; replace the engine-core connection with our Rust scheduler/runtime. Audit dependencies and preserve upstream license notices when reusing code.
 
-Reproduce the relevant vLLM serving semantics: token-budgeted chunked prefill, iteration-level continuous batching, and block-managed attention state. Reusing its Python scheduler or Ascend Python execution backend is incompatible with the execution constraint. The implementation now pins the vLLM 0.25.1 Rust frontend and injects the Iron Pangu backend. The serving frontend must remain this Rust frontend; a separate gateway or Python engine is outside the user-approved scope. Upstream references and exact boundaries are recorded in the research note accompanying this document.
+Reproduce the relevant vLLM serving semantics: token-budgeted chunked prefill, iteration-level continuous batching, and block-managed attention state. Reusing its Python scheduler or Ascend Python execution backend is incompatible with the execution constraint. The implementation now pins the vLLM 0.25.1 Rust frontend and injects the InferFabric backend. The serving frontend must remain this Rust frontend; a separate gateway or Python engine is outside the user-approved scope. Upstream references and exact boundaries are recorded in the research note accompanying this document.
 
 The upstream CLI explicitly starts a headless Python engine beside the Rust frontend. See the [CLI source](https://github.com/vllm-project/vllm/blob/main/rust/src/cmd/examples/README.md) and [experimental roadmap](https://github.com/vllm-project/vllm/issues/44280). The [research note](research.md) also records current upstream GDN disaggregation support; that support does not establish an Ascend or Python-free implementation.
 
@@ -100,7 +100,7 @@ flowchart TD
 
 Use one process per device rank initially. A group leader owns scheduling decisions; every rank executes the same step ID and collective order. Rust async tasks handle networking; a dedicated device thread owns its ACL context and submits work. Bounded channels isolate request traffic from device execution. The scheduler never holds a global lock while waiting for NPU completion.
 
-A proposed Cargo workspace contains `pangu-dsl`, `pangu-ir`, `pangu-compiler`, `pangu-model`, `pangu-runtime`, `pangu-scheduler`, `pangu-transfer`, `pangu-server`, and `pangu-bench`. A `cann-sys` boundary holds checked bindings; `native/` holds the C++ bridge and Ascend C kernels. This is a proposed layout, not an implemented workspace.
+A proposed Cargo workspace contains `inferfabric-dsl`, `inferfabric-ir`, `inferfabric-compiler`, `inferfabric-model`, `inferfabric-runtime`, `inferfabric-scheduler`, `inferfabric-transfer`, `inferfabric-server`, and `inferfabric-bench`. A `cann-sys` boundary holds checked bindings; `native/` holds the C++ bridge and Ascend C kernels. This is a proposed layout, not an implemented workspace.
 
 ## 6. DSL and compilation
 
