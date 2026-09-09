@@ -129,14 +129,132 @@ curl http://127.0.0.1:18081/v1/chat/completions \
 
 For CPU-only development, `cargo run -p inferfabric-cli -- demo examples/qwen35-2b.inferfabric examples/requests.json` exercises the deterministic mock compiler/scheduler. Mock communication traces are not hardware qualification.
 
-## Roadmap
+## Roadmap to production
 
-1. **Native code generation and fusion.** Lower typed operations into specialized Ascend C kernels and per-rank native modules. Start with measured normalization/rotation/gating chains and eliminate intermediate writes. Encode model constants, layouts, and target identity in generated artifacts; require numerical equivalence and measured launch/HBM-traffic reductions.
-2. **Packed prefill and shared KV capacity.** Process multiple prompt tokens per sequence in a kernel invocation, handle irregular recurrent chunks correctly, and allocate KV pages across active requests. Preserve cancellation, state continuity, and graph address stability while reducing padded work and reserved memory.
-3. **JIT specialization and autotuning.** Compile missing kernel variants for supported batch/context buckets, layouts, and TP configurations. Cache binaries by model contract, shape, dtype, target, compiler/CANN versions, and optimization settings. Warm up and validate each variant, then capture its graph before publishing it to serving. Bound compilation concurrency and cache memory; retire graph/storage entries only after in-flight work completes. An already qualified compatible variant can serve while a new variant compiles. Unsupported shapes must wait or fail explicitly. Measure cold-start cost as well as steady-state performance.
-4. **More efficient tensor parallelism.** Introduce complementary column/row-parallel projections and reductions, reduce full-activation AllGather operations, and qualify sharded attention/state layouts. Measure communication volume and latency before expanding beyond the current two-rank configuration.
-5. **Native prefill/decode disaggregation.** Transfer KV pages, convolution history, and FP32 recurrent state together with versioned ownership metadata. Prove split execution matches uninterrupted generation under cancellation, retries, and slot reuse before adding CP/SP or multi-node layouts.
-6. **Broader model and performance qualification.** Add model contracts with operator/state fixtures, then evaluate quantized kernels and additional architectures. Publish reproducible latency, throughput, memory, and accuracy comparisons across context lengths and concurrency, including compilation/capture costs.
+Updated 2026-09-09. This roadmap covers the language, compiler, native execution, serving behavior, and operational work needed for a production system. Existing demos and successful hardware probes are development evidence, not a production release designation. Milestones are complete only when their exit gates pass on the declared support matrix; dates and performance claims will follow measured results.
+
+### Starting point and release scope
+
+| Track | Current evidence | Remaining production boundary |
+|---|---|---|
+| Language | Legacy checkpoint DSL and canonical Qwen mathematical IR | Proposed v1 parser, reusable modules, elaboration, state/effect checking and migration |
+| Plan / execute | Verified static f32 CPU binary plans with optimizations, arena reuse and source-independent execution | General Ascend physical plans, native bundles and a loader that executes emitted decisions |
+| NPU qualification | Planner test adapter passed 19,128 output/state comparisons on two devices; existing Qwen CPU/eager/graph checks passed separately | End-to-end **v1 source → native bundle → Qwen execution** through the new runtime |
+| Inspection | Full Qwen typed DAG, layer navigation, tensor/weight/state bindings; CPU physical-plan viewer | Native kernels, fusion provenance, rank/stream placement, workspace, arena lifetimes and capture regions |
+| Serving | vLLM 0.25.1 Rust frontend and current native Qwen backend | General-plan backend integration, API contract coverage, overload control, recovery and sustained-load qualification |
+
+The [two-device qualification record](docs/validation/2026-09-08-npu-planning/README.md) describes exactly what was tested. Its test adapter does not turn a CPU plan into a production Ascend bundle. The v1 text parser and general native backend remain unimplemented.
+
+The first production release will have a deliberately explicit support matrix: Qwen3.5-2B **text**, selected Ascend/CANN/driver/container versions, declared dtypes and shape limits, qualified single-node TP degrees, and the vLLM Rust frontend only. Passing TP2 on one setup does not qualify other topologies or targets. Additional models, adapters, precision modes and distributed configurations become supported individually after their own gates pass. No Python or PyTorch execution engine will be introduced into loading, enqueue, sampling or serving.
+
+### 1. Freeze language semantics and implement DSL v1
+
+Deliver the versioned grammar, lexer, lossless syntax tree, typed AST, source locations, formatter and `parse`/`check`/`fmt` commands. Implement package imports, named arguments, bounded compile-time composition, reusable modules and separate model/plan declarations. Define operator types, symbolic dimensions, layout constraints, state initialization/update semantics and effects. Add a migration command for the legacy format with explicit diagnostics for unsupported conversions.
+
+**Exit gate:** conformance and negative fixtures cover every construct; parse/format round trips preserve meaning; malformed and adversarial inputs fail with bounded resource use and source diagnostics. A composed layer can be added through package files without adding a model enum or changing compiler source. Publish compatibility and deprecation rules before promising a stable language version.
+
+### 2. Elaborate real models into a general semantic IR
+
+Express Qwen as inspectable standard-library modules with checkpoint mappings, rotary and normalization semantics, recurrent/convolution state, attention caches and tied weights. Lower modules into a typed SSA graph with explicit effects, request boundaries and shape constraints. Treat the current optimized Qwen block path as a possible verified implementation of that graph. Validate missing/extra weights, shapes, dtypes, tied storage, checkpoint metadata and tokenizer/model configuration compatibility.
+
+**Exit gate:** the complete Qwen model elaborates from v1 source; golden operator, layer, state-continuation and full-model comparisons match the established contract. An independently authored custom layer composes with standard modules. Ill-typed state updates, incompatible checkpoint bindings and unresolved dimensions are rejected before device allocation.
+
+### 3. Build the Ascend physical planner
+
+Implement deterministic target-aware kernel selection, constant specialization, dead-code elimination, layout propagation, legal fusion, rank partitioning and collective insertion. Emit the actual DAG with tensor, effect, communication and memory-reuse dependencies. Plan weights, persistent state, activations, workspace, communication buffers and graph-owned storage separately. Resolve every size to a checked constant or a verified bound; reject plans outside the memory budget. Start with a correct serial stream schedule, then add overlap only with measured benefit and sound lifetime analysis.
+
+**Exit gate:** every emitted call has a supported kernel/ABI and explicit inputs, outputs, placement and workspace contract. Verification detects use-before-definition, illegal aliasing, missing state ordering, overflow, inconsistent collectives and overlapping live storage. Dedicated and pooled execution agree on outputs and state across shape boundaries. Kernel choices and rejection reasons are inspectable.
+
+### 4. Emit native bundles and execute without replanning
+
+Define a versioned native bundle containing physical IR, device/host objects or explicit linked-library requirements, specialization guards, weight bindings, relocations, entry points, ABI versions and target fingerprints. Keep large weights external and bind their identities explicitly. Implement a loader that validates the bundle, links dependencies, allocates/binds storage, prepares vendor handles and captures eligible graphs. Execution must not reconstruct a model from its name, rerun optimization or silently substitute a different implementation. Startup preparation required by CANN remains distinct from compilation.
+
+**Exit gate:** compile a model, remove its DSL/compiler from the deployment environment, and execute its bundle in a fresh container with only the declared runtime dependencies. Reject corrupted, truncated, incompatible and unsupported bundles before readiness. Test version upgrades, cache invalidation and rollback. Checksums establish integrity; artifact provenance and trust policy are separate requirements.
+
+### 5. Export every IR and inspect the actual native plan
+
+Provide stable dumps for syntax/AST, elaborated graph, typed/effect IR, optimized graph, physical DAG and bundle manifest. Preserve source-to-operator and fusion provenance. Extend the full-model viewer to show per-rank kernels, tensor layouts, dependencies, arena offsets/lifetimes, workspace bounds, persistent resources and capture buckets. Add plan diffs and optional measured timing/memory overlays with the run identity attached.
+
+**Exit gate:** a planned Qwen binary can be inspected without source or weights; every runtime call and allocation maps back to its emitted descriptor. Users can explain why a kernel was selected, where a tensor lives and which dependency permits reuse. Estimates, measured values and unavailable data remain visibly distinct. Inspection must not launch kernels or trigger JIT.
+
+### 6. Implement and qualify native extension adapters
+
+Define a versioned C ABI for kernel preparation, workspace requirements, launch, errors and destruction, with explicit stream and ownership rules. Build independent adapters for **Ascend C, Triton-Ascend, TileLang-Ascend and PTO**. Pin toolchains, package sources and dependencies, and export native launchers that do not depend on Python/Torch serving objects. Build-time scripting may be used in isolated tooling; it must not leak into the serving runtime. Report unsupported export routes as unavailable.
+
+**Exit gate for each adapter:** a custom RowScale kernel, a stateful operation and a composed custom layer compile without changing the compiler, match independent references including tails and error cases, and survive capture/replay with stable storage. Record source/toolchain/object hashes and supported target/shape domains. Qualify adapters separately; an unqualified adapter cannot be selected by a production plan.
+
+### 7. Generate optimized native code and fusion
+
+Specialize model constants, strides, layouts, loop bounds and tiling into generated Ascend C or other qualified kernel implementations. Begin with measured normalization/rotation/gating chains and intermediate-copy elimination. Preserve an unfused qualified baseline for comparison. Add a cost model using reproducible measurements, including launch overhead, HBM traffic, workspace and communication costs; record tuning provenance with each choice.
+
+**Exit gate:** intermediate tensors, logits and state remain within declared dtype-specific tolerances. Publish before/after latency, memory and traffic evidence on representative prefill and decode shapes. Reject an optimization that violates memory limits or regresses the declared workload budget. Removing framework overhead alone is not evidence of a speedup.
+
+### 8. Deliver efficient prefill and scalable request memory
+
+Implement packed multi-token prefill, chunked prompts, irregular sequence lengths and correct recurrent chunk transitions. Replace fixed per-slot KV reservation with a shared page allocator and explicit ownership/reference lifetimes. Handle mixed prefill/decode batches, admission, cancellation, slot/page reuse and memory pressure. Plan graph buckets and fallback policies for supported shapes. Add prefix reuse only after the model-specific cache contract includes all recurrent and convolution state needed to resume correctly.
+
+**Exit gate:** varied chunking and batch composition produce equivalent outputs/state; canceled or recycled requests cannot read another request's data. Stress page exhaustion, boundary contexts, empty/inactive lanes and repeated reuse. Enforce token/sequence limits and fairness under overload. Graph buffers remain valid until all asynchronous users complete, and measured HBM stays within the configured budget.
+
+### 9. Improve parallel and disaggregated execution
+
+Replace projection-by-projection full AllGather with qualified row/column-parallel layouts and reductions. Add sharded attention/state where mathematically valid, then qualify additional single-node TP degrees. For prefill/decode disaggregation, transfer KV, convolution history and FP32 recurrent state with versioned ownership and completion metadata. Extend to CP/SP and multi-node topologies only after the single-node contracts are stable.
+
+**Exit gate per topology:** compare unsharded, sharded and split execution across prefill/decode boundaries, cancellation and slot reuse. Inject rank failure, collective timeout, partial transfer and stale ownership messages; no rank may continue with partial or mismatched state. Bound retry/cleanup time, prevent duplicate state advancement and publish communication/latency measurements. Unsupported topology combinations fail before readiness.
+
+### 10. Integrate the general runtime with the vLLM Rust frontend
+
+Preserve the **vLLM 0.25.1 Rust frontend** as the sole frontend integration, with a documented compatibility matrix and deliberate upgrade process. Replace the fixed native-model backend boundary with verified bundle execution. Specify supported chat/completions fields, tokenization/chat templates, streaming termination, stop sequences, usage accounting, errors and cancellation semantics. Validate model-provided generation defaults and explicit request overrides. Define RNG ownership and reproducibility guarantees for seeded sampling under batching and request reuse.
+
+**Exit gate:** API conformance and end-to-end tests cover streaming/non-streaming parity, disconnects, invalid requests, stop/EOS handling, penalties, concurrent sampling and context limits. Admission queues are bounded; deadlines and backpressure are enforced. Failed or canceled requests release resources without advancing another request's state. Readiness is published only after model, memory, kernel and graph qualification succeeds.
+
+### 11. Add operational reliability and recovery
+
+Implement structured errors across Rust/C++, poisoned-session handling, device/rank health checks, watchdogs and configurable deadlines. Separate liveness from readiness; support graceful drain, shutdown and restart. Quarantine failed graph/runtime instances and rebuild them before reuse. Define what happens to in-flight requests during process/device failure rather than promising transparent continuation without durable state.
+
+**Exit gate:** fault injection covers allocation failure, bad artifacts, operator errors, failed captures, device reset, rank loss and abrupt client disconnect. The service fails closed for affected requests, reports actionable errors and returns capacity after cleanup or replacement. A documented operator runbook demonstrates recovery, rollback and safe upgrade without admitting traffic to an unqualified instance.
+
+### 12. Add observability, deployment security and reproducible packaging
+
+Expose bounded-cardinality metrics for queue delay, time to first token, inter-token latency, throughput, scheduler occupancy, cache hits, graph variants, HBM categories, workspace, compilation and failures. Correlate requests with model/bundle/target identities while keeping prompts, generated content and credentials out of default logs. Provide tracing and profiling modes with documented overhead.
+
+Publish pinned runtime/build container recipes, local Rust cross-compilation instructions, dependency/SBOM and license inventories, release checksums/provenance and artifact compatibility policy. Treat custom kernels as native code: use explicit trust/allowlist policy, isolated builds and resource limits rather than claiming in-process sandboxing. Bound parser, checkpoint and bundle inputs; test unsafe FFI/lifetime boundaries. Document authentication/TLS at the supported ingress, request quotas, secret handling, least-privilege deployment and model-data access controls.
+
+**Exit gate:** reproduce a release from declared inputs, deploy it into a clean supported environment, scrape metrics and diagnose injected failures. Test oversized/malformed requests and artifacts, incompatible dependencies and unauthorized artifact selection. Recovery and upgrade procedures include artifact/model cache compatibility and rollback. Security and operational responsibilities are explicit between the runtime, container and ingress.
+
+### 13. Implement bounded JIT specialization and autotuning
+
+Build JIT on the same verified planning and bundle contracts as ahead-of-time compilation. Compile eligible missing variants outside enqueue; use bounded queues, workers, timeouts and memory/disk quotas. Key caches by semantic graph, weight specialization where applicable, shapes, dtype, layout, topology, target, compiler/CANN/driver compatibility and optimization settings. Deduplicate concurrent compilation and recover from interrupted or corrupt cache entries.
+
+Warm, numerically qualify and capture a candidate before atomic publication. Use a previously qualified compatible variant while compilation proceeds; otherwise wait within a declared deadline or reject explicitly. Retire code, graph and storage only after in-flight users finish. Allow operators to disable JIT and serve pinned AOT bundles.
+
+**Exit gate:** cold misses, concurrent requests, tuning failure, cache eviction, process restart and rollback preserve correctness and service bounds. Measure cold-start cost and steady-state benefit. No request may execute an unqualified candidate or trigger hidden compilation inside graph replay. JIT is part of the roadmap; it is not required to enable every production deployment.
+
+### 14. Expand models and numerical coverage
+
+Add architectures through standard-library modules and checkpoint adapters, with independent reference fixtures before optimization. Evaluate quantization only with explicit scale/layout, accumulation and calibration contracts. Treat vision/multimodal inputs, MoE, additional dtypes and model families as separate support tracks, each with its own operator/state and API requirements.
+
+**Exit gate per model/precision:** validate tokenizer/templates, checkpoint coverage, intermediate tensors, logits, state continuation and representative task quality. Document numerical tolerances, rounding and NaN/Inf behavior. Publish memory/latency/throughput/quality results and unsupported features. Passing Qwen text tests does not qualify another architecture or a quantized variant.
+
+### 15. Establish release engineering and production acceptance
+
+Automate CPU tests, parser/bundle fuzzing, sanitizer checks where supported, frontend conformance, reproducible builds and a scheduled hardware qualification matrix. Store exact source, artifact, checkpoint, compiler, driver and target identities with results. Define workload-specific latency/throughput/cold-start and memory budgets before benchmarking; compare against a declared baseline with identical models, decoding settings, hardware and load generation. Report distributions and uncertainty, not only peak throughput.
+
+The first production release must satisfy all of these gates for **every advertised supported configuration**:
+
+- **End-to-end implementation:** v1 Qwen source compiles into a verified native bundle, runs without its compiler/source, and serves through the Rust frontend. Language support, a test adapter or the legacy native route alone cannot satisfy this gate.
+- **Correctness:** operator/layer/full-model references, state lifecycle, sampling/API contracts and eager/capture equivalence pass across declared shape limits. Disabled or unsupported features fail explicitly.
+- **Capacity and service behavior:** a documented workload matrix covers short/long prompts, generation lengths, concurrency, mixed prefill/decode, overload and cancellation. Results meet predeclared service and memory budgets, with no unbounded queues or uncontrolled resource growth.
+- **Endurance and isolation:** a minimum 72-hour soak includes churn, context boundaries, repeated page/slot reuse and disconnects. Live-resource accounting returns to baseline after drain; HBM stays within a declared allowance for intentional caches and allocator reservation. No stale-state exposure or unexplained growth is accepted. A soak is evidence, not proof of an availability SLO.
+- **Failure handling:** device/rank/process faults, bad artifacts and interrupted upgrades meet documented detection, cleanup and recovery bounds. Readiness, drain and rollback are demonstrated under load.
+- **Operational release:** versioned support matrix, reproducible runtime image, provenance, observability, security/deployment guidance, upgrade notes and an incident runbook are shipped and reviewed. Known issues have explicit scope and mitigations.
+
+Promote through development, hardware-qualified candidate, staging soak and canary deployment before general production use. Keep a known-good artifact/image available for rollback. Broader feature support and JIT require the same gates before becoming advertised production capabilities.
+
+### Delivery order
+
+The critical path is **v1 syntax/semantics → Qwen elaboration → native physical planner → bundle loader/executor → Rust frontend integration → production acceptance**. IR inspection and numerical fixtures accompany every compiler/runtime milestone. Reliability, observability, security and packaging start during native integration rather than being deferred to the final release. Packed prefill and optimized TP feed the performance qualification matrix; adapters, JIT and broader models can mature independently but cannot bypass release gates.
+
+Each milestone ships code, documented limitations, reproducible tests and qualification records, followed by a commit and push. Keep the existing qualified Qwen route available during migration; retire it only after the general runtime satisfies the same numerical and serving gates. Detailed contracts remain in the [DSL design](docs/dsl-language-design.md), [implementation plan](docs/dsl-implementation-plan.md), [physical planning design](docs/physical-planning.md) and [IR reference](docs/ir-reference.md).
 
 ## Repository and verification
 
