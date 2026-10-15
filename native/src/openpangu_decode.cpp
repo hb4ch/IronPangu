@@ -1,10 +1,16 @@
 // Full checkpoint diagnostic decoder. All projection GEMMs execute on Ascend;
-// scalar/state math stays explicit C++ until the integrated numerical gate
-// passes.
+// normalization, mHC, MoME, routing and attention use NPU kernels. Host
+// orchestration, RoPE and expert-output combination remain diagnostic paths.
+#include "openpangu_decoder_state.h"
+#include "openpangu_mhc.h"
 #include "openpangu_weights.h"
+#include <aclnn_ai_infra_fused_causal_conv1d.h>
+#include <aclnn_ai_infra_sparse_flash_attention_pioneer.h>
 #include <aclnnop/aclnn_dequant_swiglu_quant.h>
 #include <aclnnop/aclnn_dynamic_quant.h>
 #include <aclnnop/aclnn_quant_matmul_v5.h>
+#include <aclnnop/aclnn_rms_norm.h>
+#include <aclnnop/aclnn_swi_glu.h>
 #include <array>
 #include <hccl/hccl.h>
 #include <iostream>
@@ -62,6 +68,11 @@ struct View {
 };
 struct Decoder {
   int rank;
+  int current_position = -1;
+  std::map<int, std::unique_ptr<openpangu::Router>> routers;
+  std::map<std::string, std::unique_ptr<MhcState>> mhc_states;
+  std::map<std::string, std::unique_ptr<MomeState>> mome_states;
+  std::array<std::unique_ptr<AttentionState>, 46> attention_states;
   aclrtStream stream = nullptr;
   HcclComm comm = nullptr;
   openpangu::ResidentWeights weights;
@@ -191,113 +202,122 @@ struct Decoder {
       run(aclnnQuantMatmulV5, bytes, e);
       result = unpacked(out.read<uint16_t>());
     }
-    return distributed ? gather(result) : result;
+    auto output = distributed ? gather(result) : result;
+    trace(name, output);
+    return output;
+  }
+  void trace(const std::string &name, const V &x) {
+    const char *dir = std::getenv("IF_PANGU_TRACE_DIR");
+    if (!dir || rank != 0 || (current_position != 0 && current_position != 11))
+      return;
+    std::filesystem::create_directories(dir);
+    std::ofstream file(
+        std::filesystem::path(dir) /
+            ("pos" + std::to_string(current_position) + "-" + name + ".f32"),
+        std::ios::binary);
+    file.write(reinterpret_cast<const char *>(x.data()), x.size() * 4);
+    if (!file)
+      throw std::runtime_error("trace write");
   }
   V norm(const V &x, const std::string &name) {
-    auto &gamma = cpu(name + ".weight");
-    if (gamma.size() != x.size())
+    auto &gamma = w(name + ".weight");
+    if (gamma.bytes != x.size() * 2)
       throw std::runtime_error("norm shape");
-    float square = 0;
-    for (float v : x)
-      square += v * v;
-    float r = 1 / std::sqrt(square / x.size() + 1e-5f);
-    V y(x.size());
-    for (size_t j = 0; j < x.size(); ++j)
-      y[j] = roundbf(x[j] * r * gamma[j]);
+    DeviceTensor input({1, int64_t(x.size())}, ACL_BF16, 2),
+        out({1, int64_t(x.size())}, ACL_BF16, 2), rstd({1, 1}, ACL_FLOAT, 4);
+    input.upload(packed(x));
+    View weight(gamma.data, {int64_t(x.size())}, ACL_BF16);
+    uint64_t bytes = 0;
+    aclOpExecutor *e = nullptr;
+    checked(aclnnRmsNormGetWorkspaceSize(input.tensor, weight.t, 1e-5,
+                                         out.tensor, rstd.tensor, &bytes, &e),
+            "RMSNorm prepare");
+    run(aclnnRmsNorm, bytes, e);
+    auto y = unpacked(out.read<uint16_t>());
+    trace(name, y);
     return y;
   }
   V mome(V x, const std::string &name, int position) {
-    auto &coef = cpu(name + ".weight");
-    auto &h = history[name];
-    if (h[0].empty()) {
-      h[0].assign(x.size(), 0);
-      h[1] = h[0];
-    }
-    V original = x;
-    if (position >= 2)
+    auto &ptr = mome_states[name];
+    if (!ptr) {
+      ptr = std::make_unique<MomeState>(x.size());
+      auto &source = cpu(name + ".weight");
+      std::vector<uint16_t> weight(source.size());
       for (size_t j = 0; j < x.size(); ++j)
-        x[j] = roundbf(x[j] + h[0][j] * coef[j * 3] +
-                       h[1][j] * coef[j * 3 + 1] + x[j] * coef[j * 3 + 2]);
-    h[0] = std::move(h[1]);
-    h[1] = std::move(original);
-    return x;
+        for (int tap = 0; tap < 3; ++tap)
+          weight[tap * x.size() + j] = tobf(source[j * 3 + tap]);
+      ptr->weight.upload(weight);
+    }
+    auto &s = *ptr;
+    s.input.upload(packed(x));
+    s.computed.upload(std::vector<int32_t>{position});
+    uint64_t bytes = 0;
+    aclOpExecutor *e = nullptr;
+    checked(aclnnAiInfraFusedCausalConv1dGetWorkspaceSize(
+                s.input.tensor, s.weight.tensor, s.state.tensor,
+                s.starts.tensor, s.slots.tensor, nullptr, nullptr, nullptr,
+                s.computed.tensor, nullptr, nullptr, nullptr, 0, -1, 0, 1, 1,
+                128, 1, true, s.out.tensor, &bytes, &e),
+            "MoME prepare");
+    run(aclnnAiInfraFusedCausalConv1d, bytes, e);
+    return unpacked(s.input.read<uint16_t>());
   }
   struct HC {
+    MhcState *device = nullptr;
     V input, post, res;
   };
   HC pre(const V &x, const std::string &name, bool merge = false) {
-    auto &phi = cpu(name + ".phi.weight");
-    auto &gamma = cpu(name + ".norm_gamma");
-    auto &alpha = cpu(name + (merge ? ".branch_alpha_pre" : ".branch_alpha"));
-    auto &beta = cpu(name + (merge ? ".branch_beta_pre" : ".branch_beta"));
-    float square = 0;
-    for (float v : x)
-      square += v * v;
-    float inv = 1 / std::sqrt(square / x.size() + 1e-6f);
-    V mix(merge ? 4 : 24);
-    for (size_t j = 0; j < mix.size(); ++j) {
-      float v = 0;
-      for (size_t k = 0; k < x.size(); ++k)
-        v += x[k] * (phi[j * x.size() + k] * gamma[k]);
-      mix[j] = v * inv;
+    auto &ptr = mhc_states[name];
+    if (!ptr) {
+      ptr = std::make_unique<MhcState>();
+      auto &phi = cpu(name + ".phi.weight");
+      auto &gamma = cpu(name + ".norm_gamma");
+      V folded(24 * 10240, 0), alpha(3, 0), beta(24, 0);
+      for (size_t j = 0; j < phi.size(); ++j)
+        folded[j] = phi[j] * gamma[j % 10240];
+      auto &a = cpu(name + (merge ? ".branch_alpha_pre" : ".branch_alpha"));
+      auto &b = cpu(name + (merge ? ".branch_beta_pre" : ".branch_beta"));
+      std::copy(a.begin(), a.end(), alpha.begin());
+      std::copy(b.begin(), b.end(), beta.begin());
+      ptr->phi.upload(folded);
+      ptr->alpha.upload(alpha);
+      ptr->beta.upload(beta);
+    }
+    auto &s = *ptr;
+    s.x.upload(packed(x));
+    auto &api = training_api();
+    uint64_t bytes = 0;
+    aclOpExecutor *e = nullptr;
+    checked(api.pre_size(s.x.tensor, s.phi.tensor, s.alpha.tensor,
+                         s.beta.tensor, nullptr, 1, 1e-6, 1e-6, s.input.tensor,
+                         s.post.tensor, s.res.tensor, s.rms.tensor,
+                         s.mix.tensor, s.pre_weights.tensor, &bytes, &e),
+            "mHC pre prepare");
+    run(api.pre, bytes, e);
+    if (!merge) {
+      checked(api.sink_size(s.res.tensor, 0, 1e-6, 20, s.sink.tensor, nullptr,
+                            nullptr, &bytes, &e),
+              "mHC Sinkhorn prepare");
+      run(api.sink, bytes, e);
     }
     HC h;
-    h.input.assign(2560, 0);
-    h.post.resize(4);
-    h.res.resize(16);
-    for (int j = 0; j < 4; ++j) {
-      float g = 1 / (1 + std::exp(-(mix[j] * alpha[0] + beta[j]))) + 1e-6f;
-      for (int k = 0; k < 2560; ++k)
-        h.input[k] += g * x[j * 2560 + k];
-      if (!merge)
-        h.post[j] = 2 / (1 + std::exp(-(mix[j + 4] * alpha[1] + beta[j + 4])));
-    }
-    for (auto &v : h.input)
-      v = roundbf(v);
-    if (merge)
-      return h;
-    for (int j = 0; j < 16; ++j)
-      h.res[j] = mix[j + 8] * alpha[2] + beta[j + 8];
-    for (int i = 0; i < 4; ++i) {
-      float maximum = *std::max_element(h.res.begin() + i * 4,
-                                        h.res.begin() + (i + 1) * 4),
-            s = 0;
-      for (int j = 0; j < 4; ++j) {
-        h.res[i * 4 + j] = std::exp(h.res[i * 4 + j] - maximum);
-        s += h.res[i * 4 + j];
-      }
-      for (int j = 0; j < 4; ++j)
-        h.res[i * 4 + j] = h.res[i * 4 + j] / s + 1e-6f;
-    }
-    for (int pass = 0; pass < 20; ++pass) {
-      if (pass)
-        for (int i = 0; i < 4; ++i) {
-          float s = 1e-6f;
-          for (int j = 0; j < 4; ++j)
-            s += h.res[i * 4 + j];
-          for (int j = 0; j < 4; ++j)
-            h.res[i * 4 + j] /= s;
-        }
-      for (int j = 0; j < 4; ++j) {
-        float s = 1e-6f;
-        for (int i = 0; i < 4; ++i)
-          s += h.res[i * 4 + j];
-        for (int i = 0; i < 4; ++i)
-          h.res[i * 4 + j] /= s;
-      }
-    }
+    h.device = &s;
+    h.input = unpacked(s.input.read<uint16_t>());
     return h;
   }
-  V post(const V &x, const V &branch, const HC &h) {
-    V y(x.size());
-    for (int i = 0; i < 4; ++i)
-      for (int j = 0; j < 2560; ++j) {
-        float v = h.post[i] * branch[j];
-        for (int k = 0; k < 4; ++k)
-          v += h.res[k * 4 + i] * x[k * 2560 + j];
-        y[i * 2560 + j] = roundbf(v);
-      }
-    return y;
+  V post(const V &, const V &branch, const HC &h) {
+    if (!h.device)
+      throw std::runtime_error("missing mHC pre state");
+    auto &s = *h.device;
+    s.branch.upload(packed(branch));
+    auto &api = training_api();
+    uint64_t bytes = 0;
+    aclOpExecutor *e = nullptr;
+    checked(api.post_size(s.x.tensor, s.sink.tensor, s.branch.tensor,
+                          s.post.tensor, s.out.tensor, &bytes, &e),
+            "mHC post prepare");
+    run(api.post, bytes, e);
+    return unpacked(s.out.read<uint16_t>());
   }
   void rope(V &v, int pos) {
     V copy = v;
@@ -319,7 +339,7 @@ struct Decoder {
         norm(mome(latent, p + ".compresskv_conv", pos), p + ".kv_a_layernorm");
     rope(kr, pos);
     latent.insert(latent.end(), kr.begin(), kr.end());
-    cache[layer].push_back(latent);
+
     if (sinks[layer].empty()) {
       auto &sk = cpu(p + ".param_sink_compressed_kv");
       auto &sr = cpu(p + ".param_sink_k_pe");
@@ -331,7 +351,26 @@ struct Decoder {
       }
     }
     auto &weight = w(p + ".kv_b_proj.weight");
-    V local;
+    auto &ptr = attention_states[layer];
+    if (!ptr) {
+      ptr = std::make_unique<AttentionState>();
+      V sink_values;
+      for (auto &row : sinks[layer])
+        sink_values.insert(sink_values.end(), row.begin(), row.end());
+      ptr->sink.upload(packed(sink_values));
+    }
+    auto &state = *ptr;
+    auto key = packed(latent);
+    checked(
+        aclrtMemcpy(static_cast<uint16_t *>(state.key.data) + size_t(pos) * 576,
+                    1152, key.data(), 1152, ACL_MEMCPY_HOST_TO_DEVICE),
+        "cache append");
+    std::vector<int32_t> indices(512, -1);
+    for (int i = 0; i <= pos; ++i)
+      indices[i] = i;
+    state.indices.upload(indices);
+    state.klen.upload(std::vector<int32_t>{pos + 1});
+    V queries;
     for (int head = 0; head < 6; ++head) {
       int offset = (rank * 6 + head) * 192;
       V no(q.begin() + offset, q.begin() + offset + 128),
@@ -341,38 +380,25 @@ struct Decoder {
           matrix(no, static_cast<uint16_t *>(weight.data) + head * 256 * 512,
                  128, 512, false);
       query.insert(query.end(), rot.begin(), rot.end());
-      V scores;
-      float maximum = -1e30f;
-      auto score = [&](const V &key) {
-        float v = 0;
-        for (int j = 0; j < 576; ++j)
-          v += query[j] * key[j];
-        v /= std::sqrt(192.f);
-        maximum = std::max(maximum, v);
-        scores.push_back(v);
-      };
-      for (auto &key : cache[layer])
-        score(key);
-      for (auto &key : sinks[layer])
-        score(key);
-      float total = 0;
-      for (auto &v : scores) {
-        v = std::exp(v - maximum);
-        total += v;
-      }
-      V value(512, 0);
-      size_t index = 0;
-      auto accum = [&](const V &key) {
-        float prob = scores[index++] / total;
-        for (int j = 0; j < 512; ++j)
-          value[j] += prob * key[j];
-      };
-      for (auto &key : cache[layer])
-        accum(key);
-      for (auto &key : sinks[layer])
-        accum(key);
-      for (auto &v : value)
-        v = roundbf(v);
+      queries.insert(queries.end(), query.begin(), query.end());
+    }
+    state.query.upload(packed(queries));
+    uint64_t bytes = 0;
+    aclOpExecutor *e = nullptr;
+    char layout[] = "TND", cache_layout[] = "PA_BSND";
+    checked(aclnnAiInfraSparseFlashAttentionPioneerGetWorkspaceSize(
+                state.query.tensor, state.key.tensor, state.value.tensor,
+                state.indices.tensor, state.table.tensor, state.qlen.tensor,
+                state.klen.tensor, nullptr, nullptr, state.sink.tensor,
+                state.sinkvalue.tensor, 1 / std::sqrt(192.0), 1, layout,
+                cache_layout, 3, INT64_MAX, INT64_MAX, 2, false,
+                state.out.tensor, nullptr, nullptr, &bytes, &e),
+            "MLA attention prepare");
+    run(aclnnAiInfraSparseFlashAttentionPioneer, bytes, e);
+    auto values = unpacked(state.out.read<uint16_t>());
+    V local;
+    for (int head = 0; head < 6; ++head) {
+      V value(values.begin() + head * 512, values.begin() + (head + 1) * 512);
       auto out = matrix(value,
                         static_cast<uint16_t *>(weight.data) +
                             (head * 256 + 128) * 512,
@@ -411,40 +437,48 @@ struct Decoder {
       run(aclnnQuantMatmulV5, bytes, e);
       return unpacked(out.read<uint16_t>());
     }
-    for (size_t i = 0; i < gate.size(); ++i)
-      gate[i] = roundbf(gate[i] / (1 + std::exp(-gate[i])) * up[i]);
+    int width = gate.size();
+    V joined = gate;
+    joined.insert(joined.end(), up.begin(), up.end());
+    DeviceTensor input({1, 2 * width}, ACL_BF16, 2),
+        output({1, width}, ACL_BF16, 2);
+    input.upload(packed(joined));
+    uint64_t bytes = 0;
+    aclOpExecutor *e = nullptr;
+    checked(aclnnSwiGluGetWorkspaceSize(input.tensor, -1, output.tensor, &bytes,
+                                        &e),
+            "SwiGLU prepare");
+    run(aclnnSwiGlu, bytes, e);
+    gate = unpacked(output.read<uint16_t>());
     return linear(p + ".down_proj", gate, distributed);
   }
   V feedforward(const V &x, int layer) {
     std::string p = "model.layers." + std::to_string(layer) + ".mlp";
     if (layer < 2)
       return mlp(x, p, true);
-    auto &gate = cpu(p + ".gate.weight");
-    auto &bias = cpu(p + ".e_score_correction_bias");
-    V score(256);
-    std::vector<int> order(256);
-    std::iota(order.begin(), order.end(), 0);
-    for (int e = 0; e < 256; ++e) {
-      float v = 0;
-      for (int j = 0; j < 2560; ++j)
-        v += gate[e * 2560 + j] * x[j];
-      score[e] = 1 / (1 + std::exp(-v));
+    auto &ptr = routers[layer];
+    if (!ptr) {
+      ptr = std::make_unique<openpangu::Router>(1, 2560, 256, 8, stream);
+      auto &gate = cpu(p + ".gate.weight");
+      V transposed(gate.size());
+      for (int e = 0; e < 256; ++e)
+        for (int j = 0; j < 2560; ++j)
+          transposed[j * 256 + e] = gate[e * 2560 + j];
+      ptr->weight.upload(transposed);
+      ptr->bias.upload(cpu(p + ".e_score_correction_bias"));
     }
-    std::partial_sort(order.begin(), order.begin() + 8, order.end(),
-                      [&](int a, int b) {
-                        float aa = score[a] + bias[a], bb = score[b] + bias[b];
-                        return aa == bb ? a < b : aa > bb;
-                      });
-    float total = 0;
-    for (int i = 0; i < 8; ++i)
-      total += score[order[i]];
+    ptr->input.upload(x);
+    ptr->launch();
+    checked(aclrtSynchronizeStream(stream), "router fence");
+    auto order = ptr->ids.read<int32_t>();
+    auto score = ptr->scores.read<float>();
     V y(2560, 0);
     for (int i = 0; i < 8; ++i) {
       int e = order[i];
       if (e / 32 != rank)
         continue;
       auto value = mlp(x, p + ".experts." + std::to_string(e), false);
-      float scale = score[e] / (total + 1e-20f) * 2.5f;
+      float scale = score[i];
       for (int j = 0; j < 2560; ++j)
         y[j] += scale * value[j];
     }
@@ -455,6 +489,7 @@ struct Decoder {
     return y;
   }
   V token(int id, int pos) {
+    current_position = pos;
     if (pos < 0 || pos >= 512 || id < 0 || id >= 151552)
       throw std::runtime_error("diagnostic decoder token/context bound");
     auto &embedding = w("model.embed_tokens.weight");
@@ -478,6 +513,7 @@ struct Decoder {
       x = post(x, norm(f, p + ".post_mlp_layernorm"), h);
       if (weights.tensors.count(p + ".block_post_layernorm.weight"))
         x = norm(x, p + ".block_post_layernorm");
+      trace(p + ".output", x);
       for (float v : x)
         if (!std::isfinite(v))
           throw std::runtime_error("nonfinite layer " + std::to_string(layer));
