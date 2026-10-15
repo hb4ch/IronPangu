@@ -1,0 +1,1 @@
+initialization executor: streaming copy/cast, generic rank, budget, bounds, producer validation, failure cleanup passed

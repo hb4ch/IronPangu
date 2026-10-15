@@ -261,7 +261,7 @@ These commands use the deployed name `inferfabric-server`; the README uses the o
 
 Build recipes and scripts are the source of truth for commands; [validation records](validation/2026-10-15-openpangu-audit/README.md) describe what was actually tested. A reproducible production release still needs the pinned build-image/toolchain, dependency provenance and per-model qualification gates in the [roadmap](../README.md#roadmap-to-production).
 
-## 8. OpenPangu native component and loader qualification
+## 8. OpenPangu initialization and decoder qualification
 
 These are development qualification commands, not a 92B serving command. Build the fixture and load-plan exporters in local WSL:
 
@@ -279,3 +279,15 @@ bash scripts/qualify-openpangu-attention.sh attention-qualification
 ```
 
 The loader qualification occupies all eight devices from the TP8/EP8 DSL while loading and checking each rank; run it only on the assigned devices. It generates manifests from an audited checkpoint, builds the C++ loader, checks malformed manifests and compares every device upload with a readback. The attention qualification uses device 0 and checks synthetic absorbed MLA inputs against an independent CPU reference, including graph replay. The other `qualify-openpangu-{tp8,router,moe,mhc,mome}.sh` scripts document their individual arguments at their entry points. See the [loader evidence](validation/2026-10-15-openpangu-load/README.md) and [attention evidence](validation/2026-10-15-openpangu-attention/README.md) for exact scope and remaining integration work.
+
+The exporter now emits shared `IFINIT01` initialization programs (`rank-N.bin`) and their readable `rank-N.init.json` IR alongside the model placement `plan.json`. The generic `initialization_probe` executes these programs. Old `IFLOAD01` files are rejected: regenerate plans after updating the exporter. See [initialization format and ownership](initialization-plan.md).
+
+After successful initialization qualification, run all three full 92B generation cases through the same executor:
+
+```bash
+bash scripts/qualify-openpangu-decoder.sh /models/92B load-qualification/plan decoder-qualification
+python3 scripts/compare-openpangu-decoder.py decoder-qualification/results.json \
+  docs/validation/2026-10-15-openpangu-decoder/reference/results.json comparison.json
+```
+
+The saved reference applies only to the pinned checkpoint/tokenizer in the validation report. For a different checkpoint, regenerate the offline reference with `scripts/reference-openpangu-decoder.sh` before comparing. The diagnostic decoder still has the documented 512-token, single-request limits; DSL serving budgets do not override them.

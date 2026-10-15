@@ -37,3 +37,9 @@ cmake --build native-build --target initialization_test inferfabric_initializati
 native-build/initialization_test
 python3 native/probes/test_initialization_plan.py native-build/initialization_test
 ```
+
+## OpenPangu integration
+
+`openpangu::parallel::initialization_plan` translates model placement decisions into this shared IR. The exporter delegates binary serialization to `inferfabric_compiler::initialization::encode`; it contains no private wire encoder. Every rank also receives a readable JSON dump of the exact initialization IR. The decoder binds model names to artifact parameter IDs once at startup and retrieves allocations through `ParameterStore::at`. The generic executor never interprets names or expert ownership. The old `openpangu_weights.h`, model-specific loader probe and IFLOAD01 parser are removed.
+
+The decoder's own operation selection and name-to-ID binding table remain model-specific. mHC gamma folding, router transposition and MoME layout preparation are still explicit operator preparation outside this first initialization instruction set. They are not silently encoded as no-op initialization transforms. Moving those into typed preparation instructions is separate from migrating file I/O, residency and conversions onto this shared executor.

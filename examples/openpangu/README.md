@@ -42,3 +42,9 @@ inferfabric plan-openpangu examples/openpangu/92b-tp8-ep8.inferfabric /models/92
 ```
 
 The native qualification pipeline runs a real TP-sharded dense projection, reconstructs canonical batched activations with HCCL all-gather, executes one real SwiGLU expert per rank, applies explicit routing weights and performs an FP32 HCCL all-reduce. Both collectives are captured and replayed. This is a component pipeline, not full 92B inference or learned-router qualification. See [hardware evidence and remaining integration](../../docs/validation/2026-10-15-openpangu-tp8-ep8/README.md).
+
+## Executable initialization plan
+
+The placement plan is lowered by `openpangu::parallel::initialization_plan` into the shared, model-independent initialization IR. The locally cross-built `export_openpangu_load_plan` writes `rank-N.bin` (`IFINIT01`) and readable `rank-N.init.json`. A native initialization executor performs bounded reads, typed conversions, allocation and upload, returning a parameter store addressed by IDs. The 92B decoder uses this same executor; there is no separate OpenPangu weight loader.
+
+See [build and full-model qualification](../../docs/build.md#8-openpangu-initialization-and-decoder-qualification) and [initialization IR](../../docs/initialization-plan.md). Regenerate older `IFLOAD01` manifests. This migration does not turn the descriptive placement schedule into an executable decoder DAG; attention/FFN sequencing and operator-specific preparation remain model executor code.

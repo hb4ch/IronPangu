@@ -33,7 +33,7 @@ fn fixture() -> Manifest {
         shards: BTreeMap::new(),
         index_sha256: None,
         auxiliary_sha256: BTreeMap::new(),
-        metadata_sha256: "fixture".into(),
+        metadata_sha256: "a".repeat(64),
         capacity_note: "test",
     });
     m
@@ -182,6 +182,20 @@ fn tp_ep_slices_cover_weights_once_and_keep_experts_whole() {
             .iter()
             .any(|s| s.collective == "all_reduce_sum_fp32")
     );
+    for rank in 0..8 {
+        let init = openpangu::parallel::initialization_plan(&plan, rank).unwrap();
+        init.validate().unwrap();
+        assert_eq!(init.parameters.len(), plan.ranks[rank].weights.len());
+        assert_eq!(init.instructions.len(), init.parameters.len());
+        let binary = inferfabric_compiler::initialization::encode(&init).unwrap();
+        assert_eq!(&binary[..8], b"IFINIT01");
+        for parameter in &init.parameters {
+            assert_eq!(
+                parameter.shape,
+                plan.ranks[rank].weights[&parameter.name].local_shape
+            );
+        }
+    }
     assert!(!plan.executable);
     let mut bad = spec.clone();
     bad.ep = 4;

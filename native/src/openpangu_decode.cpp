@@ -1,9 +1,9 @@
 // Full checkpoint diagnostic decoder. All projection GEMMs execute on Ascend;
 // normalization, mHC, MoME, routing and attention use NPU kernels. Host
 // orchestration, RoPE and expert-output combination remain diagnostic paths.
+#include "initialization_acl.h"
 #include "openpangu_decoder_state.h"
 #include "openpangu_mhc.h"
-#include "openpangu_weights.h"
 #include <aclnn_ai_infra_fused_causal_conv1d.h>
 #include <aclnn_ai_infra_sparse_flash_attention_pioneer.h>
 #include <aclnnop/aclnn_dequant_swiglu_quant.h>
@@ -12,6 +12,8 @@
 #include <aclnnop/aclnn_rms_norm.h>
 #include <aclnnop/aclnn_swi_glu.h>
 #include <array>
+#include <filesystem>
+#include <fstream>
 #include <hccl/hccl.h>
 #include <iostream>
 #include <numeric>
@@ -75,16 +77,21 @@ struct Decoder {
   std::array<std::unique_ptr<AttentionState>, 46> attention_states;
   aclrtStream stream = nullptr;
   HcclComm comm = nullptr;
-  openpangu::ResidentWeights weights;
+  inferfabric::initialization::ParameterStore weights;
+  std::map<std::string, inferfabric::initialization::ParameterId> bindings;
   std::map<std::string, V> host;
   std::map<std::string, std::array<V, 2>> history;
   std::array<std::vector<V>, 46> cache;
   std::array<std::vector<V>, 46> sinks;
   void *workspace = nullptr;
   uint64_t capacity = 0;
-  Decoder(const openpangu::LoadPlan &p, const std::string &root,
+  Decoder(const inferfabric::initialization::Plan &p, const std::string &root,
           HcclRootInfo &info)
-      : rank(p.rank), weights(p, root) {
+      : rank(p.rank),
+        weights(inferfabric::initialization::Executor::execute(
+            p, root, inferfabric::initialization::acl_device_memory())) {
+    for (const auto &parameter : p.parameters)
+      bindings.emplace(parameter.name, parameter.id);
     checked(aclrtCreateStream(&stream), "stream");
     checked(HcclCommInitRootInfo(8, &info, rank, &comm), "HCCL");
   }
@@ -109,11 +116,11 @@ struct Decoder {
     checked(f(workspace, bytes, e, stream), "operator");
     checked(aclrtSynchronizeStream(stream), "fence");
   }
-  openpangu::ResidentWeight &w(const std::string &n) {
-    auto it = weights.tensors.find(n);
-    if (it == weights.tensors.end())
-      throw std::runtime_error("missing weight " + n);
-    return *it->second;
+  inferfabric::initialization::ResidentParameter &w(const std::string &n) {
+    auto it = bindings.find(n);
+    if (it == bindings.end())
+      throw std::runtime_error("unbound model parameter " + n);
+    return weights.at(it->second);
   }
   const V &cpu(const std::string &n) {
     auto it = host.find(n);
@@ -123,12 +130,12 @@ struct Decoder {
     V v;
     if (a.bytes > 8 * 1024 * 1024)
       throw std::runtime_error("scalar weight staging bound " + n);
-    if (a.dtype == "F32") {
+    if (a.dtype == inferfabric::initialization::DType::F32) {
       v.resize(a.bytes / 4);
       checked(aclrtMemcpy(v.data(), a.bytes, a.data, a.bytes,
                           ACL_MEMCPY_DEVICE_TO_HOST),
               "float weight");
-    } else if (a.dtype == "BF16") {
+    } else if (a.dtype == inferfabric::initialization::DType::Bf16) {
       std::vector<uint16_t> b(a.bytes / 2);
       checked(aclrtMemcpy(b.data(), a.bytes, a.data, a.bytes,
                           ACL_MEMCPY_DEVICE_TO_HOST),
@@ -175,11 +182,11 @@ struct Decoder {
   }
   V linear(const std::string &name, const V &x, bool distributed = false) {
     auto &a = w(name + ".weight");
-    int n = a.source.shape[0], k = a.source.shape[1];
+    int n = a.descriptor.shape[0], k = a.descriptor.shape[1];
     if (int(x.size()) != k)
       throw std::runtime_error("linear shape " + name);
     V result;
-    if (a.dtype == "BF16")
+    if (a.dtype == inferfabric::initialization::DType::Bf16)
       result = matrix(x, a.data, n, k);
     else {
       auto &s = w(name + ".weight_scale");
@@ -413,7 +420,7 @@ struct Decoder {
     if (!distributed) {
       int k = gate.size();
       auto &down = w(p + ".down_proj.weight");
-      int n = down.source.shape[0];
+      int n = down.descriptor.shape[0];
       auto &sc = w(p + ".down_proj.weight_scale");
       V joined = gate;
       joined.insert(joined.end(), up.begin(), up.end());
@@ -511,7 +518,7 @@ struct Decoder {
       h = pre(x, p + ".mlp_mhc_module");
       auto f = feedforward(norm(h.input, p + ".pre_mlp_layernorm"), layer);
       x = post(x, norm(f, p + ".post_mlp_layernorm"), h);
-      if (weights.tensors.count(p + ".block_post_layernorm.weight"))
+      if (bindings.count(p + ".block_post_layernorm.weight"))
         x = norm(x, p + ".block_post_layernorm");
       trace(p + ".output", x);
       for (float v : x)
@@ -551,8 +558,11 @@ int main(int argc, char **argv) {
     for (int rank = 0; rank < 8; ++rank)
       threads.emplace_back([&, rank] {
         try {
-          openpangu::LoadPlan plan(std::string(argv[1]) + "/rank-" +
-                                   std::to_string(rank) + ".bin");
+          auto plan = inferfabric::initialization::Plan::read(
+              std::string(argv[1]) + "/rank-" + std::to_string(rank) + ".bin");
+          if (plan.rank != static_cast<uint32_t>(rank))
+            throw std::runtime_error(
+                "decoder rank/initialization plan mismatch");
           openpangu::checked(aclrtSetDevice(plan.device), "device");
           {
             pangu::Decoder decoder(plan, argv[2], info);

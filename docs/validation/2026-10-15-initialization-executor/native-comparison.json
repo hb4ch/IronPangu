@@ -1,0 +1,25 @@
+{
+  "baseline": "419cb8b",
+  "all_equal": true,
+  "cases": [
+    {
+      "case": "arithmetic",
+      "tokens": 8,
+      "exact_tokens": true,
+      "exact_reported_logits_and_top5": true
+    },
+    {
+      "case": "geography",
+      "tokens": 8,
+      "exact_tokens": true,
+      "exact_reported_logits_and_top5": true
+    },
+    {
+      "case": "chinese",
+      "tokens": 17,
+      "exact_tokens": true,
+      "exact_reported_logits_and_top5": true
+    }
+  ],
+  "scope": "Equality at recorded JSON precision, not a claim of bitwise full-vocabulary logits"
+}

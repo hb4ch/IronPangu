@@ -225,3 +225,77 @@ pub fn compile(m: &Manifest, spec: &OpenPanguParallel) -> Result<ParallelPlan> {
         "Placement/schedule contract only; full OpenPangu native execution and serving remain unimplemented".into(),
     ]})
 }
+
+/// Model-specific placement lowering ends here. The emitted program and its
+/// native executor contain no OpenPangu naming or topology rules.
+pub fn initialization_plan(
+    plan: &ParallelPlan,
+    rank: usize,
+) -> Result<inferfabric_ir::initialization::InitializationPlan> {
+    use inferfabric_ir::initialization::{DType, InitializationPlan, Instruction, Parameter};
+    let r = plan
+        .ranks
+        .get(rank)
+        .ok_or_else(|| invalid("unknown initialization rank"))?;
+    let mut parameters = Vec::new();
+    let mut instructions = Vec::new();
+    for (name, slice) in &r.weights {
+        let source_dtype = match slice.dtype.as_str() {
+            "I8" => DType::I8,
+            "BF16" => DType::Bf16,
+            "F32" => DType::F32,
+            _ => return Err(invalid("unsupported initialization source dtype")),
+        };
+        // The binding's layout annotations are not executable transformation
+        // requests. Canonical layouts remain unchanged; only declared casts
+        // are lowered here. Packing/folding need future explicit IR operations.
+        let dtype = match slice.transform {
+            "cast_fp32" | "per_output_scale_to_fp32" => DType::F32,
+            "dynamic_w8a8_weight_out_in"
+            | "linear_weight_out_in"
+            | "embedding"
+            | "rms_norm"
+            | "mome_channels_1_width_to_width_channels"
+            | "latent_sink"
+            | "rotary_sink" => source_dtype,
+            _ => return Err(invalid("unknown weight preparation contract")),
+        };
+        let id = u32::try_from(parameters.len()).map_err(|_| invalid("too many parameters"))?;
+        parameters.push(Parameter {
+            id,
+            name: name.clone(),
+            dtype,
+            shape: slice.local_shape.clone(),
+        });
+        instructions.push(Instruction::LoadSlice {
+            destination: id,
+            shard: slice.shard.clone(),
+            offset: slice.offset,
+            bytes: slice.bytes,
+            source_dtype,
+        });
+    }
+    let result = InitializationPlan {
+        rank: u32::try_from(r.rank).map_err(|_| invalid("initialization rank overflow"))?,
+        device: r.device,
+        checkpoint_metadata_sha256: plan.checkpoint_metadata_sha256.clone(),
+        parameters,
+        instructions,
+    };
+    result.validate()?;
+    let source_bytes: u64 = result
+        .instructions
+        .iter()
+        .map(|op| match op {
+            Instruction::LoadSlice { bytes, .. } => *bytes,
+        })
+        .sum();
+    let resident_bytes = result.parameters.iter().try_fold(0u64, |sum, p| {
+        sum.checked_add(p.bytes()?)
+            .ok_or_else(|| invalid("resident size overflow"))
+    })?;
+    if source_bytes != r.stored_weight_bytes || resident_bytes != r.prepared_weight_bytes {
+        return Err(invalid("initialization placement byte totals differ"));
+    }
+    Ok(result)
+}

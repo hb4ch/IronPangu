@@ -15,7 +15,10 @@ This diagnostic runner accepts a single request, serial token prefill, greedy de
 Use the checkpoint-bound TP8/EP8 manifests described in the sibling load qualification report, the pinned vendor packages below, and 16 free devices for simultaneous native/reference runs (or run sequentially with a reference device override).
 
 ```bash
-bash scripts/qualify-openpangu-decoder.sh /models/92B load-plan decoder-device-qualified
+# Regenerate initialization programs with the current locally cross-built exporter.
+bash scripts/qualify-openpangu-load.sh /models/92B \
+  examples/openpangu/92b-tp8-ep8.inferfabric load-qualification
+bash scripts/qualify-openpangu-decoder.sh /models/92B load-qualification/plan decoder-device-qualified
 # Offline reference only; defaults to logical devices 8..15.
 bash scripts/reference-openpangu-decoder.sh
 python3 scripts/compare-openpangu-decoder.py \

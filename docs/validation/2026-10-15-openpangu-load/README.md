@@ -1,3 +1,5 @@
+> Historical IFLOAD01 loader qualification. The loader has since been replaced by the shared IFINIT01 initialization executor. Current scripts regenerate the new format; see [the initialization migration report](../2026-10-15-initialization-executor/README.md).
+
 # Native 92B checkpoint loading, TP8 / EP8
 
 Roadmap OP-03 / OP-08 loader milestone. This is full main-model weight loading, not full decoder execution or an inference-quality result.
