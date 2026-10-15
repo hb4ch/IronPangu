@@ -1,0 +1,69 @@
+#include "ascend_token_contract.h"
+#include <iostream>
+int main(int argc, char **argv) {
+  try {
+    if (argc != 2)
+      throw std::runtime_error("usage: token_plan_test PLAN_DIR");
+    auto p = inferfabric::execution::Plan::read(std::string(argv[1]) +
+                                                "/execution.bin");
+    inferfabric::execution::validate_kernels(p);
+    for (int r = 0; r < 8; ++r) {
+      auto init = inferfabric::initialization::Plan::read(
+          std::string(argv[1]) + "/rank-" + std::to_string(r) + ".bin");
+      inferfabric::execution::validate_bindings(p, init);
+    }
+    int rejected = 0;
+    auto reject = [&](auto change) {
+      auto bad = p;
+      change(bad);
+      try {
+        inferfabric::execution::validate_kernels(bad);
+      } catch (const std::exception &) {
+        ++rejected;
+        return;
+      }
+      throw std::runtime_error("invalid kernel contract accepted");
+    };
+    reject([](auto &x) { x.nodes[0].op = "unknown"; });
+    reject([](auto &x) { x.nodes[0].width = 1; });
+    reject([](auto &x) { x.nodes[0].attrs["ignored"] = "true"; });
+    reject([](auto &x) {
+      for (auto &n : x.nodes)
+        if (n.op == "rope") {
+          n.attrs["theta"] = "1";
+          break;
+        }
+    });
+    reject([](auto &x) {
+      for (auto &n : x.nodes)
+        if (n.op == "mhc_post") {
+          n.inputs[0] = 0;
+          break;
+        }
+    });
+    reject([](auto &x) {
+      for (auto &n : x.nodes)
+        if (n.op == "expert_swiglu_down") {
+          n.inputs[2] = 0;
+          break;
+        }
+    });
+    auto init = inferfabric::initialization::Plan::read(std::string(argv[1]) +
+                                                        "/rank-0.bin");
+    init.parameters[0].shape[0] = 1;
+    try {
+      inferfabric::execution::validate_bindings(p, init);
+      throw std::logic_error("bad binding accepted");
+    } catch (const std::logic_error &) {
+      throw;
+    } catch (const std::runtime_error &) {
+      ++rejected;
+    }
+    std::cout << "token graph nodes=" << p.nodes.size()
+              << "; 8 rank bindings passed; " << rejected
+              << " negative contracts rejected\n";
+  } catch (const std::exception &e) {
+    std::cerr << e.what() << '\n';
+    return 1;
+  }
+}

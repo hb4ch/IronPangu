@@ -1,5 +1,7 @@
 # Native CANN boundary
 
+The 92B decoder now requires an `execution.bin` compiled from the [complete DSL graph](../examples/openpangu/92b-tp8-ep8.inferfabric). C++ implements kernels and plan dispatch; it no longer contains a model-layer forward loop. Build/run and limits: [executable DSL guide](../docs/openpangu-executable-dsl.md).
+
 `include/inferfabric_acl.h` defines a versioned C ABI implemented by `src/inferfabric_acl.cpp`.
 It owns thread-affine ACL contexts/streams, opaque allocation and graph IDs, checked byte regions, synchronous host copies, graph capture/replay, and ordered cleanup. C++ exceptions become error status/text.
 

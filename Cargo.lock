@@ -91,6 +91,7 @@ dependencies = [
 name = "inferfabric-compiler"
 version = "0.1.0"
 dependencies = [
+ "inferfabric-authoring",
  "inferfabric-dsl",
  "inferfabric-ir",
  "inferfabric-model",

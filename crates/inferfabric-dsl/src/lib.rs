@@ -1,5 +1,6 @@
 //! Versioned authoring frontend. Parsing creates an AST, then elaboration
 //! produces the same model definition as compiled-language authors.
+mod execution;
 pub mod openpangu;
 pub mod syntax;
 use authoring::ModelDefinition;
@@ -90,6 +91,7 @@ impl Fields {
     }
 }
 pub fn elaborate(ast: &syntax::Document) -> Result<ModelDefinition> {
+    if ast.plan.iter().any(|m| matches!(&m.member, Member::Field(k, Expr::Name(v)) if k == "target" && v == "ascend_token_v1")) { return execution::elaborate(ast); }
     let contract = ast.model.iter().find_map(|m| match &m.member {
         Member::Field(k, Expr::Name(v)) if k == "contract" => Some(v.as_str()),
         _ => None,

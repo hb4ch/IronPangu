@@ -2,7 +2,8 @@
 use inferfabric_model::{OpenPanguParallel, Result, invalid};
 pub fn parse(source: &str) -> Result<OpenPanguParallel> {
     match crate::definition(source)? {
-        crate::authoring::ModelDefinition::OpenPangu { parallel } => Ok(parallel),
+        crate::authoring::ModelDefinition::OpenPangu { parallel }
+        | crate::authoring::ModelDefinition::Execution { parallel, .. } => Ok(parallel),
         _ => Err(invalid("expected OpenPangu model definition")),
     }
 }
@@ -16,7 +17,7 @@ mod tests {
         for s in [
             SOURCE.replace("ep = 8", "ep = 4"),
             SOURCE.replace("6, 7", "6, 6"),
-            SOURCE.replace("seqs = 4", "seqs = 0"),
+            SOURCE.replace("seqs = 1", "seqs = 0"),
             SOURCE.replace("tp = 8;", "tp = 8; tp = 8;"),
             SOURCE.replace("tp = 8;", "tp = 8; pp = 2;"),
         ] {

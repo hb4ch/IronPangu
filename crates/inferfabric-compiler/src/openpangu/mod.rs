@@ -5,6 +5,7 @@ mod json;
 pub mod parallel;
 use crate::checkpoint::sha;
 use inferfabric_model::{Result, invalid};
+pub use inventory::inspect as inspect_inventory;
 pub use inventory::{Inventory, TensorDescriptor};
 use serde::Serialize;
 use serde_json::Value;

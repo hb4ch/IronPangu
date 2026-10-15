@@ -123,3 +123,7 @@ target_compile_definitions(openpangu_decode PRIVATE OMNI_TRAINING_OPAPI_PATH="${
 target_link_libraries(openpangu_decode PRIVATE dl)
 
 endif()
+
+add_executable(token_plan_test probes/token_plan_test.cpp)
+target_link_libraries(token_plan_test PRIVATE inferfabric_initialization)
+target_compile_options(token_plan_test PRIVATE -Wall -Wextra -Werror)

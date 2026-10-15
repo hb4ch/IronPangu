@@ -1776,6 +1776,7 @@ dependencies = [
 name = "inferfabric-compiler"
 version = "0.1.0"
 dependencies = [
+ "inferfabric-authoring",
  "inferfabric-ir",
  "inferfabric-model",
  "serde",

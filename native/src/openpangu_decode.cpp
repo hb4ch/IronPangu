@@ -1,6 +1,7 @@
 // Full checkpoint diagnostic decoder. All projection GEMMs execute on Ascend;
 // normalization, mHC, MoME, routing and attention use NPU kernels. Host
 // orchestration, RoPE and expert-output combination remain diagnostic paths.
+#include "ascend_token_contract.h"
 #include "compiled_kernel.h"
 #include "initialization_acl.h"
 #include "openpangu_decoder_state.h"
@@ -18,6 +19,7 @@
 #include <iostream>
 #include <numeric>
 #include <thread>
+#include <variant>
 namespace pangu {
 using V = std::vector<float>;
 using openpangu::checked;
@@ -71,27 +73,27 @@ struct View {
 struct Decoder {
   int rank;
   int current_position = -1;
-  std::map<int, std::unique_ptr<openpangu::Router>> routers;
+  std::map<std::string, std::unique_ptr<openpangu::Router>> routers;
+  const inferfabric::execution::Plan &program;
   std::map<std::string, std::unique_ptr<MhcState>> mhc_states;
   std::map<std::string, std::unique_ptr<MomeState>> mome_states;
-  std::array<std::unique_ptr<AttentionState>, 46> attention_states;
+  std::map<std::string, std::unique_ptr<AttentionState>> attention_states;
+  std::map<std::string, V> prepared_sinks;
   aclrtStream stream = nullptr;
   HcclComm comm = nullptr;
   inferfabric::CompiledKernel swiglu;
   inferfabric::initialization::ParameterStore weights;
   std::map<std::string, inferfabric::initialization::ParameterId> bindings;
   std::map<std::string, V> host;
-  std::map<std::string, std::array<V, 2>> history;
-  std::array<std::vector<V>, 46> cache;
-  std::array<std::vector<V>, 46> sinks;
   void *workspace = nullptr;
   uint64_t capacity = 0;
   Decoder(const inferfabric::initialization::Plan &p, const std::string &root,
-          HcclRootInfo &info)
-      : rank(p.rank), swiglu(std::getenv("INFERFABRIC_SWIGLU_LIBRARY")
-                                 ? std::getenv("INFERFABRIC_SWIGLU_LIBRARY")
-                                 : IF_DEFAULT_SWIGLU_LIBRARY,
-                             "inferfabric.swiglu.bf16.v1", "ascend"),
+          HcclRootInfo &info, const inferfabric::execution::Plan &execution)
+      : rank(p.rank), program(execution),
+        swiglu(std::getenv("INFERFABRIC_SWIGLU_LIBRARY")
+                   ? std::getenv("INFERFABRIC_SWIGLU_LIBRARY")
+                   : IF_DEFAULT_SWIGLU_LIBRARY,
+               "inferfabric.swiglu.bf16.v1", "ascend"),
         weights(inferfabric::initialization::Executor::execute(
             p, root, inferfabric::initialization::acl_device_memory())) {
     for (const auto &parameter : p.parameters)
@@ -251,8 +253,9 @@ struct Decoder {
     trace(name, y);
     return y;
   }
-  V mome(V x, const std::string &name, int position) {
-    auto &ptr = mome_states[name];
+  V mome(V x, const std::string &name, int position,
+         const std::string &state_name) {
+    auto &ptr = mome_states[state_name];
     if (!ptr) {
       ptr = std::make_unique<MomeState>(x.size());
       auto &source = cpu(name + ".weight");
@@ -280,8 +283,9 @@ struct Decoder {
     MhcState *device = nullptr;
     V input, post, res;
   };
-  HC pre(const V &x, const std::string &name, bool merge = false) {
-    auto &ptr = mhc_states[name];
+  HC pre(const V &x, const std::string &name, bool merge,
+         const std::string &state_name) {
+    auto &ptr = mhc_states[state_name];
     if (!ptr) {
       ptr = std::make_unique<MhcState>();
       auto &phi = cpu(name + ".phi.weight");
@@ -342,35 +346,58 @@ struct Decoder {
       v[i + 32] = roundbf(copy[i + 32] * c + copy[i] * s);
     }
   }
-  V attention(const V &x, int layer, int pos) {
-    std::string p = "model.layers." + std::to_string(layer) + ".self_attn";
-    auto qa = norm(mome(linear(p + ".q_a_proj", x), p + ".qa_conv", pos),
-                   p + ".q_a_layernorm");
-    auto q = linear(p + ".q_b_proj", qa, true);
-    auto kv = linear(p + ".kv_a_proj_with_mqa", x);
-    V latent(kv.begin(), kv.begin() + 512), kr(kv.begin() + 512, kv.end());
-    latent =
-        norm(mome(latent, p + ".compresskv_conv", pos), p + ".kv_a_layernorm");
-    rope(kr, pos);
-    latent.insert(latent.end(), kr.begin(), kr.end());
-
-    if (sinks[layer].empty()) {
-      auto &sk = cpu(p + ".param_sink_compressed_kv");
-      auto &sr = cpu(p + ".param_sink_k_pe");
-      for (int i = 0; i < 128; ++i) {
-        V v(sk.begin() + i * 512, sk.begin() + (i + 1) * 512);
-        v = norm(v, p + ".kv_a_layernorm");
-        v.insert(v.end(), sr.begin() + i * 64, sr.begin() + (i + 1) * 64);
-        sinks[layer].push_back(std::move(v));
-      }
+  V absorb_query(const V &q, const std::string &weight_name, int pos) {
+    auto &weight = w(weight_name + ".weight");
+    V queries;
+    for (int head = 0; head < 6; ++head) {
+      int offset = (rank * 6 + head) * 192;
+      V no(q.begin() + offset, q.begin() + offset + 128),
+          rot(q.begin() + offset + 128, q.begin() + offset + 192);
+      rope(rot, pos);
+      auto query =
+          matrix(no, static_cast<uint16_t *>(weight.data) + head * 256 * 512,
+                 128, 512, false);
+      query.insert(query.end(), rot.begin(), rot.end());
+      queries.insert(queries.end(), query.begin(), query.end());
     }
-    auto &weight = w(p + ".kv_b_proj.weight");
-    auto &ptr = attention_states[layer];
+    return queries;
+  }
+  V expand_value(const V &values, const std::string &weight_name) {
+    auto &weight = w(weight_name + ".weight");
+    V local;
+    for (int head = 0; head < 6; ++head) {
+      V value(values.begin() + head * 512, values.begin() + (head + 1) * 512);
+      auto out = matrix(value,
+                        static_cast<uint16_t *>(weight.data) +
+                            (head * 256 + 128) * 512,
+                        128, 512);
+      local.insert(local.end(), out.begin(), out.end());
+    }
+    return local;
+  }
+  V normalize_sinks(const std::string &state_name,
+                    const std::string &weight_name,
+                    const std::string &norm_name) {
+    auto found = prepared_sinks.find(state_name);
+    if (found != prepared_sinks.end())
+      return found->second;
+    auto &sk = cpu(weight_name + ".param_sink_compressed_kv");
+    auto &sr = cpu(weight_name + ".param_sink_k_pe");
+    V values;
+    for (int i = 0; i < 128; ++i) {
+      V row(sk.begin() + i * 512, sk.begin() + (i + 1) * 512);
+      row = norm(row, norm_name);
+      row.insert(row.end(), sr.begin() + i * 64, sr.begin() + (i + 1) * 64);
+      values.insert(values.end(), row.begin(), row.end());
+    }
+    prepared_sinks.emplace(state_name, values);
+    return values;
+  }
+  void append_cache(const V &latent, const V &sink_values,
+                    const std::string &state_name, int pos) {
+    auto &ptr = attention_states[state_name];
     if (!ptr) {
       ptr = std::make_unique<AttentionState>();
-      V sink_values;
-      for (auto &row : sinks[layer])
-        sink_values.insert(sink_values.end(), row.begin(), row.end());
       ptr->sink.upload(packed(sink_values));
     }
     auto &state = *ptr;
@@ -384,18 +411,9 @@ struct Decoder {
       indices[i] = i;
     state.indices.upload(indices);
     state.klen.upload(std::vector<int32_t>{pos + 1});
-    V queries;
-    for (int head = 0; head < 6; ++head) {
-      int offset = (rank * 6 + head) * 192;
-      V no(q.begin() + offset, q.begin() + offset + 128),
-          rot(q.begin() + offset + 128, q.begin() + offset + 192);
-      rope(rot, pos);
-      auto query =
-          matrix(no, static_cast<uint16_t *>(weight.data) + head * 256 * 512,
-                 128, 512, false);
-      query.insert(query.end(), rot.begin(), rot.end());
-      queries.insert(queries.end(), query.begin(), query.end());
-    }
+  }
+  V attend(const V &queries, const std::string &state_name) {
+    auto &state = *attention_states.at(state_name);
     state.query.upload(packed(queries));
     uint64_t bytes = 0;
     aclOpExecutor *e = nullptr;
@@ -409,48 +427,36 @@ struct Decoder {
                 state.out.tensor, nullptr, nullptr, &bytes, &e),
             "MLA attention prepare");
     run(aclnnAiInfraSparseFlashAttentionPioneer, bytes, e);
-    auto values = unpacked(state.out.read<uint16_t>());
-    V local;
-    for (int head = 0; head < 6; ++head) {
-      V value(values.begin() + head * 512, values.begin() + (head + 1) * 512);
-      auto out = matrix(value,
-                        static_cast<uint16_t *>(weight.data) +
-                            (head * 256 + 128) * 512,
-                        128, 512);
-      local.insert(local.end(), out.begin(), out.end());
-    }
-    return linear(p + ".o_proj", mome(gather(local), p + ".o_conv", pos), true);
+    return unpacked(state.out.read<uint16_t>());
   }
-  V mlp(const V &x, const std::string &p, bool distributed) {
-    auto gate = linear(p + ".gate_proj", x, distributed),
-         up = linear(p + ".up_proj", x, distributed);
-    if (!distributed) {
-      int k = gate.size();
-      auto &down = w(p + ".down_proj.weight");
-      int n = down.descriptor.shape[0];
-      auto &sc = w(p + ".down_proj.weight_scale");
-      V joined = gate;
-      joined.insert(joined.end(), up.begin(), up.end());
-      DeviceTensor input({1, 2 * k}, ACL_BF16, 2), quant({1, k}, ACL_INT8, 1),
-          scale({1}, ACL_FLOAT, 4), out({1, n}, ACL_BF16, 2);
-      input.upload(packed(joined));
-      View weight(down.data, {n, k}, ACL_INT8), scales(sc.data, {n}, ACL_FLOAT);
-      uint64_t bytes = 0;
-      aclOpExecutor *e = nullptr;
-      char mode[] = "dynamic";
-      checked(aclnnDequantSwigluQuantGetWorkspaceSize(
-                  input.tensor, nullptr, nullptr, nullptr, nullptr, nullptr,
-                  nullptr, true, mode, quant.tensor, scale.tensor, &bytes, &e),
-              "expert fused activation prepare");
-      run(aclnnDequantSwigluQuant, bytes, e);
-      checked(aclnnQuantMatmulV5GetWorkspaceSize(
-                  quant.tensor, weight.t, scale.tensor, scales.t, nullptr,
-                  nullptr, nullptr, nullptr, nullptr, false, true, 0,
-                  out.tensor, &bytes, &e),
-              "expert down prepare");
-      run(aclnnQuantMatmulV5, bytes, e);
-      return unpacked(out.read<uint16_t>());
-    }
+  V expert_down(const V &gate, const V &up, const std::string &p) {
+    int k = gate.size();
+    auto &down = w(p + ".weight");
+    int n = down.descriptor.shape[0];
+    auto &sc = w(p + ".weight_scale");
+    V joined = gate;
+    joined.insert(joined.end(), up.begin(), up.end());
+    DeviceTensor input({1, 2 * k}, ACL_BF16, 2), quant({1, k}, ACL_INT8, 1),
+        scale({1}, ACL_FLOAT, 4), out({1, n}, ACL_BF16, 2);
+    input.upload(packed(joined));
+    View weight(down.data, {n, k}, ACL_INT8), scales(sc.data, {n}, ACL_FLOAT);
+    uint64_t bytes = 0;
+    aclOpExecutor *e = nullptr;
+    char mode[] = "dynamic";
+    checked(aclnnDequantSwigluQuantGetWorkspaceSize(
+                input.tensor, nullptr, nullptr, nullptr, nullptr, nullptr,
+                nullptr, true, mode, quant.tensor, scale.tensor, &bytes, &e),
+            "expert fused activation prepare");
+    run(aclnnDequantSwigluQuant, bytes, e);
+    checked(aclnnQuantMatmulV5GetWorkspaceSize(
+                quant.tensor, weight.t, scale.tensor, scales.t, nullptr,
+                nullptr, nullptr, nullptr, nullptr, false, true, 0, out.tensor,
+                &bytes, &e),
+            "expert down prepare");
+    run(aclnnQuantMatmulV5, bytes, e);
+    return unpacked(out.read<uint16_t>());
+  }
+  V activate(const V &gate, const V &up) {
     int width = gate.size();
     V joined = gate;
     joined.insert(joined.end(), up.begin(), up.end());
@@ -483,14 +489,18 @@ struct Decoder {
       aclrtSynchronizeStream(stream);
       throw;
     }
-    gate = unpacked(output.read<uint16_t>());
-    return linear(p + ".down_proj", gate, distributed);
+    return unpacked(output.read<uint16_t>());
   }
-  V feedforward(const V &x, int layer) {
-    std::string p = "model.layers." + std::to_string(layer) + ".mlp";
-    if (layer < 2)
-      return mlp(x, p, true);
-    auto &ptr = routers[layer];
+  struct Routes {
+    std::vector<int32_t> ids;
+    V scores;
+  };
+  struct ExpertRows {
+    std::vector<V> rows;
+  };
+  Routes route(const V &x, const std::string &p,
+               const std::string &state_name) {
+    auto &ptr = routers[state_name];
     if (!ptr) {
       ptr = std::make_unique<openpangu::Router>(1, 2560, 256, 8, stream);
       auto &gate = cpu(p + ".gate.weight");
@@ -506,62 +516,16 @@ struct Decoder {
     checked(aclrtSynchronizeStream(stream), "router fence");
     auto order = ptr->ids.read<int32_t>();
     auto score = ptr->scores.read<float>();
-    V y(2560, 0);
-    for (int i = 0; i < 8; ++i) {
-      int e = order[i];
-      if (e / 32 != rank)
-        continue;
-      auto value = mlp(x, p + ".experts." + std::to_string(e), false);
-      float scale = score[i];
-      for (int j = 0; j < 2560; ++j)
-        y[j] += scale * value[j];
-    }
-    y = sum(y);
-    auto shared = mlp(x, p + ".shared_experts", true);
-    for (int j = 0; j < 2560; ++j)
-      y[j] = roundbf(y[j] + shared[j]);
-    return y;
+    std::set<int32_t> selected;
+    for (size_t i = 0; i < order.size(); ++i)
+      if (order[i] < 0 || order[i] >= 256 ||
+          !selected.insert(order[i]).second || !std::isfinite(score[i]) ||
+          score[i] < 0)
+        throw std::runtime_error("invalid router output");
+    return {std::move(order), std::move(score)};
   }
-  V token(int id, int pos) {
-    current_position = pos;
-    if (pos < 0 || pos >= 512 || id < 0 || id >= 151552)
-      throw std::runtime_error("diagnostic decoder token/context bound");
-    auto &embedding = w("model.embed_tokens.weight");
-    std::vector<uint16_t> b(2560);
-    checked(
-        aclrtMemcpy(b.data(), 5120,
-                    static_cast<uint16_t *>(embedding.data) + size_t(id) * 2560,
-                    5120, ACL_MEMCPY_DEVICE_TO_HOST),
-        "embedding row");
-    V x;
-    auto row = unpacked(b);
-    for (int j = 0; j < 4; ++j)
-      x.insert(x.end(), row.begin(), row.end());
-    for (int layer = 0; layer < 46; ++layer) {
-      std::string p = "model.layers." + std::to_string(layer);
-      auto h = pre(x, p + ".attn_mhc_module");
-      auto a = attention(norm(h.input, p + ".input_layernorm"), layer, pos);
-      x = post(x, norm(a, p + ".post_attention_layernorm"), h);
-      h = pre(x, p + ".mlp_mhc_module");
-      auto f = feedforward(norm(h.input, p + ".pre_mlp_layernorm"), layer);
-      x = post(x, norm(f, p + ".post_mlp_layernorm"), h);
-      if (bindings.count(p + ".block_post_layernorm.weight"))
-        x = norm(x, p + ".block_post_layernorm");
-      trace(p + ".output", x);
-      for (float v : x)
-        if (!std::isfinite(v))
-          throw std::runtime_error("nonfinite layer " + std::to_string(layer));
-      if (rank == 0)
-        std::cerr << "position=" << pos << " layer=" << layer << " rms="
-                  << std::sqrt(std::inner_product(x.begin(), x.end(), x.begin(),
-                                                  0.f) /
-                               x.size())
-                  << '\n';
-    }
-    return linear(
-        "lm_head",
-        norm(pre(x, "model.merge_mhc_module", true).input, "model.norm"), true);
-  }
+  // Runtime dispatch is defined separately from kernel implementations.
+#include "token_dispatch.inc"
 };
 } // namespace pangu
 int main(int argc, char **argv) {
@@ -577,22 +541,33 @@ int main(int argc, char **argv) {
       prompt.push_back(std::stoi(argv[i]));
     if (steps < 1 || steps > 128 || prompt.size() + steps > 512)
       throw std::runtime_error("token budget");
+    auto execution = inferfabric::execution::Plan::read(std::string(argv[1]) +
+                                                        "/execution.bin");
+    inferfabric::execution::validate_kernels(execution);
+    if (prompt.size() + steps > execution.context)
+      throw std::runtime_error("execution plan context budget");
+    std::vector<inferfabric::initialization::Plan> initialization;
+    std::set<uint32_t> devices;
+    for (int rank = 0; rank < 8; ++rank) {
+      auto plan = inferfabric::initialization::Plan::read(
+          std::string(argv[1]) + "/rank-" + std::to_string(rank) + ".bin");
+      if (plan.rank != uint32_t(rank) || !devices.insert(plan.device).second)
+        throw std::runtime_error("initialization rank/device mismatch");
+      inferfabric::execution::validate_bindings(execution, plan);
+      initialization.push_back(std::move(plan));
+    }
     openpangu::checked(aclInit(nullptr), "init");
-    openpangu::checked(aclrtSetDevice(0), "bootstrap");
+    openpangu::checked(aclrtSetDevice(initialization[0].device), "bootstrap");
     HcclRootInfo info;
     openpangu::checked(HcclGetRootInfo(&info), "root");
     std::vector<std::thread> threads;
     for (int rank = 0; rank < 8; ++rank)
       threads.emplace_back([&, rank] {
         try {
-          auto plan = inferfabric::initialization::Plan::read(
-              std::string(argv[1]) + "/rank-" + std::to_string(rank) + ".bin");
-          if (plan.rank != static_cast<uint32_t>(rank))
-            throw std::runtime_error(
-                "decoder rank/initialization plan mismatch");
+          const auto &plan = initialization[rank];
           openpangu::checked(aclrtSetDevice(plan.device), "device");
           {
-            pangu::Decoder decoder(plan, argv[2], info);
+            pangu::Decoder decoder(plan, argv[2], info, execution);
             pangu::V logits;
             int pos = 0;
             for (int token : prompt)
@@ -635,7 +610,7 @@ int main(int argc, char **argv) {
                 }
                 std::cout << "]}" << std::endl;
               }
-              if (next == 148902 || i + 1 == steps)
+              if (next == int(execution.eos) || i + 1 == steps)
                 break;
               logits = decoder.token(next, pos++);
             }

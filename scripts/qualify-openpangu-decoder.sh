@@ -8,11 +8,14 @@ source /usr/local/Ascend/ascend-toolkit/vendors/omni_custom_transformer/bin/set_
 export HCCL_OP_EXPANSION_MODE=HOST HCCL_CONNECT_TIMEOUT=120 HCCL_EXEC_TIMEOUT=120
 cmake -S native -B native-build -DCMAKE_BUILD_TYPE=Release
 cmake --build native-build --target openpangu_decode -j4
-mkdir -p "$3"
+test -f "$2/execution.bin"
+mkdir -p "$3/plan"
+cp "$2/"*.bin "$3/plan/"
+cp "$2/execution.json" "$3/execution.json"
 cp native-build/openpangu_decode "$3/openpangu_decode"
 selected_swiglu=${INFERFABRIC_SWIGLU_LIBRARY:-native-build/libinferfabric_swiglu.so}
 cp "$selected_swiglu" "$3/selected-swiglu.so"
 export INFERFABRIC_SWIGLU_LIBRARY=$(realpath "$3/selected-swiglu.so")
-python3 scripts/qualify-openpangu-decoder.py --checkpoint "$1" --plan "$2" --binary "$3/openpangu_decode" --output "$3"
-sha256sum "$3/openpangu_decode" "$3/selected-swiglu.so" "$1/config.json" "$1/tokenizer.json" > "$3/artifacts.sha256"
+python3 scripts/qualify-openpangu-decoder.py --checkpoint "$1" --plan "$3/plan" --binary "$3/openpangu_decode" --output "$3"
+sha256sum "$3/openpangu_decode" "$3/selected-swiglu.so" "$1/config.json" "$1/tokenizer.json" "$3/plan/"*.bin > "$3/artifacts.sha256"
 ldd "$3/openpangu_decode" > "$3/dependencies.txt"

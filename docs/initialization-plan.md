@@ -1,5 +1,7 @@
 # Parameter initialization plans
 
+The executable 92B DSL now derives tensor requirements, TP row slices and EP ownership directly from graph operators via `inferfabric-compiler::token`. The older OpenPangu placement adapter remains available for audits, but the DSL execution path bypasses its model-name rules. Both emit the permanent initialization IR described here. See [the executable DSL](openpangu-executable-dsl.md).
+
 The shared initialization subsystem is model independent. Model binding/lowering produces `inferfabric_ir::initialization::InitializationPlan`; the compiler encodes it as `IFINIT01`. The native executor knows parameter IDs, storage slices, dtypes and device memory operations, not model names or TP/EP semantics.
 
 ## Contract

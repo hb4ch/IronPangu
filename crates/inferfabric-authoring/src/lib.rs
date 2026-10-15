@@ -1,20 +1,44 @@
 //! Shared model authoring boundary. Compiled code and DSL elaborate to this
 //! representation; neither path bypasses semantic or backend validation.
+pub mod execution;
 use inferfabric_model::{OpenPanguParallel, Result, Spec, invalid};
 use inferfabric_plan::ir::LogicalGraph;
 use serde::{Deserialize, Serialize};
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 #[serde(tag = "kind", rename_all = "snake_case", deny_unknown_fields)]
 pub enum ModelDefinition {
-    Qwen { checkpoint: bool, spec: Spec },
-    OpenPangu { parallel: OpenPanguParallel },
-    Graph { graph: LogicalGraph },
+    Qwen {
+        checkpoint: bool,
+        spec: Spec,
+    },
+    OpenPangu {
+        parallel: OpenPanguParallel,
+    },
+    Graph {
+        graph: LogicalGraph,
+    },
+    Execution {
+        parallel: OpenPanguParallel,
+        graph: execution::Graph,
+    },
 }
 impl ModelDefinition {
     pub fn validate(&self) -> Result<()> {
         match self {
             Self::Qwen { spec, .. } => spec.validate(),
             Self::OpenPangu { parallel } => parallel.validate(),
+            Self::Execution { parallel, graph } => {
+                parallel.validate()?;
+                graph.validate()?;
+                if parallel.tp != 8
+                    || parallel.max_model_len != graph.max_context
+                    || parallel.max_num_seqs != 1
+                    || parallel.max_num_batched_tokens != 1
+                {
+                    return Err(invalid("ascend_token_v1 currently requires TP=EP=8"));
+                }
+                Ok(())
+            }
             Self::Graph { graph } => inferfabric_plan::compile(graph.clone()).map(|_| ()),
         }
     }
