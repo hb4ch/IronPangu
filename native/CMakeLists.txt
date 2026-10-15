@@ -46,3 +46,8 @@ add_executable(openpangu_router_probe probes/openpangu_router_probe.cpp)
 target_include_directories(openpangu_router_probe PRIVATE "${ACL_INCLUDE}")
 target_link_libraries(openpangu_router_probe PRIVATE "${ACL_LIBRARY}" "${OPAPI_LIBRARY}" "${NNOPBASE_LIBRARY}")
 target_compile_options(openpangu_router_probe PRIVATE -Wall -Wextra -Werror)
+
+add_executable(openpangu_moe_probe probes/openpangu_moe_probe.cpp)
+target_include_directories(openpangu_moe_probe PRIVATE "${ACL_INCLUDE}")
+target_link_libraries(openpangu_moe_probe PRIVATE "${ACL_LIBRARY}" "${OPAPI_LIBRARY}" "${NNOPBASE_LIBRARY}" "${HCCL_LIBRARY}" pthread)
+target_compile_options(openpangu_moe_probe PRIVATE -Wall -Wextra -Werror)

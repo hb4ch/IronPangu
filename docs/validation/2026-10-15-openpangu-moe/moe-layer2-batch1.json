@@ -1,0 +1,1 @@
+{"status":"passed","batch":1,"tp":8,"ep":8,"loaded_experts":256,"cases":4,"graph_passes":2,"active_expert_checks":24,"combined_values_checked":81920,"execution":"dense masked correctness baseline"}

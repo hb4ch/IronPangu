@@ -71,12 +71,15 @@ struct Runner {
       check(aclnnDynamicQuantGetWorkspaceSize(tensors[0].t,nullptr,tensors[1].t,tensors[2].t,&bytes,&dq),"dynamic quant reprepare");
       if(bytes>dq_bytes)throw std::runtime_error("dynamic quant workspace changed");
     }
+    check(aclnnDynamicQuant(workspace,dq_bytes,dq,stream),"dynamic quant");dq=nullptr;
+    launch_quantized();
+  }
+  void launch_quantized() {
     if(!mm) {
       uint64_t bytes=0;
       check(aclnnQuantMatmulV5GetWorkspaceSize(tensors[1].t,tensors[3].t,tensors[2].t,tensors[4].t,nullptr,nullptr,nullptr,nullptr,nullptr,false,true,0,tensors[5].t,&bytes,&mm),"W8A8 reprepare");
       if(bytes>mm_bytes)throw std::runtime_error("W8A8 workspace changed");
     }
-    check(aclnnDynamicQuant(workspace,dq_bytes,dq,stream),"dynamic quant");dq=nullptr;
     check(aclnnQuantMatmulV5(workspace,mm_bytes,mm,stream),"W8A8");mm=nullptr;
   }
   std::vector<uint16_t> input(int variant) {
