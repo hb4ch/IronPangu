@@ -436,3 +436,5 @@ pub mod checkpoint;
 
 pub mod lower;
 pub mod model_inspect;
+
+pub mod openpangu;

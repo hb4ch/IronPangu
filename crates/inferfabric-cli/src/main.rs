@@ -94,6 +94,20 @@ fn run() -> Result<()> {
             )?;
             println!("NPU math qualification passed; report={}", args[5]);
         }
+        Some("inspect-openpangu" | "inspect-openpangu-checkpoint") if args.len() == 3 => {
+            let report = if args[0] == "inspect-openpangu" {
+                inferfabric_compiler::openpangu::inspect_config(Path::new(&args[1]))?
+            } else {
+                inferfabric_compiler::openpangu::inspect_checkpoint(Path::new(&args[1]))?
+            };
+            let bytes = serde_json::to_vec_pretty(&report).map_err(|e| invalid(e.to_string()))?;
+            inferfabric_compiler::write_atomic(Path::new(&args[2]), &bytes)?;
+            println!(
+                "OpenPangu metadata audit: {} main layers; executable=false hardware_qualified=false; {}",
+                report.layers.len(),
+                args[2]
+            );
+        }
         Some("compile-checkpoint") if args.len() == 4 => {
             let spec = inferfabric_dsl::parse_checkpoint(&fs::read_to_string(&args[1])?)?;
             let checkpoint = inferfabric_compiler::checkpoint::inspect(Path::new(&args[2]))?;
@@ -150,7 +164,7 @@ fn run() -> Result<()> {
         }
         _ => {
             return Err(invalid(
-                "usage: inferfabric explain-model TYPED-PLAN.json --html MODEL.html | plan GRAPH.json OUTPUT.ifplan [--dump-ir DIR] | explain PLAN.ifplan [--html OUTPUT.html] | execute PLAN.ifplan INPUTS.json REPORT.json | npu-model-probe DSL CHECKPOINT LIBRARY DEVICE TOKENS_JSON REPORT | npu-delta-probe LIBRARY DEVICE REPORT | npu-conv-probe CHECKPOINT LIBRARY DEVICE REPORT | npu-layer-probe CHECKPOINT LIBRARY DEVICE REPORT | npu-attention-probe CHECKPOINT LIBRARY DEVICE REPORT | npu-math-probe DSL CHECKPOINT LIBRARY DEVICE REPORT | compile-checkpoint MODEL.inferfabric CHECKPOINT_DIR OUTPUT.json | compile MODEL.inferfabric OUTPUT | inspect ARTIFACT | demo MODEL.inferfabric REQUESTS.json",
+                "usage: inferfabric inspect-openpangu CONFIG.json OUTPUT.json | inspect-openpangu-checkpoint CHECKPOINT_DIR OUTPUT.json | explain-model TYPED-PLAN.json --html MODEL.html | plan GRAPH.json OUTPUT.ifplan [--dump-ir DIR] | explain PLAN.ifplan [--html OUTPUT.html] | execute PLAN.ifplan INPUTS.json REPORT.json | npu-model-probe DSL CHECKPOINT LIBRARY DEVICE TOKENS_JSON REPORT | npu-delta-probe LIBRARY DEVICE REPORT | npu-conv-probe CHECKPOINT LIBRARY DEVICE REPORT | npu-layer-probe CHECKPOINT LIBRARY DEVICE REPORT | npu-attention-probe CHECKPOINT LIBRARY DEVICE REPORT | npu-math-probe DSL CHECKPOINT LIBRARY DEVICE REPORT | compile-checkpoint MODEL.inferfabric CHECKPOINT_DIR OUTPUT.json | compile MODEL.inferfabric OUTPUT | inspect ARTIFACT | demo MODEL.inferfabric REQUESTS.json",
             ));
         }
     }
