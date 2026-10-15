@@ -33,8 +33,3 @@ struct Attention {
  ~Attention(){if(stream)aclrtSynchronizeStream(stream);if(graph)aclmdlRIDestroy(graph);if(stream)aclrtDestroyStream(stream);}
 };
 int main(int argc,char**argv){try{int heads=argc==2?std::stoi(argv[1]):6;if(heads!=6&&heads!=48)throw std::runtime_error("heads must be 6 or 48");check(aclInit(nullptr),"init");check(aclrtSetDevice(0),"device");{Attention a(heads);a.run();std::cout<<"{\"status\":\"passed\",\"heads\":"<<heads<<",\"checked_values\":"<<a.checked_values<<",\"max_abs_error\":"<<a.max_error<<"}\n";}check(aclrtResetDevice(0),"reset");check(aclFinalize(),"finalize");}catch(const std::exception&e){std::cerr<<e.what()<<'\n';return 1;}}
-
-
-
-
-

@@ -74,3 +74,8 @@ if(EXISTS "${OMNI_INFERENCE_ROOT}/op_api/include/aclnn_ai_infra_sparse_flash_att
   target_link_libraries(openpangu_attention_probe PRIVATE "${OMNI_INFERENCE_ROOT}/op_api/lib/libcust_opapi.so" "${ACL_LIBRARY}" "${OPAPI_LIBRARY}" "${NNOPBASE_LIBRARY}")
   target_compile_options(openpangu_attention_probe PRIVATE -Wall -Wextra -Werror)
 endif()
+
+add_executable(openpangu_load_probe probes/openpangu_load_probe.cpp)
+target_include_directories(openpangu_load_probe PRIVATE "${ACL_INCLUDE}")
+target_link_libraries(openpangu_load_probe PRIVATE "${ACL_LIBRARY}" "${OPAPI_LIBRARY}" "${NNOPBASE_LIBRARY}")
+target_compile_options(openpangu_load_probe PRIVATE -Wall -Wextra -Werror)

@@ -260,3 +260,22 @@ These commands use the deployed name `inferfabric-server`; the README uses the o
 | ACL/HCCL initialization or graph capture fails | This is a hardware/runtime qualification issue, not proof of a cross-link problem. Check assigned devices, driver/CANN compatibility and the documented HCCL mode. |
 
 Build recipes and scripts are the source of truth for commands; [validation records](validation/2026-10-15-openpangu-audit/README.md) describe what was actually tested. A reproducible production release still needs the pinned build-image/toolchain, dependency provenance and per-model qualification gates in the [roadmap](../README.md#roadmap-to-production).
+
+## 8. OpenPangu native component and loader qualification
+
+These are development qualification commands, not a 92B serving command. Build the fixture and load-plan exporters in local WSL:
+
+```bash
+bash scripts/cross-openpangu-probe.sh
+```
+
+This produces `.deploy/export_openpangu_linear`, `export_openpangu_tensor`, `export_openpangu_moe` and `export_openpangu_load_plan` as ARM64 executables. Transfer the required binaries, native sources and scripts into the remote Docker workspace. Restore executable permissions after a Windows-created archive if necessary. Within that container, from the staged repository root:
+
+```bash
+chmod +x .deploy/export_openpangu_*
+bash scripts/qualify-openpangu-load.sh /models/92B \
+  examples/openpangu/92b-tp8-ep8.inferfabric load-qualification
+bash scripts/qualify-openpangu-attention.sh attention-qualification
+```
+
+The loader qualification occupies all eight devices from the TP8/EP8 DSL while loading and checking each rank; run it only on the assigned devices. It generates manifests from an audited checkpoint, builds the C++ loader, checks malformed manifests and compares every device upload with a readback. The attention qualification uses device 0 and checks synthetic absorbed MLA inputs against an independent CPU reference, including graph replay. The other `qualify-openpangu-{tp8,router,moe,mhc,mome}.sh` scripts document their individual arguments at their entry points. See the [loader evidence](validation/2026-10-15-openpangu-load/README.md) and [attention evidence](validation/2026-10-15-openpangu-attention/README.md) for exact scope and remaining integration work.

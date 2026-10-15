@@ -36,4 +36,3 @@ inline void validate_sparse_attention_indices(
   }
 }
 } // namespace openpangu
-
