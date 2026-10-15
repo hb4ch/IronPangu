@@ -22,3 +22,13 @@ Limits: 16 MiB per metadata/header/auxiliary file, 256 MiB aggregate shard heade
 Reports preserve the raw config, summarize main layers, record sharing declarations and list unresolved production prerequisites. `executable=false`, `hardware_qualified=false` and `payload_verified=false` are intentional. Metadata fingerprints identify headers, sizes, index and included sidecars, **not weight contents**. Identical metadata with different payload bytes can produce the same fingerprint.
 
 Stored-byte totals are not peak HBM, packed-format parameter counts, or rank-placement estimates. Replication, transformed weights, load staging, caches, MoME state, graph buckets, workspace, communication and allocator reserves remain OP-00/03/08/09 work.
+
+## Released 92B checkpoint binding
+
+The real `/mnt/sdb_data/models/92B` checkpoint uses `openpangu_v2`, dynamic W8A8 and shared indexers. Both this model type and the original `pangu_v2_moe` spelling are accepted by the audit. `bind-openpangu-checkpoint` verifies exact main-model tensor names, shapes, storage types and per-channel scale shapes, records mHC/MoME transforms and shared-index dependencies, and explicitly excludes declared MTP-layer weights. It emits a weight contract, not an executable plan. Unknown main tensors and unsupported quantization contracts fail.
+
+```sh
+inferfabric bind-openpangu-checkpoint /models/92B bound.json --allow-stale-index-size
+```
+
+The observed checkpoint has stale index `total_size` (200,272,648,050) versus 104,347,285,362 measured stored bytes. The explicit option permits only this metadata discrepancy; tensor ownership, names, shapes, byte ranges and file boundaries remain strict. Default audit/binding still rejects the mismatch. The source checkpoint is never changed. Tokenizer JSON hashing has a separate 64 MiB bound; other metadata remains bounded at 16 MiB. See [real checkpoint evidence](../../docs/validation/2026-10-15-openpangu92/checkpoint-summary.json).

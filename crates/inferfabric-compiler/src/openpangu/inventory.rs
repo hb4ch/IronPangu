@@ -9,7 +9,7 @@ use std::{
     io::Read,
     path::Path,
 };
-#[derive(Debug, Serialize)]
+#[derive(Debug, Clone, Serialize)]
 pub struct TensorDescriptor {
     pub shard: String,
     pub dtype: String,
@@ -28,6 +28,8 @@ pub struct Inventory {
     pub scope: &'static str,
     pub payload_verified: bool,
     pub stored_tensor_bytes: u64,
+    pub index_declared_bytes: Option<u64>,
+    pub index_size_matches: bool,
     pub bytes_by_dtype: BTreeMap<String, u64>,
     pub tensor_count: usize,
     pub tensors: BTreeMap<String, TensorDescriptor>,
@@ -50,7 +52,7 @@ fn add(a: u64, b: u64) -> Result<u64> {
     a.checked_add(b)
         .ok_or_else(|| invalid("metadata arithmetic overflow"))
 }
-pub fn inspect(root: &Path) -> Result<Inventory> {
+pub fn inspect(root: &Path, allow_stale_index_size: bool) -> Result<Inventory> {
     let mut index_hash = None;
     let mut expected_total = None;
     let map: Option<BTreeMap<String, String>> =
@@ -84,6 +86,8 @@ pub fn inspect(root: &Path) -> Result<Inventory> {
         scope: "stored tensor inventory; no architecture binding or runtime placement",
         payload_verified: false,
         stored_tensor_bytes: 0,
+        index_declared_bytes: expected_total,
+        index_size_matches: true,
         bytes_by_dtype: BTreeMap::new(),
         tensor_count: 0,
         tensors: BTreeMap::new(),
@@ -190,11 +194,15 @@ pub fn inspect(root: &Path) -> Result<Inventory> {
         );
     }
     result.tensor_count = result.tensors.len();
-    if result.tensor_count == 0
-        || map.as_ref().is_some_and(|m| m.len() != result.tensor_count)
-        || expected_total.is_some_and(|n| n != result.stored_tensor_bytes)
-    {
+    if result.tensor_count == 0 || map.as_ref().is_some_and(|m| m.len() != result.tensor_count) {
         return Err(invalid("checkpoint index size/count mismatch"));
+    }
+    result.index_size_matches = expected_total.is_none_or(|n| n == result.stored_tensor_bytes);
+    if !result.index_size_matches && !allow_stale_index_size {
+        return Err(invalid(format!(
+            "checkpoint index total_size mismatch: declared {:?}, measured {}; metadata-only audit can explicitly allow stale index size",
+            expected_total, result.stored_tensor_bytes
+        )));
     }
     for name in [
         "config.json",
@@ -205,7 +213,12 @@ pub fn inspect(root: &Path) -> Result<Inventory> {
         "chat_template.jinja",
     ] {
         if root.join(name).exists() {
-            let b = json::read(&json::local_file(root, name)?)?;
+            let limit = if name == "tokenizer.json" {
+                64 * 1024 * 1024
+            } else {
+                MAX_METADATA
+            };
+            let b = json::read_bounded(&json::local_file(root, name)?, limit)?;
             result.auxiliary_sha256.insert(name.into(), sha(&b));
         }
     }

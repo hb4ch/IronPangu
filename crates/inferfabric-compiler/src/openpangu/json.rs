@@ -13,12 +13,16 @@ use std::{
     path::{Path, PathBuf},
 };
 pub fn read(path: &Path) -> Result<Vec<u8>> {
+    read_bounded(path, MAX_METADATA)
+}
+pub fn read_bounded(path: &Path, limit: u64) -> Result<Vec<u8>> {
     let mut b = vec![];
-    File::open(path)?
-        .take(MAX_METADATA + 1)
-        .read_to_end(&mut b)?;
-    if b.len() as u64 > MAX_METADATA {
-        return Err(invalid("metadata exceeds 16 MiB"));
+    File::open(path)?.take(limit + 1).read_to_end(&mut b)?;
+    if b.len() as u64 > limit {
+        return Err(invalid(format!(
+            "{} exceeds metadata limit {limit} bytes",
+            path.display()
+        )));
     }
     Ok(b)
 }

@@ -221,3 +221,67 @@ fn escaping_symlinks_are_rejected() {
         .unwrap();
     assert!(a.inspect().is_err());
 }
+
+#[test]
+fn released_openpangu_v2_config_preserves_identity() {
+    let mut c = config();
+    c["model_type"] = json!("openpangu_v2");
+    c["architectures"] = json!(["OpenPanguV2ForCausalLM"]);
+    let m = audit(&c).unwrap();
+    assert_eq!(m.config, c);
+    assert_eq!(m.layers.len(), 46);
+    assert!(!m.executable);
+}
+#[test]
+fn stale_index_opt_in_does_not_relax_tensor_ownership() {
+    let d = Dir::new();
+    d.shard(
+        "one.safetensors",
+        json!({"a":{"dtype":"I8","shape":[4],"data_offsets":[0,4]}}),
+        4,
+    );
+    fs::write(
+        d.0.join("model.safetensors.index.json"),
+        json!({"metadata":{"total_size":8},"weight_map":{"a":"one.safetensors"}}).to_string(),
+    )
+    .unwrap();
+    assert!(d.inspect().is_err());
+    let m = openpangu::inspect_checkpoint_with_options(&d.0, true).unwrap();
+    let i = m.inventory.unwrap();
+    assert!(!i.index_size_matches);
+    assert_eq!(i.index_declared_bytes, Some(8));
+    assert_eq!(i.stored_tensor_bytes, 4);
+    fs::write(
+        d.0.join("model.safetensors.index.json"),
+        json!({"metadata":{"total_size":8},"weight_map":{"b":"one.safetensors"}}).to_string(),
+    )
+    .unwrap();
+    assert!(openpangu::inspect_checkpoint_with_options(&d.0, true).is_err());
+}
+#[test]
+fn tokenizer_has_separate_bounded_hash_budget() {
+    let d = Dir::new();
+    d.shard(
+        "model.safetensors",
+        json!({"a":{"dtype":"I8","shape":[1],"data_offsets":[0,1]}}),
+        1,
+    );
+    let path = d.0.join("tokenizer.json");
+    fs::File::create(&path)
+        .unwrap()
+        .set_len(17 * 1024 * 1024)
+        .unwrap();
+    assert!(
+        d.inspect()
+            .unwrap()
+            .inventory
+            .unwrap()
+            .auxiliary_sha256
+            .contains_key("tokenizer.json")
+    );
+    fs::File::create(&path)
+        .unwrap()
+        .set_len(64 * 1024 * 1024 + 1)
+        .unwrap();
+    assert!(d.inspect().is_err());
+}

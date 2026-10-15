@@ -1,4 +1,5 @@
 //! CPU-only architecture audit. This is not a model compiler or serving qualification.
+pub mod binding;
 mod inventory;
 mod json;
 use crate::checkpoint::sha;
@@ -83,9 +84,12 @@ pub fn inspect_config(path: &Path) -> Result<Manifest> {
 }
 pub fn from_config(bytes: &[u8]) -> Result<Manifest> {
     let c = json::parse(bytes)?;
-    if c["model_type"] != "pangu_v2_moe" {
+    if !matches!(
+        c["model_type"].as_str(),
+        Some("pangu_v2_moe" | "openpangu_v2")
+    ) {
         return Err(invalid(
-            "expected model_type pangu_v2_moe; V3/VL/other models require separate contracts",
+            "expected model_type pangu_v2_moe or openpangu_v2; V3/VL/other models require separate contracts",
         ));
     }
     for key in [
@@ -317,8 +321,22 @@ pub fn from_config(bytes: &[u8]) -> Result<Manifest> {
     })
 }
 pub fn inspect_checkpoint(root: &Path) -> Result<Manifest> {
+    inspect_checkpoint_with_options(root, false)
+}
+/// Metadata audit only: optionally tolerate stale index total_size, never invalid tensor ranges or ownership.
+pub fn inspect_checkpoint_with_options(
+    root: &Path,
+    allow_stale_index_size: bool,
+) -> Result<Manifest> {
     let root = root.canonicalize()?;
     let mut result = inspect_config(&json::local_file(&root, "config.json")?)?;
-    result.inventory = Some(inventory::inspect(&root)?);
+    result.inventory = Some(inventory::inspect(&root, allow_stale_index_size)?);
+    if result
+        .inventory
+        .as_ref()
+        .is_some_and(|i| !i.index_size_matches)
+    {
+        result.warnings.push("Index total_size is stale; stored-byte accounting uses validated tensor ranges. Source index was not modified; this is not payload verification.".into());
+    }
     Ok(result)
 }

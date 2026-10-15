@@ -1,0 +1,38 @@
+{
+  "checkpoint": "/mnt/sdb_data/models/92B",
+  "config_sha256": "c1b93581ae04c7cc82f4a9557d3179aba7dbbc82f1b848b6dec329f1e7c0487c",
+  "metadata_sha256": "e6ab8e354f31f844671a0d6013d686e86b4ebc2ba8f3e893d509c2c170d015d8",
+  "stored_tensor_bytes": 104347285362,
+  "index_declared_bytes": 200272648050,
+  "index_size_matches": false,
+  "bytes_by_dtype": {
+    "BF16": 8309734258,
+    "F32": 48128,
+    "I8": 96037502976
+  },
+  "shards": 50,
+  "tensors": 73790,
+  "main_tensors": 69092,
+  "main_stored_bytes": 93415683954,
+  "excluded_mtp_bytes": 10931601408,
+  "shared_index_sources": {
+    "3": 0,
+    "9": 6,
+    "15": 12,
+    "21": 18,
+    "27": 24,
+    "33": 30,
+    "39": 36,
+    "45": 42
+  },
+  "payload_verified": false,
+  "executable": false,
+  "auxiliary_sha256": {
+    "chat_template.jinja": "fd0bd3806cf96db21bd1cd8a77c5c82d93983225d89c7ff808eefd43ce171e76",
+    "config.json": "c1b93581ae04c7cc82f4a9557d3179aba7dbbc82f1b848b6dec329f1e7c0487c",
+    "generation_config.json": "60be70b5e0bbc11778bd124aea3d57af6453a19c680b9c4fa051e1d680c05a99",
+    "special_tokens_map.json": "a7ee7aa3e0396bc2d73422ed9500d3ce3bce55835f7fd316d1c0145688c27869",
+    "tokenizer.json": "7816b7b6138024e37c508ff82321e11b5ee559289184fa18f7536a3e460d3941",
+    "tokenizer_config.json": "92b6a864b8caf5ef0b061620a894c0d6ff10cb93bfedfedfdedc57c832044800"
+  }
+}
