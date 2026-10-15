@@ -1,0 +1,133 @@
+{
+  "full": {
+    "nodes": 2109,
+    "ranks": [
+      {
+        "rank": 0,
+        "parameters": 9892,
+        "resident_bytes": 12832550628,
+        "source_bytes": 12772217202,
+        "unused_indexer_tensors": 0
+      },
+      {
+        "rank": 1,
+        "parameters": 9892,
+        "resident_bytes": 12832550628,
+        "source_bytes": 12772217202,
+        "unused_indexer_tensors": 0
+      },
+      {
+        "rank": 2,
+        "parameters": 9892,
+        "resident_bytes": 12832550628,
+        "source_bytes": 12772217202,
+        "unused_indexer_tensors": 0
+      },
+      {
+        "rank": 3,
+        "parameters": 9892,
+        "resident_bytes": 12832550628,
+        "source_bytes": 12772217202,
+        "unused_indexer_tensors": 0
+      },
+      {
+        "rank": 4,
+        "parameters": 9892,
+        "resident_bytes": 12832550628,
+        "source_bytes": 12772217202,
+        "unused_indexer_tensors": 0
+      },
+      {
+        "rank": 5,
+        "parameters": 9892,
+        "resident_bytes": 12832550628,
+        "source_bytes": 12772217202,
+        "unused_indexer_tensors": 0
+      },
+      {
+        "rank": 6,
+        "parameters": 9892,
+        "resident_bytes": 12832550628,
+        "source_bytes": 12772217202,
+        "unused_indexer_tensors": 0
+      },
+      {
+        "rank": 7,
+        "parameters": 9892,
+        "resident_bytes": 12832550628,
+        "source_bytes": 12772217202,
+        "unused_indexer_tensors": 0
+      }
+    ]
+  },
+  "bypass": {
+    "nodes": 7,
+    "ranks": [
+      {
+        "rank": 0,
+        "parameters": 7,
+        "resident_bytes": 873149460,
+        "source_bytes": 873047050,
+        "unused_indexer_tensors": 0
+      },
+      {
+        "rank": 1,
+        "parameters": 7,
+        "resident_bytes": 873149460,
+        "source_bytes": 873047050,
+        "unused_indexer_tensors": 0
+      },
+      {
+        "rank": 2,
+        "parameters": 7,
+        "resident_bytes": 873149460,
+        "source_bytes": 873047050,
+        "unused_indexer_tensors": 0
+      },
+      {
+        "rank": 3,
+        "parameters": 7,
+        "resident_bytes": 873149460,
+        "source_bytes": 873047050,
+        "unused_indexer_tensors": 0
+      },
+      {
+        "rank": 4,
+        "parameters": 7,
+        "resident_bytes": 873149460,
+        "source_bytes": 873047050,
+        "unused_indexer_tensors": 0
+      },
+      {
+        "rank": 5,
+        "parameters": 7,
+        "resident_bytes": 873149460,
+        "source_bytes": 873047050,
+        "unused_indexer_tensors": 0
+      },
+      {
+        "rank": 6,
+        "parameters": 7,
+        "resident_bytes": 873149460,
+        "source_bytes": 873047050,
+        "unused_indexer_tensors": 0
+      },
+      {
+        "rank": 7,
+        "parameters": 7,
+        "resident_bytes": 873149460,
+        "source_bytes": 873047050,
+        "unused_indexer_tensors": 0
+      }
+    ]
+  },
+  "control": {
+    "same_executable": true,
+    "binary_sha256": "b1f076aadda7d0c2074091dde70e50f6cf1af4953cb06d74204aefa198545fd5",
+    "full_first_token": 16,
+    "bypass_first_token": 35994,
+    "full_first_logit": 130,
+    "bypass_first_logit": 17.125,
+    "purpose": "Deliberately omit transformer blocks: prove graph controls execution, not a hardcoded decoder fallback. Bypass output is not a model-quality result."
+  }
+}

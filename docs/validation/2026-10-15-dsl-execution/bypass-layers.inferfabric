@@ -1,0 +1,119 @@
+language inferfabric 1;
+
+// Complete token dataflow. No model contract selects a hidden decoder.
+// Expanded SSA deliberately makes every layer, collective and binding inspectable.
+// ascend_token_v1: one sequence, one token, exact causal candidates <=512.
+model OpenPangu92B {
+    context = 512;
+    eos = 148902;
+    let embedding = embedding(weight = "model.embed_tokens", width = 2560, vocab = 151552);
+    let streams = repeat(embedding, count = 4);
+
+    // Layer 0: dense FFN.
+
+    // Layer 1: dense FFN.
+
+    // Layer 2: 256 experts, top 8, EP8 + shared expert.
+
+    // Layer 3: 256 experts, top 8, EP8 + shared expert.
+
+    // Layer 4: 256 experts, top 8, EP8 + shared expert.
+
+    // Layer 5: 256 experts, top 8, EP8 + shared expert.
+
+    // Layer 6: 256 experts, top 8, EP8 + shared expert.
+
+    // Layer 7: 256 experts, top 8, EP8 + shared expert.
+
+    // Layer 8: 256 experts, top 8, EP8 + shared expert.
+
+    // Layer 9: 256 experts, top 8, EP8 + shared expert.
+
+    // Layer 10: 256 experts, top 8, EP8 + shared expert.
+
+    // Layer 11: 256 experts, top 8, EP8 + shared expert.
+
+    // Layer 12: 256 experts, top 8, EP8 + shared expert.
+
+    // Layer 13: 256 experts, top 8, EP8 + shared expert.
+
+    // Layer 14: 256 experts, top 8, EP8 + shared expert.
+
+    // Layer 15: 256 experts, top 8, EP8 + shared expert.
+
+    // Layer 16: 256 experts, top 8, EP8 + shared expert.
+
+    // Layer 17: 256 experts, top 8, EP8 + shared expert.
+
+    // Layer 18: 256 experts, top 8, EP8 + shared expert.
+
+    // Layer 19: 256 experts, top 8, EP8 + shared expert.
+
+    // Layer 20: 256 experts, top 8, EP8 + shared expert.
+
+    // Layer 21: 256 experts, top 8, EP8 + shared expert.
+
+    // Layer 22: 256 experts, top 8, EP8 + shared expert.
+
+    // Layer 23: 256 experts, top 8, EP8 + shared expert.
+
+    // Layer 24: 256 experts, top 8, EP8 + shared expert.
+
+    // Layer 25: 256 experts, top 8, EP8 + shared expert.
+
+    // Layer 26: 256 experts, top 8, EP8 + shared expert.
+
+    // Layer 27: 256 experts, top 8, EP8 + shared expert.
+
+    // Layer 28: 256 experts, top 8, EP8 + shared expert.
+
+    // Layer 29: 256 experts, top 8, EP8 + shared expert.
+
+    // Layer 30: 256 experts, top 8, EP8 + shared expert.
+
+    // Layer 31: 256 experts, top 8, EP8 + shared expert.
+
+    // Layer 32: 256 experts, top 8, EP8 + shared expert.
+
+    // Layer 33: 256 experts, top 8, EP8 + shared expert.
+
+    // Layer 34: 256 experts, top 8, EP8 + shared expert.
+
+    // Layer 35: 256 experts, top 8, EP8 + shared expert.
+
+    // Layer 36: 256 experts, top 8, EP8 + shared expert.
+
+    // Layer 37: 256 experts, top 8, EP8 + shared expert.
+
+    // Layer 38: 256 experts, top 8, EP8 + shared expert.
+
+    // Layer 39: 256 experts, top 8, EP8 + shared expert.
+
+    // Layer 40: 256 experts, top 8, EP8 + shared expert.
+
+    // Layer 41: 256 experts, top 8, EP8 + shared expert.
+
+    // Layer 42: 256 experts, top 8, EP8 + shared expert.
+
+    // Layer 43: 256 experts, top 8, EP8 + shared expert.
+
+    // Layer 44: 256 experts, top 8, EP8 + shared expert.
+
+    // Layer 45: 256 experts, top 8, EP8 + shared expert.
+    let merge = mhc_merge(streams, weight = "model.merge_mhc_module", streams = 4, sinkhorn = 20, eps = 1e-6);
+    let merged = mhc_input(merge);
+    let normalized = norm(merged, weight = "model.norm", eps = 1e-5);
+    let logits_local = linear(normalized, weight = "lm_head", width = 18944, placement = "tp_rows");
+    let logits = gather(logits_local);
+    yield logits;
+}
+
+plan TP8EP8 for OpenPangu92B {
+    target = ascend_token_v1;
+    tp = 8;
+    ep = 8;
+    devices = [0, 1, 2, 3, 4, 5, 6, 7];
+    max_num_seqs = 1;
+    max_num_batched_tokens = 1;
+    max_model_len = 512;
+}

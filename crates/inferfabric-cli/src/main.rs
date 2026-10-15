@@ -126,10 +126,44 @@ fn run() -> Result<()> {
                 args[2]
             );
         }
+        Some("compile-token")
+            if args.len() == 4 || (args.len() == 5 && args[4] == "--allow-stale-index-size") =>
+        {
+            let inferfabric_dsl::authoring::ModelDefinition::Execution { parallel, graph } =
+                inferfabric_dsl::definition(&fs::read_to_string(&args[1])?)?
+            else {
+                return Err(invalid("compile-token requires an explicit token graph"));
+            };
+            let inventory = inferfabric_compiler::openpangu::inspect_inventory(
+                Path::new(&args[2]),
+                args.len() == 5,
+            )?;
+            inferfabric_compiler::token::write_bundle(
+                &graph,
+                &parallel,
+                &inventory,
+                Path::new(&args[3]),
+            )?;
+            println!(
+                "token graph nodes={} ranks={} output={}",
+                graph.nodes.len(),
+                parallel.tp,
+                args[3]
+            );
+        }
         Some("plan-openpangu")
             if args.len() == 4 || (args.len() == 5 && args[4] == "--allow-stale-index-size") =>
         {
-            let spec = inferfabric_dsl::openpangu::parse(&fs::read_to_string(&args[1])?)?;
+            let source = fs::read_to_string(&args[1])?;
+            if matches!(
+                inferfabric_dsl::definition(&source)?,
+                inferfabric_dsl::authoring::ModelDefinition::Execution { .. }
+            ) {
+                return Err(invalid(
+                    "plan-openpangu is placement-only; use compile-token MODEL CHECKPOINT OUTPUT_DIR for an executable graph",
+                ));
+            }
+            let spec = inferfabric_dsl::openpangu::parse(&source)?;
             let audit = inferfabric_compiler::openpangu::inspect_checkpoint_with_options(
                 Path::new(&args[2]),
                 args.len() == 5,
@@ -222,7 +256,7 @@ fn run() -> Result<()> {
         }
         _ => {
             return Err(invalid(
-                "usage: inferfabric plan-openpangu DSL CHECKPOINT OUTPUT.json [--allow-stale-index-size] | bind-openpangu-checkpoint CHECKPOINT_DIR OUTPUT.json [--allow-stale-index-size] | inspect-openpangu CONFIG.json OUTPUT.json | inspect-openpangu-checkpoint CHECKPOINT_DIR OUTPUT.json [--allow-stale-index-size] | explain-model TYPED-PLAN.json --html MODEL.html | plan GRAPH.json OUTPUT.ifplan [--dump-ir DIR] | explain PLAN.ifplan [--html OUTPUT.html] | execute PLAN.ifplan INPUTS.json REPORT.json | npu-model-probe DSL CHECKPOINT LIBRARY DEVICE TOKENS_JSON REPORT | npu-delta-probe LIBRARY DEVICE REPORT | npu-conv-probe CHECKPOINT LIBRARY DEVICE REPORT | npu-layer-probe CHECKPOINT LIBRARY DEVICE REPORT | npu-attention-probe CHECKPOINT LIBRARY DEVICE REPORT | npu-math-probe DSL CHECKPOINT LIBRARY DEVICE REPORT | compile-checkpoint MODEL.inferfabric CHECKPOINT_DIR OUTPUT.json | compile MODEL.inferfabric OUTPUT | inspect ARTIFACT | demo MODEL.inferfabric REQUESTS.json",
+                "usage: inferfabric compile-token MODEL CHECKPOINT OUTPUT_DIR [--allow-stale-index-size] | plan-openpangu DSL CHECKPOINT OUTPUT.json [--allow-stale-index-size] | bind-openpangu-checkpoint CHECKPOINT_DIR OUTPUT.json [--allow-stale-index-size] | inspect-openpangu CONFIG.json OUTPUT.json | inspect-openpangu-checkpoint CHECKPOINT_DIR OUTPUT.json [--allow-stale-index-size] | explain-model TYPED-PLAN.json --html MODEL.html | plan GRAPH.json OUTPUT.ifplan [--dump-ir DIR] | explain PLAN.ifplan [--html OUTPUT.html] | execute PLAN.ifplan INPUTS.json REPORT.json | npu-model-probe DSL CHECKPOINT LIBRARY DEVICE TOKENS_JSON REPORT | npu-delta-probe LIBRARY DEVICE REPORT | npu-conv-probe CHECKPOINT LIBRARY DEVICE REPORT | npu-layer-probe CHECKPOINT LIBRARY DEVICE REPORT | npu-attention-probe CHECKPOINT LIBRARY DEVICE REPORT | npu-math-probe DSL CHECKPOINT LIBRARY DEVICE REPORT | compile-checkpoint MODEL.inferfabric CHECKPOINT_DIR OUTPUT.json | compile MODEL.inferfabric OUTPUT | inspect ARTIFACT | demo MODEL.inferfabric REQUESTS.json",
             ));
         }
     }

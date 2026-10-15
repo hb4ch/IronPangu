@@ -112,3 +112,29 @@ fn invalid_placement_missing_scale_and_shape_fail_before_execution() {
         assert!(initialization_plans(&graph, &parallel, &inventory).is_err());
     }
 }
+#[test]
+fn bundle_publication_is_complete_and_refuses_overwrite() {
+    let (graph, parallel, inventory) = fixture();
+    let root = std::env::temp_dir().join(format!(
+        "inferfabric-token-bundle-{}-{}",
+        std::process::id(),
+        std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .unwrap()
+            .as_nanos()
+    ));
+    let output = root.join("model");
+    inferfabric_compiler::token::write_bundle(&graph, &parallel, &inventory, &output).unwrap();
+    assert_eq!(
+        std::fs::read(output.join("execution.bin")).unwrap(),
+        graph.encode().unwrap()
+    );
+    for rank in 0..8 {
+        assert!(output.join(format!("rank-{rank}.bin")).is_file());
+    }
+    assert!(
+        inferfabric_compiler::token::write_bundle(&graph, &parallel, &inventory, &output).is_err()
+    );
+    assert_eq!(std::fs::read_dir(&root).unwrap().count(), 1);
+    std::fs::remove_dir_all(root).unwrap();
+}

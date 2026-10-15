@@ -67,21 +67,21 @@ the existing backend allocations; this is not a new device arena optimizer.
 Cross-compile Rust locally in WSL using [the build guide](build.md):
 
 ```sh
-bash scripts/cross-openpangu-probe.sh
+bash scripts/cross-compiler.sh
 ```
 
-Transfer the resulting exporter and sources into the remote Docker workspace.
+Transfer `.deploy/inferfabric-compiler` and the DSL source into the remote Docker workspace.
 Inside Docker:
 
 ```sh
-.deploy/export_openpangu_load_plan /models/92B \
-  examples/openpangu/92b-tp8-ep8.inferfabric dsl-plan --allow-stale-index-size
+.deploy/inferfabric-compiler compile-token \
+  examples/openpangu/92b-tp8-ep8.inferfabric /models/92B dsl-plan --allow-stale-index-size
 bash scripts/qualify-openpangu-decoder.sh /models/92B dsl-plan decoder-dsl-qualified
 ```
 
 Use the stale-index option only for the already-audited checkpoint whose index
 has stale aggregate size metadata. It does not suppress shape or shard checks.
-The exporter also accepts a compiled model artifact from the same authoring IR.
+`compile-token` also accepts a compiled model artifact from the same authoring IR. It publishes a complete new bundle through a sibling-directory rename and refuses to overwrite an existing bundle. The older `export_openpangu_load_plan` example delegates to this same compiler API for token graphs. `plan-openpangu` remains an audit command and rejects executable graphs rather than dropping their computation.
 C++/CANN builds and NPU execution remain inside Docker.
 
 ## Current backend boundary
@@ -99,3 +99,7 @@ long-context sparse attention. The diagnostic runner uses greedy decoding.
 Continuous batching, Rust serving integration for this program format, full-model
 ACL graph capture, long-context indexing and production performance remain
 separate milestones. Existing kernel plugin ABI support remains available.
+
+## Qualification
+
+[Full NPU evidence and plan-control experiment](validation/2026-10-15-dsl-execution/README.md): all 33 tokens across three prompts match the pinned offline reference. Recorded results, including logits/top-five values, are identical to the preceding native decoder.

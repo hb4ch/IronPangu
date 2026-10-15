@@ -11,27 +11,11 @@ fn main() -> Result<()> {
     }
     let source = std::fs::read_to_string(&a[1])?;
     let definition = inferfabric_dsl::definition(&source)?;
-    std::fs::create_dir_all(&a[2])?;
     if let inferfabric_dsl::authoring::ModelDefinition::Execution { parallel, graph } = definition {
         let inventory = openpangu::inspect_inventory(Path::new(&a[0]), a.len() == 4)?;
-        let plans =
-            inferfabric_compiler::token::initialization_plans(&graph, &parallel, &inventory)?;
-        // Validate all ranks before publishing any artifact.
-        let binary = graph.encode()?;
-        for initialization in &plans {
-            write_initialization(Path::new(&a[2]), initialization)?;
-        }
-        write_atomic(&Path::new(&a[2]).join("execution.bin"), &binary)?;
-        write_atomic(
-            &Path::new(&a[2]).join("execution.json"),
-            &serde_json::to_vec_pretty(&graph).unwrap(),
-        )?;
-        write_atomic(
-            &Path::new(&a[2]).join("execution.dot"),
-            graph.dot()?.as_bytes(),
-        )?;
-        write_atomic(&Path::new(&a[2]).join("plan.json"), &serde_json::to_vec_pretty(&serde_json::json!({"format":"inferfabric.token-bundle.v1", "executable":true, "topology":parallel, "nodes":graph.nodes.len(), "checkpoint_metadata_sha256":inventory.metadata_sha256})).unwrap())?;
+        inferfabric_compiler::token::write_bundle(&graph, &parallel, &inventory, Path::new(&a[2]))?;
     } else {
+        std::fs::create_dir_all(&a[2])?;
         let model = openpangu::inspect_checkpoint_with_options(Path::new(&a[0]), a.len() == 4)?;
         let spec = inferfabric_dsl::openpangu::parse(&source)?;
         let plan = openpangu::parallel::compile(&model, &spec)?;

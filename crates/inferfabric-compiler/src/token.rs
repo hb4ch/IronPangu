@@ -265,3 +265,63 @@ pub fn initialization_plans(
     }
     Ok(plans)
 }
+/// Publish a new bundle directory. Refuse to overwrite an existing bundle so
+/// readers cannot observe a mixture of old execution and new initialization IR.
+pub fn write_bundle(
+    graph: &Graph,
+    topology: &OpenPanguParallel,
+    inventory: &Inventory,
+    output: &std::path::Path,
+) -> Result<()> {
+    let plans = initialization_plans(graph, topology, inventory)?;
+    let binary = graph.encode()?;
+    if output.exists() {
+        return Err(invalid(
+            "token bundle output already exists; choose a new directory",
+        ));
+    }
+    let parent = output.parent().unwrap_or_else(|| std::path::Path::new("."));
+    std::fs::create_dir_all(parent)?;
+    // Reserve a unique sibling, then rename only after all writes succeed.
+    let mut counter = 0u32;
+    let staging = loop {
+        let candidate = parent.join(format!(
+            ".inferfabric-token-{}-{counter}",
+            std::process::id()
+        ));
+        match std::fs::create_dir(&candidate) {
+            Ok(()) => break candidate,
+            Err(e) if e.kind() == std::io::ErrorKind::AlreadyExists => {
+                counter = counter
+                    .checked_add(1)
+                    .ok_or_else(|| invalid("staging counter overflow"))?;
+            }
+            Err(e) => return Err(e.into()),
+        }
+    };
+    let publish = (|| {
+        for initialization in &plans {
+            crate::write_atomic(
+                &staging.join(format!("rank-{}.bin", initialization.rank)),
+                &crate::initialization::encode(initialization)?,
+            )?;
+            crate::write_atomic(
+                &staging.join(format!("rank-{}.init.json", initialization.rank)),
+                &serde_json::to_vec_pretty(initialization).map_err(|e| invalid(e.to_string()))?,
+            )?;
+        }
+        crate::write_atomic(&staging.join("execution.bin"), &binary)?;
+        crate::write_atomic(
+            &staging.join("execution.json"),
+            &serde_json::to_vec_pretty(graph).map_err(|e| invalid(e.to_string()))?,
+        )?;
+        crate::write_atomic(&staging.join("execution.dot"), graph.dot()?.as_bytes())?;
+        crate::write_atomic(&staging.join("plan.json"), &serde_json::to_vec_pretty(&serde_json::json!({"format":"inferfabric.token-bundle.v1","executable":true,"topology":topology,"nodes":graph.nodes.len(),"checkpoint_metadata_sha256":inventory.metadata_sha256})).map_err(|e|invalid(e.to_string()))?)?;
+        std::fs::rename(&staging, output)?;
+        Ok(())
+    })();
+    if publish.is_err() {
+        let _ = std::fs::remove_dir_all(&staging);
+    }
+    publish
+}
