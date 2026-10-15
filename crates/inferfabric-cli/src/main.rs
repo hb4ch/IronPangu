@@ -116,6 +116,27 @@ fn run() -> Result<()> {
                 args[2]
             );
         }
+        Some("plan-openpangu")
+            if args.len() == 4 || (args.len() == 5 && args[4] == "--allow-stale-index-size") =>
+        {
+            let spec = inferfabric_dsl::openpangu::parse(&fs::read_to_string(&args[1])?)?;
+            let audit = inferfabric_compiler::openpangu::inspect_checkpoint_with_options(
+                Path::new(&args[2]),
+                args.len() == 5,
+            )?;
+            let plan = inferfabric_compiler::openpangu::parallel::compile(&audit, &spec)?;
+            inferfabric_compiler::write_atomic(
+                Path::new(&args[3]),
+                &serde_json::to_vec_pretty(&plan).map_err(|e| invalid(e.to_string()))?,
+            )?;
+            println!(
+                "OpenPangu TP={} EP={} on {} ranks; {} experts/rank; executable=false",
+                spec.tp,
+                spec.ep,
+                plan.ranks.len(),
+                plan.experts_per_rank
+            );
+        }
         Some("bind-openpangu-checkpoint")
             if args.len() == 3 || (args.len() == 4 && args[3] == "--allow-stale-index-size") =>
         {
@@ -191,7 +212,7 @@ fn run() -> Result<()> {
         }
         _ => {
             return Err(invalid(
-                "usage: inferfabric bind-openpangu-checkpoint CHECKPOINT_DIR OUTPUT.json [--allow-stale-index-size] | inspect-openpangu CONFIG.json OUTPUT.json | inspect-openpangu-checkpoint CHECKPOINT_DIR OUTPUT.json [--allow-stale-index-size] | explain-model TYPED-PLAN.json --html MODEL.html | plan GRAPH.json OUTPUT.ifplan [--dump-ir DIR] | explain PLAN.ifplan [--html OUTPUT.html] | execute PLAN.ifplan INPUTS.json REPORT.json | npu-model-probe DSL CHECKPOINT LIBRARY DEVICE TOKENS_JSON REPORT | npu-delta-probe LIBRARY DEVICE REPORT | npu-conv-probe CHECKPOINT LIBRARY DEVICE REPORT | npu-layer-probe CHECKPOINT LIBRARY DEVICE REPORT | npu-attention-probe CHECKPOINT LIBRARY DEVICE REPORT | npu-math-probe DSL CHECKPOINT LIBRARY DEVICE REPORT | compile-checkpoint MODEL.inferfabric CHECKPOINT_DIR OUTPUT.json | compile MODEL.inferfabric OUTPUT | inspect ARTIFACT | demo MODEL.inferfabric REQUESTS.json",
+                "usage: inferfabric plan-openpangu DSL CHECKPOINT OUTPUT.json [--allow-stale-index-size] | bind-openpangu-checkpoint CHECKPOINT_DIR OUTPUT.json [--allow-stale-index-size] | inspect-openpangu CONFIG.json OUTPUT.json | inspect-openpangu-checkpoint CHECKPOINT_DIR OUTPUT.json [--allow-stale-index-size] | explain-model TYPED-PLAN.json --html MODEL.html | plan GRAPH.json OUTPUT.ifplan [--dump-ir DIR] | explain PLAN.ifplan [--html OUTPUT.html] | execute PLAN.ifplan INPUTS.json REPORT.json | npu-model-probe DSL CHECKPOINT LIBRARY DEVICE TOKENS_JSON REPORT | npu-delta-probe LIBRARY DEVICE REPORT | npu-conv-probe CHECKPOINT LIBRARY DEVICE REPORT | npu-layer-probe CHECKPOINT LIBRARY DEVICE REPORT | npu-attention-probe CHECKPOINT LIBRARY DEVICE REPORT | npu-math-probe DSL CHECKPOINT LIBRARY DEVICE REPORT | compile-checkpoint MODEL.inferfabric CHECKPOINT_DIR OUTPUT.json | compile MODEL.inferfabric OUTPUT | inspect ARTIFACT | demo MODEL.inferfabric REQUESTS.json",
             ));
         }
     }

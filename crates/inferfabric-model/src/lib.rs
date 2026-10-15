@@ -156,3 +156,6 @@ impl Spec {
         self.context_buckets.last().copied().unwrap_or(0)
     }
 }
+
+mod openpangu;
+pub use openpangu::OpenPanguParallel;

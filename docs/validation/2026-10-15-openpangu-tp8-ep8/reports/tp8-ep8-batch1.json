@@ -1,0 +1,1 @@
+{"status":"passed","tp":8,"ep":8,"batch":1,"experts_tested":[0,32,64,96,128,160,192,224],"routing_cases":3,"graph_passes":3,"reduced_values_checked":61440,"max_linear_abs_error":0.00195312,"scope":"real-weight TP projection and selected EP SwiGLU experts; explicit routes, not full decoder or router qualification"}

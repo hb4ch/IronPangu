@@ -1,0 +1,8 @@
+# Single node: TP8 and EP8 share these eight devices, PP=1.
+contract = openpangu_v2_tp_ep_v1
+tp = 8
+ep = 8
+devices = 0 1 2 3 4 5 6 7
+max_num_seqs = 4
+max_num_batched_tokens = 16
+max_model_len = 2048

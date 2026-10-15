@@ -32,3 +32,13 @@ inferfabric bind-openpangu-checkpoint /models/92B bound.json --allow-stale-index
 ```
 
 The observed checkpoint has stale index `total_size` (200,272,648,050) versus 104,347,285,362 measured stored bytes. The explicit option permits only this metadata discrepancy; tensor ownership, names, shapes, byte ranges and file boundaries remain strict. Default audit/binding still rejects the mismatch. The source checkpoint is never changed. Tokenizer JSON hashing has a separate 64 MiB bound; other metadata remains bounded at 16 MiB. See [real checkpoint evidence](../../docs/validation/2026-10-15-openpangu92/checkpoint-summary.json).
+
+## TP8 and EP8 on one node
+
+[92b-tp8-ep8.inferfabric](92b-tp8-ep8.inferfabric) declares TP8/EP8 on the same eight ranks (PP1), with 32 complete routed experts per rank. Compile an auditable placement and collective schedule with:
+
+```sh
+inferfabric plan-openpangu examples/openpangu/92b-tp8-ep8.inferfabric /models/92B tp8-ep8.json --allow-stale-index-size
+```
+
+The native qualification pipeline runs a real TP-sharded dense projection, reconstructs canonical batched activations with HCCL all-gather, executes one real SwiGLU expert per rank, applies explicit routing weights and performs an FP32 HCCL all-reduce. Both collectives are captured and replayed. This is a component pipeline, not full 92B inference or learned-router qualification. See [hardware evidence and remaining integration](../../docs/validation/2026-10-15-openpangu-tp8-ep8/README.md).

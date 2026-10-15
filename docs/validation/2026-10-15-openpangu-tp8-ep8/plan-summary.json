@@ -1,0 +1,2832 @@
+{
+  "format": "inferfabric.openpangu-parallel.v1",
+  "executable": false,
+  "checkpoint_metadata_sha256": "e6ab8e354f31f844671a0d6013d686e86b4ebc2ba8f3e893d509c2c170d015d8",
+  "topology": {
+    "tp": 8,
+    "ep": 8,
+    "devices": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7
+    ],
+    "max_num_seqs": 4,
+    "max_num_batched_tokens": 16,
+    "max_model_len": 2048
+  },
+  "experts_per_rank": 32,
+  "notes": [
+    "TP and EP use the SAME ranks, not a TP*EP Cartesian mesh; pipeline parallelism is 1",
+    "Correctness-first output-row TP gathers full activations after each sharded projection; attention/cache and token batch remain replicated",
+    "Each expert has one owner and is NOT additionally tensor-sharded; zero-work ranks still participate in every collective",
+    "EP uses replicated tokens, local owner masking, FP32 weighted accumulation and all-reduce; no all-to-all dispatch is claimed",
+    "Prepared bytes cover declared weight casts only; exclude staging, kernel packing, KV/MoME/index state, workspace, graph and communication buffers",
+    "Placement/schedule contract only; full OpenPangu native execution and serving remain unimplemented"
+  ],
+  "ranks": [
+    {
+      "rank": 0,
+      "device": 0,
+      "expert_begin": 0,
+      "expert_end": 32,
+      "stored_weight_bytes": 12885336434,
+      "prepared_weight_bytes": 12945669860,
+      "weight_slices": 9956
+    },
+    {
+      "rank": 1,
+      "device": 1,
+      "expert_begin": 32,
+      "expert_end": 64,
+      "stored_weight_bytes": 12885336434,
+      "prepared_weight_bytes": 12945669860,
+      "weight_slices": 9956
+    },
+    {
+      "rank": 2,
+      "device": 2,
+      "expert_begin": 64,
+      "expert_end": 96,
+      "stored_weight_bytes": 12885336434,
+      "prepared_weight_bytes": 12945669860,
+      "weight_slices": 9956
+    },
+    {
+      "rank": 3,
+      "device": 3,
+      "expert_begin": 96,
+      "expert_end": 128,
+      "stored_weight_bytes": 12885336434,
+      "prepared_weight_bytes": 12945669860,
+      "weight_slices": 9956
+    },
+    {
+      "rank": 4,
+      "device": 4,
+      "expert_begin": 128,
+      "expert_end": 160,
+      "stored_weight_bytes": 12885336434,
+      "prepared_weight_bytes": 12945669860,
+      "weight_slices": 9956
+    },
+    {
+      "rank": 5,
+      "device": 5,
+      "expert_begin": 160,
+      "expert_end": 192,
+      "stored_weight_bytes": 12885336434,
+      "prepared_weight_bytes": 12945669860,
+      "weight_slices": 9956
+    },
+    {
+      "rank": 6,
+      "device": 6,
+      "expert_begin": 192,
+      "expert_end": 224,
+      "stored_weight_bytes": 12885336434,
+      "prepared_weight_bytes": 12945669860,
+      "weight_slices": 9956
+    },
+    {
+      "rank": 7,
+      "device": 7,
+      "expert_begin": 224,
+      "expert_end": 256,
+      "stored_weight_bytes": 12885336434,
+      "prepared_weight_bytes": 12945669860,
+      "weight_slices": 9956
+    }
+  ],
+  "schedule": [
+    {
+      "layer": 0,
+      "operation": "mhc_pre_and_replicated_q_a_kv_a",
+      "collective": "none",
+      "output_layout": "replicated"
+    },
+    {
+      "layer": 0,
+      "operation": "q_b_kv_b_output_row_matmuls",
+      "collective": "all_gather_each_projection",
+      "output_layout": "replicated_canonical_rows"
+    },
+    {
+      "layer": 0,
+      "operation": "mla_swa_or_sparse_attention_and_mome",
+      "collective": "none",
+      "output_layout": "replicated"
+    },
+    {
+      "layer": 0,
+      "operation": "o_proj_output_row_matmul",
+      "collective": "all_gather",
+      "output_layout": "replicated_canonical_rows"
+    },
+    {
+      "layer": 0,
+      "operation": "mhc_post_and_ffn_pre",
+      "collective": "none",
+      "output_layout": "replicated"
+    },
+    {
+      "layer": 0,
+      "operation": "dense_gate_up_silu_down",
+      "collective": "all_gather_each_projection",
+      "output_layout": "replicated"
+    },
+    {
+      "layer": 0,
+      "operation": "mhc_post_and_optional_block_norm",
+      "collective": "none",
+      "output_layout": "replicated"
+    },
+    {
+      "layer": 1,
+      "operation": "mhc_pre_and_replicated_q_a_kv_a",
+      "collective": "none",
+      "output_layout": "replicated"
+    },
+    {
+      "layer": 1,
+      "operation": "q_b_kv_b_output_row_matmuls",
+      "collective": "all_gather_each_projection",
+      "output_layout": "replicated_canonical_rows"
+    },
+    {
+      "layer": 1,
+      "operation": "mla_swa_or_sparse_attention_and_mome",
+      "collective": "none",
+      "output_layout": "replicated"
+    },
+    {
+      "layer": 1,
+      "operation": "o_proj_output_row_matmul",
+      "collective": "all_gather",
+      "output_layout": "replicated_canonical_rows"
+    },
+    {
+      "layer": 1,
+      "operation": "mhc_post_and_ffn_pre",
+      "collective": "none",
+      "output_layout": "replicated"
+    },
+    {
+      "layer": 1,
+      "operation": "dense_gate_up_silu_down",
+      "collective": "all_gather_each_projection",
+      "output_layout": "replicated"
+    },
+    {
+      "layer": 1,
+      "operation": "mhc_post_and_optional_block_norm",
+      "collective": "none",
+      "output_layout": "replicated"
+    },
+    {
+      "layer": 2,
+      "operation": "mhc_pre_and_replicated_q_a_kv_a",
+      "collective": "none",
+      "output_layout": "replicated"
+    },
+    {
+      "layer": 2,
+      "operation": "q_b_kv_b_output_row_matmuls",
+      "collective": "all_gather_each_projection",
+      "output_layout": "replicated_canonical_rows"
+    },
+    {
+      "layer": 2,
+      "operation": "mla_swa_or_sparse_attention_and_mome",
+      "collective": "none",
+      "output_layout": "replicated"
+    },
+    {
+      "layer": 2,
+      "operation": "o_proj_output_row_matmul",
+      "collective": "all_gather",
+      "output_layout": "replicated_canonical_rows"
+    },
+    {
+      "layer": 2,
+      "operation": "mhc_post_and_ffn_pre",
+      "collective": "none",
+      "output_layout": "replicated"
+    },
+    {
+      "layer": 2,
+      "operation": "sigmoid_router_bias_topk_normalize_scale",
+      "collective": "none",
+      "output_layout": "identical_routes_all_ranks"
+    },
+    {
+      "layer": 2,
+      "operation": "owner_expert_gate_up_silu_down_weighted_sum",
+      "collective": "all_reduce_sum_fp32",
+      "output_layout": "replicated_expert_output"
+    },
+    {
+      "layer": 2,
+      "operation": "shared_expert_gate_up_silu_down",
+      "collective": "all_gather_each_projection",
+      "output_layout": "replicated_shared_output"
+    },
+    {
+      "layer": 2,
+      "operation": "add_shared_and_routed",
+      "collective": "none",
+      "output_layout": "replicated"
+    },
+    {
+      "layer": 2,
+      "operation": "mhc_post_and_optional_block_norm",
+      "collective": "none",
+      "output_layout": "replicated"
+    },
+    {
+      "layer": 3,
+      "operation": "mhc_pre_and_replicated_q_a_kv_a",
+      "collective": "none",
+      "output_layout": "replicated"
+    },
+    {
+      "layer": 3,
+      "operation": "q_b_kv_b_output_row_matmuls",
+      "collective": "all_gather_each_projection",
+      "output_layout": "replicated_canonical_rows"
+    },
+    {
+      "layer": 3,
+      "operation": "mla_swa_or_sparse_attention_and_mome",
+      "collective": "none",
+      "output_layout": "replicated"
+    },
+    {
+      "layer": 3,
+      "operation": "o_proj_output_row_matmul",
+      "collective": "all_gather",
+      "output_layout": "replicated_canonical_rows"
+    },
+    {
+      "layer": 3,
+      "operation": "mhc_post_and_ffn_pre",
+      "collective": "none",
+      "output_layout": "replicated"
+    },
+    {
+      "layer": 3,
+      "operation": "sigmoid_router_bias_topk_normalize_scale",
+      "collective": "none",
+      "output_layout": "identical_routes_all_ranks"
+    },
+    {
+      "layer": 3,
+      "operation": "owner_expert_gate_up_silu_down_weighted_sum",
+      "collective": "all_reduce_sum_fp32",
+      "output_layout": "replicated_expert_output"
+    },
+    {
+      "layer": 3,
+      "operation": "shared_expert_gate_up_silu_down",
+      "collective": "all_gather_each_projection",
+      "output_layout": "replicated_shared_output"
+    },
+    {
+      "layer": 3,
+      "operation": "add_shared_and_routed",
+      "collective": "none",
+      "output_layout": "replicated"
+    },
+    {
+      "layer": 3,
+      "operation": "mhc_post_and_optional_block_norm",
+      "collective": "none",
+      "output_layout": "replicated"
+    },
+    {
+      "layer": 4,
+      "operation": "mhc_pre_and_replicated_q_a_kv_a",
+      "collective": "none",
+      "output_layout": "replicated"
+    },
+    {
+      "layer": 4,
+      "operation": "q_b_kv_b_output_row_matmuls",
+      "collective": "all_gather_each_projection",
+      "output_layout": "replicated_canonical_rows"
+    },
+    {
+      "layer": 4,
+      "operation": "mla_swa_or_sparse_attention_and_mome",
+      "collective": "none",
+      "output_layout": "replicated"
+    },
+    {
+      "layer": 4,
+      "operation": "o_proj_output_row_matmul",
+      "collective": "all_gather",
+      "output_layout": "replicated_canonical_rows"
+    },
+    {
+      "layer": 4,
+      "operation": "mhc_post_and_ffn_pre",
+      "collective": "none",
+      "output_layout": "replicated"
+    },
+    {
+      "layer": 4,
+      "operation": "sigmoid_router_bias_topk_normalize_scale",
+      "collective": "none",
+      "output_layout": "identical_routes_all_ranks"
+    },
+    {
+      "layer": 4,
+      "operation": "owner_expert_gate_up_silu_down_weighted_sum",
+      "collective": "all_reduce_sum_fp32",
+      "output_layout": "replicated_expert_output"
+    },
+    {
+      "layer": 4,
+      "operation": "shared_expert_gate_up_silu_down",
+      "collective": "all_gather_each_projection",
+      "output_layout": "replicated_shared_output"
+    },
+    {
+      "layer": 4,
+      "operation": "add_shared_and_routed",
+      "collective": "none",
+      "output_layout": "replicated"
+    },
+    {
+      "layer": 4,
+      "operation": "mhc_post_and_optional_block_norm",
+      "collective": "none",
+      "output_layout": "replicated"
+    },
+    {
+      "layer": 5,
+      "operation": "mhc_pre_and_replicated_q_a_kv_a",
+      "collective": "none",
+      "output_layout": "replicated"
+    },
+    {
+      "layer": 5,
+      "operation": "q_b_kv_b_output_row_matmuls",
+      "collective": "all_gather_each_projection",
+      "output_layout": "replicated_canonical_rows"
+    },
+    {
+      "layer": 5,
+      "operation": "mla_swa_or_sparse_attention_and_mome",
+      "collective": "none",
+      "output_layout": "replicated"
+    },
+    {
+      "layer": 5,
+      "operation": "o_proj_output_row_matmul",
+      "collective": "all_gather",
+      "output_layout": "replicated_canonical_rows"
+    },
+    {
+      "layer": 5,
+      "operation": "mhc_post_and_ffn_pre",
+      "collective": "none",
+      "output_layout": "replicated"
+    },
+    {
+      "layer": 5,
+      "operation": "sigmoid_router_bias_topk_normalize_scale",
+      "collective": "none",
+      "output_layout": "identical_routes_all_ranks"
+    },
+    {
+      "layer": 5,
+      "operation": "owner_expert_gate_up_silu_down_weighted_sum",
+      "collective": "all_reduce_sum_fp32",
+      "output_layout": "replicated_expert_output"
+    },
+    {
+      "layer": 5,
+      "operation": "shared_expert_gate_up_silu_down",
+      "collective": "all_gather_each_projection",
+      "output_layout": "replicated_shared_output"
+    },
+    {
+      "layer": 5,
+      "operation": "add_shared_and_routed",
+      "collective": "none",
+      "output_layout": "replicated"
+    },
+    {
+      "layer": 5,
+      "operation": "mhc_post_and_optional_block_norm",
+      "collective": "none",
+      "output_layout": "replicated"
+    },
+    {
+      "layer": 6,
+      "operation": "mhc_pre_and_replicated_q_a_kv_a",
+      "collective": "none",
+      "output_layout": "replicated"
+    },
+    {
+      "layer": 6,
+      "operation": "q_b_kv_b_output_row_matmuls",
+      "collective": "all_gather_each_projection",
+      "output_layout": "replicated_canonical_rows"
+    },
+    {
+      "layer": 6,
+      "operation": "mla_swa_or_sparse_attention_and_mome",
+      "collective": "none",
+      "output_layout": "replicated"
+    },
+    {
+      "layer": 6,
+      "operation": "o_proj_output_row_matmul",
+      "collective": "all_gather",
+      "output_layout": "replicated_canonical_rows"
+    },
+    {
+      "layer": 6,
+      "operation": "mhc_post_and_ffn_pre",
+      "collective": "none",
+      "output_layout": "replicated"
+    },
+    {
+      "layer": 6,
+      "operation": "sigmoid_router_bias_topk_normalize_scale",
+      "collective": "none",
+      "output_layout": "identical_routes_all_ranks"
+    },
+    {
+      "layer": 6,
+      "operation": "owner_expert_gate_up_silu_down_weighted_sum",
+      "collective": "all_reduce_sum_fp32",
+      "output_layout": "replicated_expert_output"
+    },
+    {
+      "layer": 6,
+      "operation": "shared_expert_gate_up_silu_down",
+      "collective": "all_gather_each_projection",
+      "output_layout": "replicated_shared_output"
+    },
+    {
+      "layer": 6,
+      "operation": "add_shared_and_routed",
+      "collective": "none",
+      "output_layout": "replicated"
+    },
+    {
+      "layer": 6,
+      "operation": "mhc_post_and_optional_block_norm",
+      "collective": "none",
+      "output_layout": "replicated"
+    },
+    {
+      "layer": 7,
+      "operation": "mhc_pre_and_replicated_q_a_kv_a",
+      "collective": "none",
+      "output_layout": "replicated"
+    },
+    {
+      "layer": 7,
+      "operation": "q_b_kv_b_output_row_matmuls",
+      "collective": "all_gather_each_projection",
+      "output_layout": "replicated_canonical_rows"
+    },
+    {
+      "layer": 7,
+      "operation": "mla_swa_or_sparse_attention_and_mome",
+      "collective": "none",
+      "output_layout": "replicated"
+    },
+    {
+      "layer": 7,
+      "operation": "o_proj_output_row_matmul",
+      "collective": "all_gather",
+      "output_layout": "replicated_canonical_rows"
+    },
+    {
+      "layer": 7,
+      "operation": "mhc_post_and_ffn_pre",
+      "collective": "none",
+      "output_layout": "replicated"
+    },
+    {
+      "layer": 7,
+      "operation": "sigmoid_router_bias_topk_normalize_scale",
+      "collective": "none",
+      "output_layout": "identical_routes_all_ranks"
+    },
+    {
+      "layer": 7,
+      "operation": "owner_expert_gate_up_silu_down_weighted_sum",
+      "collective": "all_reduce_sum_fp32",
+      "output_layout": "replicated_expert_output"
+    },
+    {
+      "layer": 7,
+      "operation": "shared_expert_gate_up_silu_down",
+      "collective": "all_gather_each_projection",
+      "output_layout": "replicated_shared_output"
+    },
+    {
+      "layer": 7,
+      "operation": "add_shared_and_routed",
+      "collective": "none",
+      "output_layout": "replicated"
+    },
+    {
+      "layer": 7,
+      "operation": "mhc_post_and_optional_block_norm",
+      "collective": "none",
+      "output_layout": "replicated"
+    },
+    {
+      "layer": 8,
+      "operation": "mhc_pre_and_replicated_q_a_kv_a",
+      "collective": "none",
+      "output_layout": "replicated"
+    },
+    {
+      "layer": 8,
+      "operation": "q_b_kv_b_output_row_matmuls",
+      "collective": "all_gather_each_projection",
+      "output_layout": "replicated_canonical_rows"
+    },
+    {
+      "layer": 8,
+      "operation": "mla_swa_or_sparse_attention_and_mome",
+      "collective": "none",
+      "output_layout": "replicated"
+    },
+    {
+      "layer": 8,
+      "operation": "o_proj_output_row_matmul",
+      "collective": "all_gather",
+      "output_layout": "replicated_canonical_rows"
+    },
+    {
+      "layer": 8,
+      "operation": "mhc_post_and_ffn_pre",
+      "collective": "none",
+      "output_layout": "replicated"
+    },
+    {
+      "layer": 8,
+      "operation": "sigmoid_router_bias_topk_normalize_scale",
+      "collective": "none",
+      "output_layout": "identical_routes_all_ranks"
+    },
+    {
+      "layer": 8,
+      "operation": "owner_expert_gate_up_silu_down_weighted_sum",
+      "collective": "all_reduce_sum_fp32",
+      "output_layout": "replicated_expert_output"
+    },
+    {
+      "layer": 8,
+      "operation": "shared_expert_gate_up_silu_down",
+      "collective": "all_gather_each_projection",
+      "output_layout": "replicated_shared_output"
+    },
+    {
+      "layer": 8,
+      "operation": "add_shared_and_routed",
+      "collective": "none",
+      "output_layout": "replicated"
+    },
+    {
+      "layer": 8,
+      "operation": "mhc_post_and_optional_block_norm",
+      "collective": "none",
+      "output_layout": "replicated"
+    },
+    {
+      "layer": 9,
+      "operation": "mhc_pre_and_replicated_q_a_kv_a",
+      "collective": "none",
+      "output_layout": "replicated"
+    },
+    {
+      "layer": 9,
+      "operation": "q_b_kv_b_output_row_matmuls",
+      "collective": "all_gather_each_projection",
+      "output_layout": "replicated_canonical_rows"
+    },
+    {
+      "layer": 9,
+      "operation": "mla_swa_or_sparse_attention_and_mome",
+      "collective": "none",
+      "output_layout": "replicated"
+    },
+    {
+      "layer": 9,
+      "operation": "o_proj_output_row_matmul",
+      "collective": "all_gather",
+      "output_layout": "replicated_canonical_rows"
+    },
+    {
+      "layer": 9,
+      "operation": "mhc_post_and_ffn_pre",
+      "collective": "none",
+      "output_layout": "replicated"
+    },
+    {
+      "layer": 9,
+      "operation": "sigmoid_router_bias_topk_normalize_scale",
+      "collective": "none",
+      "output_layout": "identical_routes_all_ranks"
+    },
+    {
+      "layer": 9,
+      "operation": "owner_expert_gate_up_silu_down_weighted_sum",
+      "collective": "all_reduce_sum_fp32",
+      "output_layout": "replicated_expert_output"
+    },
+    {
+      "layer": 9,
+      "operation": "shared_expert_gate_up_silu_down",
+      "collective": "all_gather_each_projection",
+      "output_layout": "replicated_shared_output"
+    },
+    {
+      "layer": 9,
+      "operation": "add_shared_and_routed",
+      "collective": "none",
+      "output_layout": "replicated"
+    },
+    {
+      "layer": 9,
+      "operation": "mhc_post_and_optional_block_norm",
+      "collective": "none",
+      "output_layout": "replicated"
+    },
+    {
+      "layer": 10,
+      "operation": "mhc_pre_and_replicated_q_a_kv_a",
+      "collective": "none",
+      "output_layout": "replicated"
+    },
+    {
+      "layer": 10,
+      "operation": "q_b_kv_b_output_row_matmuls",
+      "collective": "all_gather_each_projection",
+      "output_layout": "replicated_canonical_rows"
+    },
+    {
+      "layer": 10,
+      "operation": "mla_swa_or_sparse_attention_and_mome",
+      "collective": "none",
+      "output_layout": "replicated"
+    },
+    {
+      "layer": 10,
+      "operation": "o_proj_output_row_matmul",
+      "collective": "all_gather",
+      "output_layout": "replicated_canonical_rows"
+    },
+    {
+      "layer": 10,
+      "operation": "mhc_post_and_ffn_pre",
+      "collective": "none",
+      "output_layout": "replicated"
+    },
+    {
+      "layer": 10,
+      "operation": "sigmoid_router_bias_topk_normalize_scale",
+      "collective": "none",
+      "output_layout": "identical_routes_all_ranks"
+    },
+    {
+      "layer": 10,
+      "operation": "owner_expert_gate_up_silu_down_weighted_sum",
+      "collective": "all_reduce_sum_fp32",
+      "output_layout": "replicated_expert_output"
+    },
+    {
+      "layer": 10,
+      "operation": "shared_expert_gate_up_silu_down",
+      "collective": "all_gather_each_projection",
+      "output_layout": "replicated_shared_output"
+    },
+    {
+      "layer": 10,
+      "operation": "add_shared_and_routed",
+      "collective": "none",
+      "output_layout": "replicated"
+    },
+    {
+      "layer": 10,
+      "operation": "mhc_post_and_optional_block_norm",
+      "collective": "none",
+      "output_layout": "replicated"
+    },
+    {
+      "layer": 11,
+      "operation": "mhc_pre_and_replicated_q_a_kv_a",
+      "collective": "none",
+      "output_layout": "replicated"
+    },
+    {
+      "layer": 11,
+      "operation": "q_b_kv_b_output_row_matmuls",
+      "collective": "all_gather_each_projection",
+      "output_layout": "replicated_canonical_rows"
+    },
+    {
+      "layer": 11,
+      "operation": "mla_swa_or_sparse_attention_and_mome",
+      "collective": "none",
+      "output_layout": "replicated"
+    },
+    {
+      "layer": 11,
+      "operation": "o_proj_output_row_matmul",
+      "collective": "all_gather",
+      "output_layout": "replicated_canonical_rows"
+    },
+    {
+      "layer": 11,
+      "operation": "mhc_post_and_ffn_pre",
+      "collective": "none",
+      "output_layout": "replicated"
+    },
+    {
+      "layer": 11,
+      "operation": "sigmoid_router_bias_topk_normalize_scale",
+      "collective": "none",
+      "output_layout": "identical_routes_all_ranks"
+    },
+    {
+      "layer": 11,
+      "operation": "owner_expert_gate_up_silu_down_weighted_sum",
+      "collective": "all_reduce_sum_fp32",
+      "output_layout": "replicated_expert_output"
+    },
+    {
+      "layer": 11,
+      "operation": "shared_expert_gate_up_silu_down",
+      "collective": "all_gather_each_projection",
+      "output_layout": "replicated_shared_output"
+    },
+    {
+      "layer": 11,
+      "operation": "add_shared_and_routed",
+      "collective": "none",
+      "output_layout": "replicated"
+    },
+    {
+      "layer": 11,
+      "operation": "mhc_post_and_optional_block_norm",
+      "collective": "none",
+      "output_layout": "replicated"
+    },
+    {
+      "layer": 12,
+      "operation": "mhc_pre_and_replicated_q_a_kv_a",
+      "collective": "none",
+      "output_layout": "replicated"
+    },
+    {
+      "layer": 12,
+      "operation": "q_b_kv_b_output_row_matmuls",
+      "collective": "all_gather_each_projection",
+      "output_layout": "replicated_canonical_rows"
+    },
+    {
+      "layer": 12,
+      "operation": "mla_swa_or_sparse_attention_and_mome",
+      "collective": "none",
+      "output_layout": "replicated"
+    },
+    {
+      "layer": 12,
+      "operation": "o_proj_output_row_matmul",
+      "collective": "all_gather",
+      "output_layout": "replicated_canonical_rows"
+    },
+    {
+      "layer": 12,
+      "operation": "mhc_post_and_ffn_pre",
+      "collective": "none",
+      "output_layout": "replicated"
+    },
+    {
+      "layer": 12,
+      "operation": "sigmoid_router_bias_topk_normalize_scale",
+      "collective": "none",
+      "output_layout": "identical_routes_all_ranks"
+    },
+    {
+      "layer": 12,
+      "operation": "owner_expert_gate_up_silu_down_weighted_sum",
+      "collective": "all_reduce_sum_fp32",
+      "output_layout": "replicated_expert_output"
+    },
+    {
+      "layer": 12,
+      "operation": "shared_expert_gate_up_silu_down",
+      "collective": "all_gather_each_projection",
+      "output_layout": "replicated_shared_output"
+    },
+    {
+      "layer": 12,
+      "operation": "add_shared_and_routed",
+      "collective": "none",
+      "output_layout": "replicated"
+    },
+    {
+      "layer": 12,
+      "operation": "mhc_post_and_optional_block_norm",
+      "collective": "none",
+      "output_layout": "replicated"
+    },
+    {
+      "layer": 13,
+      "operation": "mhc_pre_and_replicated_q_a_kv_a",
+      "collective": "none",
+      "output_layout": "replicated"
+    },
+    {
+      "layer": 13,
+      "operation": "q_b_kv_b_output_row_matmuls",
+      "collective": "all_gather_each_projection",
+      "output_layout": "replicated_canonical_rows"
+    },
+    {
+      "layer": 13,
+      "operation": "mla_swa_or_sparse_attention_and_mome",
+      "collective": "none",
+      "output_layout": "replicated"
+    },
+    {
+      "layer": 13,
+      "operation": "o_proj_output_row_matmul",
+      "collective": "all_gather",
+      "output_layout": "replicated_canonical_rows"
+    },
+    {
+      "layer": 13,
+      "operation": "mhc_post_and_ffn_pre",
+      "collective": "none",
+      "output_layout": "replicated"
+    },
+    {
+      "layer": 13,
+      "operation": "sigmoid_router_bias_topk_normalize_scale",
+      "collective": "none",
+      "output_layout": "identical_routes_all_ranks"
+    },
+    {
+      "layer": 13,
+      "operation": "owner_expert_gate_up_silu_down_weighted_sum",
+      "collective": "all_reduce_sum_fp32",
+      "output_layout": "replicated_expert_output"
+    },
+    {
+      "layer": 13,
+      "operation": "shared_expert_gate_up_silu_down",
+      "collective": "all_gather_each_projection",
+      "output_layout": "replicated_shared_output"
+    },
+    {
+      "layer": 13,
+      "operation": "add_shared_and_routed",
+      "collective": "none",
+      "output_layout": "replicated"
+    },
+    {
+      "layer": 13,
+      "operation": "mhc_post_and_optional_block_norm",
+      "collective": "none",
+      "output_layout": "replicated"
+    },
+    {
+      "layer": 14,
+      "operation": "mhc_pre_and_replicated_q_a_kv_a",
+      "collective": "none",
+      "output_layout": "replicated"
+    },
+    {
+      "layer": 14,
+      "operation": "q_b_kv_b_output_row_matmuls",
+      "collective": "all_gather_each_projection",
+      "output_layout": "replicated_canonical_rows"
+    },
+    {
+      "layer": 14,
+      "operation": "mla_swa_or_sparse_attention_and_mome",
+      "collective": "none",
+      "output_layout": "replicated"
+    },
+    {
+      "layer": 14,
+      "operation": "o_proj_output_row_matmul",
+      "collective": "all_gather",
+      "output_layout": "replicated_canonical_rows"
+    },
+    {
+      "layer": 14,
+      "operation": "mhc_post_and_ffn_pre",
+      "collective": "none",
+      "output_layout": "replicated"
+    },
+    {
+      "layer": 14,
+      "operation": "sigmoid_router_bias_topk_normalize_scale",
+      "collective": "none",
+      "output_layout": "identical_routes_all_ranks"
+    },
+    {
+      "layer": 14,
+      "operation": "owner_expert_gate_up_silu_down_weighted_sum",
+      "collective": "all_reduce_sum_fp32",
+      "output_layout": "replicated_expert_output"
+    },
+    {
+      "layer": 14,
+      "operation": "shared_expert_gate_up_silu_down",
+      "collective": "all_gather_each_projection",
+      "output_layout": "replicated_shared_output"
+    },
+    {
+      "layer": 14,
+      "operation": "add_shared_and_routed",
+      "collective": "none",
+      "output_layout": "replicated"
+    },
+    {
+      "layer": 14,
+      "operation": "mhc_post_and_optional_block_norm",
+      "collective": "none",
+      "output_layout": "replicated"
+    },
+    {
+      "layer": 15,
+      "operation": "mhc_pre_and_replicated_q_a_kv_a",
+      "collective": "none",
+      "output_layout": "replicated"
+    },
+    {
+      "layer": 15,
+      "operation": "q_b_kv_b_output_row_matmuls",
+      "collective": "all_gather_each_projection",
+      "output_layout": "replicated_canonical_rows"
+    },
+    {
+      "layer": 15,
+      "operation": "mla_swa_or_sparse_attention_and_mome",
+      "collective": "none",
+      "output_layout": "replicated"
+    },
+    {
+      "layer": 15,
+      "operation": "o_proj_output_row_matmul",
+      "collective": "all_gather",
+      "output_layout": "replicated_canonical_rows"
+    },
+    {
+      "layer": 15,
+      "operation": "mhc_post_and_ffn_pre",
+      "collective": "none",
+      "output_layout": "replicated"
+    },
+    {
+      "layer": 15,
+      "operation": "sigmoid_router_bias_topk_normalize_scale",
+      "collective": "none",
+      "output_layout": "identical_routes_all_ranks"
+    },
+    {
+      "layer": 15,
+      "operation": "owner_expert_gate_up_silu_down_weighted_sum",
+      "collective": "all_reduce_sum_fp32",
+      "output_layout": "replicated_expert_output"
+    },
+    {
+      "layer": 15,
+      "operation": "shared_expert_gate_up_silu_down",
+      "collective": "all_gather_each_projection",
+      "output_layout": "replicated_shared_output"
+    },
+    {
+      "layer": 15,
+      "operation": "add_shared_and_routed",
+      "collective": "none",
+      "output_layout": "replicated"
+    },
+    {
+      "layer": 15,
+      "operation": "mhc_post_and_optional_block_norm",
+      "collective": "none",
+      "output_layout": "replicated"
+    },
+    {
+      "layer": 16,
+      "operation": "mhc_pre_and_replicated_q_a_kv_a",
+      "collective": "none",
+      "output_layout": "replicated"
+    },
+    {
+      "layer": 16,
+      "operation": "q_b_kv_b_output_row_matmuls",
+      "collective": "all_gather_each_projection",
+      "output_layout": "replicated_canonical_rows"
+    },
+    {
+      "layer": 16,
+      "operation": "mla_swa_or_sparse_attention_and_mome",
+      "collective": "none",
+      "output_layout": "replicated"
+    },
+    {
+      "layer": 16,
+      "operation": "o_proj_output_row_matmul",
+      "collective": "all_gather",
+      "output_layout": "replicated_canonical_rows"
+    },
+    {
+      "layer": 16,
+      "operation": "mhc_post_and_ffn_pre",
+      "collective": "none",
+      "output_layout": "replicated"
+    },
+    {
+      "layer": 16,
+      "operation": "sigmoid_router_bias_topk_normalize_scale",
+      "collective": "none",
+      "output_layout": "identical_routes_all_ranks"
+    },
+    {
+      "layer": 16,
+      "operation": "owner_expert_gate_up_silu_down_weighted_sum",
+      "collective": "all_reduce_sum_fp32",
+      "output_layout": "replicated_expert_output"
+    },
+    {
+      "layer": 16,
+      "operation": "shared_expert_gate_up_silu_down",
+      "collective": "all_gather_each_projection",
+      "output_layout": "replicated_shared_output"
+    },
+    {
+      "layer": 16,
+      "operation": "add_shared_and_routed",
+      "collective": "none",
+      "output_layout": "replicated"
+    },
+    {
+      "layer": 16,
+      "operation": "mhc_post_and_optional_block_norm",
+      "collective": "none",
+      "output_layout": "replicated"
+    },
+    {
+      "layer": 17,
+      "operation": "mhc_pre_and_replicated_q_a_kv_a",
+      "collective": "none",
+      "output_layout": "replicated"
+    },
+    {
+      "layer": 17,
+      "operation": "q_b_kv_b_output_row_matmuls",
+      "collective": "all_gather_each_projection",
+      "output_layout": "replicated_canonical_rows"
+    },
+    {
+      "layer": 17,
+      "operation": "mla_swa_or_sparse_attention_and_mome",
+      "collective": "none",
+      "output_layout": "replicated"
+    },
+    {
+      "layer": 17,
+      "operation": "o_proj_output_row_matmul",
+      "collective": "all_gather",
+      "output_layout": "replicated_canonical_rows"
+    },
+    {
+      "layer": 17,
+      "operation": "mhc_post_and_ffn_pre",
+      "collective": "none",
+      "output_layout": "replicated"
+    },
+    {
+      "layer": 17,
+      "operation": "sigmoid_router_bias_topk_normalize_scale",
+      "collective": "none",
+      "output_layout": "identical_routes_all_ranks"
+    },
+    {
+      "layer": 17,
+      "operation": "owner_expert_gate_up_silu_down_weighted_sum",
+      "collective": "all_reduce_sum_fp32",
+      "output_layout": "replicated_expert_output"
+    },
+    {
+      "layer": 17,
+      "operation": "shared_expert_gate_up_silu_down",
+      "collective": "all_gather_each_projection",
+      "output_layout": "replicated_shared_output"
+    },
+    {
+      "layer": 17,
+      "operation": "add_shared_and_routed",
+      "collective": "none",
+      "output_layout": "replicated"
+    },
+    {
+      "layer": 17,
+      "operation": "mhc_post_and_optional_block_norm",
+      "collective": "none",
+      "output_layout": "replicated"
+    },
+    {
+      "layer": 18,
+      "operation": "mhc_pre_and_replicated_q_a_kv_a",
+      "collective": "none",
+      "output_layout": "replicated"
+    },
+    {
+      "layer": 18,
+      "operation": "q_b_kv_b_output_row_matmuls",
+      "collective": "all_gather_each_projection",
+      "output_layout": "replicated_canonical_rows"
+    },
+    {
+      "layer": 18,
+      "operation": "mla_swa_or_sparse_attention_and_mome",
+      "collective": "none",
+      "output_layout": "replicated"
+    },
+    {
+      "layer": 18,
+      "operation": "o_proj_output_row_matmul",
+      "collective": "all_gather",
+      "output_layout": "replicated_canonical_rows"
+    },
+    {
+      "layer": 18,
+      "operation": "mhc_post_and_ffn_pre",
+      "collective": "none",
+      "output_layout": "replicated"
+    },
+    {
+      "layer": 18,
+      "operation": "sigmoid_router_bias_topk_normalize_scale",
+      "collective": "none",
+      "output_layout": "identical_routes_all_ranks"
+    },
+    {
+      "layer": 18,
+      "operation": "owner_expert_gate_up_silu_down_weighted_sum",
+      "collective": "all_reduce_sum_fp32",
+      "output_layout": "replicated_expert_output"
+    },
+    {
+      "layer": 18,
+      "operation": "shared_expert_gate_up_silu_down",
+      "collective": "all_gather_each_projection",
+      "output_layout": "replicated_shared_output"
+    },
+    {
+      "layer": 18,
+      "operation": "add_shared_and_routed",
+      "collective": "none",
+      "output_layout": "replicated"
+    },
+    {
+      "layer": 18,
+      "operation": "mhc_post_and_optional_block_norm",
+      "collective": "none",
+      "output_layout": "replicated"
+    },
+    {
+      "layer": 19,
+      "operation": "mhc_pre_and_replicated_q_a_kv_a",
+      "collective": "none",
+      "output_layout": "replicated"
+    },
+    {
+      "layer": 19,
+      "operation": "q_b_kv_b_output_row_matmuls",
+      "collective": "all_gather_each_projection",
+      "output_layout": "replicated_canonical_rows"
+    },
+    {
+      "layer": 19,
+      "operation": "mla_swa_or_sparse_attention_and_mome",
+      "collective": "none",
+      "output_layout": "replicated"
+    },
+    {
+      "layer": 19,
+      "operation": "o_proj_output_row_matmul",
+      "collective": "all_gather",
+      "output_layout": "replicated_canonical_rows"
+    },
+    {
+      "layer": 19,
+      "operation": "mhc_post_and_ffn_pre",
+      "collective": "none",
+      "output_layout": "replicated"
+    },
+    {
+      "layer": 19,
+      "operation": "sigmoid_router_bias_topk_normalize_scale",
+      "collective": "none",
+      "output_layout": "identical_routes_all_ranks"
+    },
+    {
+      "layer": 19,
+      "operation": "owner_expert_gate_up_silu_down_weighted_sum",
+      "collective": "all_reduce_sum_fp32",
+      "output_layout": "replicated_expert_output"
+    },
+    {
+      "layer": 19,
+      "operation": "shared_expert_gate_up_silu_down",
+      "collective": "all_gather_each_projection",
+      "output_layout": "replicated_shared_output"
+    },
+    {
+      "layer": 19,
+      "operation": "add_shared_and_routed",
+      "collective": "none",
+      "output_layout": "replicated"
+    },
+    {
+      "layer": 19,
+      "operation": "mhc_post_and_optional_block_norm",
+      "collective": "none",
+      "output_layout": "replicated"
+    },
+    {
+      "layer": 20,
+      "operation": "mhc_pre_and_replicated_q_a_kv_a",
+      "collective": "none",
+      "output_layout": "replicated"
+    },
+    {
+      "layer": 20,
+      "operation": "q_b_kv_b_output_row_matmuls",
+      "collective": "all_gather_each_projection",
+      "output_layout": "replicated_canonical_rows"
+    },
+    {
+      "layer": 20,
+      "operation": "mla_swa_or_sparse_attention_and_mome",
+      "collective": "none",
+      "output_layout": "replicated"
+    },
+    {
+      "layer": 20,
+      "operation": "o_proj_output_row_matmul",
+      "collective": "all_gather",
+      "output_layout": "replicated_canonical_rows"
+    },
+    {
+      "layer": 20,
+      "operation": "mhc_post_and_ffn_pre",
+      "collective": "none",
+      "output_layout": "replicated"
+    },
+    {
+      "layer": 20,
+      "operation": "sigmoid_router_bias_topk_normalize_scale",
+      "collective": "none",
+      "output_layout": "identical_routes_all_ranks"
+    },
+    {
+      "layer": 20,
+      "operation": "owner_expert_gate_up_silu_down_weighted_sum",
+      "collective": "all_reduce_sum_fp32",
+      "output_layout": "replicated_expert_output"
+    },
+    {
+      "layer": 20,
+      "operation": "shared_expert_gate_up_silu_down",
+      "collective": "all_gather_each_projection",
+      "output_layout": "replicated_shared_output"
+    },
+    {
+      "layer": 20,
+      "operation": "add_shared_and_routed",
+      "collective": "none",
+      "output_layout": "replicated"
+    },
+    {
+      "layer": 20,
+      "operation": "mhc_post_and_optional_block_norm",
+      "collective": "none",
+      "output_layout": "replicated"
+    },
+    {
+      "layer": 21,
+      "operation": "mhc_pre_and_replicated_q_a_kv_a",
+      "collective": "none",
+      "output_layout": "replicated"
+    },
+    {
+      "layer": 21,
+      "operation": "q_b_kv_b_output_row_matmuls",
+      "collective": "all_gather_each_projection",
+      "output_layout": "replicated_canonical_rows"
+    },
+    {
+      "layer": 21,
+      "operation": "mla_swa_or_sparse_attention_and_mome",
+      "collective": "none",
+      "output_layout": "replicated"
+    },
+    {
+      "layer": 21,
+      "operation": "o_proj_output_row_matmul",
+      "collective": "all_gather",
+      "output_layout": "replicated_canonical_rows"
+    },
+    {
+      "layer": 21,
+      "operation": "mhc_post_and_ffn_pre",
+      "collective": "none",
+      "output_layout": "replicated"
+    },
+    {
+      "layer": 21,
+      "operation": "sigmoid_router_bias_topk_normalize_scale",
+      "collective": "none",
+      "output_layout": "identical_routes_all_ranks"
+    },
+    {
+      "layer": 21,
+      "operation": "owner_expert_gate_up_silu_down_weighted_sum",
+      "collective": "all_reduce_sum_fp32",
+      "output_layout": "replicated_expert_output"
+    },
+    {
+      "layer": 21,
+      "operation": "shared_expert_gate_up_silu_down",
+      "collective": "all_gather_each_projection",
+      "output_layout": "replicated_shared_output"
+    },
+    {
+      "layer": 21,
+      "operation": "add_shared_and_routed",
+      "collective": "none",
+      "output_layout": "replicated"
+    },
+    {
+      "layer": 21,
+      "operation": "mhc_post_and_optional_block_norm",
+      "collective": "none",
+      "output_layout": "replicated"
+    },
+    {
+      "layer": 22,
+      "operation": "mhc_pre_and_replicated_q_a_kv_a",
+      "collective": "none",
+      "output_layout": "replicated"
+    },
+    {
+      "layer": 22,
+      "operation": "q_b_kv_b_output_row_matmuls",
+      "collective": "all_gather_each_projection",
+      "output_layout": "replicated_canonical_rows"
+    },
+    {
+      "layer": 22,
+      "operation": "mla_swa_or_sparse_attention_and_mome",
+      "collective": "none",
+      "output_layout": "replicated"
+    },
+    {
+      "layer": 22,
+      "operation": "o_proj_output_row_matmul",
+      "collective": "all_gather",
+      "output_layout": "replicated_canonical_rows"
+    },
+    {
+      "layer": 22,
+      "operation": "mhc_post_and_ffn_pre",
+      "collective": "none",
+      "output_layout": "replicated"
+    },
+    {
+      "layer": 22,
+      "operation": "sigmoid_router_bias_topk_normalize_scale",
+      "collective": "none",
+      "output_layout": "identical_routes_all_ranks"
+    },
+    {
+      "layer": 22,
+      "operation": "owner_expert_gate_up_silu_down_weighted_sum",
+      "collective": "all_reduce_sum_fp32",
+      "output_layout": "replicated_expert_output"
+    },
+    {
+      "layer": 22,
+      "operation": "shared_expert_gate_up_silu_down",
+      "collective": "all_gather_each_projection",
+      "output_layout": "replicated_shared_output"
+    },
+    {
+      "layer": 22,
+      "operation": "add_shared_and_routed",
+      "collective": "none",
+      "output_layout": "replicated"
+    },
+    {
+      "layer": 22,
+      "operation": "mhc_post_and_optional_block_norm",
+      "collective": "none",
+      "output_layout": "replicated"
+    },
+    {
+      "layer": 23,
+      "operation": "mhc_pre_and_replicated_q_a_kv_a",
+      "collective": "none",
+      "output_layout": "replicated"
+    },
+    {
+      "layer": 23,
+      "operation": "q_b_kv_b_output_row_matmuls",
+      "collective": "all_gather_each_projection",
+      "output_layout": "replicated_canonical_rows"
+    },
+    {
+      "layer": 23,
+      "operation": "mla_swa_or_sparse_attention_and_mome",
+      "collective": "none",
+      "output_layout": "replicated"
+    },
+    {
+      "layer": 23,
+      "operation": "o_proj_output_row_matmul",
+      "collective": "all_gather",
+      "output_layout": "replicated_canonical_rows"
+    },
+    {
+      "layer": 23,
+      "operation": "mhc_post_and_ffn_pre",
+      "collective": "none",
+      "output_layout": "replicated"
+    },
+    {
+      "layer": 23,
+      "operation": "sigmoid_router_bias_topk_normalize_scale",
+      "collective": "none",
+      "output_layout": "identical_routes_all_ranks"
+    },
+    {
+      "layer": 23,
+      "operation": "owner_expert_gate_up_silu_down_weighted_sum",
+      "collective": "all_reduce_sum_fp32",
+      "output_layout": "replicated_expert_output"
+    },
+    {
+      "layer": 23,
+      "operation": "shared_expert_gate_up_silu_down",
+      "collective": "all_gather_each_projection",
+      "output_layout": "replicated_shared_output"
+    },
+    {
+      "layer": 23,
+      "operation": "add_shared_and_routed",
+      "collective": "none",
+      "output_layout": "replicated"
+    },
+    {
+      "layer": 23,
+      "operation": "mhc_post_and_optional_block_norm",
+      "collective": "none",
+      "output_layout": "replicated"
+    },
+    {
+      "layer": 24,
+      "operation": "mhc_pre_and_replicated_q_a_kv_a",
+      "collective": "none",
+      "output_layout": "replicated"
+    },
+    {
+      "layer": 24,
+      "operation": "q_b_kv_b_output_row_matmuls",
+      "collective": "all_gather_each_projection",
+      "output_layout": "replicated_canonical_rows"
+    },
+    {
+      "layer": 24,
+      "operation": "mla_swa_or_sparse_attention_and_mome",
+      "collective": "none",
+      "output_layout": "replicated"
+    },
+    {
+      "layer": 24,
+      "operation": "o_proj_output_row_matmul",
+      "collective": "all_gather",
+      "output_layout": "replicated_canonical_rows"
+    },
+    {
+      "layer": 24,
+      "operation": "mhc_post_and_ffn_pre",
+      "collective": "none",
+      "output_layout": "replicated"
+    },
+    {
+      "layer": 24,
+      "operation": "sigmoid_router_bias_topk_normalize_scale",
+      "collective": "none",
+      "output_layout": "identical_routes_all_ranks"
+    },
+    {
+      "layer": 24,
+      "operation": "owner_expert_gate_up_silu_down_weighted_sum",
+      "collective": "all_reduce_sum_fp32",
+      "output_layout": "replicated_expert_output"
+    },
+    {
+      "layer": 24,
+      "operation": "shared_expert_gate_up_silu_down",
+      "collective": "all_gather_each_projection",
+      "output_layout": "replicated_shared_output"
+    },
+    {
+      "layer": 24,
+      "operation": "add_shared_and_routed",
+      "collective": "none",
+      "output_layout": "replicated"
+    },
+    {
+      "layer": 24,
+      "operation": "mhc_post_and_optional_block_norm",
+      "collective": "none",
+      "output_layout": "replicated"
+    },
+    {
+      "layer": 25,
+      "operation": "mhc_pre_and_replicated_q_a_kv_a",
+      "collective": "none",
+      "output_layout": "replicated"
+    },
+    {
+      "layer": 25,
+      "operation": "q_b_kv_b_output_row_matmuls",
+      "collective": "all_gather_each_projection",
+      "output_layout": "replicated_canonical_rows"
+    },
+    {
+      "layer": 25,
+      "operation": "mla_swa_or_sparse_attention_and_mome",
+      "collective": "none",
+      "output_layout": "replicated"
+    },
+    {
+      "layer": 25,
+      "operation": "o_proj_output_row_matmul",
+      "collective": "all_gather",
+      "output_layout": "replicated_canonical_rows"
+    },
+    {
+      "layer": 25,
+      "operation": "mhc_post_and_ffn_pre",
+      "collective": "none",
+      "output_layout": "replicated"
+    },
+    {
+      "layer": 25,
+      "operation": "sigmoid_router_bias_topk_normalize_scale",
+      "collective": "none",
+      "output_layout": "identical_routes_all_ranks"
+    },
+    {
+      "layer": 25,
+      "operation": "owner_expert_gate_up_silu_down_weighted_sum",
+      "collective": "all_reduce_sum_fp32",
+      "output_layout": "replicated_expert_output"
+    },
+    {
+      "layer": 25,
+      "operation": "shared_expert_gate_up_silu_down",
+      "collective": "all_gather_each_projection",
+      "output_layout": "replicated_shared_output"
+    },
+    {
+      "layer": 25,
+      "operation": "add_shared_and_routed",
+      "collective": "none",
+      "output_layout": "replicated"
+    },
+    {
+      "layer": 25,
+      "operation": "mhc_post_and_optional_block_norm",
+      "collective": "none",
+      "output_layout": "replicated"
+    },
+    {
+      "layer": 26,
+      "operation": "mhc_pre_and_replicated_q_a_kv_a",
+      "collective": "none",
+      "output_layout": "replicated"
+    },
+    {
+      "layer": 26,
+      "operation": "q_b_kv_b_output_row_matmuls",
+      "collective": "all_gather_each_projection",
+      "output_layout": "replicated_canonical_rows"
+    },
+    {
+      "layer": 26,
+      "operation": "mla_swa_or_sparse_attention_and_mome",
+      "collective": "none",
+      "output_layout": "replicated"
+    },
+    {
+      "layer": 26,
+      "operation": "o_proj_output_row_matmul",
+      "collective": "all_gather",
+      "output_layout": "replicated_canonical_rows"
+    },
+    {
+      "layer": 26,
+      "operation": "mhc_post_and_ffn_pre",
+      "collective": "none",
+      "output_layout": "replicated"
+    },
+    {
+      "layer": 26,
+      "operation": "sigmoid_router_bias_topk_normalize_scale",
+      "collective": "none",
+      "output_layout": "identical_routes_all_ranks"
+    },
+    {
+      "layer": 26,
+      "operation": "owner_expert_gate_up_silu_down_weighted_sum",
+      "collective": "all_reduce_sum_fp32",
+      "output_layout": "replicated_expert_output"
+    },
+    {
+      "layer": 26,
+      "operation": "shared_expert_gate_up_silu_down",
+      "collective": "all_gather_each_projection",
+      "output_layout": "replicated_shared_output"
+    },
+    {
+      "layer": 26,
+      "operation": "add_shared_and_routed",
+      "collective": "none",
+      "output_layout": "replicated"
+    },
+    {
+      "layer": 26,
+      "operation": "mhc_post_and_optional_block_norm",
+      "collective": "none",
+      "output_layout": "replicated"
+    },
+    {
+      "layer": 27,
+      "operation": "mhc_pre_and_replicated_q_a_kv_a",
+      "collective": "none",
+      "output_layout": "replicated"
+    },
+    {
+      "layer": 27,
+      "operation": "q_b_kv_b_output_row_matmuls",
+      "collective": "all_gather_each_projection",
+      "output_layout": "replicated_canonical_rows"
+    },
+    {
+      "layer": 27,
+      "operation": "mla_swa_or_sparse_attention_and_mome",
+      "collective": "none",
+      "output_layout": "replicated"
+    },
+    {
+      "layer": 27,
+      "operation": "o_proj_output_row_matmul",
+      "collective": "all_gather",
+      "output_layout": "replicated_canonical_rows"
+    },
+    {
+      "layer": 27,
+      "operation": "mhc_post_and_ffn_pre",
+      "collective": "none",
+      "output_layout": "replicated"
+    },
+    {
+      "layer": 27,
+      "operation": "sigmoid_router_bias_topk_normalize_scale",
+      "collective": "none",
+      "output_layout": "identical_routes_all_ranks"
+    },
+    {
+      "layer": 27,
+      "operation": "owner_expert_gate_up_silu_down_weighted_sum",
+      "collective": "all_reduce_sum_fp32",
+      "output_layout": "replicated_expert_output"
+    },
+    {
+      "layer": 27,
+      "operation": "shared_expert_gate_up_silu_down",
+      "collective": "all_gather_each_projection",
+      "output_layout": "replicated_shared_output"
+    },
+    {
+      "layer": 27,
+      "operation": "add_shared_and_routed",
+      "collective": "none",
+      "output_layout": "replicated"
+    },
+    {
+      "layer": 27,
+      "operation": "mhc_post_and_optional_block_norm",
+      "collective": "none",
+      "output_layout": "replicated"
+    },
+    {
+      "layer": 28,
+      "operation": "mhc_pre_and_replicated_q_a_kv_a",
+      "collective": "none",
+      "output_layout": "replicated"
+    },
+    {
+      "layer": 28,
+      "operation": "q_b_kv_b_output_row_matmuls",
+      "collective": "all_gather_each_projection",
+      "output_layout": "replicated_canonical_rows"
+    },
+    {
+      "layer": 28,
+      "operation": "mla_swa_or_sparse_attention_and_mome",
+      "collective": "none",
+      "output_layout": "replicated"
+    },
+    {
+      "layer": 28,
+      "operation": "o_proj_output_row_matmul",
+      "collective": "all_gather",
+      "output_layout": "replicated_canonical_rows"
+    },
+    {
+      "layer": 28,
+      "operation": "mhc_post_and_ffn_pre",
+      "collective": "none",
+      "output_layout": "replicated"
+    },
+    {
+      "layer": 28,
+      "operation": "sigmoid_router_bias_topk_normalize_scale",
+      "collective": "none",
+      "output_layout": "identical_routes_all_ranks"
+    },
+    {
+      "layer": 28,
+      "operation": "owner_expert_gate_up_silu_down_weighted_sum",
+      "collective": "all_reduce_sum_fp32",
+      "output_layout": "replicated_expert_output"
+    },
+    {
+      "layer": 28,
+      "operation": "shared_expert_gate_up_silu_down",
+      "collective": "all_gather_each_projection",
+      "output_layout": "replicated_shared_output"
+    },
+    {
+      "layer": 28,
+      "operation": "add_shared_and_routed",
+      "collective": "none",
+      "output_layout": "replicated"
+    },
+    {
+      "layer": 28,
+      "operation": "mhc_post_and_optional_block_norm",
+      "collective": "none",
+      "output_layout": "replicated"
+    },
+    {
+      "layer": 29,
+      "operation": "mhc_pre_and_replicated_q_a_kv_a",
+      "collective": "none",
+      "output_layout": "replicated"
+    },
+    {
+      "layer": 29,
+      "operation": "q_b_kv_b_output_row_matmuls",
+      "collective": "all_gather_each_projection",
+      "output_layout": "replicated_canonical_rows"
+    },
+    {
+      "layer": 29,
+      "operation": "mla_swa_or_sparse_attention_and_mome",
+      "collective": "none",
+      "output_layout": "replicated"
+    },
+    {
+      "layer": 29,
+      "operation": "o_proj_output_row_matmul",
+      "collective": "all_gather",
+      "output_layout": "replicated_canonical_rows"
+    },
+    {
+      "layer": 29,
+      "operation": "mhc_post_and_ffn_pre",
+      "collective": "none",
+      "output_layout": "replicated"
+    },
+    {
+      "layer": 29,
+      "operation": "sigmoid_router_bias_topk_normalize_scale",
+      "collective": "none",
+      "output_layout": "identical_routes_all_ranks"
+    },
+    {
+      "layer": 29,
+      "operation": "owner_expert_gate_up_silu_down_weighted_sum",
+      "collective": "all_reduce_sum_fp32",
+      "output_layout": "replicated_expert_output"
+    },
+    {
+      "layer": 29,
+      "operation": "shared_expert_gate_up_silu_down",
+      "collective": "all_gather_each_projection",
+      "output_layout": "replicated_shared_output"
+    },
+    {
+      "layer": 29,
+      "operation": "add_shared_and_routed",
+      "collective": "none",
+      "output_layout": "replicated"
+    },
+    {
+      "layer": 29,
+      "operation": "mhc_post_and_optional_block_norm",
+      "collective": "none",
+      "output_layout": "replicated"
+    },
+    {
+      "layer": 30,
+      "operation": "mhc_pre_and_replicated_q_a_kv_a",
+      "collective": "none",
+      "output_layout": "replicated"
+    },
+    {
+      "layer": 30,
+      "operation": "q_b_kv_b_output_row_matmuls",
+      "collective": "all_gather_each_projection",
+      "output_layout": "replicated_canonical_rows"
+    },
+    {
+      "layer": 30,
+      "operation": "mla_swa_or_sparse_attention_and_mome",
+      "collective": "none",
+      "output_layout": "replicated"
+    },
+    {
+      "layer": 30,
+      "operation": "o_proj_output_row_matmul",
+      "collective": "all_gather",
+      "output_layout": "replicated_canonical_rows"
+    },
+    {
+      "layer": 30,
+      "operation": "mhc_post_and_ffn_pre",
+      "collective": "none",
+      "output_layout": "replicated"
+    },
+    {
+      "layer": 30,
+      "operation": "sigmoid_router_bias_topk_normalize_scale",
+      "collective": "none",
+      "output_layout": "identical_routes_all_ranks"
+    },
+    {
+      "layer": 30,
+      "operation": "owner_expert_gate_up_silu_down_weighted_sum",
+      "collective": "all_reduce_sum_fp32",
+      "output_layout": "replicated_expert_output"
+    },
+    {
+      "layer": 30,
+      "operation": "shared_expert_gate_up_silu_down",
+      "collective": "all_gather_each_projection",
+      "output_layout": "replicated_shared_output"
+    },
+    {
+      "layer": 30,
+      "operation": "add_shared_and_routed",
+      "collective": "none",
+      "output_layout": "replicated"
+    },
+    {
+      "layer": 30,
+      "operation": "mhc_post_and_optional_block_norm",
+      "collective": "none",
+      "output_layout": "replicated"
+    },
+    {
+      "layer": 31,
+      "operation": "mhc_pre_and_replicated_q_a_kv_a",
+      "collective": "none",
+      "output_layout": "replicated"
+    },
+    {
+      "layer": 31,
+      "operation": "q_b_kv_b_output_row_matmuls",
+      "collective": "all_gather_each_projection",
+      "output_layout": "replicated_canonical_rows"
+    },
+    {
+      "layer": 31,
+      "operation": "mla_swa_or_sparse_attention_and_mome",
+      "collective": "none",
+      "output_layout": "replicated"
+    },
+    {
+      "layer": 31,
+      "operation": "o_proj_output_row_matmul",
+      "collective": "all_gather",
+      "output_layout": "replicated_canonical_rows"
+    },
+    {
+      "layer": 31,
+      "operation": "mhc_post_and_ffn_pre",
+      "collective": "none",
+      "output_layout": "replicated"
+    },
+    {
+      "layer": 31,
+      "operation": "sigmoid_router_bias_topk_normalize_scale",
+      "collective": "none",
+      "output_layout": "identical_routes_all_ranks"
+    },
+    {
+      "layer": 31,
+      "operation": "owner_expert_gate_up_silu_down_weighted_sum",
+      "collective": "all_reduce_sum_fp32",
+      "output_layout": "replicated_expert_output"
+    },
+    {
+      "layer": 31,
+      "operation": "shared_expert_gate_up_silu_down",
+      "collective": "all_gather_each_projection",
+      "output_layout": "replicated_shared_output"
+    },
+    {
+      "layer": 31,
+      "operation": "add_shared_and_routed",
+      "collective": "none",
+      "output_layout": "replicated"
+    },
+    {
+      "layer": 31,
+      "operation": "mhc_post_and_optional_block_norm",
+      "collective": "none",
+      "output_layout": "replicated"
+    },
+    {
+      "layer": 32,
+      "operation": "mhc_pre_and_replicated_q_a_kv_a",
+      "collective": "none",
+      "output_layout": "replicated"
+    },
+    {
+      "layer": 32,
+      "operation": "q_b_kv_b_output_row_matmuls",
+      "collective": "all_gather_each_projection",
+      "output_layout": "replicated_canonical_rows"
+    },
+    {
+      "layer": 32,
+      "operation": "mla_swa_or_sparse_attention_and_mome",
+      "collective": "none",
+      "output_layout": "replicated"
+    },
+    {
+      "layer": 32,
+      "operation": "o_proj_output_row_matmul",
+      "collective": "all_gather",
+      "output_layout": "replicated_canonical_rows"
+    },
+    {
+      "layer": 32,
+      "operation": "mhc_post_and_ffn_pre",
+      "collective": "none",
+      "output_layout": "replicated"
+    },
+    {
+      "layer": 32,
+      "operation": "sigmoid_router_bias_topk_normalize_scale",
+      "collective": "none",
+      "output_layout": "identical_routes_all_ranks"
+    },
+    {
+      "layer": 32,
+      "operation": "owner_expert_gate_up_silu_down_weighted_sum",
+      "collective": "all_reduce_sum_fp32",
+      "output_layout": "replicated_expert_output"
+    },
+    {
+      "layer": 32,
+      "operation": "shared_expert_gate_up_silu_down",
+      "collective": "all_gather_each_projection",
+      "output_layout": "replicated_shared_output"
+    },
+    {
+      "layer": 32,
+      "operation": "add_shared_and_routed",
+      "collective": "none",
+      "output_layout": "replicated"
+    },
+    {
+      "layer": 32,
+      "operation": "mhc_post_and_optional_block_norm",
+      "collective": "none",
+      "output_layout": "replicated"
+    },
+    {
+      "layer": 33,
+      "operation": "mhc_pre_and_replicated_q_a_kv_a",
+      "collective": "none",
+      "output_layout": "replicated"
+    },
+    {
+      "layer": 33,
+      "operation": "q_b_kv_b_output_row_matmuls",
+      "collective": "all_gather_each_projection",
+      "output_layout": "replicated_canonical_rows"
+    },
+    {
+      "layer": 33,
+      "operation": "mla_swa_or_sparse_attention_and_mome",
+      "collective": "none",
+      "output_layout": "replicated"
+    },
+    {
+      "layer": 33,
+      "operation": "o_proj_output_row_matmul",
+      "collective": "all_gather",
+      "output_layout": "replicated_canonical_rows"
+    },
+    {
+      "layer": 33,
+      "operation": "mhc_post_and_ffn_pre",
+      "collective": "none",
+      "output_layout": "replicated"
+    },
+    {
+      "layer": 33,
+      "operation": "sigmoid_router_bias_topk_normalize_scale",
+      "collective": "none",
+      "output_layout": "identical_routes_all_ranks"
+    },
+    {
+      "layer": 33,
+      "operation": "owner_expert_gate_up_silu_down_weighted_sum",
+      "collective": "all_reduce_sum_fp32",
+      "output_layout": "replicated_expert_output"
+    },
+    {
+      "layer": 33,
+      "operation": "shared_expert_gate_up_silu_down",
+      "collective": "all_gather_each_projection",
+      "output_layout": "replicated_shared_output"
+    },
+    {
+      "layer": 33,
+      "operation": "add_shared_and_routed",
+      "collective": "none",
+      "output_layout": "replicated"
+    },
+    {
+      "layer": 33,
+      "operation": "mhc_post_and_optional_block_norm",
+      "collective": "none",
+      "output_layout": "replicated"
+    },
+    {
+      "layer": 34,
+      "operation": "mhc_pre_and_replicated_q_a_kv_a",
+      "collective": "none",
+      "output_layout": "replicated"
+    },
+    {
+      "layer": 34,
+      "operation": "q_b_kv_b_output_row_matmuls",
+      "collective": "all_gather_each_projection",
+      "output_layout": "replicated_canonical_rows"
+    },
+    {
+      "layer": 34,
+      "operation": "mla_swa_or_sparse_attention_and_mome",
+      "collective": "none",
+      "output_layout": "replicated"
+    },
+    {
+      "layer": 34,
+      "operation": "o_proj_output_row_matmul",
+      "collective": "all_gather",
+      "output_layout": "replicated_canonical_rows"
+    },
+    {
+      "layer": 34,
+      "operation": "mhc_post_and_ffn_pre",
+      "collective": "none",
+      "output_layout": "replicated"
+    },
+    {
+      "layer": 34,
+      "operation": "sigmoid_router_bias_topk_normalize_scale",
+      "collective": "none",
+      "output_layout": "identical_routes_all_ranks"
+    },
+    {
+      "layer": 34,
+      "operation": "owner_expert_gate_up_silu_down_weighted_sum",
+      "collective": "all_reduce_sum_fp32",
+      "output_layout": "replicated_expert_output"
+    },
+    {
+      "layer": 34,
+      "operation": "shared_expert_gate_up_silu_down",
+      "collective": "all_gather_each_projection",
+      "output_layout": "replicated_shared_output"
+    },
+    {
+      "layer": 34,
+      "operation": "add_shared_and_routed",
+      "collective": "none",
+      "output_layout": "replicated"
+    },
+    {
+      "layer": 34,
+      "operation": "mhc_post_and_optional_block_norm",
+      "collective": "none",
+      "output_layout": "replicated"
+    },
+    {
+      "layer": 35,
+      "operation": "mhc_pre_and_replicated_q_a_kv_a",
+      "collective": "none",
+      "output_layout": "replicated"
+    },
+    {
+      "layer": 35,
+      "operation": "q_b_kv_b_output_row_matmuls",
+      "collective": "all_gather_each_projection",
+      "output_layout": "replicated_canonical_rows"
+    },
+    {
+      "layer": 35,
+      "operation": "mla_swa_or_sparse_attention_and_mome",
+      "collective": "none",
+      "output_layout": "replicated"
+    },
+    {
+      "layer": 35,
+      "operation": "o_proj_output_row_matmul",
+      "collective": "all_gather",
+      "output_layout": "replicated_canonical_rows"
+    },
+    {
+      "layer": 35,
+      "operation": "mhc_post_and_ffn_pre",
+      "collective": "none",
+      "output_layout": "replicated"
+    },
+    {
+      "layer": 35,
+      "operation": "sigmoid_router_bias_topk_normalize_scale",
+      "collective": "none",
+      "output_layout": "identical_routes_all_ranks"
+    },
+    {
+      "layer": 35,
+      "operation": "owner_expert_gate_up_silu_down_weighted_sum",
+      "collective": "all_reduce_sum_fp32",
+      "output_layout": "replicated_expert_output"
+    },
+    {
+      "layer": 35,
+      "operation": "shared_expert_gate_up_silu_down",
+      "collective": "all_gather_each_projection",
+      "output_layout": "replicated_shared_output"
+    },
+    {
+      "layer": 35,
+      "operation": "add_shared_and_routed",
+      "collective": "none",
+      "output_layout": "replicated"
+    },
+    {
+      "layer": 35,
+      "operation": "mhc_post_and_optional_block_norm",
+      "collective": "none",
+      "output_layout": "replicated"
+    },
+    {
+      "layer": 36,
+      "operation": "mhc_pre_and_replicated_q_a_kv_a",
+      "collective": "none",
+      "output_layout": "replicated"
+    },
+    {
+      "layer": 36,
+      "operation": "q_b_kv_b_output_row_matmuls",
+      "collective": "all_gather_each_projection",
+      "output_layout": "replicated_canonical_rows"
+    },
+    {
+      "layer": 36,
+      "operation": "mla_swa_or_sparse_attention_and_mome",
+      "collective": "none",
+      "output_layout": "replicated"
+    },
+    {
+      "layer": 36,
+      "operation": "o_proj_output_row_matmul",
+      "collective": "all_gather",
+      "output_layout": "replicated_canonical_rows"
+    },
+    {
+      "layer": 36,
+      "operation": "mhc_post_and_ffn_pre",
+      "collective": "none",
+      "output_layout": "replicated"
+    },
+    {
+      "layer": 36,
+      "operation": "sigmoid_router_bias_topk_normalize_scale",
+      "collective": "none",
+      "output_layout": "identical_routes_all_ranks"
+    },
+    {
+      "layer": 36,
+      "operation": "owner_expert_gate_up_silu_down_weighted_sum",
+      "collective": "all_reduce_sum_fp32",
+      "output_layout": "replicated_expert_output"
+    },
+    {
+      "layer": 36,
+      "operation": "shared_expert_gate_up_silu_down",
+      "collective": "all_gather_each_projection",
+      "output_layout": "replicated_shared_output"
+    },
+    {
+      "layer": 36,
+      "operation": "add_shared_and_routed",
+      "collective": "none",
+      "output_layout": "replicated"
+    },
+    {
+      "layer": 36,
+      "operation": "mhc_post_and_optional_block_norm",
+      "collective": "none",
+      "output_layout": "replicated"
+    },
+    {
+      "layer": 37,
+      "operation": "mhc_pre_and_replicated_q_a_kv_a",
+      "collective": "none",
+      "output_layout": "replicated"
+    },
+    {
+      "layer": 37,
+      "operation": "q_b_kv_b_output_row_matmuls",
+      "collective": "all_gather_each_projection",
+      "output_layout": "replicated_canonical_rows"
+    },
+    {
+      "layer": 37,
+      "operation": "mla_swa_or_sparse_attention_and_mome",
+      "collective": "none",
+      "output_layout": "replicated"
+    },
+    {
+      "layer": 37,
+      "operation": "o_proj_output_row_matmul",
+      "collective": "all_gather",
+      "output_layout": "replicated_canonical_rows"
+    },
+    {
+      "layer": 37,
+      "operation": "mhc_post_and_ffn_pre",
+      "collective": "none",
+      "output_layout": "replicated"
+    },
+    {
+      "layer": 37,
+      "operation": "sigmoid_router_bias_topk_normalize_scale",
+      "collective": "none",
+      "output_layout": "identical_routes_all_ranks"
+    },
+    {
+      "layer": 37,
+      "operation": "owner_expert_gate_up_silu_down_weighted_sum",
+      "collective": "all_reduce_sum_fp32",
+      "output_layout": "replicated_expert_output"
+    },
+    {
+      "layer": 37,
+      "operation": "shared_expert_gate_up_silu_down",
+      "collective": "all_gather_each_projection",
+      "output_layout": "replicated_shared_output"
+    },
+    {
+      "layer": 37,
+      "operation": "add_shared_and_routed",
+      "collective": "none",
+      "output_layout": "replicated"
+    },
+    {
+      "layer": 37,
+      "operation": "mhc_post_and_optional_block_norm",
+      "collective": "none",
+      "output_layout": "replicated"
+    },
+    {
+      "layer": 38,
+      "operation": "mhc_pre_and_replicated_q_a_kv_a",
+      "collective": "none",
+      "output_layout": "replicated"
+    },
+    {
+      "layer": 38,
+      "operation": "q_b_kv_b_output_row_matmuls",
+      "collective": "all_gather_each_projection",
+      "output_layout": "replicated_canonical_rows"
+    },
+    {
+      "layer": 38,
+      "operation": "mla_swa_or_sparse_attention_and_mome",
+      "collective": "none",
+      "output_layout": "replicated"
+    },
+    {
+      "layer": 38,
+      "operation": "o_proj_output_row_matmul",
+      "collective": "all_gather",
+      "output_layout": "replicated_canonical_rows"
+    },
+    {
+      "layer": 38,
+      "operation": "mhc_post_and_ffn_pre",
+      "collective": "none",
+      "output_layout": "replicated"
+    },
+    {
+      "layer": 38,
+      "operation": "sigmoid_router_bias_topk_normalize_scale",
+      "collective": "none",
+      "output_layout": "identical_routes_all_ranks"
+    },
+    {
+      "layer": 38,
+      "operation": "owner_expert_gate_up_silu_down_weighted_sum",
+      "collective": "all_reduce_sum_fp32",
+      "output_layout": "replicated_expert_output"
+    },
+    {
+      "layer": 38,
+      "operation": "shared_expert_gate_up_silu_down",
+      "collective": "all_gather_each_projection",
+      "output_layout": "replicated_shared_output"
+    },
+    {
+      "layer": 38,
+      "operation": "add_shared_and_routed",
+      "collective": "none",
+      "output_layout": "replicated"
+    },
+    {
+      "layer": 38,
+      "operation": "mhc_post_and_optional_block_norm",
+      "collective": "none",
+      "output_layout": "replicated"
+    },
+    {
+      "layer": 39,
+      "operation": "mhc_pre_and_replicated_q_a_kv_a",
+      "collective": "none",
+      "output_layout": "replicated"
+    },
+    {
+      "layer": 39,
+      "operation": "q_b_kv_b_output_row_matmuls",
+      "collective": "all_gather_each_projection",
+      "output_layout": "replicated_canonical_rows"
+    },
+    {
+      "layer": 39,
+      "operation": "mla_swa_or_sparse_attention_and_mome",
+      "collective": "none",
+      "output_layout": "replicated"
+    },
+    {
+      "layer": 39,
+      "operation": "o_proj_output_row_matmul",
+      "collective": "all_gather",
+      "output_layout": "replicated_canonical_rows"
+    },
+    {
+      "layer": 39,
+      "operation": "mhc_post_and_ffn_pre",
+      "collective": "none",
+      "output_layout": "replicated"
+    },
+    {
+      "layer": 39,
+      "operation": "sigmoid_router_bias_topk_normalize_scale",
+      "collective": "none",
+      "output_layout": "identical_routes_all_ranks"
+    },
+    {
+      "layer": 39,
+      "operation": "owner_expert_gate_up_silu_down_weighted_sum",
+      "collective": "all_reduce_sum_fp32",
+      "output_layout": "replicated_expert_output"
+    },
+    {
+      "layer": 39,
+      "operation": "shared_expert_gate_up_silu_down",
+      "collective": "all_gather_each_projection",
+      "output_layout": "replicated_shared_output"
+    },
+    {
+      "layer": 39,
+      "operation": "add_shared_and_routed",
+      "collective": "none",
+      "output_layout": "replicated"
+    },
+    {
+      "layer": 39,
+      "operation": "mhc_post_and_optional_block_norm",
+      "collective": "none",
+      "output_layout": "replicated"
+    },
+    {
+      "layer": 40,
+      "operation": "mhc_pre_and_replicated_q_a_kv_a",
+      "collective": "none",
+      "output_layout": "replicated"
+    },
+    {
+      "layer": 40,
+      "operation": "q_b_kv_b_output_row_matmuls",
+      "collective": "all_gather_each_projection",
+      "output_layout": "replicated_canonical_rows"
+    },
+    {
+      "layer": 40,
+      "operation": "mla_swa_or_sparse_attention_and_mome",
+      "collective": "none",
+      "output_layout": "replicated"
+    },
+    {
+      "layer": 40,
+      "operation": "o_proj_output_row_matmul",
+      "collective": "all_gather",
+      "output_layout": "replicated_canonical_rows"
+    },
+    {
+      "layer": 40,
+      "operation": "mhc_post_and_ffn_pre",
+      "collective": "none",
+      "output_layout": "replicated"
+    },
+    {
+      "layer": 40,
+      "operation": "sigmoid_router_bias_topk_normalize_scale",
+      "collective": "none",
+      "output_layout": "identical_routes_all_ranks"
+    },
+    {
+      "layer": 40,
+      "operation": "owner_expert_gate_up_silu_down_weighted_sum",
+      "collective": "all_reduce_sum_fp32",
+      "output_layout": "replicated_expert_output"
+    },
+    {
+      "layer": 40,
+      "operation": "shared_expert_gate_up_silu_down",
+      "collective": "all_gather_each_projection",
+      "output_layout": "replicated_shared_output"
+    },
+    {
+      "layer": 40,
+      "operation": "add_shared_and_routed",
+      "collective": "none",
+      "output_layout": "replicated"
+    },
+    {
+      "layer": 40,
+      "operation": "mhc_post_and_optional_block_norm",
+      "collective": "none",
+      "output_layout": "replicated"
+    },
+    {
+      "layer": 41,
+      "operation": "mhc_pre_and_replicated_q_a_kv_a",
+      "collective": "none",
+      "output_layout": "replicated"
+    },
+    {
+      "layer": 41,
+      "operation": "q_b_kv_b_output_row_matmuls",
+      "collective": "all_gather_each_projection",
+      "output_layout": "replicated_canonical_rows"
+    },
+    {
+      "layer": 41,
+      "operation": "mla_swa_or_sparse_attention_and_mome",
+      "collective": "none",
+      "output_layout": "replicated"
+    },
+    {
+      "layer": 41,
+      "operation": "o_proj_output_row_matmul",
+      "collective": "all_gather",
+      "output_layout": "replicated_canonical_rows"
+    },
+    {
+      "layer": 41,
+      "operation": "mhc_post_and_ffn_pre",
+      "collective": "none",
+      "output_layout": "replicated"
+    },
+    {
+      "layer": 41,
+      "operation": "sigmoid_router_bias_topk_normalize_scale",
+      "collective": "none",
+      "output_layout": "identical_routes_all_ranks"
+    },
+    {
+      "layer": 41,
+      "operation": "owner_expert_gate_up_silu_down_weighted_sum",
+      "collective": "all_reduce_sum_fp32",
+      "output_layout": "replicated_expert_output"
+    },
+    {
+      "layer": 41,
+      "operation": "shared_expert_gate_up_silu_down",
+      "collective": "all_gather_each_projection",
+      "output_layout": "replicated_shared_output"
+    },
+    {
+      "layer": 41,
+      "operation": "add_shared_and_routed",
+      "collective": "none",
+      "output_layout": "replicated"
+    },
+    {
+      "layer": 41,
+      "operation": "mhc_post_and_optional_block_norm",
+      "collective": "none",
+      "output_layout": "replicated"
+    },
+    {
+      "layer": 42,
+      "operation": "mhc_pre_and_replicated_q_a_kv_a",
+      "collective": "none",
+      "output_layout": "replicated"
+    },
+    {
+      "layer": 42,
+      "operation": "q_b_kv_b_output_row_matmuls",
+      "collective": "all_gather_each_projection",
+      "output_layout": "replicated_canonical_rows"
+    },
+    {
+      "layer": 42,
+      "operation": "mla_swa_or_sparse_attention_and_mome",
+      "collective": "none",
+      "output_layout": "replicated"
+    },
+    {
+      "layer": 42,
+      "operation": "o_proj_output_row_matmul",
+      "collective": "all_gather",
+      "output_layout": "replicated_canonical_rows"
+    },
+    {
+      "layer": 42,
+      "operation": "mhc_post_and_ffn_pre",
+      "collective": "none",
+      "output_layout": "replicated"
+    },
+    {
+      "layer": 42,
+      "operation": "sigmoid_router_bias_topk_normalize_scale",
+      "collective": "none",
+      "output_layout": "identical_routes_all_ranks"
+    },
+    {
+      "layer": 42,
+      "operation": "owner_expert_gate_up_silu_down_weighted_sum",
+      "collective": "all_reduce_sum_fp32",
+      "output_layout": "replicated_expert_output"
+    },
+    {
+      "layer": 42,
+      "operation": "shared_expert_gate_up_silu_down",
+      "collective": "all_gather_each_projection",
+      "output_layout": "replicated_shared_output"
+    },
+    {
+      "layer": 42,
+      "operation": "add_shared_and_routed",
+      "collective": "none",
+      "output_layout": "replicated"
+    },
+    {
+      "layer": 42,
+      "operation": "mhc_post_and_optional_block_norm",
+      "collective": "none",
+      "output_layout": "replicated"
+    },
+    {
+      "layer": 43,
+      "operation": "mhc_pre_and_replicated_q_a_kv_a",
+      "collective": "none",
+      "output_layout": "replicated"
+    },
+    {
+      "layer": 43,
+      "operation": "q_b_kv_b_output_row_matmuls",
+      "collective": "all_gather_each_projection",
+      "output_layout": "replicated_canonical_rows"
+    },
+    {
+      "layer": 43,
+      "operation": "mla_swa_or_sparse_attention_and_mome",
+      "collective": "none",
+      "output_layout": "replicated"
+    },
+    {
+      "layer": 43,
+      "operation": "o_proj_output_row_matmul",
+      "collective": "all_gather",
+      "output_layout": "replicated_canonical_rows"
+    },
+    {
+      "layer": 43,
+      "operation": "mhc_post_and_ffn_pre",
+      "collective": "none",
+      "output_layout": "replicated"
+    },
+    {
+      "layer": 43,
+      "operation": "sigmoid_router_bias_topk_normalize_scale",
+      "collective": "none",
+      "output_layout": "identical_routes_all_ranks"
+    },
+    {
+      "layer": 43,
+      "operation": "owner_expert_gate_up_silu_down_weighted_sum",
+      "collective": "all_reduce_sum_fp32",
+      "output_layout": "replicated_expert_output"
+    },
+    {
+      "layer": 43,
+      "operation": "shared_expert_gate_up_silu_down",
+      "collective": "all_gather_each_projection",
+      "output_layout": "replicated_shared_output"
+    },
+    {
+      "layer": 43,
+      "operation": "add_shared_and_routed",
+      "collective": "none",
+      "output_layout": "replicated"
+    },
+    {
+      "layer": 43,
+      "operation": "mhc_post_and_optional_block_norm",
+      "collective": "none",
+      "output_layout": "replicated"
+    },
+    {
+      "layer": 44,
+      "operation": "mhc_pre_and_replicated_q_a_kv_a",
+      "collective": "none",
+      "output_layout": "replicated"
+    },
+    {
+      "layer": 44,
+      "operation": "q_b_kv_b_output_row_matmuls",
+      "collective": "all_gather_each_projection",
+      "output_layout": "replicated_canonical_rows"
+    },
+    {
+      "layer": 44,
+      "operation": "mla_swa_or_sparse_attention_and_mome",
+      "collective": "none",
+      "output_layout": "replicated"
+    },
+    {
+      "layer": 44,
+      "operation": "o_proj_output_row_matmul",
+      "collective": "all_gather",
+      "output_layout": "replicated_canonical_rows"
+    },
+    {
+      "layer": 44,
+      "operation": "mhc_post_and_ffn_pre",
+      "collective": "none",
+      "output_layout": "replicated"
+    },
+    {
+      "layer": 44,
+      "operation": "sigmoid_router_bias_topk_normalize_scale",
+      "collective": "none",
+      "output_layout": "identical_routes_all_ranks"
+    },
+    {
+      "layer": 44,
+      "operation": "owner_expert_gate_up_silu_down_weighted_sum",
+      "collective": "all_reduce_sum_fp32",
+      "output_layout": "replicated_expert_output"
+    },
+    {
+      "layer": 44,
+      "operation": "shared_expert_gate_up_silu_down",
+      "collective": "all_gather_each_projection",
+      "output_layout": "replicated_shared_output"
+    },
+    {
+      "layer": 44,
+      "operation": "add_shared_and_routed",
+      "collective": "none",
+      "output_layout": "replicated"
+    },
+    {
+      "layer": 44,
+      "operation": "mhc_post_and_optional_block_norm",
+      "collective": "none",
+      "output_layout": "replicated"
+    },
+    {
+      "layer": 45,
+      "operation": "mhc_pre_and_replicated_q_a_kv_a",
+      "collective": "none",
+      "output_layout": "replicated"
+    },
+    {
+      "layer": 45,
+      "operation": "q_b_kv_b_output_row_matmuls",
+      "collective": "all_gather_each_projection",
+      "output_layout": "replicated_canonical_rows"
+    },
+    {
+      "layer": 45,
+      "operation": "mla_swa_or_sparse_attention_and_mome",
+      "collective": "none",
+      "output_layout": "replicated"
+    },
+    {
+      "layer": 45,
+      "operation": "o_proj_output_row_matmul",
+      "collective": "all_gather",
+      "output_layout": "replicated_canonical_rows"
+    },
+    {
+      "layer": 45,
+      "operation": "mhc_post_and_ffn_pre",
+      "collective": "none",
+      "output_layout": "replicated"
+    },
+    {
+      "layer": 45,
+      "operation": "sigmoid_router_bias_topk_normalize_scale",
+      "collective": "none",
+      "output_layout": "identical_routes_all_ranks"
+    },
+    {
+      "layer": 45,
+      "operation": "owner_expert_gate_up_silu_down_weighted_sum",
+      "collective": "all_reduce_sum_fp32",
+      "output_layout": "replicated_expert_output"
+    },
+    {
+      "layer": 45,
+      "operation": "shared_expert_gate_up_silu_down",
+      "collective": "all_gather_each_projection",
+      "output_layout": "replicated_shared_output"
+    },
+    {
+      "layer": 45,
+      "operation": "add_shared_and_routed",
+      "collective": "none",
+      "output_layout": "replicated"
+    },
+    {
+      "layer": 45,
+      "operation": "mhc_post_and_optional_block_norm",
+      "collective": "none",
+      "output_layout": "replicated"
+    }
+  ],
+  "full_plan_sha256": "68b7c48606bb23a24768763cd6e13de6f0a509e4a01a6f55eb8afce9af430a5d"
+}

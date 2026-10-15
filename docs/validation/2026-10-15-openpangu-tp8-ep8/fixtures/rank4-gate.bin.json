@@ -1,0 +1,12 @@
+{
+  "checkpoint_metadata_sha256": "e6ab8e354f31f844671a0d6013d686e86b4ebc2ba8f3e893d509c2c170d015d8",
+  "fixture_sha256": "00c88e235faf4879e6f158ae27a4a55a7b6cd461478d018815c8526ad75352a5",
+  "module": "model.layers.2.mlp.experts.128.gate_proj",
+  "scale_sha256": "10c1e7b9f0950d82c19e542192102de857898d26bf6cf58c6b9d300db6b47335",
+  "scope": "one real projection; synthetic inputs; not full-model qualification",
+  "shape": [
+    1024,
+    2560
+  ],
+  "weight_sha256": "f51a6f4f587507ca7fe69a584f2f48cbed6d127a759808c3275185a0abde0765"
+}

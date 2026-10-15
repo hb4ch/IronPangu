@@ -2,6 +2,7 @@
 pub mod binding;
 mod inventory;
 mod json;
+pub mod parallel;
 use crate::checkpoint::sha;
 use inferfabric_model::{Result, invalid};
 pub use inventory::{Inventory, TensorDescriptor};

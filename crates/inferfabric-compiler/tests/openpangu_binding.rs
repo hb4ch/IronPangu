@@ -106,3 +106,87 @@ fn mtp_is_excluded_only_within_declared_layer_range() {
     m.config["num_nextn_predict_layers"] = json!(0);
     assert!(binding::bind(&m).is_err());
 }
+#[test]
+fn tp_ep_slices_cover_weights_once_and_keep_experts_whole() {
+    let mut m = fixture();
+    m.config["n_routed_experts"] = json!(8);
+    let tensors = &mut m.inventory.as_mut().unwrap().tensors;
+    for layer in [2, 3] {
+        let template: Vec<_> = tensors
+            .iter()
+            .filter(|(name, _)| name.starts_with(&format!("model.layers.{layer}.mlp.experts.0.")))
+            .map(|(n, t)| (n.clone(), t.clone()))
+            .collect();
+        for e in 2..8 {
+            for (name, t) in &template {
+                tensors.insert(
+                    name.replace(".experts.0.", &format!(".experts.{e}.")),
+                    t.clone(),
+                );
+            }
+        }
+        tensors
+            .get_mut(&format!("model.layers.{layer}.mlp.gate.weight"))
+            .unwrap()
+            .shape[0] = 8;
+        tensors
+            .get_mut(&format!("model.layers.{layer}.mlp.e_score_correction_bias"))
+            .unwrap()
+            .shape[0] = 8;
+    }
+    // Keep synthetic storage lengths consistent with the expanded router rows.
+    for layer in [2, 3] {
+        tensors
+            .get_mut(&format!("model.layers.{layer}.mlp.gate.weight"))
+            .unwrap()
+            .bytes = 8 * 2560 * 2;
+        tensors
+            .get_mut(&format!("model.layers.{layer}.mlp.e_score_correction_bias"))
+            .unwrap()
+            .bytes = 8 * 4;
+    }
+    let spec = inferfabric_model::OpenPanguParallel {
+        tp: 8,
+        ep: 8,
+        devices: (0..8).collect(),
+        max_num_seqs: 4,
+        max_num_batched_tokens: 16,
+        max_model_len: 2048,
+    };
+    let plan = openpangu::parallel::compile(&m, &spec).unwrap();
+    assert_eq!(plan.experts_per_rank, 1);
+    let name = "model.layers.0.self_attn.q_b_proj.weight";
+    let original = &m.inventory.as_ref().unwrap().tensors[name];
+    for (rank, r) in plan.ranks.iter().enumerate() {
+        let w = &r.weights[name];
+        assert_eq!(w.bytes * 8, original.bytes);
+        assert_eq!(w.offset, original.offset + w.bytes * rank as u64);
+        assert!(r.weights.contains_key(&format!(
+            "model.layers.2.mlp.experts.{rank}.gate_proj.weight"
+        )));
+        assert!(!r.weights.contains_key(&format!(
+            "model.layers.2.mlp.experts.{}.gate_proj.weight",
+            (rank + 1) % 8
+        )));
+        assert_eq!(
+            r.weights["model.embed_tokens.weight"].placement,
+            "replicated"
+        );
+        assert_eq!(
+            r.weights["model.layers.0.self_attn.q_b_proj.weight_scale"].local_shape,
+            [1152, 1]
+        );
+    }
+    assert!(
+        plan.schedule
+            .iter()
+            .any(|s| s.collective == "all_reduce_sum_fp32")
+    );
+    assert!(!plan.executable);
+    let mut bad = spec.clone();
+    bad.ep = 4;
+    assert!(openpangu::parallel::compile(&m, &bad).is_err());
+    bad = spec;
+    bad.max_model_len = 524289;
+    assert!(openpangu::parallel::compile(&m, &bad).is_err());
+}

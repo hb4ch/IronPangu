@@ -143,3 +143,5 @@ mod tests {
         }
     }
 }
+
+pub mod openpangu;

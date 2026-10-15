@@ -190,7 +190,7 @@ cmake --build native-build -j4
 ./native-build/acl_graph_probe --abi
 ```
 
-For an explicitly optimized native build, use a distinct directory with `-DCMAKE_BUILD_TYPE=Release`, then qualify those artifacts. The default commands do not set a CMake build type. CMake requires C++17 and links `ascendcl`, `opapi`, `nnopbase`, and `hccl`. It builds `libinferfabric_acl.so`, `acl_graph_probe`, `gdr_contract_probe`, `sampler_probe`, `tp_probe`, `physical_plan_probe`, and `openpangu_linear_probe`.
+For an explicitly optimized native build, use a distinct directory with `-DCMAKE_BUILD_TYPE=Release`, then qualify those artifacts. The default commands do not set a CMake build type. CMake requires C++17 and links `ascendcl`, `opapi`, `nnopbase`, and `hccl`. It builds `libinferfabric_acl.so`, `acl_graph_probe`, `gdr_contract_probe`, `sampler_probe`, `tp_probe`, `physical_plan_probe`, `openpangu_linear_probe`, and `openpangu_parallel_probe`.
 
 To upload the release CLI separately from local PowerShell:
 
