@@ -1,13 +1,45 @@
-# InferFabric
+<p align="center">
+  <img src="docs/assets/inferfabric-banner.svg" alt="InferFabric — Compile the model. Plan the work. An inference compiler and runtime for Ascend." width="1200" />
+</p>
+
+<h1 align="center">InferFabric</h1>
+
+<p align="center">
+  <strong>Explicit models. Planned memory. Native execution.</strong>
+</p>
+
+<p align="center">
+  <a href="#current-capabilities">Capabilities</a> ·
+  <a href="#build-and-run">Build &amp; run</a> ·
+  <a href="#full-model-visual-inspection">Explore a model</a> ·
+  <a href="#roadmap-to-production">Roadmap</a> ·
+  <a href="#repository-and-verification">Documentation</a>
+</p>
+
+---
+
+An inference compiler and runtime for Huawei Ascend, built in Rust with a C ABI to C++/Ascend C operators and CANN libraries. Model structure and parallel execution are declared in a DSL. Serving uses the **vLLM 0.25.1 Rust frontend**, backed by InferFabric's scheduler and native execution engine.
+
+**Implemented and previously hardware-qualified:** Qwen3.5-2B text generation across all 24 layers, ACL Graph replay, continuous batching, NPU sampling, activation memory reuse, and DSL-configured tensor parallelism on two Ascend devices. No PyTorch or Python engine participates in model loading, execution, or serving.
+
+> **Project status · Active development**
+>
+> The current native Qwen path is implemented. DSL v1, general native bundles and automatic backend code generation remain roadmap work. Recorded hardware results describe their tested revisions and environments; they are not a production-readiness claim.
+
+| Model explicitly | Compile deliberately | Execute natively |
+|---|---|---|
+| Describe tensor computation, state and parallelism in a DSL. | Specialize model constants and plan kernels, memory and dependencies. | Run through Rust and C-compatible operators, with ACL Graph replay. |
+
+**Start here:** [Architecture](docs/design.md) · [DSL v1 design](docs/dsl-language-design.md) · [IR reference](docs/ir-reference.md) · [NPU qualification](docs/validation/2026-09-08-npu-planning/README.md)
+
+<details>
+<summary><strong>Coming from Iron Pangu? Naming and artifact compatibility</strong></summary>
 
 InferFabric was previously named Iron Pangu. Pangu is a planned model target, not the infrastructure name. Packages and commands now use `inferfabric`, environment variables use `INFERFABRIC_*`, DSL files use `.inferfabric`, and compiled plans use `.inferfabric-bin`. Rebuild Rust binaries and `libinferfabric_acl.so` together because C ABI symbols also changed. Existing deployment directories and containers are not renamed automatically; substitute your actual checkout and container paths in the examples.
 
 Historical records under `docs/validation*` retain their original names and outputs. They do not validate newly built binaries. The original binary format marker is retained for format continuity.
 
-
-An inference compiler and runtime for Huawei Ascend, built in Rust with a C ABI to C++/Ascend C operators and CANN libraries. Model structure and parallel execution are declared in a DSL. Serving uses the **vLLM 0.25.1 Rust frontend**, backed by InferFabric's scheduler and native execution engine.
-
-**Working today:** Qwen3.5-2B text generation across all 24 layers, ACL Graph replay, continuous batching, NPU sampling, activation memory reuse, and DSL-configured tensor parallelism on two Ascend devices. No PyTorch or Python engine participates in model loading, execution, or serving.
+</details>
 
 ## Why build this?
 
@@ -132,6 +164,14 @@ For CPU-only development, `cargo run -p inferfabric-cli -- demo examples/qwen35-
 ## Roadmap to production
 
 Updated 2026-09-09. This roadmap covers the language, compiler, native execution, serving behavior, and operational work needed for a production system. Existing demos and successful hardware probes are development evidence, not a production release designation. Milestones are complete only when their exit gates pass on the declared support matrix; dates and performance claims will follow measured results.
+
+**Roadmap at a glance**
+
+| Foundation · 1–5 | Compiler & runtime · 6–10 | Production · 11–15 |
+|---|---|---|
+| DSL v1 and model elaboration | Kernel adapters and native fusion | Recovery and operational reliability |
+| Physical planning and native bundles | Packed prefill and distributed execution | Observability, security and packaging |
+| Inspectable IR and execution plans | General runtime + vLLM Rust frontend | JIT, model coverage and release gates |
 
 ### Starting point and release scope
 

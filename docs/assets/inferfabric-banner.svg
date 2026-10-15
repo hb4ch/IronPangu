@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="320" viewBox="0 0 1200 320" role="img" aria-labelledby="title desc">
+<title id="title">InferFabric — Compile the model. Plan the work.</title>
+<desc id="desc">An inference compiler and runtime for Ascend. A tensor graph becomes a planned native execution program.</desc>
+<defs>
+ <linearGradient id="bg" x2="1" y2="1"><stop stop-color="#0b1425"/><stop offset="1" stop-color="#142b3a"/></linearGradient>
+ <linearGradient id="accent"><stop stop-color="#70ead2"/><stop offset="1" stop-color="#8faeff"/></linearGradient>
+ <pattern id="grid" width="32" height="32" patternUnits="userSpaceOnUse"><path d="M32 0H0V32" fill="none" stroke="#284151" stroke-width=".6"/></pattern>
+</defs>
+<rect width="1200" height="320" rx="18" fill="url(#bg)"/>
+<rect x="670" width="530" height="320" fill="url(#grid)" opacity=".5"/>
+<rect x="48" y="48" width="34" height="4" rx="2" fill="#70ead2"/>
+<text x="96" y="55" fill="#9fb8ca" font-family="Segoe UI,Arial,sans-serif" font-size="12" letter-spacing="3">MODEL → PLAN → EXECUTE</text>
+<text x="45" y="131" fill="#f1f6fc" font-family="Segoe UI,Arial,sans-serif" font-size="62" font-weight="700" letter-spacing="-2">InferFabric</text>
+<text x="48" y="176" fill="#c3d4e3" font-family="Segoe UI,Arial,sans-serif" font-size="24">Compile the model. Plan the work.</text>
+<text x="48" y="211" fill="#90a9bd" font-family="Segoe UI,Arial,sans-serif" font-size="16">An inference compiler and runtime for Ascend.</text>
+<g font-family="Segoe UI,Arial,sans-serif" font-size="12" fill="#b9d4e4">
+ <rect x="48" y="248" width="66" height="28" rx="14" fill="#213848"/><text x="64" y="267">RUST</text>
+ <rect x="124" y="248" width="112" height="28" rx="14" fill="#213848"/><text x="141" y="267">NATIVE OPS</text>
+ <rect x="246" y="248" width="141" height="28" rx="14" fill="#213848"/><text x="263" y="267">GRAPH EXECUTION</text>
+</g>
+<g stroke="url(#accent)" stroke-width="2" fill="none" opacity=".85">
+ <path d="M742 97H793V160H850M742 223H793V160M892 160H949V97H1000M949 160V223H1000M1042 97H1090V160M1042 223H1090V160H1134"/>
+</g>
+<g fill="#193544" stroke="#70ead2" stroke-width="2">
+ <rect x="700" y="76" width="42" height="42" rx="10"/><rect x="700" y="202" width="42" height="42" rx="10"/>
+ <rect x="850" y="139" width="42" height="42" rx="10"/>
+ <rect x="1000" y="76" width="42" height="42" rx="10"/><rect x="1000" y="202" width="42" height="42" rx="10"/>
+</g>
+<circle cx="1134" cy="160" r="7" fill="#a4baff"/>
+<g fill="#a9c2d3" font-family="Segoe UI,Arial,sans-serif" font-size="11" text-anchor="middle" letter-spacing="1.5">
+ <text x="721" y="271">TENSORS</text><text x="871" y="210">PLAN</text><text x="1021" y="271">KERNELS</text>
+</g>
+<path d="M48 305H1152" stroke="url(#accent)" stroke-width="2" opacity=".6"/>
+</svg>
