@@ -79,3 +79,8 @@ add_executable(openpangu_load_probe probes/openpangu_load_probe.cpp)
 target_include_directories(openpangu_load_probe PRIVATE "${ACL_INCLUDE}")
 target_link_libraries(openpangu_load_probe PRIVATE "${ACL_LIBRARY}" "${OPAPI_LIBRARY}" "${NNOPBASE_LIBRARY}")
 target_compile_options(openpangu_load_probe PRIVATE -Wall -Wextra -Werror)
+
+add_executable(openpangu_decode src/openpangu_decode.cpp)
+target_include_directories(openpangu_decode PRIVATE "${ACL_INCLUDE}")
+target_link_libraries(openpangu_decode PRIVATE "${ACL_LIBRARY}" "${OPAPI_LIBRARY}" "${NNOPBASE_LIBRARY}" "${HCCL_LIBRARY}" pthread)
+target_compile_options(openpangu_decode PRIVATE -Wall -Wextra -Werror)
