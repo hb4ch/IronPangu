@@ -1,0 +1,10 @@
+{
+  "checkpoint_metadata_sha256": "e6ab8e354f31f844671a0d6013d686e86b4ebc2ba8f3e893d509c2c170d015d8",
+  "fixture_sha256": "484e80486f4a82037f67d275932fa3e91df58504487efecb86dc81a80badc36f",
+  "shape": [
+    256
+  ],
+  "source_dtype": "F32",
+  "source_sha256": "66c906df80bb57774a5796d16caf3e834404b67a9d23a841f00f48bbcff29ab6",
+  "tensor": "model.layers.2.mlp.e_score_correction_bias"
+}

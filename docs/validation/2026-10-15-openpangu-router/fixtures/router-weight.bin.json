@@ -1,0 +1,11 @@
+{
+  "checkpoint_metadata_sha256": "e6ab8e354f31f844671a0d6013d686e86b4ebc2ba8f3e893d509c2c170d015d8",
+  "fixture_sha256": "5f44b745c84eae2e84e3015c6435ae1126946a56e941481e26f97c404fd0ed76",
+  "shape": [
+    256,
+    2560
+  ],
+  "source_dtype": "BF16",
+  "source_sha256": "744d65f2d48bbf4a6e48fabff1a1071cba4072d50eab38eaf3aef6db9b010747",
+  "tensor": "model.layers.2.mlp.gate.weight"
+}
