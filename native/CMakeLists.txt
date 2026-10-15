@@ -67,3 +67,10 @@ if(EXISTS "${OMNI_INFERENCE_ROOT}/op_api/include/aclnn_ai_infra_fused_causal_con
   target_link_libraries(openpangu_mome_probe PRIVATE "${OMNI_INFERENCE_ROOT}/op_api/lib/libcust_opapi.so" "${ACL_LIBRARY}" "${OPAPI_LIBRARY}" "${NNOPBASE_LIBRARY}")
   target_compile_options(openpangu_mome_probe PRIVATE -Wall -Wextra -Werror)
 endif()
+
+if(EXISTS "${OMNI_INFERENCE_ROOT}/op_api/include/aclnn_ai_infra_sparse_flash_attention_pioneer.h")
+  add_executable(openpangu_attention_probe probes/openpangu_attention_probe.cpp)
+  target_include_directories(openpangu_attention_probe PRIVATE "${ACL_INCLUDE}" "${OMNI_INFERENCE_ROOT}/op_api/include")
+  target_link_libraries(openpangu_attention_probe PRIVATE "${OMNI_INFERENCE_ROOT}/op_api/lib/libcust_opapi.so" "${ACL_LIBRARY}" "${OPAPI_LIBRARY}" "${NNOPBASE_LIBRARY}")
+  target_compile_options(openpangu_attention_probe PRIVATE -Wall -Wextra -Werror)
+endif()
