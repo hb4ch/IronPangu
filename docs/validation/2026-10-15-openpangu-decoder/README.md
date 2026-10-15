@@ -16,3 +16,17 @@ These checkpoint-tokenizer IDs encode `<|message_start|>user\n1+1=?<|message_end
 The runner rejects prompts plus generated tokens exceeding 512. Within this bound every causal token is inside the SWA-512 window and sparse top-2048 set, so no learned selection can remove any causal key. The runner therefore uses the exact full candidate set and does not claim learned-indexer or long-context support. It uses absorbed MLA for every token, including prompt tokens. That has different BF16 rounding from an unabsorbed prefill reference and must be qualified.
 
 Limitations: one request, serial token prefill, greedy decoding, C++ scalar/state math, synchronous temporary allocations, no integrated ACLgraph or Rust frontend, no request cancellation/recovery, and no production performance claim. Existing independently qualified graph paths are unchanged. Routed MLP currently rounds SwiGLU to BF16 before dynamic quantization; matching the reference fused quantization boundary is an open numerical integration task. Process-wide failure exit is development-only.
+
+## Three-prompt full-decoder smoke qualification
+
+The next integration revision uses CANN `aclnnDequantSwigluQuant` directly for routed-expert activation quantization, removing the extra BF16 rounding before INT8 quantization. Every generated token is checked for agreement across all eight ranks. JSON records now include top-five log probabilities.
+
+The real-checkpoint runs completed all three cases, including EOS:
+
+| Prompt | Generated text (EOS omitted here) |
+|---|---|
+| `1+1=?` | `1 + 1 = 2` |
+| `What is the capital of France?` | `The capital of France is Paris.` |
+| `请用一句话介绍北京。` | `北京是中国的首都，拥有悠久的历史、丰富的文化遗产和现代化的城市风貌。` |
+
+Reproduce inside Docker with `bash scripts/qualify-openpangu-decoder.sh /models/92B load-plan decoder-qualification`. The Python driver only tokenizes/detokenizes and invokes the native binary; model loading and execution are C++. It checks expected answer content, while the executable checks finite residuals and rank consensus. These are smoke checks, not proof of broad accuracy or reference-logit parity. The native executable dependency record contains no Python or Torch libraries. The prior arithmetic file records the earlier activation-rounding baseline; `native/` records the fused-quantization revision.
