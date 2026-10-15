@@ -9,6 +9,7 @@
 </p>
 
 <p align="center">
+  <a href="#the-big-picture">Vision</a> ·
   <a href="#current-capabilities">Capabilities</a> ·
   <a href="#build-and-run">Build &amp; run</a> ·
   <a href="#full-model-visual-inspection">Explore a model</a> ·
@@ -40,6 +41,12 @@ InferFabric was previously named Iron Pangu. Pangu is a planned model target, no
 Historical records under `docs/validation*` retain their original names and outputs. They do not validate newly built binaries. The original binary format marker is retained for format continuity.
 
 </details>
+
+## The big picture
+
+![Target architecture: compile an explicit model into a native bundle, then schedule requests and execute on Ascend.](docs/assets/inferfabric-vision.svg)
+
+*Target architecture.* The current Qwen runtime already serves through the Rust frontend and ACL Graph replay. General DSL v1 compilation and native bundles are planned.
 
 ## Why build this?
 
@@ -98,6 +105,12 @@ DSL + checkpoint metadata
 
 Today, the C++ bridge is compiled ahead of time, and the native runtime prepares vendor operators and captures graphs at startup. Serialized `.inferfabric-bin` artifacts contain versioned, checksummed plans; they are not standalone native model executables. Whole-program native code generation and JIT kernel specialization are roadmap items. ACL Graph capture itself is not a substitute for either.
 
+### Whole-model planning, backend optimization
+
+![Proposed backend design: InferFabric delegates computation regions to TileLang, PTO, Triton or Ascend C and selects qualified implementations before finalizing memory and scheduling.](docs/assets/inferfabric-backends.svg)
+
+*Proposed generated-backend design.* InferFabric owns model semantics, fusion candidates and global planning. Backend adapters receive computation regions before internal tiling is fixed, then return compiled implementations and resource contracts. TileLang can optimize parameterized programs and search adapter-supplied configurations; PTO remains a sibling route. These generated routes are roadmap work, distinct from loading handwritten kernels.
+
 ## Current capabilities
 
 | Area | Implemented behavior |
@@ -120,6 +133,8 @@ On the qualified Ascend A3/CANN 9.1.0 setup, TP2 with context 2048 and four sequ
 - Dedicated and pooled allocation produced identical startup/full-context logits and all 48 persistent state-region fingerprints on both ranks.
 - Sixty mixed requests matched dedicated-allocation outputs, with no observed process HBM growth across five measurement rounds at MiB resolution.
 - Graph/eager checks, independent operator CPU references, seeded sampling, streaming, cancellation, and slot reuse passed. TP1 also passed startup qualification at context 8192 with eight slots.
+
+![Measured memory comparison: pooled allocation reduces startup HBM growth from 5.789 GB to 3.531 GB, workspace from 1.394 GB to 0.034 GB, and temporary allocations from 598.6 MB to 56.3 MB.](docs/assets/inferfabric-memory.svg)
 
 These measurements compare InferFabric allocator configurations, not InferFabric against PyTorch or another serving engine. See [activation memory validation](docs/npu-activation-memory.md) for reports, methodology, and limits.
 
