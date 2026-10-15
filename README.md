@@ -142,7 +142,7 @@ These measurements compare InferFabric allocator configurations, not InferFabric
 
 ## Build and run
 
-Rust requires 1.96 or newer; the qualified local toolchain is 1.98.1. Rust ARM64 binaries are cross-compiled locally under WSL using the target container's sysroot. Native C++ compilation and NPU execution run inside Docker. See [environment and cross-compilation setup](docs/remote-development.md); its initial bring-up sections are historical.
+Rust requires 1.96 or newer; the qualified local toolchain is 1.98.1. Rust ARM64 binaries are cross-compiled locally under WSL using the target container's sysroot. Native C++ compilation and NPU execution run inside Docker. See the [build and cross-compilation guide](docs/build.md) for toolchain setup, sysroot preparation, both Cargo workspaces, Docker builds and verification. The [initial environment record](docs/remote-development.md) is historical.
 
 Build the Rust frontend locally after preparing that toolchain and sysroot:
 
