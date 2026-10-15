@@ -38,12 +38,14 @@ pub enum Role {
     Decode,
 }
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(deny_unknown_fields)]
 pub struct Mesh {
     pub tp: usize,
     pub cp: usize,
     pub sp: bool,
 }
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(deny_unknown_fields)]
 pub struct Model {
     pub name: String,
     pub hidden: usize,
@@ -58,6 +60,7 @@ pub struct Model {
     pub layers: Vec<Layer>,
 }
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(deny_unknown_fields)]
 pub struct Spec {
     pub model: Model,
     pub prefill: Mesh,

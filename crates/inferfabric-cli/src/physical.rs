@@ -16,10 +16,33 @@ fn write_json(path: &Path, value: &impl serde::Serialize) -> Result<()> {
 }
 pub fn run(args: &[String]) -> Result<()> {
     match args[0].as_str() {
-        "plan" if args.len() == 3 || (args.len() == 5 && args[3] == "--dump-ir") => {
-            let graph: LogicalGraph =
-                serde_json::from_slice(&read(&args[1])?).map_err(|e| invalid(e.to_string()))?;
-            let c = plan::compile(graph)?;
+        "plan" | "plan-debug" if args.len() == 3 || (args.len() == 5 && args[3] == "--dump-ir") => {
+            let source = read(&args[1])?;
+            let text =
+                std::str::from_utf8(&source).map_err(|_| invalid("model source must be UTF-8"))?;
+            let is_artifact = serde_json::from_slice::<Value>(&source)
+                .ok()
+                .is_some_and(|v| v.get("format").is_some());
+            let graph: LogicalGraph = if !text.trim_start().starts_with('{') || is_artifact {
+                match inferfabric_dsl::definition(text)? {
+                    inferfabric_dsl::authoring::ModelDefinition::Graph { graph } => graph,
+                    _ => {
+                        return Err(invalid(
+                            "use the checkpoint compiler for this model contract",
+                        ));
+                    }
+                }
+            } else {
+                // Logical JSON is an IR interchange, not the removed legacy DSL.
+                serde_json::from_slice(&source).map_err(|e| invalid(e.to_string()))?
+            };
+            let c = plan::compile_with_options(
+                graph,
+                &plan::CompileOptions {
+                    debug: args[0] == "plan-debug",
+                    ..Default::default()
+                },
+            )?;
             let binary = plan::encode(&c.physical)?;
             inferfabric_compiler::write_atomic(Path::new(&args[2]), &binary)?;
             if args.len() == 5 {
@@ -43,6 +66,13 @@ pub fn run(args: &[String]) -> Result<()> {
                 c.physical.removed_nodes.len(),
                 args[2]
             );
+        }
+        "tune-plan" if args.len() == 4 => {
+            let original = plan::decode(&read(&args[1])?)?;
+            let overrides =
+                serde_json::from_slice(&read(&args[2])?).map_err(|e| invalid(e.to_string()))?;
+            let tuned = plan::override_kernels(&original, &overrides)?;
+            inferfabric_compiler::write_atomic(Path::new(&args[3]), &plan::encode(&tuned)?)?;
         }
         "explain" if args.len() == 2 || (args.len() == 4 && args[2] == "--html") => {
             let p = plan::decode(&read(&args[1])?)?;

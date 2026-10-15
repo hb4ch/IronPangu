@@ -15,8 +15,18 @@ fn main() {
 fn run() -> Result<()> {
     let args = env::args().skip(1).collect::<Vec<_>>();
     match args.first().map(String::as_str) {
+        Some("model-source") if args.len() == 3 => {
+            let definition = inferfabric_dsl::definition(&fs::read_to_string(&args[1])?)?;
+            inferfabric_compiler::write_atomic(
+                Path::new(&args[2]),
+                &inferfabric_dsl::authoring::encode(&definition)?,
+            )?;
+            return Ok(());
+        }
         Some("explain-model") => return model_inspect::run(&args),
-        Some("plan" | "explain" | "execute") => return physical::run(&args),
+        Some("plan" | "plan-debug" | "tune-plan" | "explain" | "execute") => {
+            return physical::run(&args);
+        }
         #[cfg(unix)]
         Some("npu-model-probe") if args.len() == 7 => {
             let device = args[4].parse().map_err(|_| invalid("invalid device ID"))?;

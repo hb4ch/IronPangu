@@ -291,3 +291,7 @@ python3 scripts/compare-openpangu-decoder.py decoder-qualification/results.json 
 ```
 
 The saved reference applies only to the pinned checkpoint/tokenizer in the validation report. For a different checkpoint, regenerate the offline reference with `scripts/reference-openpangu-decoder.sh` before comparing. The diagnostic decoder still has the documented 512-token, single-request limits; DSL serving budgets do not override them.
+
+## Model definition inputs
+
+Source readers now require versioned v1 DSL or an `inferfabric.model` v1 artifact emitted by compiled code. Legacy flat key/value files are rejected. All checked-in examples and frontend fixtures are migrated. See [dual authoring and debug-plan commands](model-authoring.md). Rebuild Rust tools/frontend after this source-language change; initialization and decoder binary formats are unchanged.

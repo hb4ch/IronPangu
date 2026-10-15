@@ -62,6 +62,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "inferfabric-authoring"
+version = "0.1.0"
+dependencies = [
+ "inferfabric-model",
+ "inferfabric-plan",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
 name = "inferfabric-cli"
 version = "0.1.0"
 dependencies = [
@@ -93,7 +103,10 @@ dependencies = [
 name = "inferfabric-dsl"
 version = "0.1.0"
 dependencies = [
+ "inferfabric-authoring",
  "inferfabric-model",
+ "inferfabric-plan",
+ "serde_json",
 ]
 
 [[package]]

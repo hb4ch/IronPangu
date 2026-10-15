@@ -21,3 +21,5 @@ inferfabric-transfer = { path = "crates/inferfabric-transfer" }
 inferfabric-scheduler = { path = "crates/inferfabric-scheduler" }
 
 inferfabric-plan = { path = "crates/inferfabric-plan" }
+
+inferfabric-authoring = { path = "crates/inferfabric-authoring" }

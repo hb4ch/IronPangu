@@ -69,24 +69,21 @@ A model DSL gives the compiler more than a sequence of operator calls. It expose
 
 Memory reuse and a constrained TP implementation work today. General fusion, communication optimization, and distinct optimized prefill kernels remain development work.
 
-For example, these declarations come from the [complete TP2 program](examples/qwen35-2b-tp2.inferfabric):
+For example, a small graph can be authored directly (checkpoint contract examples remain in the [TP2 program](examples/qwen35-2b-tp2.inferfabric)):
 
 ```text
-contract = qwen35_text_v1
-hidden = 2048
-intermediate = 6144
-query_heads = 8
-kv_heads = 2
-head_dim = 256
-# Mesh fields: TP CP SP
-prefill = 2 1 false
-decode = 2 1 false
-page_tokens = 128
-batch_buckets = 1 2 4 8
-context_buckets = 128 512 2048 8192
+language inferfabric 1;
+model Residual {
+    input x: tensor<f32>[2, 2];
+    const weight: tensor<f32>[2, 2] = [1, 0, 0, 1];
+    let projected = matmul(x, weight);
+    let output = add(projected, x);
+    yield output;
+}
+plan Cpu for Residual { target = cpu_f32_v1; }
 ```
 
-This is an excerpt, not a standalone program. The complete DSL also declares the other dimensions and ordered delta/full-attention layers. Dimensions are assertions against the checkpoint, not instructions to reshape incompatible weights. The versioned contract fixes mathematical details such as normalization, gating, and recurrent-state orientation. Unknown fields and incompatible checkpoints are rejected.
+This is an executable CPU graph example. The legacy flat DSL is removed. Versioned DSL and compiled Rust model authors produce the same checked model definition; existing Qwen/OpenPangu contract adapters preserve their checkpoint semantics. Debug plans, IR dumps and checked kernel overrides support inspection and tuning. See [dual authoring and compiled implementations](docs/model-authoring.md) for commands and supported scope.
 
 ## Compilation toward bare-metal performance
 
@@ -194,7 +191,7 @@ Updated 2026-10-15. Production targets are **OpenPangu V2 92B and 505B**. This r
 
 | Track | Current evidence | Remaining production boundary |
 |---|---|---|
-| Language | Legacy checkpoint DSL and canonical Qwen mathematical IR | Proposed v1 parser, reusable modules, elaboration, state/effect checking and migration |
+| Language | Versioned v1 subset, shared compiled-model authoring, canonical Qwen contracts and CPU graph execution | Reusable modules, symbolic types/effects and general NPU graph lowering |
 | Plan / execute | Verified static f32 CPU binary plans with optimizations, arena reuse and source-independent execution | General Ascend physical plans, native bundles and a loader that executes emitted decisions |
 | NPU qualification | Planner test adapter passed 19,128 output/state comparisons on two devices; existing Qwen CPU/eager/graph checks passed separately | End-to-end **v1 source → native bundle → Qwen execution** through the new runtime |
 | Inspection | Full Qwen typed DAG, layer navigation, tensor/weight/state bindings; CPU physical-plan viewer | Native kernels, fusion provenance, rank/stream placement, workspace, arena lifetimes and capture regions |
@@ -389,12 +386,12 @@ Run local checks with `cargo fmt --all --check`, `cargo test --workspace`, and `
 
 Further reading: [sampling](docs/npu-sampling.md), [context and HBM profiling](docs/npu-memory-profile.md), [continuous batching](docs/npu-continuous-batching.md), [tensor parallelism](docs/npu-tensor-parallel.md), [activation memory](docs/npu-activation-memory.md), and the [target architecture](docs/design.md). The README describes current implementation scope; older design and bring-up notes also contain historical milestones and future targets.
 
-Proposed DSL v1: [language design](docs/dsl-language-design.md) and [implementation plan](docs/dsl-implementation-plan.md). These specify future syntax and extension interfaces; the current parser still accepts the legacy format.
+Proposed DSL v1: [language design](docs/dsl-language-design.md) and [implementation plan](docs/dsl-implementation-plan.md). The legacy parser is removed; the implemented subset and compiled-code route are documented in [model authoring](docs/model-authoring.md). Broader module syntax and backend adapters remain planned.
 
 
 ## Physical plan / execute workflow
 
-A locally verified CPU path now compiles a logical tensor DAG into a frozen binary plan and executes it without its source. It includes shape checks, constant folding, dead-node removal, explicit kernel selection, memory reuse dependencies, persistent state, complete IR dumps, and interactive HTML explanation. This path currently accepts logical JSON with static f32 primitives; it does not replace Ascend serving or implement the proposed DSL v1 parser.
+A locally verified CPU path now compiles a logical tensor DAG into a frozen binary plan and executes it without its source. It includes shape checks, constant folding, dead-node removal, explicit kernel selection, memory reuse dependencies, persistent state, complete IR dumps, and interactive HTML explanation. This path accepts v1 graph DSL, compiled model artifacts and logical JSON IR with static f32 primitives. It does not replace Ascend serving or implement the full proposed module language.
 
 ```sh
 cargo run -p inferfabric-cli -- plan examples/physical-plan/residual-state.logical.json .deploy/demo.ifplan --dump-ir .deploy/demo-ir

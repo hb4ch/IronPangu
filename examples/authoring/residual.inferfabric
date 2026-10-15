@@ -1,0 +1,12 @@
+language inferfabric 1;
+model Residual {
+    input x: tensor<f32>[2, 2];
+    const weight: tensor<f32>[2, 2] = [1, 0, 0, 1];
+    let projected = matmul(x, weight);
+    let summed = add(projected, x);
+    let output = relu(summed);
+    yield output;
+}
+plan Cpu for Residual {
+    target = cpu_f32_v1;
+}

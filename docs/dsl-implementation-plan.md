@@ -1,5 +1,7 @@
 # InferFabric DSL v1 implementation plan
 
+Current implementation update (2026-10-15): the legacy parsers have been removed. A bounded v1 model/plan AST and graph subset now shares its model-definition boundary with compiled Rust authors. Debug planning and checked compiled implementation overrides are available on the CPU physical path. See [supported authoring interfaces](model-authoring.md) for exact implemented scope; the broader module syntax and backend adapters below remain design requirements, not implemented features. Earlier migration/authorization statements describe their historical session and do not override later user instructions.
+
 Status: proposed, 2026-09-08. Companion specification: [language design](dsl-language-design.md). This is an implementation plan, not a claim that the new parser or foreign-kernel runtime exists. No NPU runs or remote deployment are authorized for this work.
 
 ## 1. Outcome and acceptance boundary

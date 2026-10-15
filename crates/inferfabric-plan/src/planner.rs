@@ -193,8 +193,31 @@ fn fold(node: &TypedNode, values: &[Value]) -> Vec<f32> {
         })
         .collect()
 }
+#[derive(Debug, Clone, Default)]
+pub struct CompileOptions {
+    /// Retain nodes and disable constant folding for source-level inspection.
+    pub debug: bool,
+    /// Explicit implementation choices keyed by logical node name.
+    pub kernel_overrides: BTreeMap<String, Kernel>,
+}
 pub fn compile(logical: LogicalGraph) -> Result<Compilation> {
+    compile_with_options(logical, &CompileOptions::default())
+}
+pub fn compile_with_options(
+    logical: LogicalGraph,
+    options: &CompileOptions,
+) -> Result<Compilation> {
     let typed = typed(&logical)?;
+    for (name, kernel) in &options.kernel_overrides {
+        let node = typed
+            .nodes
+            .iter()
+            .find(|n| &n.name == name)
+            .ok_or_else(|| invalid(format!("unknown kernel override node {name}")))?;
+        if node.op != kernel.op() {
+            return Err(invalid("kernel override changes operation semantics"));
+        }
+    }
     let mut needed: BTreeSet<_> = typed
         .outputs
         .iter()
@@ -203,14 +226,16 @@ pub fn compile(logical: LogicalGraph) -> Result<Compilation> {
         .collect();
     let mut removed_nodes = vec![];
     for node in typed.nodes.iter().rev() {
-        if needed.contains(&node.output) {
+        if options.debug || needed.contains(&node.output) {
             needed.extend(&node.inputs);
         } else {
             removed_nodes.push(node.name.clone());
         }
     }
     let mut optimized = typed.clone();
-    optimized.nodes.retain(|node| needed.contains(&node.output));
+    optimized
+        .nodes
+        .retain(|node| options.debug || needed.contains(&node.output));
     let mut folded_nodes = vec![];
     let mut retained = vec![];
     for node in &optimized.nodes {
@@ -220,7 +245,9 @@ pub fn compile(logical: LogicalGraph) -> Result<Compilation> {
             } else {
                 1
             };
-        if work <= 4096
+        if !options.debug
+            && !options.kernel_overrides.contains_key(&node.name)
+            && work <= 4096
             && node
                 .inputs
                 .iter()
@@ -270,6 +297,13 @@ pub fn compile(logical: LogicalGraph) -> Result<Compilation> {
         .iter()
         .map(|(a, b)| (remap[a], remap[b]))
         .collect();
+    for name in options.kernel_overrides.keys() {
+        if !optimized.nodes.iter().any(|n| &n.name == name) {
+            return Err(invalid(format!(
+                "override node {name} was eliminated; use debug planning to retain it"
+            )));
+        }
+    }
     let count = optimized.nodes.len();
     let mut lives = BTreeMap::new();
     let mut producers = BTreeMap::new();
@@ -357,6 +391,11 @@ pub fn compile(logical: LogicalGraph) -> Result<Compilation> {
             }
             Op::Matmul => Kernel::MatmulF32V1,
         };
+        let kernel = options
+            .kernel_overrides
+            .get(&node.name)
+            .copied()
+            .unwrap_or(kernel);
         steps.push(Step {
             name: node.name.clone(),
             kernel,
@@ -366,7 +405,9 @@ pub fn compile(logical: LogicalGraph) -> Result<Compilation> {
             stream: 0,
             dependencies: deps.into_iter().collect(),
             reuse_dependencies: reuse.into_iter().collect(),
-            selection_reason: if kernel == Kernel::MatmulBlockedF32V1 {
+            selection_reason: if options.kernel_overrides.contains_key(&node.name) {
+                "explicit checked implementation override"
+            } else if kernel == Kernel::MatmulBlockedF32V1 {
                 "static MAC count >= 4096: 16x16 output tiles"
             } else {
                 "qualified deterministic CPU implementation; no timing-based cost model"

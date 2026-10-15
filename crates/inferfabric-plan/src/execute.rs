@@ -24,11 +24,24 @@ impl std::ops::IndexMut<usize> for Arena {
         &mut self.0[index / 16].0[index % 16]
     }
 }
+/// Compiled implementation of one existing logical operation. This debug/native
+/// authoring seam cannot introduce undeclared state effects or change shapes.
+/// Numerical equivalence remains the implementer's qualification obligation.
+pub trait CompiledKernel {
+    fn operation(&self) -> Op;
+    fn execute(
+        &self,
+        input_shapes: &[Vec<usize>],
+        inputs: &[Vec<f32>],
+        output_shape: &[usize],
+    ) -> Result<Vec<f32>>;
+}
 /// Owns stable CPU storage across invocations; consumes only a verified physical plan.
 pub struct Executor {
     plan: PhysicalPlan,
     arena: Arena,
     owned: BTreeMap<usize, Vec<f32>>,
+    implementations: BTreeMap<String, Box<dyn CompiledKernel>>,
 }
 impl Executor {
     pub fn new(plan: PhysicalPlan) -> Result<Self> {
@@ -40,7 +53,35 @@ impl Executor {
             .filter_map(|(i, b)| b.value.initial.clone().map(|v| (i, v)))
             .collect();
         let arena = Arena(vec![Line([0.; 16]); plan.arena_bytes / 64]);
-        Ok(Self { plan, arena, owned })
+        Ok(Self {
+            plan,
+            arena,
+            owned,
+            implementations: BTreeMap::new(),
+        })
+    }
+    /// Bind explicitly in compiled code before invocation. No source evaluation or
+    /// dynamic code loading is performed by a serialized plan.
+    pub fn bind_implementation(
+        &mut self,
+        step_name: &str,
+        implementation: Box<dyn CompiledKernel>,
+    ) -> Result<()> {
+        let step = self
+            .plan
+            .steps
+            .iter()
+            .find(|s| s.name == step_name)
+            .ok_or_else(|| invalid("unknown implementation step"))?;
+        if step.kernel.op() != implementation.operation() {
+            return Err(invalid("compiled implementation operation mismatch"));
+        }
+        if self.implementations.contains_key(step_name) {
+            return Err(invalid("duplicate implementation binding"));
+        }
+        self.implementations
+            .insert(step_name.into(), implementation);
+        Ok(())
     }
     fn get(&self, id: usize, index: usize, inputs: &BTreeMap<String, Vec<f32>>) -> f32 {
         let b = &self.plan.buffers[id];
@@ -79,6 +120,32 @@ impl Executor {
             let a = step.inputs[0];
             let b = step.inputs.get(1).copied();
             let count = elements(&self.plan.buffers[step.output].value.shape)?;
+            if let Some(implementation) = self.implementations.get(&step.name) {
+                let shapes = step
+                    .inputs
+                    .iter()
+                    .map(|&id| self.plan.buffers[id].value.shape.clone())
+                    .collect::<Vec<_>>();
+                let values = step
+                    .inputs
+                    .iter()
+                    .map(|&id| self.collect(id, inputs))
+                    .collect::<Vec<_>>();
+                let output = implementation.execute(
+                    &shapes,
+                    &values,
+                    &self.plan.buffers[step.output].value.shape,
+                )?;
+                if output.len() != count || output.iter().any(|x| !x.is_finite()) {
+                    return Err(invalid(
+                        "compiled implementation output contract violation; state not committed",
+                    ));
+                }
+                for (i, value) in output.into_iter().enumerate() {
+                    self.arena[dst + i] = value;
+                }
+                continue;
+            }
             match step.kernel {
                 Kernel::AddF32V1 | Kernel::MulF32V1 | Kernel::ReluF32V1 => {
                     for i in 0..count {

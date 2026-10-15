@@ -1763,6 +1763,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "inferfabric-authoring"
+version = "0.1.0"
+dependencies = [
+ "inferfabric-model",
+ "inferfabric-plan",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
 name = "inferfabric-compiler"
 version = "0.1.0"
 dependencies = [
@@ -1777,7 +1787,10 @@ dependencies = [
 name = "inferfabric-dsl"
 version = "0.1.0"
 dependencies = [
+ "inferfabric-authoring",
  "inferfabric-model",
+ "inferfabric-plan",
+ "serde_json",
 ]
 
 [[package]]
@@ -1804,6 +1817,16 @@ dependencies = [
  "libloading",
  "serde",
  "serde_json",
+]
+
+[[package]]
+name = "inferfabric-plan"
+version = "0.1.0"
+dependencies = [
+ "inferfabric-model",
+ "serde",
+ "serde_json",
+ "sha2 0.11.0",
 ]
 
 [[package]]
