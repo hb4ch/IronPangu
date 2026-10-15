@@ -1,0 +1,12 @@
+{
+  "checkpoint_metadata_sha256": "e6ab8e354f31f844671a0d6013d686e86b4ebc2ba8f3e893d509c2c170d015d8",
+  "fixture_sha256": "e2b8c60ccecf538113258b779b1b40f24accfffc2ec212cec75b18fe54b90f5f",
+  "shape": [
+    512,
+    1,
+    3
+  ],
+  "source_dtype": "BF16",
+  "source_sha256": "f6dc2af5398eaac6041203fe8ab2551ff08f30c0bab6a4425ead4b9e80d38ddd",
+  "tensor": "model.layers.0.self_attn.compresskv_conv.weight"
+}

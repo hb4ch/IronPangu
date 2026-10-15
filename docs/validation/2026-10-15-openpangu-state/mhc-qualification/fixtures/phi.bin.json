@@ -1,0 +1,11 @@
+{
+  "checkpoint_metadata_sha256": "e6ab8e354f31f844671a0d6013d686e86b4ebc2ba8f3e893d509c2c170d015d8",
+  "fixture_sha256": "73aa68e8bb694e9c706cebaf4d61410517c7191adb73ff60d5b5f55fed4f63b8",
+  "shape": [
+    24,
+    10240
+  ],
+  "source_dtype": "BF16",
+  "source_sha256": "4986e04422a9262af6a6ae311e8c22741924ca2862b6162b67f1a4aca061f7f6",
+  "tensor": "model.layers.0.attn_mhc_module.phi.weight"
+}
