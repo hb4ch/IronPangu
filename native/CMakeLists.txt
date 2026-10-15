@@ -31,3 +31,8 @@ add_executable(physical_plan_probe probes/physical_plan_probe.cpp)
 target_include_directories(physical_plan_probe PRIVATE "${ACL_INCLUDE}")
 target_link_libraries(physical_plan_probe PRIVATE "${ACL_LIBRARY}" "${OPAPI_LIBRARY}" "${NNOPBASE_LIBRARY}")
 target_compile_options(physical_plan_probe PRIVATE -Wall -Wextra -Werror)
+
+add_executable(openpangu_linear_probe probes/openpangu_linear_probe.cpp)
+target_include_directories(openpangu_linear_probe PRIVATE "${ACL_INCLUDE}")
+target_link_libraries(openpangu_linear_probe PRIVATE "${ACL_LIBRARY}" "${OPAPI_LIBRARY}" "${NNOPBASE_LIBRARY}")
+target_compile_options(openpangu_linear_probe PRIVATE -Wall -Wextra -Werror)

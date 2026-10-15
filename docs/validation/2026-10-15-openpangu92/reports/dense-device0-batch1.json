@@ -1,0 +1,1 @@
+{"status":"passed","device":0,"batch":1,"input":9216,"output":2560,"cases":3,"graph_passes":3,"checked_values":30720,"max_abs_error":0,"max_quant_integer_error":0,"workspace_bytes":16941568}

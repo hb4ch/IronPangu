@@ -1,0 +1,12 @@
+{
+  "checkpoint_metadata_sha256": "e6ab8e354f31f844671a0d6013d686e86b4ebc2ba8f3e893d509c2c170d015d8",
+  "fixture_sha256": "012d1f0f20b8af3219ac2e36e5bd8af4b78defda13fc6ba2a2f51ac0967ea0ef",
+  "module": "model.layers.0.self_attn.q_b_proj",
+  "scale_sha256": "63697347f659db7008f2fcc2cd53bcd33789bd138bd4a90f92591c77494d280b",
+  "scope": "one real projection; synthetic inputs; not full-model qualification",
+  "shape": [
+    9216,
+    1024
+  ],
+  "weight_sha256": "9198fd6c2724b4afeee1af7ff1db0ee44ecdf201958253930cbe3b0eee3fd198"
+}

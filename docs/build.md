@@ -15,6 +15,7 @@ Run shell commands from the repository root unless stated otherwise. Examples us
 | ARM64 CLI, debug | `bash scripts/cross-compiler.sh` | `.deploy/inferfabric-compiler` |
 | ARM64 CLI, release | `bash scripts/cross-npu-probe.sh` | `.deploy/inferfabric-npu` |
 | ARM64 frontend, debug | `bash scripts/cross-frontend.sh` | `.deploy/inferfabric-server` |
+| ARM64 OpenPangu W8A8 fixture exporter | `bash scripts/cross-openpangu-probe.sh` | `.deploy/export_openpangu_linear` |
 | Native C++ library and probes, inside target Docker | `cmake -S native -B native-build && cmake --build native-build -j4` | `native-build/libinferfabric_acl.so` and probe executables |
 
 Both ARM64 CLI scripts build the same `inferfabric-cli` package; their profile and copied filename differ. Despite its name, `cross-npu-probe.sh` only compiles and strips locally. It does not connect to a remote machine or execute a probe. The frontend script deliberately builds the qualified debug profile and rejects arguments such as `--release`. Stripping a debug-profile binary does not turn it into a release-profile build.
@@ -189,7 +190,7 @@ cmake --build native-build -j4
 ./native-build/acl_graph_probe --abi
 ```
 
-For an explicitly optimized native build, use a distinct directory with `-DCMAKE_BUILD_TYPE=Release`, then qualify those artifacts. The default commands do not set a CMake build type. CMake requires C++17 and links `ascendcl`, `opapi`, `nnopbase`, and `hccl`. It builds `libinferfabric_acl.so`, `acl_graph_probe`, `gdr_contract_probe`, `sampler_probe`, `tp_probe`, and `physical_plan_probe`.
+For an explicitly optimized native build, use a distinct directory with `-DCMAKE_BUILD_TYPE=Release`, then qualify those artifacts. The default commands do not set a CMake build type. CMake requires C++17 and links `ascendcl`, `opapi`, `nnopbase`, and `hccl`. It builds `libinferfabric_acl.so`, `acl_graph_probe`, `gdr_contract_probe`, `sampler_probe`, `tp_probe`, `physical_plan_probe`, and `openpangu_linear_probe`.
 
 To upload the release CLI separately from local PowerShell:
 
