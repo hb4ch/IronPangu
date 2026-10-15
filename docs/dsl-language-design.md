@@ -215,6 +215,8 @@ Prefer adjacent source files for editor tooling, imports, testing and ownership.
 
 All sources, included headers, imported helper modules, compile flags, compiler revisions and native dependencies must be enumerated or captured by a hermetic build manifest. A file outside the declared package/build roots is rejected unless explicitly provided as a locked dependency. Source content is hashed. Formatting the DSL cannot reformat embedded kernel code.
 
+Implemented first native seam (2026-10-15): `native/include/inferfabric_kernel_v1.h` and the compiled-kernel loader provide a restricted POD prepare/enqueue/release interface for contiguous tensors and one-shot invocations. The 92B dense/shared SwiGLU call site uses it, with a CANN default and explicit shared-library override for compiled implementations. This is not the complete inspect/prepare/enqueue/release bundle/adapter design below. See [current native authoring scope](model-authoring.md#native-ascend-c-boundary).
+
 ### Build adapter and serving boundary
 
 The adapters are proposed integrations, not a claim that upstream exporters already share an ABI. Triton-Ascend documents compilation to device object code and a separate runtime driver. TileLang-Ascend provides a distinct compilation/runtime stack. PTO is a tile-oriented virtual ISA. These facts motivate separate adapters, rather than treating Python JIT wrappers or PTO source as interchangeable shared libraries. See the primary references below.

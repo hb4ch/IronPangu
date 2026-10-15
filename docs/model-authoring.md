@@ -40,7 +40,20 @@ Compiled callers use `compile_with_options`, `override_kernels` and `Executor::b
 
 Model definition must remain independent of implementation language. An Ascend C implementation may replace an operation or a fused subgraph only through the native implementation contract, preserving tensor layouts, effects, workspace, stream ordering and numerical acceptance criteria. The implementation must retain editable source and build provenance, rather than requiring edits to generated code that are lost on recompile. Plan overrides select a separately built implementation; they must not disguise changed model semantics as a backend optimization.
 
-The current 92B runtime remains compiled C++/CANN code with the common initialization executor. The general Ascend C/PTO/TileLang/Triton build adapters and generic NPU execution-plan integration are separate work from the now-working dual model-authoring paths. Do not interpret CPU override tests as proof of Ascend kernels or graph-capture safety.
+The 92B decoder now binds its dense/shared SwiGLU through the native [kernel ABI](../native/include/inferfabric_kernel_v1.h) and reusable [compiled-kernel loader](../native/include/compiled_kernel.h). The default [C++ implementation](../native/kernels/swiglu_cann.cpp) calls CANN; a separately compiled Ascend C host wrapper can export the same function table. This is an actual model call site, not just an extension mock. The initial hook covers this one operation, not arbitrary replacements throughout the 92B model.
+
+Select an implementation explicitly at process startup:
+
+```bash
+INFERFABRIC_SWIGLU_LIBRARY=/absolute/path/to/custom-swiglu.so \
+  bash scripts/qualify-openpangu-decoder.sh /models/92B authoring-code-plan custom-kernel-results
+```
+
+The qualifier snapshots and hashes the selected shared object alongside the executable. Parsing a model never loads a shared object. An invalid ABI, contract, target, descriptor, tensor alias or workspace is rejected. The default implementation requires one contiguous BF16 `[T, 2H]` input and `[T, H]` output, with the first half as the SiLU gate and the second half as the multiplier. It does not change the routed-expert fused INT8 activation path.
+
+A custom implementation exports `inferfabric_kernel_v1`, returning the versioned POD function table for `inferfabric.swiglu.bf16.v1` on target `ascend`. `prepare` validates specialization and reports caller-owned workspace; `enqueue` launches on the supplied stream; `release` frees metadata only after the caller fences completion. Prepared instances are single-enqueue. The loader retains the shared object until prepared instances are destroyed. No C++ objects or exceptions cross the ABI. Library code is trusted native code: interface checks do not prove its math or enforce its no-allocation/no-hidden-effects obligations.
+
+This hook enables independent source-level optimization without editing the model definition. Keep its source, build flags/toolchain and output-library hash with test results. A custom implementation still requires independent numerical and capture qualification. General plan-selected native subgraph replacements, hermetic Ascend C/PTO/TileLang/Triton build adapters and generic NPU execution-plan integration remain work; an environment-selected debug override is not a production implementation-selection manifest. The CPU `tune-plan` command does not select this native library.
 
 ## Validation
 

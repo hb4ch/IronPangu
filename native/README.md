@@ -24,3 +24,16 @@ Native ABI version 2 now includes prepared BF16 linear and weighted RMS operatio
 See [the native milestone](../docs/npu-native-milestone.md) for full-model and HTTP qualification, FP32 recurrence, convolution, paged attention and current serving limits.
 
 `physical_plan_probe FIXTURE DEVICE` is an explicit hardware qualification executable for trusted fixtures emitted by `cargo run -p inferfabric-cli --example export_npu_fixture`. It tests planned arena reuse and state commits through ACLNN eager/captured execution. It is not a production plan loader or new serving backend. [Two-device qualification and reproduction](../docs/validation/2026-09-08-npu-planning/README.md).
+
+## Compiled operation implementations
+
+`inferfabric_kernel_v1.h` defines a POD C ABI for separately compiled operations. `CompiledKernel` owns a shared-library handle, validates ABI/contract/target and contiguous tensor descriptors, and creates single-enqueue prepared invocations with caller-owned workspace. The 92B decoder's dense/shared BF16 SwiGLU uses this interface. Default implementation: `kernels/swiglu_cann.cpp`; override: `INFERFABRIC_SWIGLU_LIBRARY=/absolute/path/library.so`. A compiled Ascend C host launcher may implement the same contract. See [authoring and implementation boundaries](../docs/model-authoring.md#native-ascend-c-boundary).
+
+Build/check the ABI without model loading inside Docker:
+
+```bash
+cmake --build native-build --target compiled_kernel_test kernel_test_impl kernel_bad_impl -j4
+native-build/compiled_kernel_test native-build/libkernel_test_impl.so native-build/libkernel_bad_impl.so
+```
+
+These interface tests do not qualify arbitrary plugin code or capture safety. Use the complete 92B generation comparison after changing its selected implementation. The qualifier snapshots/hashes both the executable and selected library. Kernel input/output buffers and prepared state must remain alive until stream completion.

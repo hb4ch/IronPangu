@@ -1,6 +1,7 @@
 // Full checkpoint diagnostic decoder. All projection GEMMs execute on Ascend;
 // normalization, mHC, MoME, routing and attention use NPU kernels. Host
 // orchestration, RoPE and expert-output combination remain diagnostic paths.
+#include "compiled_kernel.h"
 #include "initialization_acl.h"
 #include "openpangu_decoder_state.h"
 #include "openpangu_mhc.h"
@@ -10,7 +11,6 @@
 #include <aclnnop/aclnn_dynamic_quant.h>
 #include <aclnnop/aclnn_quant_matmul_v5.h>
 #include <aclnnop/aclnn_rms_norm.h>
-#include <aclnnop/aclnn_swi_glu.h>
 #include <array>
 #include <filesystem>
 #include <fstream>
@@ -77,6 +77,7 @@ struct Decoder {
   std::array<std::unique_ptr<AttentionState>, 46> attention_states;
   aclrtStream stream = nullptr;
   HcclComm comm = nullptr;
+  inferfabric::CompiledKernel swiglu;
   inferfabric::initialization::ParameterStore weights;
   std::map<std::string, inferfabric::initialization::ParameterId> bindings;
   std::map<std::string, V> host;
@@ -87,7 +88,10 @@ struct Decoder {
   uint64_t capacity = 0;
   Decoder(const inferfabric::initialization::Plan &p, const std::string &root,
           HcclRootInfo &info)
-      : rank(p.rank),
+      : rank(p.rank), swiglu(std::getenv("INFERFABRIC_SWIGLU_LIBRARY")
+                                 ? std::getenv("INFERFABRIC_SWIGLU_LIBRARY")
+                                 : IF_DEFAULT_SWIGLU_LIBRARY,
+                             "inferfabric.swiglu.bf16.v1", "ascend"),
         weights(inferfabric::initialization::Executor::execute(
             p, root, inferfabric::initialization::acl_device_memory())) {
     for (const auto &parameter : p.parameters)
@@ -105,7 +109,7 @@ struct Decoder {
     if (stream)
       aclrtDestroyStream(stream);
   }
-  void run(openpangu::Launcher f, uint64_t bytes, aclOpExecutor *e) {
+  void reserve_workspace(uint64_t bytes) {
     if (bytes > capacity) {
       if (workspace)
         checked(aclrtFree(workspace), "workspace free");
@@ -113,6 +117,9 @@ struct Decoder {
       checked(aclrtMalloc(&workspace, capacity, ACL_MEM_MALLOC_HUGE_FIRST),
               "workspace");
     }
+  }
+  void run(openpangu::Launcher f, uint64_t bytes, aclOpExecutor *e) {
+    reserve_workspace(bytes);
     checked(f(workspace, bytes, e, stream), "operator");
     checked(aclrtSynchronizeStream(stream), "fence");
   }
@@ -450,12 +457,32 @@ struct Decoder {
     DeviceTensor input({1, 2 * width}, ACL_BF16, 2),
         output({1, width}, ACL_BF16, 2);
     input.upload(packed(joined));
-    uint64_t bytes = 0;
-    aclOpExecutor *e = nullptr;
-    checked(aclnnSwiGluGetWorkspaceSize(input.tensor, -1, output.tensor, &bytes,
-                                        &e),
-            "SwiGLU prepare");
-    run(aclnnSwiGlu, bytes, e);
+    auto descriptor = [](DeviceTensor &tensor, int64_t columns,
+                         uint32_t access) {
+      IFKernelTensorV1 result{};
+      result.struct_bytes = sizeof(result);
+      result.dtype = 2;
+      result.rank = 2;
+      result.access = access;
+      result.data = tensor.data;
+      result.allocation_bytes = uint64_t(columns) * 2;
+      result.shape[0] = 1;
+      result.shape[1] = columns;
+      result.strides[0] = columns;
+      result.strides[1] = 1;
+      return result;
+    };
+    auto prepared = swiglu.prepare({descriptor(input, 2 * width, 1)},
+                                   {descriptor(output, width, 2)});
+    reserve_workspace(prepared.workspace_bytes());
+    try {
+      prepared.enqueue(workspace, capacity, stream);
+      checked(aclrtSynchronizeStream(stream), "compiled SwiGLU fence");
+    } catch (...) {
+      // Foreign metadata and device buffers cannot be freed before completion.
+      aclrtSynchronizeStream(stream);
+      throw;
+    }
     gate = unpacked(output.read<uint16_t>());
     return linear(p + ".down_proj", gate, distributed);
   }

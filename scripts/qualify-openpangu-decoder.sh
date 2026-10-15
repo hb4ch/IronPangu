@@ -10,6 +10,9 @@ cmake -S native -B native-build -DCMAKE_BUILD_TYPE=Release
 cmake --build native-build --target openpangu_decode -j4
 mkdir -p "$3"
 cp native-build/openpangu_decode "$3/openpangu_decode"
+selected_swiglu=${INFERFABRIC_SWIGLU_LIBRARY:-native-build/libinferfabric_swiglu.so}
+cp "$selected_swiglu" "$3/selected-swiglu.so"
+export INFERFABRIC_SWIGLU_LIBRARY=$(realpath "$3/selected-swiglu.so")
 python3 scripts/qualify-openpangu-decoder.py --checkpoint "$1" --plan "$2" --binary "$3/openpangu_decode" --output "$3"
-sha256sum "$3/openpangu_decode" "$1/config.json" "$1/tokenizer.json" > "$3/artifacts.sha256"
+sha256sum "$3/openpangu_decode" "$3/selected-swiglu.so" "$1/config.json" "$1/tokenizer.json" > "$3/artifacts.sha256"
 ldd "$3/openpangu_decode" > "$3/dependencies.txt"
