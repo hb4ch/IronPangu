@@ -15,6 +15,7 @@
 #include <aclnnop/aclnn_dynamic_quant.h>
 #include <aclnnop/aclnn_grouped_matmul_v5.h>
 #include <aclnnop/aclnn_index_copy.h>
+#include <aclnnop/aclnn_moe_finalize_routing_v2.h>
 #include <aclnnop/aclnn_quant_matmul_v5.h>
 #include <aclnnop/aclnn_reduce_sum.h>
 #include <aclnnop/aclnn_rms_norm.h>
@@ -650,12 +651,12 @@ struct Decoder {
   }
   // Group-list entries and selected weight offsets remain on device. Zero
   // count terminates the sparse list; unused capacity has no matmul work.
-  V sparse_group_table, sparse_group_padding, route_priority;
+  V sparse_group_table, sparse_group_padding, route_priority, reduction_indices;
   void prepare_routes(Routes &routes) {
     if (!sparse_group_table.size()) {
       DeviceTensor table({256, 2}, ACL_INT64, 8),
           padding({24, 2}, ACL_INT64, 8), owners({256}, ACL_FLOAT, 4),
-          priority({8}, ACL_FLOAT, 4);
+          priority({8}, ACL_FLOAT, 4), identity({8}, ACL_INT32, 4);
       std::vector<int64_t> entries(512);
       Host owner(256), position(8);
       for (int i = 0; i < 256; ++i) {
@@ -669,6 +670,9 @@ struct Decoder {
       resident::control_upload(padding, std::vector<int64_t>(48, 0));
       resident::control_upload(owners, owner);
       resident::control_upload(priority, position);
+      resident::control_upload(identity,
+                               std::vector<int32_t>{0, 1, 2, 3, 4, 5, 6, 7});
+      reduction_indices = result(identity, ACL_INT32);
       sparse_group_table = result(table, ACL_INT64);
       sparse_group_padding = result(padding, ACL_INT64);
       route_owner_table = result(owners, ACL_FLOAT);
@@ -772,29 +776,22 @@ struct Decoder {
   }
   V weighted_rows(const ExpertRows &rows, const V &scores, size_t width) {
     if (scores.dtype() != ACL_FLOAT ||
-        rows.packed.size() != scores.size() * width)
+        rows.packed.size() != scores.size() * width ||
+        reduction_indices.size() != scores.size())
       throw std::runtime_error("weighted expert reduction contract");
     auto input = cast(rows.packed, ACL_FLOAT);
-    V products(input.size()), out(width);
+    V out(width);
     View x(input.data(), {int64_t(scores.size()), int64_t(width)}, ACL_FLOAT),
-        s(scores.data(), {int64_t(scores.size()), 1}, ACL_FLOAT),
-        y(products.data(), {int64_t(scores.size()), int64_t(width)}, ACL_FLOAT);
+        s(scores.data(), {1, int64_t(scores.size())}, ACL_FLOAT),
+        y(out.data(), {1, int64_t(width)}, ACL_FLOAT);
     uint64_t bytes = 0;
     aclOpExecutor *e = nullptr;
-    checked(prepared::query("aclnnMul", true, aclnnMulGetWorkspaceSize, x.t,
-                            s.t, y.t, &bytes, &e),
-            "expert weighted rows prepare");
-    run(aclnnMul, bytes, e);
-    int64_t axis = 0;
-    auto *axes = aclCreateIntArray(&axis, 1);
-    if (!axes)
-      throw std::runtime_error("expert reduction axes");
-    auto status =
-        prepared::query("aclnnReduceSum", false, aclnnReduceSumGetWorkspaceSize,
-                        y.t, axes, false, ACL_FLOAT, out.tensor(), &bytes, &e);
-    aclDestroyIntArray(axes);
-    checked(status, "expert reduction prepare");
-    run(aclnnReduceSum, bytes, e);
+    checked(prepared::query("aclnnMoeFinalizeRoutingV2", false,
+                            aclnnMoeFinalizeRoutingV2GetWorkspaceSize, x.t,
+                            reduction_indices.tensor(), nullptr, nullptr,
+                            nullptr, s.t, nullptr, 0, y.t, &bytes, &e),
+            "fused expert reduction prepare");
+    run(aclnnMoeFinalizeRoutingV2, bytes, e);
     return out;
   }
   int emit(const V &resident_logits, int step) {

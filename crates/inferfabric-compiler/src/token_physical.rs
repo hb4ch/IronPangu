@@ -109,11 +109,13 @@ pub fn lower(graph: &Graph, devices: &[u32]) -> Result<Plan> {
         }];
         if matches!(
             n.op.as_str(),
-            "mhc_pre" | "mhc_merge" | "expert_reduce" | "rope" | "mla_query"
+            "mhc_pre" | "mhc_merge" | "expert_reduce" | "rope" | "mla_query" | "mla_value"
         ) {
             boundaries.push(Boundary {kind: BoundaryKind::InternalLaunches, detail: match n.op.as_str() {
                 "mhc_pre" | "mhc_merge" => "mHC inference-only output flag permits the vendor small-token tiling; no training auxiliary values are consumed",
-                "expert_reduce" => "One FP32 broadcast multiply and vector reduction over owner-ordered expert rows; parallel reduction is a distinct numerical contract",
+                "expert_reduce" => "Fused FP32 MoeFinalizeRoutingV2 weighted reduction over owner-ordered expert rows with device identity indices; distinct reduction numerical contract",
+                "mla_query" => "One batched BF16 head matmul with bounded strided parameter/input views; batched FP32 rotary followed by BF16 rounding",
+                "mla_value" => "One batched BF16 head matmul with bounded strided parameter views; vendor workspace/layout materialization remains internal",
                 _ => "Fused rotary operation in FP32 followed by BF16 rounding; shared position-derived controls remain device-resident",
             }.into()});
         }
@@ -169,7 +171,7 @@ pub fn lower(graph: &Graph, devices: &[u32]) -> Result<Plan> {
                 id: format!("ascend.token.device_resident.{}.v1", n.op),
                 contract_revision: revision.clone(), numerical_contract: match n.op.as_str() {
                     "expert_linear" | "expert_swiglu_down" => format!("ascend_token_v1/{}/sparse_gmm_bf16_scales_v1", n.op),
-                    "expert_reduce" => "ascend_token_v1/expert_reduce/vector_weighted_sum_fp32_v1".into(),
+                    "expert_reduce" => "ascend_token_v1/expert_reduce/fused_finalize_fp32_v1".into(),
                     "mhc_pre" | "mhc_merge" => format!("ascend_token_v1/{}/inference_outputs_v1", n.op),
                     "rope" => "ascend_token_v1/rope/fused_fp32_v1".into(),
                     "mla_query" | "mla_value" => format!("ascend_token_v1/{}/batched_heads_bf16_v1", n.op),
