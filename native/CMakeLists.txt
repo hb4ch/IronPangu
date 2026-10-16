@@ -140,3 +140,10 @@ target_link_libraries(resident_tensor_probe PRIVATE "${ACL_LIBRARY}" "${OPAPI_LI
 target_compile_options(resident_tensor_probe PRIVATE -Wall -Wextra -Werror
   -include "${CMAKE_CURRENT_SOURCE_DIR}/src/resident_transfer.h")
 target_compile_definitions(resident_tensor_probe PRIVATE IF_REQUIRE_DEVICE_RESIDENCY=1)
+
+add_executable(prepared_execution_probe probes/prepared_execution_probe.cpp)
+target_include_directories(prepared_execution_probe PRIVATE "${ACL_INCLUDE}")
+target_link_libraries(prepared_execution_probe PRIVATE "${ACL_LIBRARY}" "${OPAPI_LIBRARY}" "${NNOPBASE_LIBRARY}")
+target_compile_options(prepared_execution_probe PRIVATE -Wall -Wextra -Werror
+  -include "${CMAKE_CURRENT_SOURCE_DIR}/src/resident_transfer.h")
+target_compile_definitions(prepared_execution_probe PRIVATE IF_REQUIRE_DEVICE_RESIDENCY=1)

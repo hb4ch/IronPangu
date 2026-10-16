@@ -1,0 +1,470 @@
+{
+  "validated_case_ranks": 48,
+  "exact_output_records": 66,
+  "pooled_tpot_ms": 1281.6910372333334,
+  "prior_tpot_ms": 2046.8629148,
+  "latency_reduction_percent": 37.38266358895031,
+  "speed_ratio": 1.597001816614378,
+  "profile_host_submission_only": [
+    {
+      "name": "HcclAllGather",
+      "calls_per_rank_token": 277.0,
+      "host_ms_per_rank_token": 1136.5445266875
+    },
+    {
+      "name": "HcclAllReduce",
+      "calls_per_rank_token": 44.0,
+      "host_ms_per_rank_token": 75.1390163125
+    },
+    {
+      "name": "copy_async",
+      "calls_per_rank_token": 13585.0,
+      "host_ms_per_rank_token": 57.050112625
+    },
+    {
+      "name": "decode_total",
+      "calls_per_rank_token": 1.0,
+      "host_ms_per_rank_token": 1473.27929175
+    },
+    {
+      "name": "kernel_launch",
+      "calls_per_rank_token": 15441.0,
+      "host_ms_per_rank_token": 123.551770875
+    }
+  ],
+  "rank_checks": [
+    {
+      "run": "arithmetic-0",
+      "rank": 0,
+      "device_pool_bytes": 11522298208,
+      "decode_positions": 7,
+      "decode_allocations": 0,
+      "decode_completions": 0,
+      "invocation_replays": 208420
+    },
+    {
+      "run": "arithmetic-0",
+      "rank": 1,
+      "device_pool_bytes": 11522298208,
+      "decode_positions": 7,
+      "decode_allocations": 0,
+      "decode_completions": 0,
+      "invocation_replays": 208420
+    },
+    {
+      "run": "arithmetic-0",
+      "rank": 2,
+      "device_pool_bytes": 11522298208,
+      "decode_positions": 7,
+      "decode_allocations": 0,
+      "decode_completions": 0,
+      "invocation_replays": 208420
+    },
+    {
+      "run": "arithmetic-0",
+      "rank": 3,
+      "device_pool_bytes": 11522298208,
+      "decode_positions": 7,
+      "decode_allocations": 0,
+      "decode_completions": 0,
+      "invocation_replays": 208420
+    },
+    {
+      "run": "arithmetic-0",
+      "rank": 4,
+      "device_pool_bytes": 11522298208,
+      "decode_positions": 7,
+      "decode_allocations": 0,
+      "decode_completions": 0,
+      "invocation_replays": 208420
+    },
+    {
+      "run": "arithmetic-0",
+      "rank": 5,
+      "device_pool_bytes": 11522298208,
+      "decode_positions": 7,
+      "decode_allocations": 0,
+      "decode_completions": 0,
+      "invocation_replays": 208420
+    },
+    {
+      "run": "arithmetic-0",
+      "rank": 6,
+      "device_pool_bytes": 11522298208,
+      "decode_positions": 7,
+      "decode_allocations": 0,
+      "decode_completions": 0,
+      "invocation_replays": 208420
+    },
+    {
+      "run": "arithmetic-0",
+      "rank": 7,
+      "device_pool_bytes": 11522298208,
+      "decode_positions": 7,
+      "decode_allocations": 0,
+      "decode_completions": 0,
+      "invocation_replays": 208420
+    },
+    {
+      "run": "geography-0",
+      "rank": 0,
+      "device_pool_bytes": 11522298208,
+      "decode_positions": 7,
+      "decode_allocations": 0,
+      "decode_completions": 0,
+      "invocation_replays": 238714
+    },
+    {
+      "run": "geography-0",
+      "rank": 1,
+      "device_pool_bytes": 11522298208,
+      "decode_positions": 7,
+      "decode_allocations": 0,
+      "decode_completions": 0,
+      "invocation_replays": 238714
+    },
+    {
+      "run": "geography-0",
+      "rank": 2,
+      "device_pool_bytes": 11522298208,
+      "decode_positions": 7,
+      "decode_allocations": 0,
+      "decode_completions": 0,
+      "invocation_replays": 238714
+    },
+    {
+      "run": "geography-0",
+      "rank": 3,
+      "device_pool_bytes": 11522298208,
+      "decode_positions": 7,
+      "decode_allocations": 0,
+      "decode_completions": 0,
+      "invocation_replays": 238714
+    },
+    {
+      "run": "geography-0",
+      "rank": 4,
+      "device_pool_bytes": 11522298208,
+      "decode_positions": 7,
+      "decode_allocations": 0,
+      "decode_completions": 0,
+      "invocation_replays": 238714
+    },
+    {
+      "run": "geography-0",
+      "rank": 5,
+      "device_pool_bytes": 11522298208,
+      "decode_positions": 7,
+      "decode_allocations": 0,
+      "decode_completions": 0,
+      "invocation_replays": 238714
+    },
+    {
+      "run": "geography-0",
+      "rank": 6,
+      "device_pool_bytes": 11522298208,
+      "decode_positions": 7,
+      "decode_allocations": 0,
+      "decode_completions": 0,
+      "invocation_replays": 238714
+    },
+    {
+      "run": "geography-0",
+      "rank": 7,
+      "device_pool_bytes": 11522298208,
+      "decode_positions": 7,
+      "decode_allocations": 0,
+      "decode_completions": 0,
+      "invocation_replays": 238714
+    },
+    {
+      "run": "chinese-0",
+      "rank": 0,
+      "device_pool_bytes": 11522298208,
+      "decode_positions": 16,
+      "decode_allocations": 0,
+      "decode_completions": 0,
+      "invocation_replays": 319498
+    },
+    {
+      "run": "chinese-0",
+      "rank": 1,
+      "device_pool_bytes": 11522298208,
+      "decode_positions": 16,
+      "decode_allocations": 0,
+      "decode_completions": 0,
+      "invocation_replays": 319498
+    },
+    {
+      "run": "chinese-0",
+      "rank": 2,
+      "device_pool_bytes": 11522298208,
+      "decode_positions": 16,
+      "decode_allocations": 0,
+      "decode_completions": 0,
+      "invocation_replays": 319498
+    },
+    {
+      "run": "chinese-0",
+      "rank": 3,
+      "device_pool_bytes": 11522298208,
+      "decode_positions": 16,
+      "decode_allocations": 0,
+      "decode_completions": 0,
+      "invocation_replays": 319498
+    },
+    {
+      "run": "chinese-0",
+      "rank": 4,
+      "device_pool_bytes": 11522298208,
+      "decode_positions": 16,
+      "decode_allocations": 0,
+      "decode_completions": 0,
+      "invocation_replays": 319498
+    },
+    {
+      "run": "chinese-0",
+      "rank": 5,
+      "device_pool_bytes": 11522298208,
+      "decode_positions": 16,
+      "decode_allocations": 0,
+      "decode_completions": 0,
+      "invocation_replays": 319498
+    },
+    {
+      "run": "chinese-0",
+      "rank": 6,
+      "device_pool_bytes": 11522298208,
+      "decode_positions": 16,
+      "decode_allocations": 0,
+      "decode_completions": 0,
+      "invocation_replays": 319498
+    },
+    {
+      "run": "chinese-0",
+      "rank": 7,
+      "device_pool_bytes": 11522298208,
+      "decode_positions": 16,
+      "decode_allocations": 0,
+      "decode_completions": 0,
+      "invocation_replays": 319498
+    },
+    {
+      "run": "arithmetic-1",
+      "rank": 0,
+      "device_pool_bytes": 11522298208,
+      "decode_positions": 7,
+      "decode_allocations": 0,
+      "decode_completions": 0,
+      "invocation_replays": 208420
+    },
+    {
+      "run": "arithmetic-1",
+      "rank": 1,
+      "device_pool_bytes": 11522298208,
+      "decode_positions": 7,
+      "decode_allocations": 0,
+      "decode_completions": 0,
+      "invocation_replays": 208420
+    },
+    {
+      "run": "arithmetic-1",
+      "rank": 2,
+      "device_pool_bytes": 11522298208,
+      "decode_positions": 7,
+      "decode_allocations": 0,
+      "decode_completions": 0,
+      "invocation_replays": 208420
+    },
+    {
+      "run": "arithmetic-1",
+      "rank": 3,
+      "device_pool_bytes": 11522298208,
+      "decode_positions": 7,
+      "decode_allocations": 0,
+      "decode_completions": 0,
+      "invocation_replays": 208420
+    },
+    {
+      "run": "arithmetic-1",
+      "rank": 4,
+      "device_pool_bytes": 11522298208,
+      "decode_positions": 7,
+      "decode_allocations": 0,
+      "decode_completions": 0,
+      "invocation_replays": 208420
+    },
+    {
+      "run": "arithmetic-1",
+      "rank": 5,
+      "device_pool_bytes": 11522298208,
+      "decode_positions": 7,
+      "decode_allocations": 0,
+      "decode_completions": 0,
+      "invocation_replays": 208420
+    },
+    {
+      "run": "arithmetic-1",
+      "rank": 6,
+      "device_pool_bytes": 11522298208,
+      "decode_positions": 7,
+      "decode_allocations": 0,
+      "decode_completions": 0,
+      "invocation_replays": 208420
+    },
+    {
+      "run": "arithmetic-1",
+      "rank": 7,
+      "device_pool_bytes": 11522298208,
+      "decode_positions": 7,
+      "decode_allocations": 0,
+      "decode_completions": 0,
+      "invocation_replays": 208420
+    },
+    {
+      "run": "geography-1",
+      "rank": 0,
+      "device_pool_bytes": 11522298208,
+      "decode_positions": 7,
+      "decode_allocations": 0,
+      "decode_completions": 0,
+      "invocation_replays": 238714
+    },
+    {
+      "run": "geography-1",
+      "rank": 1,
+      "device_pool_bytes": 11522298208,
+      "decode_positions": 7,
+      "decode_allocations": 0,
+      "decode_completions": 0,
+      "invocation_replays": 238714
+    },
+    {
+      "run": "geography-1",
+      "rank": 2,
+      "device_pool_bytes": 11522298208,
+      "decode_positions": 7,
+      "decode_allocations": 0,
+      "decode_completions": 0,
+      "invocation_replays": 238714
+    },
+    {
+      "run": "geography-1",
+      "rank": 3,
+      "device_pool_bytes": 11522298208,
+      "decode_positions": 7,
+      "decode_allocations": 0,
+      "decode_completions": 0,
+      "invocation_replays": 238714
+    },
+    {
+      "run": "geography-1",
+      "rank": 4,
+      "device_pool_bytes": 11522298208,
+      "decode_positions": 7,
+      "decode_allocations": 0,
+      "decode_completions": 0,
+      "invocation_replays": 238714
+    },
+    {
+      "run": "geography-1",
+      "rank": 5,
+      "device_pool_bytes": 11522298208,
+      "decode_positions": 7,
+      "decode_allocations": 0,
+      "decode_completions": 0,
+      "invocation_replays": 238714
+    },
+    {
+      "run": "geography-1",
+      "rank": 6,
+      "device_pool_bytes": 11522298208,
+      "decode_positions": 7,
+      "decode_allocations": 0,
+      "decode_completions": 0,
+      "invocation_replays": 238714
+    },
+    {
+      "run": "geography-1",
+      "rank": 7,
+      "device_pool_bytes": 11522298208,
+      "decode_positions": 7,
+      "decode_allocations": 0,
+      "decode_completions": 0,
+      "invocation_replays": 238714
+    },
+    {
+      "run": "chinese-1",
+      "rank": 0,
+      "device_pool_bytes": 11522298208,
+      "decode_positions": 16,
+      "decode_allocations": 0,
+      "decode_completions": 0,
+      "invocation_replays": 319498
+    },
+    {
+      "run": "chinese-1",
+      "rank": 1,
+      "device_pool_bytes": 11522298208,
+      "decode_positions": 16,
+      "decode_allocations": 0,
+      "decode_completions": 0,
+      "invocation_replays": 319498
+    },
+    {
+      "run": "chinese-1",
+      "rank": 2,
+      "device_pool_bytes": 11522298208,
+      "decode_positions": 16,
+      "decode_allocations": 0,
+      "decode_completions": 0,
+      "invocation_replays": 319498
+    },
+    {
+      "run": "chinese-1",
+      "rank": 3,
+      "device_pool_bytes": 11522298208,
+      "decode_positions": 16,
+      "decode_allocations": 0,
+      "decode_completions": 0,
+      "invocation_replays": 319498
+    },
+    {
+      "run": "chinese-1",
+      "rank": 4,
+      "device_pool_bytes": 11522298208,
+      "decode_positions": 16,
+      "decode_allocations": 0,
+      "decode_completions": 0,
+      "invocation_replays": 319498
+    },
+    {
+      "run": "chinese-1",
+      "rank": 5,
+      "device_pool_bytes": 11522298208,
+      "decode_positions": 16,
+      "decode_allocations": 0,
+      "decode_completions": 0,
+      "invocation_replays": 319498
+    },
+    {
+      "run": "chinese-1",
+      "rank": 6,
+      "device_pool_bytes": 11522298208,
+      "decode_positions": 16,
+      "decode_allocations": 0,
+      "decode_completions": 0,
+      "invocation_replays": 319498
+    },
+    {
+      "run": "chinese-1",
+      "rank": 7,
+      "device_pool_bytes": 11522298208,
+      "decode_positions": 16,
+      "decode_allocations": 0,
+      "decode_completions": 0,
+      "invocation_replays": 319498
+    }
+  ],
+  "comparison_caveat": "Historical same-machine baseline; no randomized paired A/B control. Runtime and host variability remain."
+}

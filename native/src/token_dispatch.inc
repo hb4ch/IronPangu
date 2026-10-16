@@ -9,6 +9,7 @@ static std::string expert_name(std::string pattern, int expert) {
   return pattern;
 }
 V token(int id, int pos) {
+  execution.begin_step(pos);
   current_position = pos;
   if (pos < 0 || pos >= int(program.context) || id < 0 || id >= 151552)
     throw std::runtime_error("token/context bound");
@@ -108,8 +109,7 @@ V token(int id, int pos) {
       auto owners = select(route_owner_table, r.ids, 256, 1);
       auto scores = binary(r.scores, owners, '*');
       V out(n.width);
-      checked(aclrtMemset(out.data(), out.bytes(), 0, out.bytes()),
-              "resident reduction zero");
+      execution.zero(out.data(), out.bytes());
       for (size_t j = 0; j < r.ids.size(); ++j)
         out = binary(
             out, binary(rows.rows.at(j), resident::slice(scores, j, 1), '*'),
@@ -131,5 +131,6 @@ V token(int id, int pos) {
       if (--remaining[j] == 0)
         values[j].reset();
   }
+  execution.end_step();
   return std::get<V>(std::move(*values[program.output]));
 }

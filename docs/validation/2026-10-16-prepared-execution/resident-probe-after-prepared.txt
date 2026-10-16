@@ -1,0 +1,1 @@
+device ownership, copy, slice, concat and implicit transfer rejection passed

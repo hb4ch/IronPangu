@@ -23,6 +23,7 @@
 #include <thread>
 #include <variant>
 namespace pangu {
+namespace prepared = inferfabric::prepared;
 using Host = std::vector<float>;
 using V = inferfabric::resident::Tensor;
 namespace resident = inferfabric::resident;
@@ -48,8 +49,14 @@ Host unpacked(const std::vector<uint16_t> &b) {
 }
 struct View {
   aclTensor *t = nullptr;
+  bool cached = false;
   View(void *p, std::vector<int64_t> shape, aclDataType type,
        bool transpose = false) {
+    if (prepared::active) {
+      t = prepared::active->descriptor(p, shape, type, transpose);
+      cached = true;
+      return;
+    }
     auto storage = shape;
     std::vector<int64_t> s(shape.size(), 1);
     for (int i = int(s.size()) - 2; i >= 0; --i)
@@ -64,11 +71,14 @@ struct View {
       throw std::runtime_error("weight view");
   }
   ~View() {
-    if (t)
+    if (t && !cached)
       aclDestroyTensor(t);
   }
 };
 struct Decoder {
+  // Declared first: outlives all values, descriptors and state.
+  prepared::Context execution;
+  std::vector<std::unique_ptr<inferfabric::PreparedKernel>> pending_kernels;
   int rank;
   int current_position = -1;
   std::map<std::string, std::unique_ptr<openpangu::Router>> routers;
@@ -83,8 +93,6 @@ struct Decoder {
   inferfabric::initialization::ParameterStore weights;
   std::map<std::string, inferfabric::initialization::ParameterId> bindings;
   std::map<std::string, Host> host;
-  void *workspace = nullptr;
-  uint64_t capacity = 0;
   Decoder(const inferfabric::initialization::Plan &p, const std::string &root,
           HcclRootInfo &info, const inferfabric::execution::Plan &execution)
       : rank(p.rank), program(execution),
@@ -96,35 +104,22 @@ struct Decoder {
             p, root, inferfabric::initialization::acl_device_memory())) {
     for (const auto &parameter : p.parameters)
       bindings.emplace(parameter.name, parameter.id);
-    checked(aclrtCreateStream(&stream), "stream");
+    stream = this->execution.stream;
     checked(HcclCommInitRootInfo(8, &info, rank, &comm), "HCCL");
   }
   ~Decoder() {
     if (stream)
       aclrtSynchronizeStream(stream);
-    if (workspace)
-      aclrtFree(workspace);
     if (comm)
       HcclCommDestroy(comm);
-    if (stream)
-      aclrtDestroyStream(stream);
-  }
-  void reserve_workspace(uint64_t bytes) {
-    if (bytes > capacity) {
-      if (workspace)
-        checked(aclrtFree(workspace), "workspace free");
-      capacity = bytes;
-      checked(aclrtMalloc(&workspace, capacity, ACL_MEM_MALLOC_HUGE_FIRST),
-              "workspace");
-    }
   }
   void run(openpangu::Launcher f, uint64_t bytes, aclOpExecutor *e) {
-    reserve_workspace(bytes);
+    execution.require_stream(stream);
+    void *workspace = execution.workspace(bytes);
     {
       inferfabric::profiling::Scope timing("kernel_launch");
       checked(f(workspace, bytes, e, stream), "operator");
     }
-    checked(aclrtSynchronizeStream(stream), "fence");
   }
   inferfabric::initialization::ResidentParameter &w(const std::string &n) {
     auto it = bindings.find(n);
@@ -163,9 +158,9 @@ struct Decoder {
     V out(x.size(), dtype);
     uint64_t bytes = 0;
     aclOpExecutor *e = nullptr;
-    checked(
-        aclnnCastGetWorkspaceSize(x.tensor(), dtype, out.tensor(), &bytes, &e),
-        "resident cast prepare");
+    checked(prepared::query("aclnnCast", true, aclnnCastGetWorkspaceSize,
+                            x.tensor(), dtype, out.tensor(), &bytes, &e),
+            "resident cast prepare");
     run(aclnnCast, bytes, e);
     return out;
   }
@@ -189,16 +184,18 @@ struct Decoder {
     V out(a.size());
     uint64_t bytes = 0;
     aclOpExecutor *e = nullptr;
-    float f = 1;
-    aclScalar *one = aclCreateScalar(&f, ACL_FLOAT);
+    aclScalar *one = execution.one();
     aclnnStatus status =
-        kind == '*'   ? aclnnMulGetWorkspaceSize(a.tensor(), b.tensor(),
-                                                 out.tensor(), &bytes, &e)
-        : kind == '+' ? aclnnAddGetWorkspaceSize(a.tensor(), b.tensor(), one,
-                                                 out.tensor(), &bytes, &e)
-                      : aclnnSubGetWorkspaceSize(a.tensor(), b.tensor(), one,
-                                                 out.tensor(), &bytes, &e);
-    aclDestroyScalar(one);
+        kind == '*'
+            ? prepared::query("aclnnMul", true, aclnnMulGetWorkspaceSize,
+                              a.tensor(), b.tensor(), out.tensor(), &bytes, &e)
+        : kind == '+'
+            ? prepared::query("aclnnAdd", true, aclnnAddGetWorkspaceSize,
+                              a.tensor(), b.tensor(), one, out.tensor(), &bytes,
+                              &e)
+            : prepared::query("aclnnSub", true, aclnnSubGetWorkspaceSize,
+                              a.tensor(), b.tensor(), one, out.tensor(), &bytes,
+                              &e);
     checked(status, "resident binary prepare");
     run(kind == '*' ? aclnnMul : kind == '+' ? aclnnAdd : aclnnSub, bytes, e);
     return out;
@@ -213,7 +210,6 @@ struct Decoder {
                             comm, stream),
               "all gather");
     }
-    checked(aclrtSynchronizeStream(stream), "gather fence");
     return result(b);
   }
   V sum(const V &x) {
@@ -226,7 +222,6 @@ struct Decoder {
                             HCCL_REDUCE_SUM, comm, stream),
               "all reduce");
     }
-    checked(aclrtSynchronizeStream(stream), "reduce fence");
     return result(b, ACL_FLOAT);
   }
   V matrix(const V &x, void *weight, int rows, int cols,
@@ -238,8 +233,8 @@ struct Decoder {
     View view(weight, {rows, cols}, ACL_BF16, transposed);
     uint64_t bytes = 0;
     aclOpExecutor *e = nullptr;
-    checked(aclnnMatmulGetWorkspaceSize(input.tensor, view.t, out.tensor, 0,
-                                        &bytes, &e),
+    checked(prepared::query("aclnnMatmul", true, aclnnMatmulGetWorkspaceSize,
+                            input.tensor, view.t, out.tensor, 0, &bytes, &e),
             "BF16 matmul prepare");
     run(aclnnMatmul, bytes, e);
     return result(out);
@@ -260,15 +255,16 @@ struct Decoder {
       View weight(a.data, {n, k}, ACL_INT8), scales(s.data, {n}, ACL_FLOAT);
       uint64_t bytes = 0;
       aclOpExecutor *e = nullptr;
-      checked(aclnnDynamicQuantGetWorkspaceSize(input.tensor, nullptr,
-                                                quant.tensor, scale.tensor,
-                                                &bytes, &e),
+      checked(prepared::query("aclnnDynamicQuant", false,
+                              aclnnDynamicQuantGetWorkspaceSize, input.tensor,
+                              nullptr, quant.tensor, scale.tensor, &bytes, &e),
               "quant prepare");
       run(aclnnDynamicQuant, bytes, e);
-      checked(aclnnQuantMatmulV5GetWorkspaceSize(
-                  quant.tensor, weight.t, scale.tensor, scales.t, nullptr,
-                  nullptr, nullptr, nullptr, nullptr, false, true, 0,
-                  out.tensor, &bytes, &e),
+      checked(prepared::query("aclnnQuantMatmulV5", false,
+                              aclnnQuantMatmulV5GetWorkspaceSize, quant.tensor,
+                              weight.t, scale.tensor, scales.t, nullptr,
+                              nullptr, nullptr, nullptr, nullptr, false, true,
+                              0, out.tensor, &bytes, &e),
               "int8 matmul prepare");
       run(aclnnQuantMatmulV5, bytes, e);
       result = this->result(out);
@@ -288,8 +284,9 @@ struct Decoder {
     View weight(gamma.data, {int64_t(x.size())}, ACL_BF16);
     uint64_t bytes = 0;
     aclOpExecutor *e = nullptr;
-    checked(aclnnRmsNormGetWorkspaceSize(input.tensor, weight.t, 1e-5,
-                                         out.tensor, rstd.tensor, &bytes, &e),
+    checked(prepared::query("aclnnRmsNorm", false, aclnnRmsNormGetWorkspaceSize,
+                            input.tensor, weight.t, 1e-5, out.tensor,
+                            rstd.tensor, &bytes, &e),
             "RMSNorm prepare");
     run(aclnnRmsNorm, bytes, e);
     auto y = result(out);
@@ -314,11 +311,13 @@ struct Decoder {
     resident::control_upload(s.computed, std::vector<int32_t>{position});
     uint64_t bytes = 0;
     aclOpExecutor *e = nullptr;
-    checked(aclnnAiInfraFusedCausalConv1dGetWorkspaceSize(
-                s.input.tensor, s.weight.tensor, s.state.tensor,
-                s.starts.tensor, s.slots.tensor, nullptr, nullptr, nullptr,
-                s.computed.tensor, nullptr, nullptr, nullptr, 0, -1, 0, 1, 1,
-                128, 1, true, s.out.tensor, &bytes, &e),
+    checked(prepared::query("aclnnAiInfraFusedCausalConv1d", false,
+                            aclnnAiInfraFusedCausalConv1dGetWorkspaceSize,
+                            s.input.tensor, s.weight.tensor, s.state.tensor,
+                            s.starts.tensor, s.slots.tensor, nullptr, nullptr,
+                            nullptr, s.computed.tensor, nullptr, nullptr,
+                            nullptr, 0, -1, 0, 1, 1, 128, 1, true, s.out.tensor,
+                            &bytes, &e),
             "MoME prepare");
     run(aclnnAiInfraFusedCausalConv1d, bytes, e);
     return result(s.input);
@@ -350,15 +349,17 @@ struct Decoder {
     auto &api = training_api();
     uint64_t bytes = 0;
     aclOpExecutor *e = nullptr;
-    checked(api.pre_size(s.x.tensor, s.phi.tensor, s.alpha.tensor,
-                         s.beta.tensor, nullptr, 1, 1e-6, 1e-6, s.input.tensor,
-                         s.post.tensor, s.res.tensor, s.rms.tensor,
-                         s.mix.tensor, s.pre_weights.tensor, &bytes, &e),
+    checked(prepared::query("mHC.pre", false, api.pre_size, s.x.tensor,
+                            s.phi.tensor, s.alpha.tensor, s.beta.tensor,
+                            nullptr, 1, 1e-6, 1e-6, s.input.tensor,
+                            s.post.tensor, s.res.tensor, s.rms.tensor,
+                            s.mix.tensor, s.pre_weights.tensor, &bytes, &e),
             "mHC pre prepare");
     run(api.pre, bytes, e);
     if (!merge) {
-      checked(api.sink_size(s.res.tensor, 0, 1e-6, 20, s.sink.tensor, nullptr,
-                            nullptr, &bytes, &e),
+      checked(prepared::query("mHC.sink", false, api.sink_size, s.res.tensor, 0,
+                              1e-6, 20, s.sink.tensor, nullptr, nullptr, &bytes,
+                              &e),
               "mHC Sinkhorn prepare");
       run(api.sink, bytes, e);
     }
@@ -375,8 +376,9 @@ struct Decoder {
     auto &api = training_api();
     uint64_t bytes = 0;
     aclOpExecutor *e = nullptr;
-    checked(api.post_size(s.x.tensor, s.sink.tensor, s.branch.tensor,
-                          s.post.tensor, s.out.tensor, &bytes, &e),
+    checked(prepared::query("mHC.post", false, api.post_size, s.x.tensor,
+                            s.sink.tensor, s.branch.tensor, s.post.tensor,
+                            s.out.tensor, &bytes, &e),
             "mHC post prepare");
     run(api.post, bytes, e);
     return result(s.out);
@@ -478,7 +480,9 @@ struct Decoder {
     uint64_t bytes = 0;
     aclOpExecutor *e = nullptr;
     char layout[] = "TND", cache_layout[] = "PA_BSND";
-    checked(aclnnAiInfraSparseFlashAttentionPioneerGetWorkspaceSize(
+    checked(prepared::query(
+                "aclnnAiInfraSparseFlashAttentionPioneer", false,
+                aclnnAiInfraSparseFlashAttentionPioneerGetWorkspaceSize,
                 state.query.tensor, state.key.tensor, state.value.tensor,
                 state.indices.tensor, state.table.tensor, state.qlen.tensor,
                 state.klen.tensor, nullptr, nullptr, state.sink.tensor,
@@ -510,17 +514,14 @@ struct Decoder {
       result.strides[1] = 1;
       return result;
     };
-    auto prepared = swiglu.prepare({descriptor(input, 2 * width, 1)},
-                                   {descriptor(output, width, 2)});
-    reserve_workspace(prepared.workspace_bytes());
-    try {
-      prepared.enqueue(workspace, capacity, stream);
-      checked(aclrtSynchronizeStream(stream), "compiled SwiGLU fence");
-    } catch (...) {
-      // Foreign metadata and device buffers cannot be freed before completion.
-      aclrtSynchronizeStream(stream);
-      throw;
-    }
+    auto invocation =
+        std::make_unique<inferfabric::PreparedKernel>(swiglu.prepare(
+            {descriptor(input, 2 * width, 1)}, {descriptor(output, width, 2)}));
+    auto *workspace = execution.workspace(invocation->workspace_bytes());
+    // Retain foreign invocation metadata until the explicit output boundary.
+    pending_kernels.push_back(std::move(invocation));
+    pending_kernels.back()->enqueue(workspace, execution.workspace_capacity(),
+                                    stream);
     return result(output);
   }
   struct Routes {
@@ -545,7 +546,6 @@ struct Decoder {
     }
     to_device(ptr->input, x, ACL_FLOAT);
     ptr->launch();
-    checked(aclrtSynchronizeStream(stream), "router fence");
     return {resident::from_device(ptr->ids.data, 8, ACL_INT32),
             result(ptr->scores, ACL_FLOAT)};
   }
@@ -567,8 +567,9 @@ struct Decoder {
             source.dtype());
     uint64_t bytes = 0;
     aclOpExecutor *e = nullptr;
-    checked(aclnnIndexSelectGetWorkspaceSize(sv.t, 0, indices.tensor(), ov.t,
-                                             &bytes, &e),
+    checked(prepared::query("aclnnIndexSelect", false,
+                            aclnnIndexSelectGetWorkspaceSize, sv.t, 0,
+                            indices.tensor(), ov.t, &bytes, &e),
             "device index prepare");
     run(aclnnIndexSelect, bytes, e);
     return out;
@@ -625,22 +626,25 @@ struct Decoder {
     aclOpExecutor *e = nullptr;
     if (fused) {
       char mode[] = "dynamic";
-      checked(aclnnDequantSwigluQuantGetWorkspaceSize(
-                  input.tensor, nullptr, nullptr, nullptr, nullptr, nullptr,
-                  nullptr, true, mode, quant.tensor, scale.tensor, &bytes, &e),
+      checked(prepared::query("aclnnDequantSwigluQuant", false,
+                              aclnnDequantSwigluQuantGetWorkspaceSize,
+                              input.tensor, nullptr, nullptr, nullptr, nullptr,
+                              nullptr, nullptr, true, mode, quant.tensor,
+                              scale.tensor, &bytes, &e),
               "resident expert activation prepare");
       run(aclnnDequantSwigluQuant, bytes, e);
     } else {
-      checked(aclnnDynamicQuantGetWorkspaceSize(input.tensor, nullptr,
-                                                quant.tensor, scale.tensor,
-                                                &bytes, &e),
+      checked(prepared::query("aclnnDynamicQuant", false,
+                              aclnnDynamicQuantGetWorkspaceSize, input.tensor,
+                              nullptr, quant.tensor, scale.tensor, &bytes, &e),
               "resident expert quant prepare");
       run(aclnnDynamicQuant, bytes, e);
     }
-    checked(aclnnQuantMatmulV5GetWorkspaceSize(quant.tensor, wv.t, scale.tensor,
-                                               sv.t, nullptr, nullptr, nullptr,
-                                               nullptr, nullptr, false, true, 0,
-                                               out.tensor, &bytes, &e),
+    checked(prepared::query("aclnnQuantMatmulV5", false,
+                            aclnnQuantMatmulV5GetWorkspaceSize, quant.tensor,
+                            wv.t, scale.tensor, sv.t, nullptr, nullptr, nullptr,
+                            nullptr, nullptr, false, true, 0, out.tensor,
+                            &bytes, &e),
             "resident expert matmul prepare");
     run(aclnnQuantMatmulV5, bytes, e);
     return result(out);
@@ -649,46 +653,58 @@ struct Decoder {
     V top(5), ids(5, ACL_INT64), probs(logits.size());
     uint64_t bytes = 0;
     aclOpExecutor *e = nullptr;
-    checked(aclnnTopkGetWorkspaceSize(logits.tensor(), 5, 0, true, true,
-                                      top.tensor(), ids.tensor(), &bytes, &e),
+    checked(prepared::query("aclnnTopk", false, aclnnTopkGetWorkspaceSize,
+                            logits.tensor(), 5, 0, true, true, top.tensor(),
+                            ids.tensor(), &bytes, &e),
             "device output topk prepare");
     run(aclnnTopk, bytes, e);
-    checked(aclnnLogSoftmaxGetWorkspaceSize(logits.tensor(), 0, probs.tensor(),
-                                            &bytes, &e),
+    checked(prepared::query("aclnnLogSoftmax", false,
+                            aclnnLogSoftmaxGetWorkspaceSize, logits.tensor(), 0,
+                            probs.tensor(), &bytes, &e),
             "device logsoftmax prepare");
     run(aclnnLogSoftmax, bytes, e);
     auto selected_probs = select(probs, ids, logits.size(), 1);
     V selected(1, ACL_INT64), peers(8, ACL_INT64);
-    checked(aclnnArgMaxGetWorkspaceSize(logits.tensor(), 0, true,
-                                        selected.tensor(), &bytes, &e),
+    checked(prepared::query("aclnnArgMax", false, aclnnArgMaxGetWorkspaceSize,
+                            logits.tensor(), 0, true, selected.tensor(), &bytes,
+                            &e),
             "device greedy argmax prepare");
     run(aclnnArgMax, bytes, e);
     checked(HcclAllGather(selected.data(), peers.data(), 1,
                           HCCL_DATA_TYPE_INT64, comm, stream),
             "device token consensus");
-    checked(aclrtSynchronizeStream(stream), "output completion");
     resident::TransferScope boundary(resident::TransferRole::RequestOutput);
-    // Explicit request-output boundary: only selected IDs/top-five diagnostics.
+    // Queue all explicitly permitted output copies on the owning stream before
+    // its single completion boundary. No synchronous copy/global fence.
+    auto *host_output = static_cast<char *>(execution.output_host(144));
+    checked(aclrtMemcpyAsync(host_output, 64, peers.data(), 64,
+                             ACL_MEMCPY_DEVICE_TO_HOST, stream),
+            "output consensus IDs");
+    if (rank == 0) {
+      checked(aclrtMemcpyAsync(host_output + 64, 40, ids.data(), 40,
+                               ACL_MEMCPY_DEVICE_TO_HOST, stream),
+              "output top IDs");
+      checked(aclrtMemcpyAsync(host_output + 104, 20, selected_probs.data(), 20,
+                               ACL_MEMCPY_DEVICE_TO_HOST, stream),
+              "output top log probabilities");
+      checked(aclrtMemcpyAsync(host_output + 124, 20, top.data(), 20,
+                               ACL_MEMCPY_DEVICE_TO_HOST, stream),
+              "output top scores");
+    }
+    execution.complete();
+    pending_kernels.clear();
     std::array<int64_t, 8> peer_ids{};
     std::array<int64_t, 5> order{};
     std::array<float, 5> lp{}, scores{};
-    checked(aclrtMemcpy(peer_ids.data(), 64, peers.data(), 64,
-                        ACL_MEMCPY_DEVICE_TO_HOST),
-            "output consensus IDs");
+    std::memcpy(peer_ids.data(), host_output, 64);
     int next = int(peer_ids[0]);
     for (auto id : peer_ids)
       if (id != next)
         throw std::runtime_error("ranks disagree on token");
     if (rank == 0) {
-      checked(aclrtMemcpy(order.data(), 40, ids.data(), 40,
-                          ACL_MEMCPY_DEVICE_TO_HOST),
-              "output top IDs");
-      checked(aclrtMemcpy(lp.data(), 20, selected_probs.data(), 20,
-                          ACL_MEMCPY_DEVICE_TO_HOST),
-              "output top log probabilities");
-      checked(aclrtMemcpy(scores.data(), 20, top.data(), 20,
-                          ACL_MEMCPY_DEVICE_TO_HOST),
-              "output top scores");
+      std::memcpy(order.data(), host_output + 64, 40);
+      std::memcpy(lp.data(), host_output + 104, 20);
+      std::memcpy(scores.data(), host_output + 124, 20);
       std::cout << "{\"step\":" << step << ",\"token\":" << next
                 << ",\"logit\":" << scores[0] << ",\"top5\":[";
       for (int j = 0; j < 5; ++j) {
@@ -775,6 +791,15 @@ int main(int argc, char **argv) {
             if (!capture.directory.empty())
               inferfabric::profiling::write(capture.directory + "/rank-" +
                                             std::to_string(rank) + ".csv");
+            if (const char *dir =
+                    std::getenv("INFERFABRIC_PREPARED_AUDIT_DIR")) {
+              std::filesystem::create_directories(dir);
+              std::ofstream out(std::filesystem::path(dir) /
+                                ("rank-" + std::to_string(rank) + ".json"));
+              decoder.execution.write(out);
+              if (!out)
+                throw std::runtime_error("prepared audit write");
+            }
             if (const char *dir =
                     std::getenv("INFERFABRIC_TRANSFER_AUDIT_DIR")) {
               std::filesystem::create_directories(dir);

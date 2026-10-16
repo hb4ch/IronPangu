@@ -28,6 +28,21 @@ fn physical_inspection_preserves_qualified_92b_program() {
             .count(),
         321
     );
+    // Reusable buffers use stream ordering; only the explicit request output
+    // may advertise host completion. Do not regress to one fence per operator.
+    let completions: Vec<_> = physical.schedules[0]
+        .steps
+        .iter()
+        .enumerate()
+        .filter(|(_, s)| {
+            s.operation.candidates[0]
+                .boundaries
+                .iter()
+                .any(|b| b.kind == physical::BoundaryKind::Synchronize)
+        })
+        .map(|(i, _)| i)
+        .collect();
+    assert_eq!(completions, vec![graph.output]);
 }
 fn fixture() -> Graph {
     serde_json::from_str(include_str!("fixtures/viewer-scopes.json")).unwrap()

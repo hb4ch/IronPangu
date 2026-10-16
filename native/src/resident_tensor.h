@@ -54,10 +54,13 @@ public:
     return storage_->tensor;
   }
 };
-// Synchronous conservative execution makes ownership explicit. No host access
-// to tensor contents is available here. Preparation/arena reuse can replace
-// allocation without changing the value or device-only operator contracts.
+// Copies and recycling are ordered on the prepared context stream.
+// No host access to tensor contents is available here.
 inline void copy(void *dst, const void *src, size_t bytes) {
+  if (prepared::active) {
+    prepared::active->copy(dst, src, bytes);
+    return;
+  }
   openpangu::checked(
       aclrtMemcpy(dst, bytes, src, bytes, ACL_MEMCPY_DEVICE_TO_DEVICE),
       "resident device copy");

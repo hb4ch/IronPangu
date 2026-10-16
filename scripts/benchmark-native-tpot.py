@@ -35,6 +35,7 @@ def main():
     parser.add_argument('--output', required=True)
     parser.add_argument('--repeats', type=int, default=1)
     parser.add_argument('--timeout', type=float, default=900)
+    parser.add_argument('--resident-audit', action='store_true', help='Require transfer and prepared-execution audits for every rank/run')
     args = parser.parse_args()
     if args.repeats < 1 or args.timeout <= 0:
         parser.error('positive repeats/timeout required')
@@ -47,11 +48,17 @@ def main():
         for case in fixtures:
             name = f"{case['case']}-{repeat}"
             command = [args.binary, args.plan, args.checkpoint, '32', *map(str, case['input_ids'])]
+            env = os.environ.copy()
+            env.pop('INFERFABRIC_PROFILE_DIR', None)
+            env.pop('INFERFABRIC_PROFILE_VENDOR', None)
+            if args.resident_audit:
+                env['INFERFABRIC_TRANSFER_AUDIT_DIR'] = str((out/name/'transfers').resolve())
+                env['INFERFABRIC_PREPARED_AUDIT_DIR'] = str((out/name/'prepared').resolve())
             rows, receipts, pending = [], [], b''
             start = time.perf_counter_ns()
             with (out / f'{name}.stderr').open('wb') as error:
                 process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=error,
-                                           start_new_session=True)
+                                           start_new_session=True, env=env)
                 selector = selectors.DefaultSelector()
                 selector.register(process.stdout, selectors.EVENT_READ)
                 try:
@@ -85,6 +92,22 @@ def main():
                     process.stdout.close()
             if [r['token'] for r in rows] != case['output_ids']:
                 raise RuntimeError(f'{name}: output differs from qualified native sequence')
+            if args.resident_audit:
+                if rows != case['steps']:
+                    raise RuntimeError(f'{name}: complete output records differ')
+                for rank in range(8):
+                    transfer = json.loads((out/name/'transfers'/f'rank-{rank}.json').read_text())
+                    prepared = json.loads((out/name/'prepared'/f'rank-{rank}.json').read_text())
+                    if transfer['activation_host_transfers'] or transfer['rejected']:
+                        raise RuntimeError(f'{name}: residency failure')
+                    output_boundary = next(b for b in transfer['boundaries'] if b['role'] == 'request_output')
+                    if output_boundary['d2h_bytes'] != len(rows) * (144 if rank == 0 else 64):
+                        raise RuntimeError(f'{name}: unexpected output transfer bytes')
+                    decode = [s for s in prepared['steps'] if s['position'] >= len(case['input_ids'])]
+                    if len(decode) != len(rows)-1 or any(s['device_allocations'] or s['completion_boundaries'] for s in decode):
+                        raise RuntimeError(f'{name}: decode allocated or fenced')
+                    if prepared['output_boundaries'] != len(rows):
+                        raise RuntimeError(f'{name}: output boundary count')
             elapsed = [(b-a)/1e6 for a,b in zip(receipts,receipts[1:])]
             if any(t <= 0 for t in elapsed):
                 raise RuntimeError('coalesced output records; cannot resolve token intervals')
@@ -93,7 +116,7 @@ def main():
                       'output_tokens': len(rows), 'process_to_first_output_s': (receipts[0]-start)/1e9,
                       'decode_span_s': (receipts[-1]-receipts[0])/1e9, 'tpot': stats(elapsed),
                       'interval_ms': elapsed, 'receipt_offset_ns': [t-start for t in receipts],
-                      'exact_qualified_tokens': True, 'outputs': rows}
+                      'exact_qualified_tokens': True, 'resident_prepared_audit': args.resident_audit, 'outputs': rows}
             results.append(result)
             (out/'runs.json').write_text(json.dumps(results, indent=2)+'\n')
             print(json.dumps({k:v for k,v in result.items() if k not in ('outputs','receipt_offset_ns','interval_ms')}), flush=True)

@@ -80,8 +80,10 @@ Ascend token adapter registers the current operator implementations without mode
 names or layer schedules. `compile-token` publishes `physical.json` alongside
 `execution.html`; the viewer embeds the same verified physical metadata.
 
-The resident 92B path uses device values, internal device allocations and frequent
-synchronization. The physical artifact remains **inspection-only and non-executable**
+The resident 92B path now uses reusable per-rank device buffers, cached qualified
+invocations and same-stream ordering, with completion only at request output.
+See [prepared device execution](prepared-device-execution.md) for ownership and
+qualification details. The physical artifact remains **inspection-only and non-executable**
 until the native executor consumes frozen physical invocations directly. One physical step represents
 a backend call with opaque internals, not a claim that each logical op is one
 NPU kernel. Boundary annotations identify classified external transfers, synchronization,

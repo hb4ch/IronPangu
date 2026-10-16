@@ -4,6 +4,7 @@
 #endif
 // Native OpenPangu building blocks. Caller owns stream and fences before destruction.
 #include <acl/acl.h>
+#include "prepared_execution.h"
 #include <aclnnop/aclnn_matmul.h>
 #include <aclnnop/aclnn_moe_gating_top_k.h>
 #include <algorithm>
@@ -34,18 +35,21 @@ struct FloatFixture {
 };
 struct DeviceTensor {
   void *data=nullptr;aclTensor *tensor=nullptr;size_t bytes=0;
+  inferfabric::prepared::Context *owner=nullptr;
   DeviceTensor(std::vector<int64_t> shape,aclDataType dtype,size_t width):bytes(width) {
     if(shape.empty())throw std::runtime_error("empty tensor shape");
     std::vector<int64_t> strides(shape.size(),1);
     for(auto d:shape){if(d<=0 || uint64_t(d)>SIZE_MAX/bytes)throw std::runtime_error("tensor bounds");bytes*=d;}
     for(size_t j=shape.size()-1;j>0;--j)strides[j-1]=strides[j]*shape[j];
+    owner=inferfabric::prepared::active;
+    if(owner){data=owner->acquire(bytes);tensor=owner->descriptor(data,shape,dtype);return;}
     checked(aclrtMalloc(&data,bytes,ACL_MEM_MALLOC_HUGE_FIRST),"tensor allocation");
     tensor=aclCreateTensor(shape.data(),shape.size(),dtype,strides.data(),0,ACL_FORMAT_ND,shape.data(),shape.size(),data);
     if(!tensor){aclrtFree(data);data=nullptr;throw std::runtime_error("tensor descriptor");}
   }
   DeviceTensor(const DeviceTensor&)=delete;DeviceTensor& operator=(const DeviceTensor&)=delete;
-  ~DeviceTensor(){if(tensor)aclDestroyTensor(tensor);if(data)aclrtFree(data);}
-  template<class T> void upload(const std::vector<T>& v){if(v.size()*sizeof(T)!=bytes)throw std::runtime_error("upload size");checked(aclrtMemcpy(data,bytes,v.data(),bytes,ACL_MEMCPY_HOST_TO_DEVICE),"tensor upload");}
+  ~DeviceTensor(){if(owner){owner->release(data);return;}if(tensor)aclDestroyTensor(tensor);if(data)aclrtFree(data);}
+  template<class T> void upload(const std::vector<T>& v){if(v.size()*sizeof(T)!=bytes)throw std::runtime_error("upload size");if(owner){owner->upload(data,v.data(),bytes);return;}checked(aclrtMemcpy(data,bytes,v.data(),bytes,ACL_MEMCPY_HOST_TO_DEVICE),"tensor upload");}
   template<class T> std::vector<T> read() const {std::vector<T> v(bytes/sizeof(T));checked(aclrtMemcpy(v.data(),bytes,data,bytes,ACL_MEMCPY_DEVICE_TO_HOST),"tensor download");return v;}
 };
 using Launcher=aclnnStatus(*)(void*,uint64_t,aclOpExecutor*,aclrtStream);

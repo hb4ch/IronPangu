@@ -30,6 +30,7 @@ pub fn lower(graph: &Graph, devices: &[u32]) -> Result<Plan> {
     source.extend_from_slice(include_bytes!("../../../native/src/resident_transfer.h"));
     source.extend_from_slice(include_bytes!("../../../native/src/execution_profile.h"));
     source.extend_from_slice(include_bytes!("../../../native/src/execution_capture.h"));
+    source.extend_from_slice(include_bytes!("../../../native/src/prepared_execution.h"));
     let revision = digest(&source);
     let mut values = vec![];
     let mut operations = vec![];
@@ -85,13 +86,10 @@ pub fn lower(graph: &Graph, devices: &[u32]) -> Result<Plan> {
         });
         let mut boundaries = vec![Boundary {
             kind: BoundaryKind::InternalLaunches,
-            detail: "Device-only operator contract: no activation/routing/cache readback or implicit fallback".into(),
-        }, Boundary {
-            kind: BoundaryKind::Synchronize,
-            detail: "Conservative stream completion before releasing temporary device buffers; no overlap claimed".into(),
+            detail: "Device-only single-stream execution: leases recycle after last enqueue, descriptors persist; qualified Cast/Add/Sub/Mul/Matmul invocations are repeatable, other vendor invocations remain explicitly one-shot. No activation/routing/cache readback or implicit fallback".into(),
         }, Boundary {
             kind: BoundaryKind::DynamicAllocation,
-            detail: "Device allocations remain per-call; complete workspace/arena bound pending preparation".into(),
+            detail: "Per-rank reusable device pool grows on a new size/liveness requirement during preparation; warmed decode reuses buffers and workspace. Runtime audit records allocations and reuses. Static arena offsets and full workspace bounds remain unresolved".into(),
         }];
         if matches!(
             n.op.as_str(),
@@ -113,6 +111,8 @@ pub fn lower(graph: &Graph, devices: &[u32]) -> Result<Plan> {
                 detail: "Device-packed owner-local expert weight banks; eight device-indexed slots per rank, including masked foreign routes. Additional bank memory and compute are not yet optimized".into()});
         }
         if i == graph.output {
+            boundaries.push(Boundary {kind: BoundaryKind::Synchronize,
+                detail: "Request output only: enqueue pinned D2H of permitted IDs/diagnostics, then complete this rank's stream once. No per-operator or device-global fence; teardown also completes the owning stream".into()});
             boundaries.push(Boundary {kind: BoundaryKind::RequestOutput,
                 detail: "After decode only: device argmax/top-k/log-softmax; 64 bytes of consensus token IDs per rank, plus 80 bytes of top-five output diagnostics on leader. Prefill and intermediate values are never read back".into()});
         }
@@ -144,7 +144,7 @@ pub fn lower(graph: &Graph, devices: &[u32]) -> Result<Plan> {
                 contract_revision: revision.clone(), numerical_contract: format!("ascend_token_v1/{}", n.op),
                 location: Location::Device, eligible: true, rejection: None,
                 workspace_bound_bytes: None, capture_qualified: false, boundaries,
-                unresolved: vec!["Internal device launch/buffer DAG and full memory bound require preparation".into(),
+                unresolved: vec!["Runtime-prepared descriptors/pool are not a frozen physical arena; internal device DAG and static full memory bound remain unresolved".into(),
                     "Native binary, vendor runtime and custom kernel identities require deployment binding".into()],
                 cost: Cost::default(),
             }],

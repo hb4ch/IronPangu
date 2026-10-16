@@ -14,6 +14,7 @@ provenance={str(path):hashlib.sha256(path.read_bytes()).hexdigest() for path in 
 case=next(c for c in json.loads(Path(a.cases).read_text()) if c['case']==a.case)
 if len(case['output_ids'])<3:raise ValueError('capture needs at least three outputs')
 env=dict(os.environ,INFERFABRIC_PROFILE_DIR=str(out.resolve()),INFERFABRIC_TRANSFER_AUDIT_DIR=str((out/'transfers').resolve()))
+env['INFERFABRIC_PREPARED_AUDIT_DIR']=str((out/'prepared').resolve())
 env.pop('INFERFABRIC_PROFILE_VENDOR',None)
 if a.vendor:env['INFERFABRIC_PROFILE_VENDOR']='1'
 with (out/'stderr.txt').open('w') as err:

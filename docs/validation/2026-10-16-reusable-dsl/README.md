@@ -91,3 +91,11 @@ continuous batching, full-model ACLgraph, Rust serving integration for this
 program format and production performance remain separate milestones. Exact
 results on these three prompts do not establish broad model quality or equality
 of every vocabulary logit.
+
+## Prepared execution update
+
+The viewer was regenerated on 2026-10-16 with the current compiler's prepared
+execution annotations: reusable per-rank buffers, explicit repeatability policy
+and completion only at request output. The logical graph/execution binary is
+unchanged. [Prepared runtime evidence and measured TPOT](../2026-10-16-prepared-execution/README.md)
+records the newer runtime qualification separately from the historical results above.

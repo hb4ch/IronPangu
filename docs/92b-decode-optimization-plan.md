@@ -208,3 +208,13 @@ contain the reproducible measurements. No optimization in this plan has been
 credited with a speedup. The current physical plan is inspectable planning IR;
 implementing its prepared execution contract remains work, not an already-frozen
 production execution engine.
+
+## Milestone 1 implementation update
+
+The [prepared execution milestone](prepared-device-execution.md) now has full 92B
+NPU qualification and [measured results](validation/2026-10-16-prepared-execution/README.md):
+reusable device buffers, cached qualified invocations and owning-stream output
+completion replace per-call allocation and fences. Runtime preparation still has
+explicit one-shot vendor operators; frozen physical arenas and checked zero-copy
+activation views remain follow-up work. The ordered capture/collective/sparse-EP
+priorities above remain open.
