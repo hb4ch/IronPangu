@@ -285,6 +285,7 @@ pub fn serial_plan(
     if n == 0
         || n > 10000
         || values.len() != n
+        || values.iter().any(|v| v.location != Location::Device)
         || devices.is_empty()
         || devices.len() > 256
         || outputs.is_empty()

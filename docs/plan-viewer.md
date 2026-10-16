@@ -102,3 +102,14 @@ All runs require zero JavaScript errors and zero HTTP requests. Rust tests also
 check deterministic HTML output, validation and safe embedding. Overview and
 operation screenshots were visually inspected. This is viewer validation; the recorded
 NPU numerical qualification remains the same previously tested execution program.
+
+### Device-residency inspection
+
+Current generated plans use `serial-device-resident-v1`. Every activation has
+`location: device`; host and opaque implementation candidates are rejected
+before cost selection. Operation details distinguish control-input uploads from
+immutable-parameter preparation. Request-output byte bounds appear in plan
+limitations. No activation transfer or implicit offload is legal. The displayed
+host activation payload peak is therefore zero; this does not mean total host
+memory or total device memory is zero. Workspace, duplicated expert banks and
+persistent state still need a complete prepared memory plan.

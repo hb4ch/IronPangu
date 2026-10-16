@@ -22,6 +22,22 @@
 
 ## Latest progress
 
+### 2026-10-16 · Milestone: device-resident 92B execution
+
+**Activations, routing data and KV state now stay on the NPU throughout the full
+TP8/EP8 decoder.** Host fallback is rejected before cost selection. Device-side
+expert selection/reduction and greedy sampling avoid activation readback;
+classified control, parameter-preparation and request-output transfers are audited.
+
+All **33/33 generated tokens** match the pinned reference across three complete
+answers. All 24 case/rank audits pass with zero activation transfers. Logits are
+not bitwise equal to the previous host-staged path. Fixed-slot EP, temporary
+allocations and serial synchronization remain performance work.
+
+[Full NPU evidence and limits](docs/validation/2026-10-16-device-resident/README.md) ·
+[Residency contract](docs/native-physical-planning.md) ·
+[Inspect the resident plan](docs/validation/2026-10-16-reusable-dsl/execution.html)
+
 ### 2026-10-16 · Milestone: reusable DSL → complete 92B NPU inference
 
 **OpenPangu V2 92B is now fully defined in a compact DSL and verified end to end on eight Ascend NPUs (TP8/EP8).**
@@ -236,7 +252,7 @@ The production program must qualify **both OpenPangu V2 92B and 505B text checkp
 
 **Scope decision:** 92B and 505B are both required. V3, vision and other model families are separate tracks. Do not assume the two V2 checkpoints enable identical features: a checkpoint-derived capability manifest must select attention variants, MoME, mHC, index sharing, quantization and MTP. Architecture-required features cannot be disabled just to make a model load. Optional performance features may remain disabled only if the release still meets its service budgets.
 
-Current blockers are concrete: `bound.rs` asserts the Qwen dimensions and layer pattern; `lower.rs` accepts only its canonical blocks; the native runner fixes Qwen vocabulary/hidden dimensions and attention/state allocation. OpenPangu now has an audited TP8/EP8 checkpoint loader and qualified native attention, router/MoE, mHC and MoME components. A complete 46-layer 92B diagnostic decoder now generates reference-matched short answers with TP8/EP8. Learned indexer/long-context cache lifecycle, broad golden-logit qualification and Rust serving integration remain open. The full decoder executes selected experts only, but still lacks production grouped dispatch and device-resident scheduling. The general physical-plan executor is CPU f32 only, and the transfer crate currently uses in-memory transport. Existing graph capture, sampling and scheduling are reusable foundations, not OpenPangu qualifications.
+Current blockers are concrete: `bound.rs` asserts the Qwen dimensions and layer pattern; `lower.rs` accepts only its canonical blocks; the native runner fixes Qwen vocabulary/hidden dimensions and attention/state allocation. OpenPangu now has an audited TP8/EP8 checkpoint loader and qualified native attention, router/MoE, mHC and MoME components. A complete 46-layer 92B diagnostic decoder now generates reference-matched short answers with TP8/EP8. Learned indexer/long-context cache lifecycle, broad golden-logit qualification and Rust serving integration remain open. The full decoder now keeps activations/routing/state on device, using fixed route slots and device-indexed expert banks; sparse grouped dispatch, bank-memory optimization and prepared scheduling remain open. The general physical-plan executor is CPU f32 only, and the transfer crate currently uses in-memory transport. Existing graph capture, sampling and scheduling are reusable foundations, not OpenPangu qualifications.
 
 | ID / priority | Work to deliver | Acceptance evidence |
 |---|---|---|

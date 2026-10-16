@@ -210,13 +210,15 @@ capacity, so disjoint subviews can safely share an allocation.
 contract and actual workspace requirements before enqueue; exceeding bounds fails
 instead of allocating more memory. The binder independently checks actual address
 ranges to catch different allocation IDs bound to overlapping storage. Serialized
-contracts contain no pointers. No native loader or kernel implementation changed.
+contracts contain no pointers. The binding ABI remains unchanged by the resident
+serial executor migration.
 The viewer exposes these support limits as metadata, without claiming that opaque
 backend calls have already been lowered to bound device-buffer invocations.
 
-Contract implementation and local binding tests do not
-claim that the complete native decoder already uses device buffers. Replacing
-host-staged kernels and building the executable physical runner follows separately.
+The complete native decoder now uses device values and resident kernel calls.
+It still dispatches the token program directly rather than consuming serialized
+`device_buffer::Invocation` records. Building the frozen physical runner and
+preparing all resources before execution remain separate work.
 
 ## Viewer
 
@@ -228,7 +230,7 @@ views must expose owners and ordering proofs once reuse exists. Future measured
 trace overlays must match the exact plan identity; predictions are labelled.
 
 The first viewer presents ordinal call order, not a fabricated timed Gantt chart.
-It shows partial host payload accounting separately from unknown HBM. The physical
+It shows zero intermediate host payload separately from unknown total HBM. The physical
 view paginates to 24 calls, preserving large-model usability.
 
 ## Delivery sequence and acceptance gates

@@ -1,0 +1,26 @@
+[
+  {
+    "case": "arithmetic",
+    "tokens": 8,
+    "exact_token_match": true,
+    "selected_logits_exact": false,
+    "max_selected_logit_abs_delta": 9.5,
+    "max_selected_logprob_abs_delta": 0.131915
+  },
+  {
+    "case": "geography",
+    "tokens": 8,
+    "exact_token_match": true,
+    "selected_logits_exact": false,
+    "max_selected_logit_abs_delta": 5,
+    "max_selected_logprob_abs_delta": 0.01245247
+  },
+  {
+    "case": "chinese",
+    "tokens": 17,
+    "exact_token_match": true,
+    "selected_logits_exact": false,
+    "max_selected_logit_abs_delta": 9.5,
+    "max_selected_logprob_abs_delta": 0.336834
+  }
+]

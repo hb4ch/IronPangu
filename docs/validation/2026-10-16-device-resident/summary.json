@@ -1,0 +1,27 @@
+{
+  "cases": 3,
+  "tokens": 33,
+  "ranks": 8,
+  "exact_reference_sequences": true,
+  "activation_host_transfers": 0,
+  "rejected_transfers": 0,
+  "audited_case_ranks": 24,
+  "total_output_d2h_bytes": 19536,
+  "native_execution_binary_sha256": "3e7e99d4f0a41953d32a27f181a842a7af3cc9cabee9ed5bfc242f0e883754dc",
+  "logical_program_sha256": "46fa67de15080a6ccf370ea852f2d7a6744b532603bdf73ded7f59c34a082513",
+  "native_transfer_negative_test": "passed",
+  "device_ownership_and_transfer_probe": "passed",
+  "rust_workspace_tests": "passed",
+  "clippy_warnings_denied": "passed",
+  "local_aarch64_cross_build": "passed",
+  "scope": "executor-owned transfers; vendor internal metadata traffic excluded; no bitwise-logit or production-performance claim",
+  "physical_policy": "serial-device-resident-v1",
+  "physical_json_sha256": "a5c02a425f4618366ea3ac6537136ac00577a76ffc6e26ad9440379c25febfaa",
+  "viewer": {
+    "scopes_checked": 460,
+    "pages_checked": 462,
+    "max_visible": 24,
+    "browser_errors": 0,
+    "network_requests": 0
+  }
+}

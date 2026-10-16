@@ -14,7 +14,13 @@ workspace and pinned implementation identity without process pointers. Checked
 binding produces the existing `IFKernelTensorV1` POD layout. The initial ABI
 supports contiguous I8/BF16/F32 tensors and disjoint outputs/workspace; this
 contract is available for the future physical executor, not integrated into the
-current host-staged token runtime.
+current resident token runtime, which binds device resources directly in C++.
+
+Device-residency policy `serial-device-resident-v1` rejects host/opaque kernel
+candidates and unclassified activation transfers before cost search.
+`inferfabric.transfer-audit.v1` records executor-owned control, parameter-preparation
+and request-output transfer counts/bytes per rank. It is runtime evidence, not an
+executable plan or a trace of vendor-internal metadata traffic.
 
 Updated 2026-09-08. This catalog separates implemented formats from the proposed DSL v1 frontend and future native physical extensions. There is currently no single representation shared by every historical path. The field definitions in the linked Rust sources are authoritative; new physical-path JSON objects reject unknown fields.
 

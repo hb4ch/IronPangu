@@ -47,6 +47,13 @@ fn deterministic_baseline_preserves_logical_program_and_explicit_unknowns() {
     assert!(!s.cost_complete);
     assert_eq!(s.estimated_serial_ns, None);
     assert_eq!(s.known_host_payload_peak_bytes, 0);
+    assert_eq!(a.policy, "serial-device-resident-v1");
+    assert!(
+        s.steps[graph.output].operation.candidates[0]
+            .boundaries
+            .iter()
+            .any(|b| b.kind == physical::BoundaryKind::RequestOutput)
+    );
     assert_eq!(
         s.steps[6]
             .operation

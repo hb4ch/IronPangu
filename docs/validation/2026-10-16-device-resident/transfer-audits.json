@@ -1,0 +1,722 @@
+[
+  {
+    "case": "arithmetic",
+    "rank": 0,
+    "format": "inferfabric.transfer-audit.v1",
+    "activation_host_transfers": 0,
+    "rejected": 0,
+    "boundaries": [
+      {
+        "role": "control_input",
+        "h2d_calls": 17206,
+        "h2d_bytes": 11576016,
+        "d2h_calls": 0,
+        "d2h_bytes": 0
+      },
+      {
+        "role": "parameter_preparation",
+        "h2d_calls": 505,
+        "h2d_bytes": 208940860,
+        "d2h_calls": 598,
+        "d2h_bytes": 154259172
+      },
+      {
+        "role": "request_output",
+        "h2d_calls": 0,
+        "h2d_bytes": 0,
+        "d2h_calls": 32,
+        "d2h_bytes": 1152
+      }
+    ]
+  },
+  {
+    "case": "arithmetic",
+    "rank": 1,
+    "format": "inferfabric.transfer-audit.v1",
+    "activation_host_transfers": 0,
+    "rejected": 0,
+    "boundaries": [
+      {
+        "role": "control_input",
+        "h2d_calls": 17206,
+        "h2d_bytes": 11576016,
+        "d2h_calls": 0,
+        "d2h_bytes": 0
+      },
+      {
+        "role": "parameter_preparation",
+        "h2d_calls": 505,
+        "h2d_bytes": 208940860,
+        "d2h_calls": 598,
+        "d2h_bytes": 154259172
+      },
+      {
+        "role": "request_output",
+        "h2d_calls": 0,
+        "h2d_bytes": 0,
+        "d2h_calls": 8,
+        "d2h_bytes": 512
+      }
+    ]
+  },
+  {
+    "case": "arithmetic",
+    "rank": 2,
+    "format": "inferfabric.transfer-audit.v1",
+    "activation_host_transfers": 0,
+    "rejected": 0,
+    "boundaries": [
+      {
+        "role": "control_input",
+        "h2d_calls": 17206,
+        "h2d_bytes": 11576016,
+        "d2h_calls": 0,
+        "d2h_bytes": 0
+      },
+      {
+        "role": "parameter_preparation",
+        "h2d_calls": 505,
+        "h2d_bytes": 208940860,
+        "d2h_calls": 598,
+        "d2h_bytes": 154259172
+      },
+      {
+        "role": "request_output",
+        "h2d_calls": 0,
+        "h2d_bytes": 0,
+        "d2h_calls": 8,
+        "d2h_bytes": 512
+      }
+    ]
+  },
+  {
+    "case": "arithmetic",
+    "rank": 3,
+    "format": "inferfabric.transfer-audit.v1",
+    "activation_host_transfers": 0,
+    "rejected": 0,
+    "boundaries": [
+      {
+        "role": "control_input",
+        "h2d_calls": 17206,
+        "h2d_bytes": 11576016,
+        "d2h_calls": 0,
+        "d2h_bytes": 0
+      },
+      {
+        "role": "parameter_preparation",
+        "h2d_calls": 505,
+        "h2d_bytes": 208940860,
+        "d2h_calls": 598,
+        "d2h_bytes": 154259172
+      },
+      {
+        "role": "request_output",
+        "h2d_calls": 0,
+        "h2d_bytes": 0,
+        "d2h_calls": 8,
+        "d2h_bytes": 512
+      }
+    ]
+  },
+  {
+    "case": "arithmetic",
+    "rank": 4,
+    "format": "inferfabric.transfer-audit.v1",
+    "activation_host_transfers": 0,
+    "rejected": 0,
+    "boundaries": [
+      {
+        "role": "control_input",
+        "h2d_calls": 17206,
+        "h2d_bytes": 11576016,
+        "d2h_calls": 0,
+        "d2h_bytes": 0
+      },
+      {
+        "role": "parameter_preparation",
+        "h2d_calls": 505,
+        "h2d_bytes": 208940860,
+        "d2h_calls": 598,
+        "d2h_bytes": 154259172
+      },
+      {
+        "role": "request_output",
+        "h2d_calls": 0,
+        "h2d_bytes": 0,
+        "d2h_calls": 8,
+        "d2h_bytes": 512
+      }
+    ]
+  },
+  {
+    "case": "arithmetic",
+    "rank": 5,
+    "format": "inferfabric.transfer-audit.v1",
+    "activation_host_transfers": 0,
+    "rejected": 0,
+    "boundaries": [
+      {
+        "role": "control_input",
+        "h2d_calls": 17206,
+        "h2d_bytes": 11576016,
+        "d2h_calls": 0,
+        "d2h_bytes": 0
+      },
+      {
+        "role": "parameter_preparation",
+        "h2d_calls": 505,
+        "h2d_bytes": 208940860,
+        "d2h_calls": 598,
+        "d2h_bytes": 154259172
+      },
+      {
+        "role": "request_output",
+        "h2d_calls": 0,
+        "h2d_bytes": 0,
+        "d2h_calls": 8,
+        "d2h_bytes": 512
+      }
+    ]
+  },
+  {
+    "case": "arithmetic",
+    "rank": 6,
+    "format": "inferfabric.transfer-audit.v1",
+    "activation_host_transfers": 0,
+    "rejected": 0,
+    "boundaries": [
+      {
+        "role": "control_input",
+        "h2d_calls": 17206,
+        "h2d_bytes": 11576016,
+        "d2h_calls": 0,
+        "d2h_bytes": 0
+      },
+      {
+        "role": "parameter_preparation",
+        "h2d_calls": 505,
+        "h2d_bytes": 208940860,
+        "d2h_calls": 598,
+        "d2h_bytes": 154259172
+      },
+      {
+        "role": "request_output",
+        "h2d_calls": 0,
+        "h2d_bytes": 0,
+        "d2h_calls": 8,
+        "d2h_bytes": 512
+      }
+    ]
+  },
+  {
+    "case": "arithmetic",
+    "rank": 7,
+    "format": "inferfabric.transfer-audit.v1",
+    "activation_host_transfers": 0,
+    "rejected": 0,
+    "boundaries": [
+      {
+        "role": "control_input",
+        "h2d_calls": 17206,
+        "h2d_bytes": 11576016,
+        "d2h_calls": 0,
+        "d2h_bytes": 0
+      },
+      {
+        "role": "parameter_preparation",
+        "h2d_calls": 505,
+        "h2d_bytes": 208940860,
+        "d2h_calls": 598,
+        "d2h_bytes": 154259172
+      },
+      {
+        "role": "request_output",
+        "h2d_calls": 0,
+        "h2d_bytes": 0,
+        "d2h_calls": 8,
+        "d2h_bytes": 512
+      }
+    ]
+  },
+  {
+    "case": "geography",
+    "rank": 0,
+    "format": "inferfabric.transfer-audit.v1",
+    "activation_host_transfers": 0,
+    "rejected": 0,
+    "boundaries": [
+      {
+        "role": "control_input",
+        "h2d_calls": 19828,
+        "h2d_bytes": 12108144,
+        "d2h_calls": 0,
+        "d2h_bytes": 0
+      },
+      {
+        "role": "parameter_preparation",
+        "h2d_calls": 505,
+        "h2d_bytes": 208940860,
+        "d2h_calls": 598,
+        "d2h_bytes": 154259172
+      },
+      {
+        "role": "request_output",
+        "h2d_calls": 0,
+        "h2d_bytes": 0,
+        "d2h_calls": 32,
+        "d2h_bytes": 1152
+      }
+    ]
+  },
+  {
+    "case": "geography",
+    "rank": 1,
+    "format": "inferfabric.transfer-audit.v1",
+    "activation_host_transfers": 0,
+    "rejected": 0,
+    "boundaries": [
+      {
+        "role": "control_input",
+        "h2d_calls": 19828,
+        "h2d_bytes": 12108144,
+        "d2h_calls": 0,
+        "d2h_bytes": 0
+      },
+      {
+        "role": "parameter_preparation",
+        "h2d_calls": 505,
+        "h2d_bytes": 208940860,
+        "d2h_calls": 598,
+        "d2h_bytes": 154259172
+      },
+      {
+        "role": "request_output",
+        "h2d_calls": 0,
+        "h2d_bytes": 0,
+        "d2h_calls": 8,
+        "d2h_bytes": 512
+      }
+    ]
+  },
+  {
+    "case": "geography",
+    "rank": 2,
+    "format": "inferfabric.transfer-audit.v1",
+    "activation_host_transfers": 0,
+    "rejected": 0,
+    "boundaries": [
+      {
+        "role": "control_input",
+        "h2d_calls": 19828,
+        "h2d_bytes": 12108144,
+        "d2h_calls": 0,
+        "d2h_bytes": 0
+      },
+      {
+        "role": "parameter_preparation",
+        "h2d_calls": 505,
+        "h2d_bytes": 208940860,
+        "d2h_calls": 598,
+        "d2h_bytes": 154259172
+      },
+      {
+        "role": "request_output",
+        "h2d_calls": 0,
+        "h2d_bytes": 0,
+        "d2h_calls": 8,
+        "d2h_bytes": 512
+      }
+    ]
+  },
+  {
+    "case": "geography",
+    "rank": 3,
+    "format": "inferfabric.transfer-audit.v1",
+    "activation_host_transfers": 0,
+    "rejected": 0,
+    "boundaries": [
+      {
+        "role": "control_input",
+        "h2d_calls": 19828,
+        "h2d_bytes": 12108144,
+        "d2h_calls": 0,
+        "d2h_bytes": 0
+      },
+      {
+        "role": "parameter_preparation",
+        "h2d_calls": 505,
+        "h2d_bytes": 208940860,
+        "d2h_calls": 598,
+        "d2h_bytes": 154259172
+      },
+      {
+        "role": "request_output",
+        "h2d_calls": 0,
+        "h2d_bytes": 0,
+        "d2h_calls": 8,
+        "d2h_bytes": 512
+      }
+    ]
+  },
+  {
+    "case": "geography",
+    "rank": 4,
+    "format": "inferfabric.transfer-audit.v1",
+    "activation_host_transfers": 0,
+    "rejected": 0,
+    "boundaries": [
+      {
+        "role": "control_input",
+        "h2d_calls": 19828,
+        "h2d_bytes": 12108144,
+        "d2h_calls": 0,
+        "d2h_bytes": 0
+      },
+      {
+        "role": "parameter_preparation",
+        "h2d_calls": 505,
+        "h2d_bytes": 208940860,
+        "d2h_calls": 598,
+        "d2h_bytes": 154259172
+      },
+      {
+        "role": "request_output",
+        "h2d_calls": 0,
+        "h2d_bytes": 0,
+        "d2h_calls": 8,
+        "d2h_bytes": 512
+      }
+    ]
+  },
+  {
+    "case": "geography",
+    "rank": 5,
+    "format": "inferfabric.transfer-audit.v1",
+    "activation_host_transfers": 0,
+    "rejected": 0,
+    "boundaries": [
+      {
+        "role": "control_input",
+        "h2d_calls": 19828,
+        "h2d_bytes": 12108144,
+        "d2h_calls": 0,
+        "d2h_bytes": 0
+      },
+      {
+        "role": "parameter_preparation",
+        "h2d_calls": 505,
+        "h2d_bytes": 208940860,
+        "d2h_calls": 598,
+        "d2h_bytes": 154259172
+      },
+      {
+        "role": "request_output",
+        "h2d_calls": 0,
+        "h2d_bytes": 0,
+        "d2h_calls": 8,
+        "d2h_bytes": 512
+      }
+    ]
+  },
+  {
+    "case": "geography",
+    "rank": 6,
+    "format": "inferfabric.transfer-audit.v1",
+    "activation_host_transfers": 0,
+    "rejected": 0,
+    "boundaries": [
+      {
+        "role": "control_input",
+        "h2d_calls": 19828,
+        "h2d_bytes": 12108144,
+        "d2h_calls": 0,
+        "d2h_bytes": 0
+      },
+      {
+        "role": "parameter_preparation",
+        "h2d_calls": 505,
+        "h2d_bytes": 208940860,
+        "d2h_calls": 598,
+        "d2h_bytes": 154259172
+      },
+      {
+        "role": "request_output",
+        "h2d_calls": 0,
+        "h2d_bytes": 0,
+        "d2h_calls": 8,
+        "d2h_bytes": 512
+      }
+    ]
+  },
+  {
+    "case": "geography",
+    "rank": 7,
+    "format": "inferfabric.transfer-audit.v1",
+    "activation_host_transfers": 0,
+    "rejected": 0,
+    "boundaries": [
+      {
+        "role": "control_input",
+        "h2d_calls": 19828,
+        "h2d_bytes": 12108144,
+        "d2h_calls": 0,
+        "d2h_bytes": 0
+      },
+      {
+        "role": "parameter_preparation",
+        "h2d_calls": 505,
+        "h2d_bytes": 208940860,
+        "d2h_calls": 598,
+        "d2h_bytes": 154259172
+      },
+      {
+        "role": "request_output",
+        "h2d_calls": 0,
+        "h2d_bytes": 0,
+        "d2h_calls": 8,
+        "d2h_bytes": 512
+      }
+    ]
+  },
+  {
+    "case": "chinese",
+    "rank": 0,
+    "format": "inferfabric.transfer-audit.v1",
+    "activation_host_transfers": 0,
+    "rejected": 0,
+    "boundaries": [
+      {
+        "role": "control_input",
+        "h2d_calls": 26820,
+        "h2d_bytes": 13527152,
+        "d2h_calls": 0,
+        "d2h_bytes": 0
+      },
+      {
+        "role": "parameter_preparation",
+        "h2d_calls": 505,
+        "h2d_bytes": 208940860,
+        "d2h_calls": 598,
+        "d2h_bytes": 154259172
+      },
+      {
+        "role": "request_output",
+        "h2d_calls": 0,
+        "h2d_bytes": 0,
+        "d2h_calls": 68,
+        "d2h_bytes": 2448
+      }
+    ]
+  },
+  {
+    "case": "chinese",
+    "rank": 1,
+    "format": "inferfabric.transfer-audit.v1",
+    "activation_host_transfers": 0,
+    "rejected": 0,
+    "boundaries": [
+      {
+        "role": "control_input",
+        "h2d_calls": 26820,
+        "h2d_bytes": 13527152,
+        "d2h_calls": 0,
+        "d2h_bytes": 0
+      },
+      {
+        "role": "parameter_preparation",
+        "h2d_calls": 505,
+        "h2d_bytes": 208940860,
+        "d2h_calls": 598,
+        "d2h_bytes": 154259172
+      },
+      {
+        "role": "request_output",
+        "h2d_calls": 0,
+        "h2d_bytes": 0,
+        "d2h_calls": 17,
+        "d2h_bytes": 1088
+      }
+    ]
+  },
+  {
+    "case": "chinese",
+    "rank": 2,
+    "format": "inferfabric.transfer-audit.v1",
+    "activation_host_transfers": 0,
+    "rejected": 0,
+    "boundaries": [
+      {
+        "role": "control_input",
+        "h2d_calls": 26820,
+        "h2d_bytes": 13527152,
+        "d2h_calls": 0,
+        "d2h_bytes": 0
+      },
+      {
+        "role": "parameter_preparation",
+        "h2d_calls": 505,
+        "h2d_bytes": 208940860,
+        "d2h_calls": 598,
+        "d2h_bytes": 154259172
+      },
+      {
+        "role": "request_output",
+        "h2d_calls": 0,
+        "h2d_bytes": 0,
+        "d2h_calls": 17,
+        "d2h_bytes": 1088
+      }
+    ]
+  },
+  {
+    "case": "chinese",
+    "rank": 3,
+    "format": "inferfabric.transfer-audit.v1",
+    "activation_host_transfers": 0,
+    "rejected": 0,
+    "boundaries": [
+      {
+        "role": "control_input",
+        "h2d_calls": 26820,
+        "h2d_bytes": 13527152,
+        "d2h_calls": 0,
+        "d2h_bytes": 0
+      },
+      {
+        "role": "parameter_preparation",
+        "h2d_calls": 505,
+        "h2d_bytes": 208940860,
+        "d2h_calls": 598,
+        "d2h_bytes": 154259172
+      },
+      {
+        "role": "request_output",
+        "h2d_calls": 0,
+        "h2d_bytes": 0,
+        "d2h_calls": 17,
+        "d2h_bytes": 1088
+      }
+    ]
+  },
+  {
+    "case": "chinese",
+    "rank": 4,
+    "format": "inferfabric.transfer-audit.v1",
+    "activation_host_transfers": 0,
+    "rejected": 0,
+    "boundaries": [
+      {
+        "role": "control_input",
+        "h2d_calls": 26820,
+        "h2d_bytes": 13527152,
+        "d2h_calls": 0,
+        "d2h_bytes": 0
+      },
+      {
+        "role": "parameter_preparation",
+        "h2d_calls": 505,
+        "h2d_bytes": 208940860,
+        "d2h_calls": 598,
+        "d2h_bytes": 154259172
+      },
+      {
+        "role": "request_output",
+        "h2d_calls": 0,
+        "h2d_bytes": 0,
+        "d2h_calls": 17,
+        "d2h_bytes": 1088
+      }
+    ]
+  },
+  {
+    "case": "chinese",
+    "rank": 5,
+    "format": "inferfabric.transfer-audit.v1",
+    "activation_host_transfers": 0,
+    "rejected": 0,
+    "boundaries": [
+      {
+        "role": "control_input",
+        "h2d_calls": 26820,
+        "h2d_bytes": 13527152,
+        "d2h_calls": 0,
+        "d2h_bytes": 0
+      },
+      {
+        "role": "parameter_preparation",
+        "h2d_calls": 505,
+        "h2d_bytes": 208940860,
+        "d2h_calls": 598,
+        "d2h_bytes": 154259172
+      },
+      {
+        "role": "request_output",
+        "h2d_calls": 0,
+        "h2d_bytes": 0,
+        "d2h_calls": 17,
+        "d2h_bytes": 1088
+      }
+    ]
+  },
+  {
+    "case": "chinese",
+    "rank": 6,
+    "format": "inferfabric.transfer-audit.v1",
+    "activation_host_transfers": 0,
+    "rejected": 0,
+    "boundaries": [
+      {
+        "role": "control_input",
+        "h2d_calls": 26820,
+        "h2d_bytes": 13527152,
+        "d2h_calls": 0,
+        "d2h_bytes": 0
+      },
+      {
+        "role": "parameter_preparation",
+        "h2d_calls": 505,
+        "h2d_bytes": 208940860,
+        "d2h_calls": 598,
+        "d2h_bytes": 154259172
+      },
+      {
+        "role": "request_output",
+        "h2d_calls": 0,
+        "h2d_bytes": 0,
+        "d2h_calls": 17,
+        "d2h_bytes": 1088
+      }
+    ]
+  },
+  {
+    "case": "chinese",
+    "rank": 7,
+    "format": "inferfabric.transfer-audit.v1",
+    "activation_host_transfers": 0,
+    "rejected": 0,
+    "boundaries": [
+      {
+        "role": "control_input",
+        "h2d_calls": 26820,
+        "h2d_bytes": 13527152,
+        "d2h_calls": 0,
+        "d2h_bytes": 0
+      },
+      {
+        "role": "parameter_preparation",
+        "h2d_calls": 505,
+        "h2d_bytes": 208940860,
+        "d2h_calls": 598,
+        "d2h_bytes": 154259172
+      },
+      {
+        "role": "request_output",
+        "h2d_calls": 0,
+        "h2d_bytes": 0,
+        "d2h_calls": 17,
+        "d2h_bytes": 1088
+      }
+    ]
+  }
+]
