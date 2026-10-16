@@ -86,6 +86,10 @@ fn unsafe_or_ambiguous_expansions_fail() {
         ("range(0, 2)", "range(0, 4097)"),
         ("range(0, 2)", "range(3, 2)"),
         ("range(0, 2)", "range(0, embedded)"),
+        (
+            "Temporal(x, w.shared_conv)",
+            "choose(x, Temporal(x, w.shared_conv), Temporal(x, w.shared_conv))",
+        ),
         ("div(width, 8)", "div(width, 0)"),
         ("div(width, 8)", "div(width, 7)"),
         ("mome(x, weight = w, taps = 3)", "Temporal(x, w)"),
@@ -115,4 +119,31 @@ fn scalar_only_nested_expansion_is_bounded() {
         .replace("range(0, 2)", "range(0, 4096)");
     let e = definition(&s).unwrap_err().to_string();
     assert!(e.contains("work limit"), "{e}");
+}
+
+#[test]
+fn indirect_recursion_and_nested_parser_depth_are_rejected() {
+    let s = SOURCE
+        .replace(
+            "module Temporal",
+            "module Other(x,w) {let y=Temporal(x,w);yield y;} module Temporal",
+        )
+        .replace("mome(x, weight = w, taps = 3)", "Other(x,w)");
+    assert!(
+        definition(&s)
+            .unwrap_err()
+            .to_string()
+            .contains("recursive")
+    );
+    let mut e = String::from("x");
+    for _ in 0..80 {
+        e = format!("fold j in range(0,1) carry(z=x) {{let y={e};yield y;}}");
+    }
+    let s = SOURCE.replace("Temporal(x, w.shared_conv)", &e);
+    assert!(
+        definition(&s)
+            .unwrap_err()
+            .to_string()
+            .contains("nesting limit")
+    );
 }

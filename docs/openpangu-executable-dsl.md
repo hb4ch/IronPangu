@@ -1,22 +1,24 @@
 # OpenPangu 92B executable DSL
 
 The model is defined in [`examples/openpangu/92b-tp8-ep8.inferfabric`](../examples/openpangu/92b-tp8-ep8.inferfabric).
-It contains the complete 46-layer, 2,109-node token dataflow. There is no contract
-selector that invokes a C++ model forward function. C++ supplies registered
-operator implementations; the DSL supplies operation order, edges, parameters,
-TP collectives, EP routing, residual connections, state instances and output.
-The file is expanded SSA so every layer and binding can be inspected directly.
-Reusable modules/loops remain a language ergonomics task; no generator is needed
-to compile or execute this checked-in source.
+It defines the complete 46-layer model in 107 lines using five reusable DSL
+modules: `TPLinear`, `DenseFFN`, `RoutedMoE`, `MLAAttention`, and `DecoderBlock`.
+A compile-time fold instantiates the blocks, choosing dense/MoE branches and
+attention windows. Scoped weights resolve checkpoint bindings without repeated
+full paths. See [module syntax and expansion rules](dsl-modules.md).
 
-An excerpt from the first attention block:
+The compiler expands this source into the same 2,109 primitive operations as the
+qualified flat graph. There is no contract selector that invokes a C++ model
+forward function. C++ supplies registered operator implementations; the DSL
+supplies operation order, edges, parameters, collectives, routing, residual
+connections, state instances and output. Expanded SSA is generated output.
 
 ```inferfabric
-let l0_qa = linear(l0_an, weight = "model.layers.0.self_attn.q_a_proj", width = 1024, placement = "replicated");
-let l0_qc = mome(l0_qa, weight = "model.layers.0.self_attn.qa_conv", taps = 3);
-let l0_qn = norm(l0_qc, weight = "model.layers.0.self_attn.q_a_layernorm", eps = 1e-5);
-let l0_q_local = linear(l0_qn, weight = "model.layers.0.self_attn.q_b_proj", width = 1152, placement = "tp_rows");
-let l0_q = gather(l0_q_local);
+let hidden = fold i in range(0, 46) carry(x = streams) {
+    let window = choose(eq(mod(i, 3), 0), 2048, 512);
+    let block = DecoderBlock(x, child(w.layers, i), i, window);
+    yield block;
+};
 ```
 
 For each MoE block the graph separately describes routing, owner-local gate/up
@@ -47,7 +49,7 @@ The result contains:
 
 | Artifact | Meaning |
 |---|---|
-| `execution.json` | Complete typed-checkable dataflow with names, input IDs and attributes |
+| `execution.json` | Complete dataflow with instance paths, input IDs, attributes, source spans and module call stacks |
 | `execution.dot` | Graphviz graph of every operation and dependency |
 | `execution.bin` | Versioned `IFTOKN01` program consumed by the native executor |
 | `rank-N.init.json` | Readable permanent initialization IR |

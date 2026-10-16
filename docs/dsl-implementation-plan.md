@@ -1,6 +1,8 @@
 # InferFabric DSL v1 implementation plan
 
-**Executable 92B update (2026-10-15):** The complete 46-layer model is now an explicit 2,109-node DSL graph, lowered to native execution and generic initialization programs. See [the implementation and backend limits](openpangu-executable-dsl.md). Larger module/symbolic-shape proposals below remain future work.
+**Reusable authoring update (2026-10-16):** File-local modules, compile-time folds/conditionals, scoped weights, hygienic state identity and source provenance are implemented for `ascend_token_v1`. The 92B definition is 107 lines and expands to the qualified 2,109-operation graph. See [implemented syntax and limits](dsl-modules.md). Cross-file imports, configuration records, general symbolic types and broader backend adapters below remain future work.
+
+**Executable 92B update (2026-10-15):** The complete 46-layer model is now an explicit 2,109-node DSL graph, lowered to native execution and generic initialization programs. See [the implementation and backend limits](openpangu-executable-dsl.md). Larger import/symbolic-shape proposals below remain future work.
 
 Current implementation update (2026-10-15): the legacy parsers have been removed. A bounded v1 model/plan AST and graph subset now shares its model-definition boundary with compiled Rust authors. Debug planning and checked compiled implementation overrides are available on the CPU physical path. See [supported authoring interfaces](model-authoring.md) for exact implemented scope; the broader module syntax and backend adapters below remain design requirements, not implemented features. Earlier migration/authorization statements describe their historical session and do not override later user instructions.
 

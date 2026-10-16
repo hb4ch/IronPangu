@@ -28,36 +28,36 @@ fn full_decoder_is_explicit_and_round_trips_through_compiled_authoring() {
         unreachable!()
     };
     assert_eq!(graph.encode().unwrap(), other.encode().unwrap());
-    assert!(graph.dot().unwrap().contains("l45_out"));
+    assert!(graph.dot().unwrap().contains("hidden.i45.block.output"));
 }
 #[test]
 fn unsafe_dataflow_shapes_effects_and_budgets_are_rejected() {
     for source in [
-        SOURCE.replacen("mhc_input(l0_hc)", "mhc_input(embedding)", 1),
-        SOURCE.replacen("linear(l0_an,", "linear(not_defined,", 1),
+        SOURCE.replacen("mhc_input(attn_hc)", "mhc_input(x)", 1),
+        SOURCE.replacen(
+            "linear(x, weight = w.q_a_proj",
+            "linear(not_defined, weight = w.q_a_proj",
+            1,
+        ),
         SOURCE.replacen("theta = 6400000", "theta = 10000", 1),
         SOURCE.replacen("start = 512, width = 64", "start = 540, width = 64", 1),
         SOURCE.replacen("placement = \"tp_rows\"", "placement = \"magic\"", 1),
-        SOURCE.replacen("l2_eg, l2_eu, l2_route", "l2_eg, l2_eu, l3_route", 1),
+        SOURCE.replacen("gate, up, routes", "gate, up, x", 1),
         SOURCE.replacen("yield logits;", "yield normalized;", 1),
         SOURCE.replace("context = 512", "context = 513"),
         SOURCE.replace("max_num_seqs = 1", "max_num_seqs = 4"),
-        SOURCE.replacen("mhc_post(l0_hc, l0_apn)", "mhc_post(l0_fhc, l0_apn)", 1),
+        SOURCE.replacen(
+            "mhc_post(attn_hc, attn_post)",
+            "mhc_post(ffn_hc, attn_post)",
+            1,
+        ),
     ] {
         assert!(definition(&source).is_err());
     }
 }
 #[test]
 fn changing_dsl_changes_program_not_a_model_selector() {
-    let bypass = SOURCE
-        .lines()
-        .filter(|s| {
-            !s.trim_start().starts_with("let l0_")
-                && !(1..46).any(|l| s.trim_start().starts_with(&format!("let l{l}_")))
-        })
-        .collect::<Vec<_>>()
-        .join("\n")
-        .replace("mhc_merge(l45_out,", "mhc_merge(streams,");
+    let bypass = SOURCE.replace("range(0, 46)", "range(0, 0)");
     let ModelDefinition::Execution { graph, .. } = definition(&bypass).unwrap() else {
         panic!()
     };
@@ -69,4 +69,27 @@ fn changing_dsl_changes_program_not_a_model_selector() {
         panic!()
     };
     assert_ne!(graph.encode().unwrap(), original.encode().unwrap());
+}
+
+#[test]
+fn reusable_model_expands_to_the_qualified_primitive_graph() {
+    let ModelDefinition::Execution { graph, .. } = definition(SOURCE).unwrap() else {
+        panic!()
+    };
+    let baseline: authoring::execution::Graph = serde_json::from_str(include_str!(
+        "../../../docs/validation/2026-10-15-dsl-execution/execution.json"
+    ))
+    .unwrap();
+    assert_eq!(graph.output, baseline.output);
+    assert_eq!(graph.max_context, baseline.max_context);
+    assert_eq!(graph.eos, baseline.eos);
+    assert_eq!(graph.nodes.len(), baseline.nodes.len());
+    for (actual, expected) in graph.nodes.iter().zip(&baseline.nodes) {
+        assert_eq!(actual.op, expected.op, "{}", actual.name);
+        assert_eq!(actual.inputs, expected.inputs, "{}", actual.name);
+        assert_eq!(actual.attrs, expected.attrs, "{}", actual.name);
+        let source = actual.source.as_ref().unwrap();
+        assert!(source.start < source.end && source.end <= SOURCE.len());
+    }
+    assert!(SOURCE.lines().count() < 150);
 }

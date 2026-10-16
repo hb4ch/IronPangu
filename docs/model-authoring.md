@@ -8,7 +8,9 @@ The legacy unversioned `key = value` parsers are removed, including the separate
 
 See [graph example](../examples/authoring/residual.inferfabric) and [92B definition](../examples/openpangu/92b-tp8-ep8.inferfabric). The CPU graph target supports static f32 inputs, constants, persistent state, add/mul/relu/matmul, named outputs and simultaneous state updates. The CPU planner validates shapes/effects and emits source-independent executable plans. The 92B example now uses `ascend_token_v1`: its complete 2,109-operation computation, state and weight placement are defined in the DSL. See [the executable 92B DSL](openpangu-executable-dsl.md). The older Qwen/OpenPangu contract adapters remain metadata/placement interfaces; the 92B executor requires an explicit execution program.
 
-The lexer understands quoted strings, comments, lists and calls; declarations and members carry byte spans. Unknown fields, duplicate declarations, invalid versions, unsupported operations and excessive input/nesting are rejected. This is an implemented subset of the larger language design: reusable/imported modules, lossless CST/formatting, symbolic shapes, arbitrary foreign operations and general NPU graph lowering remain unsupported. Unsupported constructs fail rather than reverting to the retired parser.
+File-local reusable modules, compile-time folds/conditionals, and scoped weights now elaborate into the token graph with hygienic state identities and source provenance. The 92B source is 107 lines; its expanded plan still contains 2,109 operations. See [module authoring](dsl-modules.md).
+
+The lexer understands quoted strings, comments, lists and calls; declarations and members carry byte spans. Unknown fields, duplicate declarations, invalid versions, unsupported operations and excessive input/nesting are rejected. This is an implemented subset of the larger language design: cross-file module imports, lossless CST/formatting, symbolic shapes, arbitrary foreign operations and general NPU graph lowering remain unsupported. Unsupported constructs fail rather than reverting to the retired parser.
 
 ## Compiled-language route
 
