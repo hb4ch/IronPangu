@@ -1,5 +1,7 @@
 #pragma once
 #include <acl/acl.h>
+#include "frozen_arena.h"
+#include <set>
 #include <aclnn/acl_meta.h>
 #include <cstdint>
 #include <cstring>
@@ -30,6 +32,7 @@ class Context {
     void *data;
     size_t bytes;
     bool live = true;
+    size_t slot = 0;
   };
   struct Invocation {
     aclOpExecutor *executor;
@@ -40,6 +43,20 @@ class Context {
     bool repeatable = false;
   };
   std::vector<std::unique_ptr<Block>> blocks_;
+  void *arena_ = nullptr;
+  ArenaLayout layout_;
+  uint64_t program_fingerprint_ = 0;
+  int64_t instruction_ = -1;
+  std::map<int64_t,std::set<size_t>> instruction_slots_;
+  void record(Block *b) {
+    if(arena_) {
+      auto allowed=layout_.bindings.find(instruction_);
+      if(allowed==layout_.bindings.end() || !allowed->second.count(b->slot))
+        throw std::runtime_error("unplanned arena binding at instruction " + std::to_string(instruction_) + " slot=" + std::to_string(b->slot));
+    }
+    instruction_slots_[instruction_].insert(b->slot);
+  }
+
   std::map<size_t, std::vector<Block *>> free_;
   std::map<void *, Block *> owned_;
   std::map<std::string, aclTensor *> descriptors_;
@@ -70,7 +87,7 @@ class Context {
 
 public:
   aclrtStream stream = nullptr;
-  Context() {
+  explicit Context(const std::string &arena_path = "", uint64_t fingerprint = 0) : program_fingerprint_(fingerprint) {
     if (active)
       throw std::runtime_error("nested prepared execution context");
     check(aclrtCreateStream(&stream), "prepared stream");
@@ -78,6 +95,19 @@ public:
     one_ = aclCreateScalar(&one, ACL_FLOAT);
     if (!one_)
       throw std::runtime_error("prepared scalar");
+    if(!arena_path.empty()) {
+      layout_=ArenaLayout::read(arena_path,fingerprint,ArenaLayout::fingerprint_file("/proc/self/exe"));
+      check(aclrtMalloc(&arena_,layout_.bytes,ACL_MEM_MALLOC_HUGE_FIRST),"frozen arena reservation");
+      ++allocations_;allocated_bytes_=layout_.bytes;
+      for(size_t i=0;i<layout_.slots.size();++i) {
+        auto s=layout_.slots[i];
+        auto b=std::make_unique<Block>(Block{static_cast<char *>(arena_)+s.offset,size_t(s.bytes),false,i});
+        owned_.emplace(b->data,b.get());blocks_.push_back(std::move(b));
+      }
+      // Unused slots sit below released slots. Preserve the qualified LIFO
+      // reuse policy and original first-allocation order for equal sizes.
+      for(auto i=blocks_.rbegin();i!=blocks_.rend();++i) free_[(*i)->bytes].push_back(i->get());
+    }
     active = this;
   }
   Context(const Context &) = delete;
@@ -94,8 +124,8 @@ public:
     for (auto &[key, tensor] : strided_descriptors_)
       aclDestroyTensor(tensor);
     aclDestroyScalar(one_);
-    for (auto &block : blocks_)
-      aclrtFree(block->data);
+    if(arena_) aclrtFree(arena_);
+    else for (auto &block : blocks_) aclrtFree(block->data);
     for (auto &[pointer, bytes] : uploads_)
       aclrtFreeHost(pointer);
     if (output_host_)
@@ -117,14 +147,17 @@ public:
       available.pop_back();
       block->live = true;
       ++reuse_;
+      record(block);
       return block->data;
     }
+    if(arena_) throw std::runtime_error("frozen arena exhausted: undeclared allocation at instruction " + std::to_string(instruction_) + " bytes=" + std::to_string(bytes));
     if (capturing_)
       throw std::runtime_error("capture requires prepared device buffers");
     void *pointer = nullptr;
     check(aclrtMalloc(&pointer, bytes, ACL_MEM_MALLOC_HUGE_FIRST),
           "prepared allocation");
-    auto block = std::make_unique<Block>(Block{pointer, bytes});
+    auto block = std::make_unique<Block>(Block{pointer, bytes, true, blocks_.size()});
+    record(block.get());
     owned_.emplace(pointer, block.get());
     blocks_.push_back(std::move(block));
     ++allocations_;
@@ -228,6 +261,7 @@ public:
       workspace_ = acquire(bytes);
       workspace_bytes_ = bytes;
     }
+    if(workspace_) record(owned_.at(workspace_));
     return workspace_;
   }
   size_t workspace_capacity() const { return workspace_bytes_; }
@@ -316,6 +350,7 @@ public:
     }
     return output_host_;
   }
+  void instruction(int64_t id) { instruction_=id; }
   void begin_step(int position) {
     before_ = {position, allocations_, reuse_, boundaries_};
   }
@@ -391,7 +426,23 @@ public:
       out << "{\"name\":\"" << graph.name << "\",\"replays\":" << graph.replays
           << '}';
     }
-    out << "]}\n";
+    out << "],\"arena\":{\"format\":\"inferfabric.frozen-arena.v1\",\"frozen\":" << (arena_?"true":"false")
+        << ",\"backend_fingerprint\":\"" << ArenaLayout::fingerprint_file("/proc/self/exe") << "\""
+        << ",\"program_fingerprint\":\"" << program_fingerprint_ << "\",\"slots\":[";
+    uint64_t offset=0;
+    for(size_t i=0;i<blocks_.size();++i) {
+      if(i) out << ',';
+      offset=arena_?layout_.slots[i].offset:(offset+511)/512*512;
+      out << "{\"id\":" << i << ",\"offset\":" << offset << ",\"bytes\":" << blocks_[i]->bytes << '}';
+      offset+=blocks_[i]->bytes;
+    }
+    out << "],\"bytes\":" << offset << ",\"instruction_slots\":{";
+    first=true;for(const auto &[id,slots]:instruction_slots_) {
+      if(!first) { out<<','; }
+      first=false;out<<'"'<<id<<"\":[";
+      bool first_slot=true;for(auto slot:slots){if(!first_slot)out<<',';first_slot=false;out<<slot;}out<<']';
+    }
+    out << "}}}\n";
   }
 };
 template <class F, class... Args>

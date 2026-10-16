@@ -133,6 +133,17 @@ inline void validate_kernels(const Plan &p) {
       if (uint64_t(n.integer("start")) + w() > a)
         error();
       check({{0, a}}, {"start", "width"}, {0, w()});
+    } else if (p.physical && (n.op == "query_project" || n.op == "query_rotary_extract")) {
+      auto layout=n.text("input_layout");
+      if(layout!="rank_local" && layout!="replicated") error();
+      std::vector<std::string> attrs{"input_layout"};
+      if(n.op=="query_project") attrs.push_back("weight");
+      check({{0,layout=="rank_local" ? 1152u : 9216u}},attrs,{0,n.op=="query_project" ? 3072u : 384u});
+    } else if (p.physical && n.op == "rope_f32") {
+      if(tensor(0)!=64 && tensor(0)!=384) error();
+      check({{0,tensor(0)}},{"theta"},{0,tensor(0)});eq("theta","6400000");
+    } else if (p.physical && n.op == "concat_columns") {
+      check({{0,3072},{0,384}},{"rows"},{0,3456});eq("rows","6");
     } else if (n.op == "rope") {
       check({{0, 64}}, {"theta"}, {0, 64});
       eq("theta", "6400000");
@@ -222,7 +233,7 @@ inline void validate_kernels(const Plan &p) {
       error();
     if (p.physical && n.op != "cast") {
       std::string output_dtype = n.kind == 0 ? "bf16" : "opaque";
-      if (n.op == "add_f32" || n.op == "expert_reduce") output_dtype = "f32";
+      if (n.op == "add_f32" || n.op == "expert_reduce" || n.op == "rope_f32" || n.op == "query_rotary_extract") output_dtype = "f32";
       if (n.op == "allreduce") output_dtype = n.attrs.count("dtype") ? n.text("dtype") : "f32";
       if (n.op == "slice" || n.op == "repeat" || n.op == "concat" || (n.op == "optional_norm" && n.kernel == "alias"))
         output_dtype = p.nodes[n.inputs[0]].dtype;
@@ -237,7 +248,7 @@ inline void validate_kernels(const Plan &p) {
         if (v.kind != 0) continue;
         std::string required = "bf16";
         if (n.op == "slice" || n.op == "repeat" || n.op == "concat" || (n.op == "optional_norm" && n.kernel == "alias")) continue;
-        if (n.op == "router" || n.op == "rope" || n.op == "add_f32") required = "f32";
+        if (n.op == "router" || n.op == "rope" || n.op == "rope_f32" || n.op == "add_f32") required = "f32";
         if (n.op == "allreduce") required = n.attrs.count("dtype") ? n.text("dtype") : "f32";
         if (v.dtype != required) error();
       }
@@ -338,7 +349,7 @@ inline void validate_bindings(const Plan &program,
               {merge ? 1 : 3}, DType::F32);
       require(name + (merge ? ".branch_beta_pre" : ".branch_beta"),
               {merge ? 4 : 24}, DType::F32);
-    } else if (n.op == "mla_query" || n.op == "mla_value")
+    } else if (n.op == "mla_query" || n.op == "query_project" || n.op == "mla_value")
       require(name + ".weight", {1536, 512}, DType::Bf16);
     else if (n.op == "sink_normalize") {
       require(name + ".param_sink_compressed_kv", {128, 512}, DType::Bf16);

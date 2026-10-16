@@ -118,8 +118,8 @@ struct Decoder {
            inferfabric::initialization::DType>
       source_types;
   Decoder(const inferfabric::initialization::Plan &p, const std::string &root,
-          HcclRootInfo &info, const inferfabric::execution::Plan &execution)
-      : rank(p.rank), program(execution),
+          HcclRootInfo &info, const inferfabric::execution::Plan &execution, const std::string &arena_path, uint64_t fingerprint)
+      : execution(arena_path,fingerprint), rank(p.rank), program(execution),
         swiglu(std::getenv("INFERFABRIC_SWIGLU_LIBRARY")
                    ? std::getenv("INFERFABRIC_SWIGLU_LIBRARY")
                    : IF_DEFAULT_SWIGLU_LIBRARY,
@@ -457,7 +457,7 @@ struct Decoder {
     run(api.post, bytes, e);
     return result(s.out);
   }
-  V rope(const V &input, int pos) {
+  V rope(const V &input, int pos, bool fp32_output = false) {
     if (!input.size() || input.size() % 64 || pos != current_position)
       throw std::runtime_error("rotary shape/position contract");
     // Preserve FP32 products/sum and the existing final BF16 rounding while
@@ -475,31 +475,29 @@ struct Decoder {
                             cos.t, sin.t, 0, out.tensor, &bytes, &e),
             "rotary prepare");
     run(aclnnRotaryPositionEmbedding, bytes, e);
-    return rounded(result(out, ACL_FLOAT));
+    return fp32_output ? result(out, ACL_FLOAT) : rounded(result(out, ACL_FLOAT));
   }
-  V absorb_query(const V &q, const std::string &weight_name, int pos,
-                 bool local_heads) {
+  V query_project(const V &q, const std::string &weight_name, bool local_heads) {
     auto &weight = w(weight_name + ".weight");
-    auto local =
-        cast(resident::slice(q, local_heads ? 0 : rank * 1152, 1152), ACL_BF16);
-    auto *input = execution.strided_descriptor(local.data(), 1152, {6, 1, 128},
-                                               {192, 128, 1}, ACL_BF16);
-    auto *bank = weight_views.get(weight.data, 6 * 256 * 512, {6, 128, 512},
-                                  {256 * 512, 512, 1}, ACL_BF16);
-    auto projected = batched_matrix(input, bank, 6, 512);
-    auto *rotary_view = execution.strided_descriptor(
-        static_cast<uint16_t *>(local.data()) + 128, 1024,
-        {6, 64}, {192, 1}, ACL_BF16);
-    DeviceTensor rotary({6, 64}, ACL_FLOAT, 4);
-    uint64_t bytes = 0;
-    aclOpExecutor *e = nullptr;
-    checked(prepared::query("query_rotary_extract", false,
-                            aclnnCastGetWorkspaceSize, rotary_view, ACL_FLOAT,
-                            rotary.tensor, &bytes, &e),
-            "query rotary extract prepare");
-    run(aclnnCast, bytes, e);
-    auto rotated = rope(result(rotary, ACL_FLOAT), pos);
-    return concat_columns(projected, rotated, 6);
+    auto local = resident::slice(q, local_heads ? 0 : rank * 1152, 1152);
+    if(local.dtype()!=ACL_BF16) throw std::runtime_error("query project storage");
+    auto *input = execution.strided_descriptor(local.data(), 1152, {6, 1, 128}, {192, 128, 1}, ACL_BF16);
+    auto *bank = weight_views.get(weight.data, 6 * 256 * 512, {6, 128, 512}, {256 * 512, 512, 1}, ACL_BF16);
+    return batched_matrix(input, bank, 6, 512);
+  }
+  V query_rotary_extract(const V &q, bool local_heads) {
+    auto local = resident::slice(q, local_heads ? 0 : rank * 1152, 1152);
+    if(local.dtype()!=ACL_BF16) throw std::runtime_error("query extraction storage");
+    auto *rotary_view = execution.strided_descriptor(static_cast<uint16_t *>(local.data()) + 128, 1024, {6, 64}, {192, 1}, ACL_BF16);
+    DeviceTensor rotary({6,64},ACL_FLOAT,4);
+    uint64_t bytes=0; aclOpExecutor *e=nullptr;
+    checked(prepared::query("query_rotary_extract",false,aclnnCastGetWorkspaceSize,rotary_view,ACL_FLOAT,rotary.tensor,&bytes,&e),"query rotary extract prepare");
+    run(aclnnCast,bytes,e);return result(rotary,ACL_FLOAT);
+  }
+  V absorb_query(const V &q, const std::string &weight_name, int pos, bool local_heads) {
+    auto projected=query_project(q,weight_name,local_heads);
+    auto rotary=query_rotary_extract(q,local_heads);
+    return concat_columns(projected,rope(rotary,pos),6);
   }
   V concat_columns(const V &a, const V &b, int64_t rows) {
     if (rows <= 0 || a.dtype() != b.dtype() || a.size() % rows || b.size() % rows)
@@ -1107,7 +1105,10 @@ int main(int argc, char **argv) {
           const auto &plan = initialization[rank];
           openpangu::checked(aclrtSetDevice(plan.device), "device");
           {
-            pangu::Decoder decoder(plan, argv[2], info, execution);
+            auto arena_path=std::filesystem::path(argv[1]) / ("arena-rank-"+std::to_string(rank)+".txt");
+            pangu::Decoder decoder(plan, argv[2], info, execution,
+                std::filesystem::exists(arena_path)?arena_path.string():"",
+                inferfabric::prepared::ArenaLayout::fingerprint_file(std::string(argv[1])+"/execution.bin"));
             pangu::V logits;
             int pos = 0;
             for (int token : prompt) {

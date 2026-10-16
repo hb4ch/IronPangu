@@ -57,9 +57,10 @@ struct DeviceTensor {
 using Launcher=aclnnStatus(*)(void*,uint64_t,aclOpExecutor*,aclrtStream);
 struct Operation {
   aclOpExecutor *executor=nullptr;uint64_t bytes=0;void *workspace=nullptr;uint64_t capacity=0;
+  inferfabric::prepared::Context *owner=nullptr;
   Operation()=default;Operation(const Operation&)=delete;
-  void allocate(){capacity=std::max(uint64_t(64),bytes);checked(aclrtMalloc(&workspace,capacity,ACL_MEM_MALLOC_HUGE_FIRST),"operator workspace");}
-  void run(Launcher launch,aclrtStream stream){if(bytes>capacity)throw std::runtime_error("workspace grew");checked(launch(workspace,bytes,executor,stream),"operator launch");executor=nullptr;}
+  void allocate(){owner=inferfabric::prepared::active;if(owner){owner->workspace(bytes);return;}capacity=std::max(uint64_t(64),bytes);checked(aclrtMalloc(&workspace,capacity,ACL_MEM_MALLOC_HUGE_FIRST),"operator workspace");}
+  void run(Launcher launch,aclrtStream stream){if(owner){owner->require_stream(stream);checked(launch(owner->workspace(bytes),bytes,executor,stream),"prepared operator launch");executor=nullptr;return;}if(bytes>capacity)throw std::runtime_error("workspace grew");checked(launch(workspace,bytes,executor,stream),"operator launch");executor=nullptr;}
   ~Operation(){if(executor)aclDestroyAclOpExecutor(executor);if(workspace)aclrtFree(workspace);}
 };
 // Replicated FP32 gate. Bias affects selection only; unbiased sigmoid scores

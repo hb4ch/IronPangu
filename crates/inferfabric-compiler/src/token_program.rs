@@ -111,12 +111,17 @@ pub fn lower(graph: &Graph, inventory: Option<&Inventory>) -> Result<Program> {
     let mut p = Program {
         format: "inferfabric.token-program.v2".into(), max_context: graph.max_context,
         eos: graph.eos, output: 0, instructions: vec![], conversions_shared: 0, copies_eliminated: 0,
-        limitations: vec!["Composite vendor recipes still own internal temporaries and launches; only inter-operation storage conversions are executable instructions in this revision. No claim of a complete kernel DAG or static arena.".into()],
+        limitations: vec!["Dense quantization and MLA query construction are expanded. Other composite vendor recipes retain internal temporaries and launches. Hardware preparation can bind a fixed arena; no claim of a complete primitive kernel DAG.".into()],
     };
     let mut outputs = vec![];
     let mut casts = BTreeMap::new();
     for (logical, n) in graph.nodes.iter().enumerate() {
-        if n.attrs.get("cache_dtype").is_some_and(|v|v!="bf16") { return Err(invalid(format!("{}: requested {} cache has no qualified Ascend attention/cache kernel; refusing BF16 substitution",n.name,n.attrs["cache_dtype"]))); }
+        if n.attrs.get("cache_dtype").is_some_and(|v| v != "bf16") {
+            return Err(invalid(format!(
+                "{}: requested {} cache has no qualified Ascend attention/cache kernel; refusing BF16 substitution",
+                n.name, n.attrs["cache_dtype"]
+            )));
+        }
         let mut inputs: Vec<usize> = n.inputs.iter().map(|&i| outputs[i]).collect();
         for (slot, input) in inputs.iter_mut().enumerate() {
             if p.instructions[*input].kind != 0 {
@@ -185,7 +190,7 @@ pub fn lower(graph: &Graph, inventory: Option<&Inventory>) -> Result<Program> {
             Type::Routes => (2, 0),
             Type::Experts(w) => (3, w),
             Type::Cache => (4, 0),
-            Type::Quantized(w) => (5,w),
+            Type::Quantized(w) => (5, w),
         };
         let dtype = if kind != 0 {
             "opaque".into()
@@ -209,7 +214,10 @@ pub fn lower(graph: &Graph, inventory: Option<&Inventory>) -> Result<Program> {
                 _ => "bf16".into(),
             }
         };
-        if n.op=="cast" && p.instructions[inputs[0]].dtype==dtype { outputs.push(inputs[0]); continue; }
+        if n.op == "cast" && p.instructions[inputs[0]].dtype == dtype {
+            outputs.push(inputs[0]);
+            continue;
+        }
         let kernel = if n.op == "linear" {
             if n.attrs.contains_key("paired_weight") {
                 "paired_bf16"
@@ -236,14 +244,115 @@ pub fn lower(graph: &Graph, inventory: Option<&Inventory>) -> Result<Program> {
                 Some(_) => "norm",
                 None => "unbound",
             }
-        } else if n.op=="cast" { "aclnnCast" } else {
+        } else if n.op == "cast" {
+            "aclnnCast"
+        } else {
             n.op.as_str()
         };
-        if n.op=="linear" && p.instructions[inputs[0]].kind==5 && !matches!(kernel,"int8"|"unbound") {return Err(invalid("quantized input requires INT8 projection weights"));}
-        if n.op=="linear" && kernel=="int8" && p.instructions[inputs[0]].kind==0 {
-            let id=p.instructions.len();let width=p.instructions[inputs[0]].width;
-            p.instructions.push(Instruction {logical_node:logical,name:format!("__quant_{id}"),op:"quantize".into(),inputs:vec![inputs[0]],attrs:BTreeMap::from([("dtype".into(),"int8".into()),("scheme".into(),"per_token_symmetric".into()),("scale_dtype".into(),"f32".into())]),kind:5,width,dtype:"opaque".into(),kernel:"quantize".into(),reason:"Explicit activation quantization for selected INT8 projection".into()});
-            inputs[0]=id;
+        if n.op == "linear"
+            && p.instructions[inputs[0]].kind == 5
+            && !matches!(kernel, "int8" | "unbound")
+        {
+            return Err(invalid("quantized input requires INT8 projection weights"));
+        }
+        if n.op == "linear" && kernel == "int8" && p.instructions[inputs[0]].kind == 0 {
+            let id = p.instructions.len();
+            let width = p.instructions[inputs[0]].width;
+            p.instructions.push(Instruction {
+                logical_node: logical,
+                name: format!("__quant_{id}"),
+                op: "quantize".into(),
+                inputs: vec![inputs[0]],
+                attrs: BTreeMap::from([
+                    ("dtype".into(), "int8".into()),
+                    ("scheme".into(), "per_token_symmetric".into()),
+                    ("scale_dtype".into(), "f32".into()),
+                ]),
+                kind: 5,
+                width,
+                dtype: "opaque".into(),
+                kernel: "quantize".into(),
+                reason: "Explicit activation quantization for selected INT8 projection".into(),
+            });
+            inputs[0] = id;
+        }
+        // Expand the query recipe before serialization. Every conversion and
+        // materialization has its own SSA value and scheduling position.
+        if n.op == "mla_query" || n.op == "rope" {
+            let mut emit = |op: &str,
+                            ins: Vec<usize>,
+                            attrs: BTreeMap<String, String>,
+                            width: usize,
+                            dtype: &str| {
+                let id = p.instructions.len();
+                p.instructions.push(Instruction {
+                    logical_node: logical,
+                    name: format!("{}__{}_{}", n.name, op, id),
+                    op: op.into(),
+                    inputs: ins,
+                    attrs,
+                    kind: 0,
+                    width,
+                    dtype: dtype.into(),
+                    kernel: if op == "cast" {
+                        "aclnnCast".into()
+                    } else {
+                        op.into()
+                    },
+                    reason: "Expanded composite; single declared operation with explicit storage"
+                        .into(),
+                });
+                id
+            };
+            let mut projection = None;
+            let rotary = if n.op == "mla_query" {
+                let layout = n
+                    .attrs
+                    .get("input_layout")
+                    .cloned()
+                    .unwrap_or("replicated".into());
+                let attrs = BTreeMap::from([("input_layout".into(), layout)]);
+                let mut project_attrs = attrs.clone();
+                project_attrs.insert("weight".into(), n.attrs["weight"].clone());
+                projection = Some(emit(
+                    "query_project",
+                    inputs.clone(),
+                    project_attrs,
+                    3072,
+                    "bf16",
+                ));
+                emit("query_rotary_extract", inputs, attrs, 384, "f32")
+            } else {
+                inputs[0]
+            };
+            let rw = if projection.is_some() { 384 } else { width };
+            let rotated = emit(
+                "rope_f32",
+                vec![rotary],
+                BTreeMap::from([("theta".into(), n.attrs["theta"].clone())]),
+                rw,
+                "f32",
+            );
+            let rounded = emit(
+                "cast",
+                vec![rotated],
+                BTreeMap::from([("dtype".into(), "bf16".into())]),
+                rw,
+                "bf16",
+            );
+            let output = if let Some(projected) = projection {
+                emit(
+                    "concat_columns",
+                    vec![projected, rounded],
+                    BTreeMap::from([("rows".into(), "6".into())]),
+                    width,
+                    "bf16",
+                )
+            } else {
+                rounded
+            };
+            outputs.push(output);
+            continue;
         }
         let id = p.instructions.len();
         p.instructions.push(Instruction { logical_node: logical, name: n.name.clone(),
@@ -382,6 +491,10 @@ pub fn recipes(p: &Program, graph: &Graph) -> Vec<serde_json::Value> {
             "mhc_pre" => (&["aclnnAiInfraManifoldConstrainedHyperConnectionPre", "aclnnManifoldConstrainedHyperConnectionSinkhornEnhance"], "BF16 residual; FP32 phi, mixing and Sinkhorn; residual borrowed", "persistent state; source alias"),
             "mhc_merge" => (&["aclnnAiInfraManifoldConstrainedHyperConnectionPre"], "BF16 residual; FP32 phi and mixing", "persistent state; source alias"),
             "mhc_post" => (&["aclnnAiInfraManifoldConstrainedHyperConnectionPost"], "BF16 residual and branch; FP32 mixing", "persistent output"),
+            "query_project" => (&["aclnnBatchMatMul"], "strided local query/weight views; BF16 input/output", "new BF16 latent query"),
+            "query_rotary_extract" => (&["aclnnCast"], "strided BF16 rotary columns to contiguous FP32", "new FP32 rotary input"),
+            "rope_f32" => (&["aclnnRotaryPositionEmbedding"], "FP32 rotation; rounding is a separate instruction", "new FP32 output"),
+            "concat_columns" => (&["aclnnCat"], "concatenate columns of declared row matrices", "new contiguous output"),
             "rope" => (&["aclnnRotaryPositionEmbedding", "aclnnCast"], "FP32 rotation → BF16 rounding", "FP32 temporary + BF16 result"),
             "mla_query" => (&["aclnnBatchMatMul", "aclnnCast", "aclnnRotaryPositionEmbedding", "aclnnCast", "aclnnCat"], "strided BF16 → FP32 rotary extraction → BF16 rounding; packed with latent query", "immutable weights packed once; rotary and concatenation temporaries"),
             "mla_value" => (&["aclnnBatchMatMul"], "BF16 heads", "immutable weights packed once; new output"),
@@ -408,6 +521,6 @@ pub fn recipes(p: &Program, graph: &Graph) -> Vec<serde_json::Value> {
             _ => "none in this instruction",
         };
         serde_json::json!({"apis":apis,"internal":internal,"materialization":materialization,"placement":placement,"communication":communication,
-            "granularity":if matches!(i.op.as_str(), "cast"|"add_f32"|"slice"|"gather"|"allreduce") {"instruction"} else {"backend recipe"}})
+            "granularity":if matches!(i.op.as_str(), "cast"|"quantize"|"query_project"|"query_rotary_extract"|"rope_f32"|"concat_columns"|"add_f32"|"slice"|"gather"|"allreduce") {"instruction"} else {"backend recipe"}})
     }).collect()
 }

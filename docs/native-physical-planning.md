@@ -338,3 +338,47 @@ completion stages, not capabilities claimed by the new viewer:
    bundle. Replay must issue only declared work; reject mismatched identities,
    stale plans and undeclared transfers. Verify full-model outputs, graph replay,
    residency and execution traces against the plan before calling it complete.
+
+### Hardware-bound arena and query expansion (2026-10-16)
+
+Dense INT8 projections now have separate quantization and matmul instructions.
+MLA query construction expands into query projection, strided rotary extraction,
+FP32 rotary embedding, BF16 rounding, and column concatenation. The generated
+instructions retain their logical source node and module hierarchy. This exposes
+the temporary values and their dependencies without changing the arithmetic.
+
+Hardware preparation records every prepared allocation slot, including persistent
+state, packed parameters, activation temporaries and vendor workspace. Slots have
+512-byte-aligned, disjoint offsets. The initial policy preserves the qualified
+exact-size LIFO reuse schedule; it does not yet optimize the footprint or discard
+obsolete workspace-growth slots. Checkpoint storage is allocated separately by
+the initialization executor. ACL/HCCL internal allocations are outside this arena.
+
+After a full prepared audit, bind a new bundle inside the runtime container:
+
+```sh
+python3 scripts/bind-prepared-arena.py PLAN AUDIT_DIR BOUND_PLAN
+```
+
+The output contains `arena.json` and one `arena-rank-N.txt` per rank, alongside
+the original executable and initialization plans. Each native process reserves
+one contiguous arena, creates descriptors over its fixed offsets, and never
+grows it. Allocation requests must match a free declared slot of exactly the
+requested size and an instruction-to-slot binding observed during preparation.
+Workspace uses the same arena. Aliases retain leases; a slot becomes reusable
+only after the last lease is released on its owning stream. Graph capture retains
+the arena addresses through replay; no global fence or activation host transfer
+is introduced.
+
+The binding includes fingerprints of both `execution.bin` and the native backend
+binary. A changed binary/program requires fresh preparation. Overlap, alignment,
+extent, duplicate bindings, unknown slots, exhausted capacity and unplanned
+instruction bindings fail closed. Use the same qualified CANN/vendor/HCCL runtime
+for preparation and execution. Runtime-internal allocation costs are not covered
+by this layout, and this is not an offline estimate of unknown vendor workspace.
+
+The viewer reads the bound arena metadata and exposes rank capacity, slot offsets,
+sizes, and the slots acquired by each instruction during preparation. This usage
+table includes preparation-only buffers; it is not a claim that every listed slot
+is newly allocated on each token. Some backend recipes remain composite, so this
+milestone must not be described as completion of the full primitive execution DAG.

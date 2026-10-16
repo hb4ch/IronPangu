@@ -61,7 +61,7 @@ int main(int argc, char **argv) {
     });
     reject([](auto &x) {
       for (auto &n : x.nodes)
-        if (n.op == "mla_query") {
+        if ((n.op == "mla_query" || n.op == "query_project")) {
           n.attrs["input_layout"] =
               n.attrs.count("input_layout") &&
                       n.attrs["input_layout"] == "rank_local"
@@ -72,7 +72,7 @@ int main(int argc, char **argv) {
     });
     reject([](auto &x) {
       for (auto &n : x.nodes)
-        if (n.op == "mla_query") {
+        if ((n.op == "mla_query" || n.op == "query_project")) {
           n.attrs["input_layout"] = "unknown";
           break;
         }

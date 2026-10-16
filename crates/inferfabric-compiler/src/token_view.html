@@ -371,12 +371,19 @@
       if (s === "tp_local_heads") s += ` · rank ${rank}`;
       return s;
     }
+    function memoryDetails(id) {
+      const arena=data.arena?.ranks[rank];
+      if(!arena) return "Preparation pool; no hardware-bound arena in this bundle. Vendor workspace and composite temporaries are prepared at runtime.";
+      const slots=(arena.instruction_slots[String(id)] || []).map(j=>arena.slots[j]);
+      return `Frozen arena: ${arena.bytes.toLocaleString()} bytes, ${arena.slots.length} slots on rank ${rank}. Growth is forbidden. Exact-size LIFO reuse on the owning stream; checkpoint storage is separate.<br>` +
+        (slots.length ? `<table><thead><tr><th>Slot</th><th>Offset</th><th>Bytes</th></tr></thead><tbody>${slots.map(s=>`<tr><td>${s.id}</td><td>${s.offset}</td><td>${s.bytes}</td></tr>`).join("")}</tbody></table>` : "No new slot or workspace acquired by this instruction in the preparation trace; aliases may still read existing storage.");
+    }
     function inspect(id) {
       const i = ins[id],
         n = nodes[i.logical_node],
         r = recipes[id];
       $("#detail").innerHTML =
-        `<button id="close" style="float:right">Close</button><h2>#${id} ${esc(i.name)}</h2><div class="grid"><section><b>Selected implementation</b><p>${r.apis.length ? r.apis.map((x) => `<code>${esc(x)}</code>`).join(" → ") : esc(r.internal)}</p><p>${badge(r.granularity)} ${badge(i.dtype)} ${badge(placement(id))}</p><p>${esc(i.reason)}</p><b>Internal work / numerical contract</b><p>${esc(r.internal)}</p><b>Storage / aliasing</b><p>${esc(r.materialization)}</p><b>Communication</b><p>${esc(r.communication)}</p></section><section><b>Shape</b><p>${i.kind === 0 ? `[${i.width}] ${esc(i.dtype)} · ${i.width * (i.dtype === "bf16" ? 2 : 4)} payload bytes per rank` : i.kind === 5 ? `[${i.width}] INT8 payload + [1] FP32 scale · ${i.width + 4} payload bytes per rank` : "Opaque structured value; inner shapes belong to backend recipe"}</p><b>Dependencies</b><p>${i.inputs.length ? i.inputs.map((j) => `<button data-ins="${j}">#${j} ${esc(ins[j].name)} · ${esc(ins[j].dtype)}</button>`).join(" ") : "Control / parameters only"}</p><b>Weight bindings and attributes</b><pre>${esc(JSON.stringify(n.attrs, null, 2))}</pre><b>Scheduling / memory</b><p>Rank ${rank}, owning stream 0; SSA last-use release. Reusable runtime pool, no frozen arena. Vendor workspace and composite temporaries remain runtime prepared. Cost unknown; no measured candidate comparison.</p></section></div>`;
+        `<button id="close" style="float:right">Close</button><h2>#${id} ${esc(i.name)}</h2><div class="grid"><section><b>Selected implementation</b><p>${r.apis.length ? r.apis.map((x) => `<code>${esc(x)}</code>`).join(" → ") : esc(r.internal)}</p><p>${badge(r.granularity)} ${badge(i.dtype)} ${badge(placement(id))}</p><p>${esc(i.reason)}</p><b>Internal work / numerical contract</b><p>${esc(r.internal)}</p><b>Storage / aliasing</b><p>${esc(r.materialization)}</p><b>Communication</b><p>${esc(r.communication)}</p></section><section><b>Shape</b><p>${i.kind === 0 ? `[${i.width}] ${esc(i.dtype)} · ${i.width * (i.dtype === "bf16" ? 2 : 4)} payload bytes per rank` : i.kind === 5 ? `[${i.width}] INT8 payload + [1] FP32 scale · ${i.width + 4} payload bytes per rank` : "Opaque structured value; inner shapes belong to backend recipe"}</p><b>Dependencies</b><p>${i.inputs.length ? i.inputs.map((j) => `<button data-ins="${j}">#${j} ${esc(ins[j].name)} · ${esc(ins[j].dtype)}</button>`).join(" ") : "Control / parameters only"}</p><b>Weight bindings and attributes</b><pre>${esc(JSON.stringify(n.attrs, null, 2))}</pre><b>Scheduling / memory</b><p>Rank ${rank}, owning stream 0; SSA last-use release. ${memoryDetails(id)} Cost unknown; no measured candidate comparison.</p></section></div>`;
       $("#close").onclick = () => ($("#detail").innerHTML = "");
       $("#detail")
         .querySelectorAll("[data-ins]")
@@ -463,7 +470,7 @@
       `<b>Ascend token backend · TP ${data.parallel.tp} / EP ${data.parallel.ep}</b><br>EP method: ${esc(data.parallel.method)}. ${data.parallel.unsupported.map(esc).join(" and ")} are <b>not selected or implemented by this backend</b>. ${esc(data.parallel.transport)}. Activations stay on device.<br><small>Per-rank weights use the DSL placement: tp_rows, tp_columns, tp_channels, replicated or expert ownership. Model collectives exclude the request-output token-consensus AllGather.</small>`;
     $("#limits").innerHTML =
       program.limitations.map((s) => "<p>" + esc(s) + "</p>").join("") +
-      "<p>Only inter-operation casts are executable rows. Casts and copies inside composite recipes are listed in their details, not counted as separately planned instructions. No fabricated kernel costs, timings or memory bounds.</p>";
+      "<p>Boundary casts, dense quantization and MLA query construction are executable rows. Remaining composite internals are listed in their details. Bound arena slots are measured during hardware preparation; no fabricated kernel costs or timings.</p>";
     $("#mode").onclick = () => {
       flat = !flat;
       page = 0;

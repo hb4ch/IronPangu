@@ -15,6 +15,7 @@ V execute_token() {
   auto remaining = program.uses;
   for (size_t i = 0; i < program.nodes.size(); ++i) {
     const auto &n = program.nodes[i];
+    execution.instruction(int64_t(i));
     inferfabric::profiling::Scope timing(n.op.c_str(), true);
     auto input = [&](size_t j) -> Value & {
       return *values.at(n.inputs.at(j));
@@ -84,6 +85,14 @@ V execute_token() {
       if (size_t(start) + width > tensor(0).size())
         throw std::runtime_error("slice bounds");
       result = resident::slice(tensor(0), start, width);
+    } else if (n.op == "query_project") {
+      result=query_project(tensor(0),weight(),n.text("input_layout")=="rank_local");
+    } else if (n.op == "query_rotary_extract") {
+      result=query_rotary_extract(tensor(0),n.text("input_layout")=="rank_local");
+    } else if (n.op == "concat_columns") {
+      result=concat_columns(tensor(0),tensor(1),n.integer("rows"));
+    } else if (n.op == "rope_f32") {
+      result=rope(tensor(0),pos,true);
     } else if (n.op == "rope") {
       result = rope(tensor(0), pos);
     } else if (n.op == "concat") {
@@ -154,5 +163,6 @@ V execute_token() {
       if (--remaining[j] == 0)
         values[j].reset();
   }
+  execution.instruction(-1);
   return std::get<V>(std::move(*values[program.output]));
 }
