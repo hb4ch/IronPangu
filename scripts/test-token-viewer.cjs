@@ -48,3 +48,11 @@ if(api.data.recipes.some(r=>r.value_fields?.some(f=>f.row_stride_bytes))) {
   assert(packedHtml.includes('row stride 656 bytes'));
   assert(packedHtml.includes('aclnnAiInfraKvQuantSparseFlashAttention'));
 }
+
+if(api.data.arena?.ranks[7]?.workspace) {
+  const details=vm.runInContext('memoryDetails(25)',context);
+  assert(details.includes('Shared workspace:'));
+  assert(details.includes('permanent slot 0'));
+  assert(details.includes('Growth allocations: 0'));
+  assert(details.includes('instruction demand'));
+}

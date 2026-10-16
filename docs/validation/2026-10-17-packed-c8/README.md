@@ -10,6 +10,11 @@ The model definition is
 [92b-tp8-ep8-c8.inferfabric](../../../examples/openpangu/92b-tp8-ep8-c8.inferfabric);
 [the format contract](../../packed-mla-cache.md) documents its exact scope.
 
+The workspace-growth limitation measured below was subsequently fixed by
+[maximum shared workspace planning](../2026-10-17-shared-workspace/README.md).
+These numbers remain the immutable pre-fix baseline. For current preparation
+commands, use [the build guide](../../build.md#frozen-arena-preparation-for-the-92b-token-backend).
+
 ## Measured results
 
 | Format | Graph TPOT, ms/token | KV cache per rank | Frozen arena per rank, bytes | Median HBM used, GiB |

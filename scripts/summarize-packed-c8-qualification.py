@@ -15,11 +15,11 @@ def read(path):
     return json.loads(path.read_text())
 
 
-def summarize(root):
+def summarize(root, c8_stem="cache-c8", bf16_stem="cache-c8-bf16", require_planned_workspace=False):
     variants = {}
     for name, stem, cache_bytes, modes in [
-        ('bf16', 'cache-c8-bf16', 46 * 512 * 1152, ['tpot']),
-        ('c8', 'cache-c8', 16 * 512 * 656 + 30 * 512 * 1152, ['tpot', 'eager']),
+        ('bf16', bf16_stem, 46 * 512 * 1152, ['tpot']),
+        ('c8', c8_stem, 16 * 512 * 656 + 30 * 512 * 1152, ['tpot', 'eager']),
     ]:
         arena = read(root / f'{stem}-bound-plan/arena.json')
         measurements = {}
@@ -34,6 +34,14 @@ def summarize(root):
                 for rank in range(8):
                     audit = read(folder / 'prepared' / f'rank-{rank}.json')
                     transfer = read(folder / 'transfers' / f'rank-{rank}.json')
+                    if require_planned_workspace:
+                        workspace = audit['workspace']
+                        assert workspace['planned'] and workspace['growth_allocations'] == 0
+                        assert workspace['slot'] == 0
+                        assert workspace['peak_requested_bytes'] <= workspace['planned_bytes']
+                        assert workspace['planned_bytes'] == arena['ranks'][rank]['slots'][0]['bytes']
+                        for instruction in workspace['instruction_requests']:
+                            assert 0 in arena['ranks'][rank]['instruction_slots'][instruction]
                     assert audit['device_allocations'] == 1
                     assert audit['device_bytes'] == arena['ranks'][rank]['bytes']
                     assert all(s['device_allocations'] == 0 and s['completion_boundaries'] == 0 for s in audit['steps'])
@@ -54,6 +62,11 @@ def summarize(root):
             }
         variants[name] = {
             'persistent_cache_bytes_per_rank': cache_bytes,
+            'shared_workspace': [{'planned_bytes': r['workspace']['planned_bytes'],
+                                  'peak_requested_bytes': r['workspace']['peak_requested_bytes'],
+                                  'slot': r['workspace']['slot'],
+                                  'growth_allocations': r['workspace']['growth_allocations']}
+                                 for r in arena['ranks']] if require_planned_workspace else None,
             'arena_bytes_per_rank': [r['bytes'] for r in arena['ranks']],
             'arena_slots_per_rank': [len(r['slots']) for r in arena['ranks']],
             'measurements': measurements,
@@ -92,8 +105,11 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('root', type=Path)
     parser.add_argument('output', type=Path)
+    parser.add_argument('--c8-stem', default='cache-c8')
+    parser.add_argument('--bf16-stem', default='cache-c8-bf16')
+    parser.add_argument('--require-planned-workspace', action='store_true')
     args = parser.parse_args()
-    result = summarize(args.root)
+    result = summarize(args.root, args.c8_stem, args.bf16_stem, args.require_planned_workspace)
     args.output.write_text(json.dumps(result, ensure_ascii=False, indent=2) + '\n')
     for name, variant in result['variants'].items():
         m = variant['measurements']['tpot']
