@@ -33,3 +33,16 @@ Same checkpoint, devices 0–7, TP8/EP8, batch one, context 512, greedy decoding
 short prompts as prior milestones. TPOT excludes loading/prefill. Native requests
 use fresh processes; OmniInfer uses a warmed engine. This is an offline decode
 comparison, not a concurrent-serving or long-context production qualification.
+
+## Follow-up profiling
+
+The fresh [device trace summary](device-profile.json) records 88 grouped matmuls
+per token, matching the reference launch count. mHC preprocessing and attention
+remain the largest compute entries. Inclusive sums are not additive TPOT and the
+reference trace used another prompt.
+
+The reference trace identifies mHC Pre V2. Switching native to that API with
+batchInvariant=false and inference-only outputs passed full output and replay
+audits, but measured [23.9141 ms/token](mhc-v2-experiment-summary.json) versus
+23.9198: no meaningful gain. The V1 implementation is retained. This experiment
+does not establish why the profiled mHC durations differ.

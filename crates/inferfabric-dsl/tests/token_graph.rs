@@ -9,7 +9,7 @@ fn full_decoder_is_explicit_and_round_trips_through_compiled_authoring() {
     let ModelDefinition::Execution { graph, parallel } = &model else {
         panic!("expected executable graph")
     };
-    assert_eq!(graph.nodes.len(), 1837);
+    assert_eq!(graph.nodes.len(), 1699);
     assert_eq!(graph.nodes.iter().filter(|n| n.op == "router").count(), 44);
     assert_eq!(
         graph
@@ -61,6 +61,16 @@ fn unsafe_dataflow_shapes_effects_and_budgets_are_rejected() {
         ),
         SOURCE.replacen("theta = 6400000", "theta = 10000", 1),
         SOURCE.replacen("start = 512, width = 64", "start = 540, width = 64", 1),
+        SOURCE.replacen(
+            "cache_norm_rope_append(kc, kr, sinks",
+            "cache_norm_rope_append(kr, kc, sinks",
+            1,
+        ),
+        SOURCE.replacen(
+            "eps = 1e-5, theta = 6400000",
+            "eps = 1e-6, theta = 6400000",
+            1,
+        ),
         SOURCE.replacen("placement = \"tp_rows\"", "placement = \"magic\"", 1),
         SOURCE.replacen("gate_up, routes", "gate_up, x", 1),
         SOURCE.replacen(
@@ -109,7 +119,7 @@ fn reusable_model_preserves_layers_with_explicit_communication_layouts() {
     .unwrap();
     assert_eq!(graph.max_context, baseline.max_context);
     assert_eq!(graph.eos, baseline.eos);
-    assert_eq!(baseline.nodes.len() - graph.nodes.len(), 272);
+    assert_eq!(baseline.nodes.len() - graph.nodes.len(), 410);
     for op in [
         "linear",
         "mhc_pre",

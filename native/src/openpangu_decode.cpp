@@ -10,6 +10,7 @@
 #include "resident_tensor.h"
 #include "resident_transfer.h"
 #include <aclnn_ai_infra_fused_causal_conv1d.h>
+#include <aclnn_ai_infra_kv_rms_norm_rope_cache.h>
 #include <aclnn_ai_infra_sparse_flash_attention_pioneer.h>
 #include <aclnnop/aclnn_batch_matmul.h>
 #include <aclnnop/aclnn_dequant_swiglu_quant.h>
@@ -90,8 +91,8 @@ struct Decoder {
   aclmdlRI decode_graph = nullptr;
   V graph_output;
   std::vector<std::unique_ptr<inferfabric::PreparedKernel>> graph_kernels;
-  std::unique_ptr<DeviceTensor> token_index, position_index, sequence_length,
-      causal_indices, rotary_cos, rotary_sin;
+  std::unique_ptr<DeviceTensor> token_index, position_index, cache_position, sequence_length,
+      causal_indices, rotary_cos, rotary_sin, rotary_cos_bf16, rotary_sin_bf16;
   int rank;
   int current_position = -1;
   std::map<std::string, std::unique_ptr<openpangu::Router>> routers;
@@ -127,6 +128,8 @@ struct Decoder {
         std::make_unique<DeviceTensor>(std::vector<int64_t>{1}, ACL_INT32, 4);
     position_index =
         std::make_unique<DeviceTensor>(std::vector<int64_t>{1}, ACL_INT32, 4);
+    cache_position =
+        std::make_unique<DeviceTensor>(std::vector<int64_t>{1}, ACL_INT64, 8);
     sequence_length =
         std::make_unique<DeviceTensor>(std::vector<int64_t>{1}, ACL_INT32, 4);
     causal_indices = std::make_unique<DeviceTensor>(
@@ -135,6 +138,10 @@ struct Decoder {
         std::make_unique<DeviceTensor>(std::vector<int64_t>{64}, ACL_FLOAT, 4);
     rotary_sin =
         std::make_unique<DeviceTensor>(std::vector<int64_t>{64}, ACL_FLOAT, 4);
+    rotary_cos_bf16 =
+        std::make_unique<DeviceTensor>(std::vector<int64_t>{1, 1, 1, 64}, ACL_BF16, 2);
+    rotary_sin_bf16 =
+        std::make_unique<DeviceTensor>(std::vector<int64_t>{1, 1, 1, 64}, ACL_BF16, 2);
     checked(HcclCommInitRootInfo(8, &info, rank, &comm), "HCCL");
   }
   ~Decoder() {
@@ -520,6 +527,40 @@ struct Decoder {
     run(aclnnInplaceIndexCopy, bytes, executor);
   }
 
+  void append_normalized_cache(const V &latent, const V &rotary,
+                               const V &sinks, const std::string &norm_name,
+                               const std::string &state_name, int pos) {
+    if (latent.size() != 512 || rotary.size() != 64 || pos != current_position)
+      throw std::runtime_error("fused cache shape/position contract");
+    auto &ptr = attention_states[state_name];
+    if (!ptr) {
+      resident::TransferScope constants(resident::TransferRole::ControlInput);
+      ptr = std::make_unique<AttentionState>();
+      to_device(ptr->sink, sinks);
+    }
+    auto input = resident::concat(cast(latent, ACL_BF16), cast(rotary, ACL_BF16));
+    View kv(input.data(), {1, 1, 1, 576}, ACL_BF16);
+    auto &gamma = w(norm_name + ".weight");
+    View norm_weight(gamma.data, {512}, ACL_BF16);
+    // This vendor API requires output descriptors even for a cache-only consumer.
+    DeviceTensor rope_out({1, 1, 1, 64}, ACL_BF16, 2),
+        latent_out({1, 1, 1, 512}, ACL_BF16, 2);
+    // The vendor's absent separate rope cache selects combined [latent, rope]
+    // storage, matching the existing paged cache contract. Position stays on device.
+    char cache_mode[] = "PA", rotary_mode[] = "half", quant_mode[] = "none";
+    uint64_t bytes = 0;
+    aclOpExecutor *e = nullptr;
+    checked(prepared::query("aclnnAiInfraKvRmsNormRopeCache", false,
+                            aclnnAiInfraKvRmsNormRopeCacheGetWorkspaceSize,
+                            kv.t, norm_weight.t, rotary_cos_bf16->tensor,
+                            rotary_sin_bf16->tensor, cache_position->tensor,
+                            nullptr, ptr->key.tensor, nullptr, nullptr,
+                            nullptr, nullptr, nullptr, 1e-5, cache_mode,
+                            rotary_mode, quant_mode, true, rope_out.tensor, latent_out.tensor,
+                            &bytes, &e),
+            "fused cache normalization/rotary prepare");
+    run(aclnnAiInfraKvRmsNormRopeCache, bytes, e);
+  }
   V attend(const V &queries, const std::string &state_name) {
     auto &state = *attention_states.at(state_name);
     to_device(state.query, queries);
@@ -877,6 +918,7 @@ struct Decoder {
     current_position = pos;
     resident::control_upload(*token_index, std::vector<int32_t>{id});
     resident::control_upload(*position_index, std::vector<int32_t>{pos});
+    resident::control_upload(*cache_position, std::vector<int64_t>{pos});
     resident::control_upload(*sequence_length, std::vector<int32_t>{pos + 1});
     std::vector<int32_t> indices(program.context, -1);
     for (int i = 0; i <= pos; ++i)
@@ -890,6 +932,13 @@ struct Decoder {
     }
     resident::control_upload(*rotary_cos, c);
     resident::control_upload(*rotary_sin, sn);
+    std::vector<uint16_t> cb(64), sb(64);
+    for (size_t i = 0; i < 64; ++i) {
+      cb[i] = tobf(c[i]);
+      sb[i] = tobf(sn[i]);
+    }
+    resident::control_upload(*rotary_cos_bf16, cb);
+    resident::control_upload(*rotary_sin_bf16, sb);
   }
   V token(int id, int pos, bool decode = false) {
     set_token_inputs(id, pos);

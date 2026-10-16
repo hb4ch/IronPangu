@@ -29,7 +29,7 @@ int main(int argc, char **argv) {
     reject([](auto &x) { x.nodes[0].attrs["ignored"] = "true"; });
     reject([](auto &x) {
       for (auto &n : x.nodes)
-        if (n.op == "rope") {
+        if (n.op == "rope" || n.op == "cache_norm_rope_append") {
           n.attrs["theta"] = "1";
           break;
         }

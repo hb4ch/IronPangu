@@ -122,9 +122,9 @@ pub fn initialization_plans(
                     false,
                     n.attrs["placement"] == "tp_columns",
                 )?,
-                "norm" | "optional_norm" => {
+                "norm" | "optional_norm" | "cache_norm_rope_append" => {
                     let key = format!("{name}.weight");
-                    if n.op == "norm" || inventory.tensors.contains_key(&key) {
+                    if n.op != "optional_norm" || inventory.tensors.contains_key(&key) {
                         b.add(key, vec![width], DType::Bf16, false)?;
                     }
                 }

@@ -124,7 +124,11 @@ inline void validate_kernels(const Plan &p) {
       eq("eps", "1e-5");
     } else if (n.op == "cache_append")
       check({{0, 576}, {0, 73728}}, {}, {4, 0});
-    else if (n.op == "latent_attention") {
+    else if (n.op == "cache_norm_rope_append") {
+      check({{0, 512}, {0, 64}, {0, 73728}}, {"weight", "eps", "theta"}, {4, 0});
+      eq("eps", "1e-5");
+      eq("theta", "6400000");
+    } else if (n.op == "latent_attention") {
       check({{0, 3456}, {4, 0}}, {"scale_dim", "window", "selection"},
             {0, 3072});
       eq("scale_dim", "192");
@@ -231,8 +235,8 @@ inline void validate_bindings(const Plan &program,
       require(name + ".weight", {151552, 2560}, DType::Bf16);
     else if (n.op == "linear")
       linear(name, width, n.width);
-    else if (n.op == "norm" || n.op == "optional_norm") {
-      if (n.op == "norm" || weights.count(name + ".weight"))
+    else if (n.op == "norm" || n.op == "optional_norm" || n.op == "cache_norm_rope_append") {
+      if (n.op != "optional_norm" || weights.count(name + ".weight"))
         require(name + ".weight", {width}, DType::Bf16);
     } else if (n.op == "mome")
       require(name + ".weight", {width, 1, 3}, DType::Bf16);

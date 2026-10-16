@@ -48,13 +48,11 @@ module MLAAttention(x, w, window) {
     let latent = slice(kv, start = 0, width = 512);
     let kr = slice(kv, start = 512, width = 64);
     let kc = mome(latent, weight = w.compresskv_conv, taps = 3);
-    let kn = norm(kc, weight = w.kv_a_layernorm, eps = 1e-5);
-    let rot = rope(kr, theta = 6400000);
-    let key = concat(kn, rot);
 
     let sinks = sink_normalize(weight = w, norm = w.kv_a_layernorm,
                                count = 128, latent = 512, rope = 64, eps = 1e-5);
-    let cache = cache_append(key, sinks);
+    let cache = cache_norm_rope_append(kc, kr, sinks, weight = w.kv_a_layernorm,
+                                       eps = 1e-5, theta = 6400000);
     let query = mla_query(q, weight = w.kv_b_proj, theta = 6400000,
                           heads = 48, nope = 128, rope = 64, latent = 512, input_layout = "rank_local");
     let attended = latent_attention(query, cache, scale_dim = 192,

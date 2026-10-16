@@ -7,7 +7,7 @@ A compile-time fold instantiates the blocks, choosing dense/MoE branches and
 attention windows. Scoped weights resolve checkpoint bindings without repeated
 full paths. See [module syntax and expansion rules](dsl-modules.md).
 
-The compiler expands this source into 1,837 primitive operations. The initial
+The compiler expands this source into 1,699 primitive operations. The initial
 module migration preserved all 2,109 operations of the qualified flat graph;
 the current placement leaves one gather and 92 explicit all-reduces per token. Shared experts are replicated
 as in the matched OmniInfer configuration, while MLA query projection emits only
@@ -39,6 +39,14 @@ and over the local rank's parameter ownership during initialization planning.
 packed expert rows with one input quantization and one grouped matmul. The two-input
 `expert_swiglu_down` consumes those rows directly. The original separate-projection
 form remains validated and executable. The fused activation/down kernel preserves the qualified W8A8 rounding boundary.
+
+The explicit `cache_norm_rope_append(latent, rotary, sinks, weight=..., eps=1e-5,
+theta=6400000)` operation accepts 512 latent values, 64 unrotated key values and
+128 normalized sinks. It fuses RMS normalization, half-rotary and the paged cache
+write, returning a single-consumer cache handle. Its gamma binding is loaded by
+the generic initialization planner. The physical plan records BF16 rotary
+coefficients and the device position control; this differs numerically from the
+separate FP32 rotary contract. The separate operations remain supported.
 
 ## Compilation and initialization
 

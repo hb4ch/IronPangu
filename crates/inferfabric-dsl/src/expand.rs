@@ -23,6 +23,7 @@ const PRIMITIVES: &[&str] = &[
     "mla_value",
     "sink_normalize",
     "cache_append",
+    "cache_norm_rope_append",
     "latent_attention",
     "swiglu",
     "router",

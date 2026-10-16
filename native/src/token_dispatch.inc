@@ -79,6 +79,9 @@ V execute_token() {
     else if (n.op == "cache_append") {
       append_cache(tensor(0), tensor(1), n.name, pos);
       result = n.name;
+    } else if (n.op == "cache_norm_rope_append") {
+      append_normalized_cache(tensor(0), tensor(1), tensor(2), weight(), n.name, pos);
+      result = n.name;
     } else if (n.op == "latent_attention")
       result = attend(tensor(0), std::get<std::string>(input(1)));
     else if (n.op == "swiglu")

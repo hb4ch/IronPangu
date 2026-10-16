@@ -246,6 +246,20 @@ impl Node {
                 self.schema(inputs, &[Tensor(576), Tensor(73728)], &[])?;
                 Cache
             }
+            "cache_norm_rope_append" => {
+                self.schema(
+                    inputs,
+                    &[Tensor(512), Tensor(64), Tensor(73728)],
+                    &["weight", "eps", "theta"],
+                )?;
+                if self.attrs["eps"] != "1e-5" || self.integer("theta")? != 6400000 {
+                    return fail(
+                        self,
+                        "unsupported fused cache normalization/rotary contract",
+                    );
+                }
+                Cache
+            }
             "latent_attention" => {
                 self.schema(
                     inputs,

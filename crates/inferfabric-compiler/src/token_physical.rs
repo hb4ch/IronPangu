@@ -35,7 +35,9 @@ pub fn lower(graph: &Graph, devices: &[u32]) -> Result<Plan> {
     source.extend_from_slice(include_bytes!("../../../native/src/execution_profile.h"));
     source.extend_from_slice(include_bytes!("../../../native/src/execution_capture.h"));
     source.extend_from_slice(include_bytes!("../../../native/src/prepared_execution.h"));
-    source.extend_from_slice(include_bytes!("../../../native/src/prepared_weight_views.h"));
+    source.extend_from_slice(include_bytes!(
+        "../../../native/src/prepared_weight_views.h"
+    ));
     let revision = digest(&source);
     let mut values: Vec<Value> = vec![];
     let mut operations = vec![];
@@ -108,6 +110,10 @@ pub fn lower(graph: &Graph, devices: &[u32]) -> Result<Plan> {
             kind: BoundaryKind::DynamicAllocation,
             detail: "Per-rank reusable device pool grows on a new size/liveness requirement during preparation; warmed decode reuses buffers and workspace. Runtime audit records allocations and reuses. Static arena offsets and full workspace bounds remain unresolved".into(),
         }];
+        if n.op == "cache_norm_rope_append" {
+            boundaries.push(Boundary { kind: BoundaryKind::InternalLaunches,
+                detail: "Fused KV RMS normalization, half-rotary and paged cache write; BF16 input, gamma and rotary coefficients, epsilon 1e-5. Position is a device control input. Combined latent/rotary cache remains device resident; no implicit readback or fallback. Numerical contract differs from separate FP32 rotary".into() });
+        }
         if n.op == "linear" && n.attrs.get("placement").is_some_and(|p| p == "tp_columns") {
             boundaries.push(Boundary { kind: BoundaryKind::InternalLaunches,
                 detail: "Input-column TP slice loaded by generic strided initialization; local dynamic quantization and BF16 partial output. Cross-rank FP32 sum is a separate explicit allreduce node; no implicit gather".into() });
@@ -126,7 +132,7 @@ pub fn lower(graph: &Graph, devices: &[u32]) -> Result<Plan> {
         }
         if matches!(
             n.op.as_str(),
-            "rope" | "mla_query" | "mome" | "cache_append"
+            "rope" | "mla_query" | "mome" | "cache_append" | "cache_norm_rope_append"
         ) {
             boundaries.push(Boundary {kind: BoundaryKind::ControlUpload,
                 detail: "Position/length/index metadata or position-derived rotary constants only; never activation contents".into()});
@@ -179,6 +185,7 @@ pub fn lower(graph: &Graph, devices: &[u32]) -> Result<Plan> {
             candidates: vec![Candidate {
                 id: format!("ascend.token.device_resident.{}.v1", n.op),
                 contract_revision: revision.clone(), numerical_contract: match n.op.as_str() {
+                    "cache_norm_rope_append" => "ascend_token_v1/cache_norm_rope_append/fused_bf16_rotary_v1".into(),
                     "expert_linear" if n.attrs.contains_key("paired_weight") => "ascend_token_v1/expert_linear/paired_sparse_gmm_bf16_scales_v1".into(),
                     "linear" if n.attrs.get("placement").is_some_and(|p| p == "tp_columns") => "ascend_token_v1/linear/local_columns_bf16_partial_v1".into(),
                     "expert_linear" | "expert_swiglu_down" => format!("ascend_token_v1/{}/sparse_gmm_bf16_scales_v1", n.op),

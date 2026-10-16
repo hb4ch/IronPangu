@@ -1,0 +1,1659 @@
+{
+  "format": "inferfabric.cann-kernel-summary.v1",
+  "iterations": 2,
+  "devices": [
+    {
+      "table": "paired-vendor/vendor/PROF_000001_20261016191034354_00191190AOGILJMK/device_0/sqlite/ai_core_op_summary.db",
+      "sha256": "70553e20b12d4f7789e890d8847eda19a51c6868eafde1e8f76c9f637554a559",
+      "kernels": [
+        {
+          "type": "AiInfraManifoldConstrainedHyperConnectionPre_b47a89e885f94ce5a9668d271df2d4a3_1",
+          "count_per_iteration": 93.0,
+          "summed_ms_per_iteration": 2.951628625
+        },
+        {
+          "type": "AiInfraSparseFlashAttentionPioneer_d5278b9259418f886fa913564f167179_2114587",
+          "count_per_iteration": 46.0,
+          "summed_ms_per_iteration": 2.342936125
+        },
+        {
+          "type": "MatMulV2_ND_ND_FP16_FP16_false_true_all_98513",
+          "count_per_iteration": 178.0,
+          "summed_ms_per_iteration": 2.172503
+        },
+        {
+          "type": "QuantBatchMatmulV3_ND_ND_int8_int8_fp32_bf16_high_performance_25",
+          "count_per_iteration": 98.0,
+          "summed_ms_per_iteration": 1.567520375
+        },
+        {
+          "type": "GroupedMatmul_7027ddb93c25b26c6a749b5e1bdcd245_34529280514",
+          "count_per_iteration": 88.0,
+          "summed_ms_per_iteration": 1.527610125
+        },
+        {
+          "type": "AiInfraFusedCausalConv1d_35c4c74c1fae0fea32fe578f438ae985_2",
+          "count_per_iteration": 138.0,
+          "summed_ms_per_iteration": 0.6880125
+        },
+        {
+          "type": "RmsNorm_normal_all_bf16_high_performance_0",
+          "count_per_iteration": 194.0,
+          "summed_ms_per_iteration": 0.68118525
+        },
+        {
+          "type": "BatchMatMulV2_ND_ND_FP16_FP16_false_false_all_98371",
+          "count_per_iteration": 46.0,
+          "summed_ms_per_iteration": 0.6698725
+        },
+        {
+          "type": "MatMulV2_ND_ND_FP32_FP32_false_false_all_65603",
+          "count_per_iteration": 44.0,
+          "summed_ms_per_iteration": 0.594551625
+        },
+        {
+          "type": "ManifoldConstrainedHyperConnectionSinkhornEnhance_7a5d5a273555874254c11acef95789fa_1",
+          "count_per_iteration": 92.0,
+          "summed_ms_per_iteration": 0.57383175
+        },
+        {
+          "type": "Cast_b2717900ea7de2d41ea9c63d23aa269b_high_performance_210000000",
+          "count_per_iteration": 272.0,
+          "summed_ms_per_iteration": 0.569399
+        },
+        {
+          "type": "ScatterUpdate_e1b0109dfcfe48c3210f1a593265d1dc_high_precision_880013000",
+          "count_per_iteration": 46.0,
+          "summed_ms_per_iteration": 0.534231125
+        },
+        {
+          "type": "AiInfraManifoldConstrainedHyperConnectionPost_12198cd9f51675f0cd721b3c8d5940a5_0",
+          "count_per_iteration": 92.0,
+          "summed_ms_per_iteration": 0.517139625
+        },
+        {
+          "type": "GatherV3_9e31943a1a48bf81ddff1fc6379e0be3_optional_10330",
+          "count_per_iteration": 132.0,
+          "summed_ms_per_iteration": 0.490870125
+        },
+        {
+          "type": "MatMulV2_ND_ND_FP16_FP16_false_true_all_98371",
+          "count_per_iteration": 46.0,
+          "summed_ms_per_iteration": 0.484580375
+        },
+        {
+          "type": "DynamicQuant_bf16_c1_high_performance_10",
+          "count_per_iteration": 142.0,
+          "summed_ms_per_iteration": 0.47108125
+        },
+        {
+          "type": "BatchMatMulV2_ND_ND_FP16_FP16_false_false_all_98433",
+          "count_per_iteration": 46.0,
+          "summed_ms_per_iteration": 0.440169875
+        },
+        {
+          "type": "RmsNorm_normal_all_bf16_high_performance_2",
+          "count_per_iteration": 92.0,
+          "summed_ms_per_iteration": 0.383308125
+        },
+        {
+          "type": "GatherV3_7beee77dd8bc124a96bc6f1da51c82cc_optional_10330",
+          "count_per_iteration": 88.0,
+          "summed_ms_per_iteration": 0.328677375
+        },
+        {
+          "type": "RotaryPositionEmbedding_92ba353a5a8fff1d4725322f6d7a90d5_1051",
+          "count_per_iteration": 46.0,
+          "summed_ms_per_iteration": 0.311716
+        },
+        {
+          "type": "Cast_9f288b80370c6545ffe8cef142d37f5c_high_performance_210000000",
+          "count_per_iteration": 184.0,
+          "summed_ms_per_iteration": 0.276226625
+        },
+        {
+          "type": "RotaryPositionEmbedding_92ba353a5a8fff1d4725322f6d7a90d5_1041",
+          "count_per_iteration": 46.0,
+          "summed_ms_per_iteration": 0.255024625
+        },
+        {
+          "type": "MoeFinalizeRoutingV2_9dc99a0b36758a4e2cd64afad2cf6896_20034",
+          "count_per_iteration": 44.0,
+          "summed_ms_per_iteration": 0.24590575
+        },
+        {
+          "type": "DequantSwigluQuant_bf16_high_performance_30012",
+          "count_per_iteration": 44.0,
+          "summed_ms_per_iteration": 0.224534125
+        },
+        {
+          "type": "TopKV2_5c671486fda0d949d7cba9a9754bc2dd_high_performance_2017612701781458944",
+          "count_per_iteration": 44.0,
+          "summed_ms_per_iteration": 0.216973625
+        },
+        {
+          "type": "MoeGatingTopK_81369a2fa0455f39b5d19d432d261f57_1",
+          "count_per_iteration": 44.0,
+          "summed_ms_per_iteration": 0.1837535
+        },
+        {
+          "type": "GatherV3_e9b6eba7780749dc7a31c6224838748d_optional_10330",
+          "count_per_iteration": 44.0,
+          "summed_ms_per_iteration": 0.171743625
+        },
+        {
+          "type": "SwiGlu_3_high_performance_27",
+          "count_per_iteration": 46.0,
+          "summed_ms_per_iteration": 0.154522875
+        },
+        {
+          "type": "Mul_ee98c6628030785f610b924ab1557b31_high_performance_210000000",
+          "count_per_iteration": 88.0,
+          "summed_ms_per_iteration": 0.129423125
+        },
+        {
+          "type": "Slice_ee29dafe4fe21e12bb8d56ae91626cba_high_performance_524000000",
+          "count_per_iteration": 46.0,
+          "summed_ms_per_iteration": 0.100552125
+        },
+        {
+          "type": "Add_ee98c6628030785f610b924ab1557b31_high_performance_210000000",
+          "count_per_iteration": 44.0,
+          "summed_ms_per_iteration": 0.099282125
+        },
+        {
+          "type": "MatMulV2_ND_ND_FP16_FP16_false_true_all_98499",
+          "count_per_iteration": 1.0,
+          "summed_ms_per_iteration": 0.09129175
+        },
+        {
+          "type": "LogSoftmaxV2",
+          "count_per_iteration": 1.0,
+          "summed_ms_per_iteration": 0.073391375
+        },
+        {
+          "type": "Cast_e87590d11ccda8b259ab6b1ea7212319_high_performance_210000000",
+          "count_per_iteration": 44.0,
+          "summed_ms_per_iteration": 0.056670875
+        },
+        {
+          "type": "ArgMaxV2",
+          "count_per_iteration": 1.0,
+          "summed_ms_per_iteration": 0.0316605
+        },
+        {
+          "type": "TopKV2",
+          "count_per_iteration": 2.0,
+          "summed_ms_per_iteration": 0.028200625
+        },
+        {
+          "type": "Cast",
+          "count_per_iteration": 3.0,
+          "summed_ms_per_iteration": 0.0180105
+        },
+        {
+          "type": "GatherElements",
+          "count_per_iteration": 1.0,
+          "summed_ms_per_iteration": 0.01076025
+        },
+        {
+          "type": "GatherV3_81f85b8118942f9275eea83b86babe7d_optional_10330",
+          "count_per_iteration": 1.0,
+          "summed_ms_per_iteration": 0.004170125
+        },
+        {
+          "type": "GatherV3",
+          "count_per_iteration": 1.0,
+          "summed_ms_per_iteration": 0.003390125
+        }
+      ]
+    },
+    {
+      "table": "paired-vendor/vendor/PROF_000001_20261016191034354_00191190AOGILJMK/device_1/sqlite/ai_core_op_summary.db",
+      "sha256": "a1bb7fc052de5a4561f0c043f4dd3d580a3367e83f5bcab0f4828c993c250472",
+      "kernels": [
+        {
+          "type": "AiInfraManifoldConstrainedHyperConnectionPre_b47a89e885f94ce5a9668d271df2d4a3_1",
+          "count_per_iteration": 93.0,
+          "summed_ms_per_iteration": 2.959891375
+        },
+        {
+          "type": "AiInfraSparseFlashAttentionPioneer_d5278b9259418f886fa913564f167179_2114587",
+          "count_per_iteration": 46.0,
+          "summed_ms_per_iteration": 2.361557375
+        },
+        {
+          "type": "MatMulV2_ND_ND_FP16_FP16_false_true_all_98513",
+          "count_per_iteration": 178.0,
+          "summed_ms_per_iteration": 2.19841375
+        },
+        {
+          "type": "GroupedMatmul_7027ddb93c25b26c6a749b5e1bdcd245_34529280514",
+          "count_per_iteration": 88.0,
+          "summed_ms_per_iteration": 1.596342375
+        },
+        {
+          "type": "QuantBatchMatmulV3_ND_ND_int8_int8_fp32_bf16_high_performance_25",
+          "count_per_iteration": 98.0,
+          "summed_ms_per_iteration": 1.57747225
+        },
+        {
+          "type": "AiInfraFusedCausalConv1d_35c4c74c1fae0fea32fe578f438ae985_2",
+          "count_per_iteration": 138.0,
+          "summed_ms_per_iteration": 0.683644375
+        },
+        {
+          "type": "RmsNorm_normal_all_bf16_high_performance_0",
+          "count_per_iteration": 194.0,
+          "summed_ms_per_iteration": 0.683441
+        },
+        {
+          "type": "BatchMatMulV2_ND_ND_FP16_FP16_false_false_all_98371",
+          "count_per_iteration": 46.0,
+          "summed_ms_per_iteration": 0.65912425
+        },
+        {
+          "type": "MatMulV2_ND_ND_FP32_FP32_false_false_all_65603",
+          "count_per_iteration": 44.0,
+          "summed_ms_per_iteration": 0.604883125
+        },
+        {
+          "type": "ManifoldConstrainedHyperConnectionSinkhornEnhance_7a5d5a273555874254c11acef95789fa_1",
+          "count_per_iteration": 92.0,
+          "summed_ms_per_iteration": 0.573701375
+        },
+        {
+          "type": "Cast_b2717900ea7de2d41ea9c63d23aa269b_high_performance_210000000",
+          "count_per_iteration": 272.0,
+          "summed_ms_per_iteration": 0.556622
+        },
+        {
+          "type": "ScatterUpdate_e1b0109dfcfe48c3210f1a593265d1dc_high_precision_880013000",
+          "count_per_iteration": 46.0,
+          "summed_ms_per_iteration": 0.543070375
+        },
+        {
+          "type": "GatherV3_9e31943a1a48bf81ddff1fc6379e0be3_optional_10330",
+          "count_per_iteration": 132.0,
+          "summed_ms_per_iteration": 0.5250705
+        },
+        {
+          "type": "AiInfraManifoldConstrainedHyperConnectionPost_12198cd9f51675f0cd721b3c8d5940a5_0",
+          "count_per_iteration": 92.0,
+          "summed_ms_per_iteration": 0.520220625
+        },
+        {
+          "type": "MatMulV2_ND_ND_FP16_FP16_false_true_all_98371",
+          "count_per_iteration": 46.0,
+          "summed_ms_per_iteration": 0.480559
+        },
+        {
+          "type": "DynamicQuant_bf16_c1_high_performance_10",
+          "count_per_iteration": 142.0,
+          "summed_ms_per_iteration": 0.4726585
+        },
+        {
+          "type": "BatchMatMulV2_ND_ND_FP16_FP16_false_false_all_98433",
+          "count_per_iteration": 46.0,
+          "summed_ms_per_iteration": 0.4519185
+        },
+        {
+          "type": "RmsNorm_normal_all_bf16_high_performance_2",
+          "count_per_iteration": 92.0,
+          "summed_ms_per_iteration": 0.38558675
+        },
+        {
+          "type": "GatherV3_7beee77dd8bc124a96bc6f1da51c82cc_optional_10330",
+          "count_per_iteration": 88.0,
+          "summed_ms_per_iteration": 0.31942525
+        },
+        {
+          "type": "RotaryPositionEmbedding_92ba353a5a8fff1d4725322f6d7a90d5_1051",
+          "count_per_iteration": 46.0,
+          "summed_ms_per_iteration": 0.31174525
+        },
+        {
+          "type": "Cast_9f288b80370c6545ffe8cef142d37f5c_high_performance_210000000",
+          "count_per_iteration": 184.0,
+          "summed_ms_per_iteration": 0.274624625
+        },
+        {
+          "type": "RotaryPositionEmbedding_92ba353a5a8fff1d4725322f6d7a90d5_1041",
+          "count_per_iteration": 46.0,
+          "summed_ms_per_iteration": 0.25617675
+        },
+        {
+          "type": "MoeFinalizeRoutingV2_9dc99a0b36758a4e2cd64afad2cf6896_20034",
+          "count_per_iteration": 44.0,
+          "summed_ms_per_iteration": 0.2424035
+        },
+        {
+          "type": "DequantSwigluQuant_bf16_high_performance_30012",
+          "count_per_iteration": 44.0,
+          "summed_ms_per_iteration": 0.234064625
+        },
+        {
+          "type": "TopKV2_5c671486fda0d949d7cba9a9754bc2dd_high_performance_2017612701781458944",
+          "count_per_iteration": 44.0,
+          "summed_ms_per_iteration": 0.21680475
+        },
+        {
+          "type": "MoeGatingTopK_81369a2fa0455f39b5d19d432d261f57_1",
+          "count_per_iteration": 44.0,
+          "summed_ms_per_iteration": 0.186123125
+        },
+        {
+          "type": "GatherV3_e9b6eba7780749dc7a31c6224838748d_optional_10330",
+          "count_per_iteration": 44.0,
+          "summed_ms_per_iteration": 0.1632745
+        },
+        {
+          "type": "SwiGlu_3_high_performance_27",
+          "count_per_iteration": 46.0,
+          "summed_ms_per_iteration": 0.156763125
+        },
+        {
+          "type": "Mul_ee98c6628030785f610b924ab1557b31_high_performance_210000000",
+          "count_per_iteration": 88.0,
+          "summed_ms_per_iteration": 0.131852875
+        },
+        {
+          "type": "Slice_ee29dafe4fe21e12bb8d56ae91626cba_high_performance_524000000",
+          "count_per_iteration": 46.0,
+          "summed_ms_per_iteration": 0.102011375
+        },
+        {
+          "type": "Add_ee98c6628030785f610b924ab1557b31_high_performance_210000000",
+          "count_per_iteration": 44.0,
+          "summed_ms_per_iteration": 0.099471125
+        },
+        {
+          "type": "MatMulV2_ND_ND_FP16_FP16_false_true_all_98499",
+          "count_per_iteration": 1.0,
+          "summed_ms_per_iteration": 0.095012
+        },
+        {
+          "type": "LogSoftmaxV2",
+          "count_per_iteration": 1.0,
+          "summed_ms_per_iteration": 0.0733815
+        },
+        {
+          "type": "Cast_e87590d11ccda8b259ab6b1ea7212319_high_performance_210000000",
+          "count_per_iteration": 44.0,
+          "summed_ms_per_iteration": 0.056691
+        },
+        {
+          "type": "ArgMaxV2",
+          "count_per_iteration": 1.0,
+          "summed_ms_per_iteration": 0.032330625
+        },
+        {
+          "type": "TopKV2",
+          "count_per_iteration": 2.0,
+          "summed_ms_per_iteration": 0.027600625
+        },
+        {
+          "type": "Cast",
+          "count_per_iteration": 3.0,
+          "summed_ms_per_iteration": 0.01314025
+        },
+        {
+          "type": "GatherElements",
+          "count_per_iteration": 1.0,
+          "summed_ms_per_iteration": 0.01062025
+        },
+        {
+          "type": "GatherV3_81f85b8118942f9275eea83b86babe7d_optional_10330",
+          "count_per_iteration": 1.0,
+          "summed_ms_per_iteration": 0.00401
+        },
+        {
+          "type": "GatherV3",
+          "count_per_iteration": 1.0,
+          "summed_ms_per_iteration": 0.00326
+        }
+      ]
+    },
+    {
+      "table": "paired-vendor/vendor/PROF_000001_20261016191034354_00191190AOGILJMK/device_2/sqlite/ai_core_op_summary.db",
+      "sha256": "be25abcd88c9bb139c03e372121c43b12606f4c36f3048870855551ff8ab70de",
+      "kernels": [
+        {
+          "type": "AiInfraManifoldConstrainedHyperConnectionPre_b47a89e885f94ce5a9668d271df2d4a3_1",
+          "count_per_iteration": 93.0,
+          "summed_ms_per_iteration": 2.958011
+        },
+        {
+          "type": "AiInfraSparseFlashAttentionPioneer_d5278b9259418f886fa913564f167179_2114587",
+          "count_per_iteration": 46.0,
+          "summed_ms_per_iteration": 2.33254625
+        },
+        {
+          "type": "MatMulV2_ND_ND_FP16_FP16_false_true_all_98513",
+          "count_per_iteration": 178.0,
+          "summed_ms_per_iteration": 2.1764955
+        },
+        {
+          "type": "QuantBatchMatmulV3_ND_ND_int8_int8_fp32_bf16_high_performance_25",
+          "count_per_iteration": 98.0,
+          "summed_ms_per_iteration": 1.5647825
+        },
+        {
+          "type": "GroupedMatmul_7027ddb93c25b26c6a749b5e1bdcd245_34529280514",
+          "count_per_iteration": 88.0,
+          "summed_ms_per_iteration": 1.540481
+        },
+        {
+          "type": "AiInfraFusedCausalConv1d_35c4c74c1fae0fea32fe578f438ae985_2",
+          "count_per_iteration": 138.0,
+          "summed_ms_per_iteration": 0.68482225
+        },
+        {
+          "type": "RmsNorm_normal_all_bf16_high_performance_0",
+          "count_per_iteration": 194.0,
+          "summed_ms_per_iteration": 0.68202425
+        },
+        {
+          "type": "BatchMatMulV2_ND_ND_FP16_FP16_false_false_all_98371",
+          "count_per_iteration": 46.0,
+          "summed_ms_per_iteration": 0.660823625
+        },
+        {
+          "type": "MatMulV2_ND_ND_FP32_FP32_false_false_all_65603",
+          "count_per_iteration": 44.0,
+          "summed_ms_per_iteration": 0.583792125
+        },
+        {
+          "type": "ManifoldConstrainedHyperConnectionSinkhornEnhance_7a5d5a273555874254c11acef95789fa_1",
+          "count_per_iteration": 92.0,
+          "summed_ms_per_iteration": 0.574140125
+        },
+        {
+          "type": "Cast_b2717900ea7de2d41ea9c63d23aa269b_high_performance_210000000",
+          "count_per_iteration": 272.0,
+          "summed_ms_per_iteration": 0.556441875
+        },
+        {
+          "type": "ScatterUpdate_e1b0109dfcfe48c3210f1a593265d1dc_high_precision_880013000",
+          "count_per_iteration": 46.0,
+          "summed_ms_per_iteration": 0.54306025
+        },
+        {
+          "type": "GatherV3_9e31943a1a48bf81ddff1fc6379e0be3_optional_10330",
+          "count_per_iteration": 132.0,
+          "summed_ms_per_iteration": 0.52543075
+        },
+        {
+          "type": "AiInfraManifoldConstrainedHyperConnectionPost_12198cd9f51675f0cd721b3c8d5940a5_0",
+          "count_per_iteration": 92.0,
+          "summed_ms_per_iteration": 0.518008875
+        },
+        {
+          "type": "MatMulV2_ND_ND_FP16_FP16_false_true_all_98371",
+          "count_per_iteration": 46.0,
+          "summed_ms_per_iteration": 0.482769
+        },
+        {
+          "type": "DynamicQuant_bf16_c1_high_performance_10",
+          "count_per_iteration": 142.0,
+          "summed_ms_per_iteration": 0.470469625
+        },
+        {
+          "type": "BatchMatMulV2_ND_ND_FP16_FP16_false_false_all_98433",
+          "count_per_iteration": 46.0,
+          "summed_ms_per_iteration": 0.44292975
+        },
+        {
+          "type": "RmsNorm_normal_all_bf16_high_performance_2",
+          "count_per_iteration": 92.0,
+          "summed_ms_per_iteration": 0.382967375
+        },
+        {
+          "type": "GatherV3_7beee77dd8bc124a96bc6f1da51c82cc_optional_10330",
+          "count_per_iteration": 88.0,
+          "summed_ms_per_iteration": 0.329186
+        },
+        {
+          "type": "RotaryPositionEmbedding_92ba353a5a8fff1d4725322f6d7a90d5_1051",
+          "count_per_iteration": 46.0,
+          "summed_ms_per_iteration": 0.30983625
+        },
+        {
+          "type": "Cast_9f288b80370c6545ffe8cef142d37f5c_high_performance_210000000",
+          "count_per_iteration": 184.0,
+          "summed_ms_per_iteration": 0.274084125
+        },
+        {
+          "type": "RotaryPositionEmbedding_92ba353a5a8fff1d4725322f6d7a90d5_1041",
+          "count_per_iteration": 46.0,
+          "summed_ms_per_iteration": 0.255765625
+        },
+        {
+          "type": "MoeFinalizeRoutingV2_9dc99a0b36758a4e2cd64afad2cf6896_20034",
+          "count_per_iteration": 44.0,
+          "summed_ms_per_iteration": 0.241964625
+        },
+        {
+          "type": "DequantSwigluQuant_bf16_high_performance_30012",
+          "count_per_iteration": 44.0,
+          "summed_ms_per_iteration": 0.22617375
+        },
+        {
+          "type": "TopKV2_5c671486fda0d949d7cba9a9754bc2dd_high_performance_2017612701781458944",
+          "count_per_iteration": 44.0,
+          "summed_ms_per_iteration": 0.219285
+        },
+        {
+          "type": "MoeGatingTopK_81369a2fa0455f39b5d19d432d261f57_1",
+          "count_per_iteration": 44.0,
+          "summed_ms_per_iteration": 0.184223375
+        },
+        {
+          "type": "GatherV3_e9b6eba7780749dc7a31c6224838748d_optional_10330",
+          "count_per_iteration": 44.0,
+          "summed_ms_per_iteration": 0.1648935
+        },
+        {
+          "type": "SwiGlu_3_high_performance_27",
+          "count_per_iteration": 46.0,
+          "summed_ms_per_iteration": 0.156222375
+        },
+        {
+          "type": "Mul_ee98c6628030785f610b924ab1557b31_high_performance_210000000",
+          "count_per_iteration": 88.0,
+          "summed_ms_per_iteration": 0.129462125
+        },
+        {
+          "type": "Slice_ee29dafe4fe21e12bb8d56ae91626cba_high_performance_524000000",
+          "count_per_iteration": 46.0,
+          "summed_ms_per_iteration": 0.1021925
+        },
+        {
+          "type": "Add_ee98c6628030785f610b924ab1557b31_high_performance_210000000",
+          "count_per_iteration": 44.0,
+          "summed_ms_per_iteration": 0.097292375
+        },
+        {
+          "type": "MatMulV2_ND_ND_FP16_FP16_false_true_all_98499",
+          "count_per_iteration": 1.0,
+          "summed_ms_per_iteration": 0.095651875
+        },
+        {
+          "type": "LogSoftmaxV2",
+          "count_per_iteration": 1.0,
+          "summed_ms_per_iteration": 0.073521375
+        },
+        {
+          "type": "Cast_e87590d11ccda8b259ab6b1ea7212319_high_performance_210000000",
+          "count_per_iteration": 44.0,
+          "summed_ms_per_iteration": 0.05549125
+        },
+        {
+          "type": "ArgMaxV2",
+          "count_per_iteration": 1.0,
+          "summed_ms_per_iteration": 0.0320605
+        },
+        {
+          "type": "TopKV2",
+          "count_per_iteration": 2.0,
+          "summed_ms_per_iteration": 0.027840625
+        },
+        {
+          "type": "Cast",
+          "count_per_iteration": 3.0,
+          "summed_ms_per_iteration": 0.017700625
+        },
+        {
+          "type": "GatherElements",
+          "count_per_iteration": 1.0,
+          "summed_ms_per_iteration": 0.010500125
+        },
+        {
+          "type": "GatherV3_81f85b8118942f9275eea83b86babe7d_optional_10330",
+          "count_per_iteration": 1.0,
+          "summed_ms_per_iteration": 0.00407
+        },
+        {
+          "type": "GatherV3",
+          "count_per_iteration": 1.0,
+          "summed_ms_per_iteration": 0.00326025
+        }
+      ]
+    },
+    {
+      "table": "paired-vendor/vendor/PROF_000001_20261016191034354_00191190AOGILJMK/device_3/sqlite/ai_core_op_summary.db",
+      "sha256": "3abbcfdc830dd527e4524a5aa0931234f0e6bcd2bbb2b969bbe225754290a496",
+      "kernels": [
+        {
+          "type": "AiInfraManifoldConstrainedHyperConnectionPre_b47a89e885f94ce5a9668d271df2d4a3_1",
+          "count_per_iteration": 93.0,
+          "summed_ms_per_iteration": 2.931811375
+        },
+        {
+          "type": "AiInfraSparseFlashAttentionPioneer_d5278b9259418f886fa913564f167179_2114587",
+          "count_per_iteration": 46.0,
+          "summed_ms_per_iteration": 2.3343465
+        },
+        {
+          "type": "MatMulV2_ND_ND_FP16_FP16_false_true_all_98513",
+          "count_per_iteration": 178.0,
+          "summed_ms_per_iteration": 2.187314125
+        },
+        {
+          "type": "QuantBatchMatmulV3_ND_ND_int8_int8_fp32_bf16_high_performance_25",
+          "count_per_iteration": 98.0,
+          "summed_ms_per_iteration": 1.544192125
+        },
+        {
+          "type": "GroupedMatmul_7027ddb93c25b26c6a749b5e1bdcd245_34529280514",
+          "count_per_iteration": 88.0,
+          "summed_ms_per_iteration": 1.4872395
+        },
+        {
+          "type": "RmsNorm_normal_all_bf16_high_performance_0",
+          "count_per_iteration": 194.0,
+          "summed_ms_per_iteration": 0.683742125
+        },
+        {
+          "type": "AiInfraFusedCausalConv1d_35c4c74c1fae0fea32fe578f438ae985_2",
+          "count_per_iteration": 138.0,
+          "summed_ms_per_iteration": 0.68001375
+        },
+        {
+          "type": "BatchMatMulV2_ND_ND_FP16_FP16_false_false_all_98371",
+          "count_per_iteration": 46.0,
+          "summed_ms_per_iteration": 0.64492375
+        },
+        {
+          "type": "MatMulV2_ND_ND_FP32_FP32_false_false_all_65603",
+          "count_per_iteration": 44.0,
+          "summed_ms_per_iteration": 0.584642875
+        },
+        {
+          "type": "ManifoldConstrainedHyperConnectionSinkhornEnhance_7a5d5a273555874254c11acef95789fa_1",
+          "count_per_iteration": 92.0,
+          "summed_ms_per_iteration": 0.57193075
+        },
+        {
+          "type": "AiInfraManifoldConstrainedHyperConnectionPost_12198cd9f51675f0cd721b3c8d5940a5_0",
+          "count_per_iteration": 92.0,
+          "summed_ms_per_iteration": 0.518720125
+        },
+        {
+          "type": "Cast_b2717900ea7de2d41ea9c63d23aa269b_high_performance_210000000",
+          "count_per_iteration": 272.0,
+          "summed_ms_per_iteration": 0.517128625
+        },
+        {
+          "type": "GatherV3_9e31943a1a48bf81ddff1fc6379e0be3_optional_10330",
+          "count_per_iteration": 132.0,
+          "summed_ms_per_iteration": 0.488780125
+        },
+        {
+          "type": "MatMulV2_ND_ND_FP16_FP16_false_true_all_98371",
+          "count_per_iteration": 46.0,
+          "summed_ms_per_iteration": 0.486409375
+        },
+        {
+          "type": "ScatterUpdate_e1b0109dfcfe48c3210f1a593265d1dc_high_precision_880013000",
+          "count_per_iteration": 46.0,
+          "summed_ms_per_iteration": 0.47030875
+        },
+        {
+          "type": "DynamicQuant_bf16_c1_high_performance_10",
+          "count_per_iteration": 142.0,
+          "summed_ms_per_iteration": 0.4697985
+        },
+        {
+          "type": "BatchMatMulV2_ND_ND_FP16_FP16_false_false_all_98433",
+          "count_per_iteration": 46.0,
+          "summed_ms_per_iteration": 0.4509785
+        },
+        {
+          "type": "RmsNorm_normal_all_bf16_high_performance_2",
+          "count_per_iteration": 92.0,
+          "summed_ms_per_iteration": 0.38434725
+        },
+        {
+          "type": "GatherV3_7beee77dd8bc124a96bc6f1da51c82cc_optional_10330",
+          "count_per_iteration": 88.0,
+          "summed_ms_per_iteration": 0.314067
+        },
+        {
+          "type": "RotaryPositionEmbedding_92ba353a5a8fff1d4725322f6d7a90d5_1051",
+          "count_per_iteration": 46.0,
+          "summed_ms_per_iteration": 0.312966375
+        },
+        {
+          "type": "Cast_9f288b80370c6545ffe8cef142d37f5c_high_performance_210000000",
+          "count_per_iteration": 184.0,
+          "summed_ms_per_iteration": 0.26492475
+        },
+        {
+          "type": "RotaryPositionEmbedding_92ba353a5a8fff1d4725322f6d7a90d5_1041",
+          "count_per_iteration": 46.0,
+          "summed_ms_per_iteration": 0.254846125
+        },
+        {
+          "type": "MoeFinalizeRoutingV2_9dc99a0b36758a4e2cd64afad2cf6896_20034",
+          "count_per_iteration": 44.0,
+          "summed_ms_per_iteration": 0.24235375
+        },
+        {
+          "type": "DequantSwigluQuant_bf16_high_performance_30012",
+          "count_per_iteration": 44.0,
+          "summed_ms_per_iteration": 0.23755575
+        },
+        {
+          "type": "TopKV2_5c671486fda0d949d7cba9a9754bc2dd_high_performance_2017612701781458944",
+          "count_per_iteration": 44.0,
+          "summed_ms_per_iteration": 0.2154845
+        },
+        {
+          "type": "MoeGatingTopK_81369a2fa0455f39b5d19d432d261f57_1",
+          "count_per_iteration": 44.0,
+          "summed_ms_per_iteration": 0.183162375
+        },
+        {
+          "type": "GatherV3_e9b6eba7780749dc7a31c6224838748d_optional_10330",
+          "count_per_iteration": 44.0,
+          "summed_ms_per_iteration": 0.171274
+        },
+        {
+          "type": "SwiGlu_3_high_performance_27",
+          "count_per_iteration": 46.0,
+          "summed_ms_per_iteration": 0.15657225
+        },
+        {
+          "type": "Mul_ee98c6628030785f610b924ab1557b31_high_performance_210000000",
+          "count_per_iteration": 88.0,
+          "summed_ms_per_iteration": 0.13156275
+        },
+        {
+          "type": "Add_ee98c6628030785f610b924ab1557b31_high_performance_210000000",
+          "count_per_iteration": 44.0,
+          "summed_ms_per_iteration": 0.10086225
+        },
+        {
+          "type": "Slice_ee29dafe4fe21e12bb8d56ae91626cba_high_performance_524000000",
+          "count_per_iteration": 46.0,
+          "summed_ms_per_iteration": 0.100462
+        },
+        {
+          "type": "MatMulV2_ND_ND_FP16_FP16_false_true_all_98499",
+          "count_per_iteration": 1.0,
+          "summed_ms_per_iteration": 0.093841875
+        },
+        {
+          "type": "LogSoftmaxV2",
+          "count_per_iteration": 1.0,
+          "summed_ms_per_iteration": 0.0738915
+        },
+        {
+          "type": "Cast_e87590d11ccda8b259ab6b1ea7212319_high_performance_210000000",
+          "count_per_iteration": 44.0,
+          "summed_ms_per_iteration": 0.056151125
+        },
+        {
+          "type": "ArgMaxV2",
+          "count_per_iteration": 1.0,
+          "summed_ms_per_iteration": 0.031560625
+        },
+        {
+          "type": "TopKV2",
+          "count_per_iteration": 2.0,
+          "summed_ms_per_iteration": 0.028340625
+        },
+        {
+          "type": "Cast",
+          "count_per_iteration": 3.0,
+          "summed_ms_per_iteration": 0.01199025
+        },
+        {
+          "type": "GatherElements",
+          "count_per_iteration": 1.0,
+          "summed_ms_per_iteration": 0.00973025
+        },
+        {
+          "type": "GatherV3_81f85b8118942f9275eea83b86babe7d_optional_10330",
+          "count_per_iteration": 1.0,
+          "summed_ms_per_iteration": 0.003980125
+        },
+        {
+          "type": "GatherV3",
+          "count_per_iteration": 1.0,
+          "summed_ms_per_iteration": 0.0036
+        }
+      ]
+    },
+    {
+      "table": "paired-vendor/vendor/PROF_000001_20261016191034354_00191190AOGILJMK/device_4/sqlite/ai_core_op_summary.db",
+      "sha256": "37d6dcc6169356f160fa4a5e0879f02553add93f569411ded21805905f6b9266",
+      "kernels": [
+        {
+          "type": "AiInfraManifoldConstrainedHyperConnectionPre_b47a89e885f94ce5a9668d271df2d4a3_1",
+          "count_per_iteration": 93.0,
+          "summed_ms_per_iteration": 2.947367625
+        },
+        {
+          "type": "AiInfraSparseFlashAttentionPioneer_d5278b9259418f886fa913564f167179_2114587",
+          "count_per_iteration": 46.0,
+          "summed_ms_per_iteration": 2.296045375
+        },
+        {
+          "type": "MatMulV2_ND_ND_FP16_FP16_false_true_all_98513",
+          "count_per_iteration": 178.0,
+          "summed_ms_per_iteration": 2.17047075
+        },
+        {
+          "type": "GroupedMatmul_7027ddb93c25b26c6a749b5e1bdcd245_34529280514",
+          "count_per_iteration": 88.0,
+          "summed_ms_per_iteration": 1.577941125
+        },
+        {
+          "type": "QuantBatchMatmulV3_ND_ND_int8_int8_fp32_bf16_high_performance_25",
+          "count_per_iteration": 98.0,
+          "summed_ms_per_iteration": 1.550909625
+        },
+        {
+          "type": "AiInfraFusedCausalConv1d_35c4c74c1fae0fea32fe578f438ae985_2",
+          "count_per_iteration": 138.0,
+          "summed_ms_per_iteration": 0.687103125
+        },
+        {
+          "type": "RmsNorm_normal_all_bf16_high_performance_0",
+          "count_per_iteration": 194.0,
+          "summed_ms_per_iteration": 0.67956225
+        },
+        {
+          "type": "BatchMatMulV2_ND_ND_FP16_FP16_false_false_all_98371",
+          "count_per_iteration": 46.0,
+          "summed_ms_per_iteration": 0.663723
+        },
+        {
+          "type": "MatMulV2_ND_ND_FP32_FP32_false_false_all_65603",
+          "count_per_iteration": 44.0,
+          "summed_ms_per_iteration": 0.615242375
+        },
+        {
+          "type": "ManifoldConstrainedHyperConnectionSinkhornEnhance_7a5d5a273555874254c11acef95789fa_1",
+          "count_per_iteration": 92.0,
+          "summed_ms_per_iteration": 0.574584125
+        },
+        {
+          "type": "Cast_b2717900ea7de2d41ea9c63d23aa269b_high_performance_210000000",
+          "count_per_iteration": 272.0,
+          "summed_ms_per_iteration": 0.559761625
+        },
+        {
+          "type": "ScatterUpdate_e1b0109dfcfe48c3210f1a593265d1dc_high_precision_880013000",
+          "count_per_iteration": 46.0,
+          "summed_ms_per_iteration": 0.544530625
+        },
+        {
+          "type": "AiInfraManifoldConstrainedHyperConnectionPost_12198cd9f51675f0cd721b3c8d5940a5_0",
+          "count_per_iteration": 92.0,
+          "summed_ms_per_iteration": 0.51936025
+        },
+        {
+          "type": "GatherV3_9e31943a1a48bf81ddff1fc6379e0be3_optional_10330",
+          "count_per_iteration": 132.0,
+          "summed_ms_per_iteration": 0.518760875
+        },
+        {
+          "type": "MatMulV2_ND_ND_FP16_FP16_false_true_all_98371",
+          "count_per_iteration": 46.0,
+          "summed_ms_per_iteration": 0.480421125
+        },
+        {
+          "type": "DynamicQuant_bf16_c1_high_performance_10",
+          "count_per_iteration": 142.0,
+          "summed_ms_per_iteration": 0.46893875
+        },
+        {
+          "type": "BatchMatMulV2_ND_ND_FP16_FP16_false_false_all_98433",
+          "count_per_iteration": 46.0,
+          "summed_ms_per_iteration": 0.441808625
+        },
+        {
+          "type": "RmsNorm_normal_all_bf16_high_performance_2",
+          "count_per_iteration": 92.0,
+          "summed_ms_per_iteration": 0.3820085
+        },
+        {
+          "type": "GatherV3_7beee77dd8bc124a96bc6f1da51c82cc_optional_10330",
+          "count_per_iteration": 88.0,
+          "summed_ms_per_iteration": 0.3277565
+        },
+        {
+          "type": "RotaryPositionEmbedding_92ba353a5a8fff1d4725322f6d7a90d5_1051",
+          "count_per_iteration": 46.0,
+          "summed_ms_per_iteration": 0.311586625
+        },
+        {
+          "type": "Cast_9f288b80370c6545ffe8cef142d37f5c_high_performance_210000000",
+          "count_per_iteration": 184.0,
+          "summed_ms_per_iteration": 0.274265375
+        },
+        {
+          "type": "RotaryPositionEmbedding_92ba353a5a8fff1d4725322f6d7a90d5_1041",
+          "count_per_iteration": 46.0,
+          "summed_ms_per_iteration": 0.255874875
+        },
+        {
+          "type": "MoeFinalizeRoutingV2_9dc99a0b36758a4e2cd64afad2cf6896_20034",
+          "count_per_iteration": 44.0,
+          "summed_ms_per_iteration": 0.2419155
+        },
+        {
+          "type": "DequantSwigluQuant_bf16_high_performance_30012",
+          "count_per_iteration": 44.0,
+          "summed_ms_per_iteration": 0.223433875
+        },
+        {
+          "type": "TopKV2_5c671486fda0d949d7cba9a9754bc2dd_high_performance_2017612701781458944",
+          "count_per_iteration": 44.0,
+          "summed_ms_per_iteration": 0.217624
+        },
+        {
+          "type": "MoeGatingTopK_81369a2fa0455f39b5d19d432d261f57_1",
+          "count_per_iteration": 44.0,
+          "summed_ms_per_iteration": 0.184375
+        },
+        {
+          "type": "GatherV3_e9b6eba7780749dc7a31c6224838748d_optional_10330",
+          "count_per_iteration": 44.0,
+          "summed_ms_per_iteration": 0.17840325
+        },
+        {
+          "type": "SwiGlu_3_high_performance_27",
+          "count_per_iteration": 46.0,
+          "summed_ms_per_iteration": 0.155613
+        },
+        {
+          "type": "Mul_ee98c6628030785f610b924ab1557b31_high_performance_210000000",
+          "count_per_iteration": 88.0,
+          "summed_ms_per_iteration": 0.13011225
+        },
+        {
+          "type": "Slice_ee29dafe4fe21e12bb8d56ae91626cba_high_performance_524000000",
+          "count_per_iteration": 46.0,
+          "summed_ms_per_iteration": 0.10127275
+        },
+        {
+          "type": "Add_ee98c6628030785f610b924ab1557b31_high_performance_210000000",
+          "count_per_iteration": 44.0,
+          "summed_ms_per_iteration": 0.099912125
+        },
+        {
+          "type": "MatMulV2_ND_ND_FP16_FP16_false_true_all_98499",
+          "count_per_iteration": 1.0,
+          "summed_ms_per_iteration": 0.093781875
+        },
+        {
+          "type": "LogSoftmaxV2",
+          "count_per_iteration": 1.0,
+          "summed_ms_per_iteration": 0.072461375
+        },
+        {
+          "type": "Cast_e87590d11ccda8b259ab6b1ea7212319_high_performance_210000000",
+          "count_per_iteration": 44.0,
+          "summed_ms_per_iteration": 0.054840875
+        },
+        {
+          "type": "ArgMaxV2",
+          "count_per_iteration": 1.0,
+          "summed_ms_per_iteration": 0.0319605
+        },
+        {
+          "type": "TopKV2",
+          "count_per_iteration": 2.0,
+          "summed_ms_per_iteration": 0.028700625
+        },
+        {
+          "type": "Cast",
+          "count_per_iteration": 3.0,
+          "summed_ms_per_iteration": 0.013160125
+        },
+        {
+          "type": "GatherElements",
+          "count_per_iteration": 1.0,
+          "summed_ms_per_iteration": 0.010650375
+        },
+        {
+          "type": "GatherV3_81f85b8118942f9275eea83b86babe7d_optional_10330",
+          "count_per_iteration": 1.0,
+          "summed_ms_per_iteration": 0.00434
+        },
+        {
+          "type": "GatherV3",
+          "count_per_iteration": 1.0,
+          "summed_ms_per_iteration": 0.003290125
+        }
+      ]
+    },
+    {
+      "table": "paired-vendor/vendor/PROF_000001_20261016191034354_00191190AOGILJMK/device_5/sqlite/ai_core_op_summary.db",
+      "sha256": "274fe32845acc8c037d577e2fb03eb970cf407da8c6eef037b7d578484a55af1",
+      "kernels": [
+        {
+          "type": "AiInfraManifoldConstrainedHyperConnectionPre_b47a89e885f94ce5a9668d271df2d4a3_1",
+          "count_per_iteration": 93.0,
+          "summed_ms_per_iteration": 2.93816
+        },
+        {
+          "type": "AiInfraSparseFlashAttentionPioneer_d5278b9259418f886fa913564f167179_2114587",
+          "count_per_iteration": 46.0,
+          "summed_ms_per_iteration": 2.32334
+        },
+        {
+          "type": "MatMulV2_ND_ND_FP16_FP16_false_true_all_98513",
+          "count_per_iteration": 178.0,
+          "summed_ms_per_iteration": 2.17754
+        },
+        {
+          "type": "QuantBatchMatmulV3_ND_ND_int8_int8_fp32_bf16_high_performance_25",
+          "count_per_iteration": 98.0,
+          "summed_ms_per_iteration": 1.5625
+        },
+        {
+          "type": "GroupedMatmul_7027ddb93c25b26c6a749b5e1bdcd245_34529280514",
+          "count_per_iteration": 88.0,
+          "summed_ms_per_iteration": 1.47929
+        },
+        {
+          "type": "AiInfraFusedCausalConv1d_35c4c74c1fae0fea32fe578f438ae985_2",
+          "count_per_iteration": 138.0,
+          "summed_ms_per_iteration": 0.68865
+        },
+        {
+          "type": "RmsNorm_normal_all_bf16_high_performance_0",
+          "count_per_iteration": 194.0,
+          "summed_ms_per_iteration": 0.6792
+        },
+        {
+          "type": "BatchMatMulV2_ND_ND_FP16_FP16_false_false_all_98371",
+          "count_per_iteration": 46.0,
+          "summed_ms_per_iteration": 0.64319
+        },
+        {
+          "type": "MatMulV2_ND_ND_FP32_FP32_false_false_all_65603",
+          "count_per_iteration": 44.0,
+          "summed_ms_per_iteration": 0.59273
+        },
+        {
+          "type": "ManifoldConstrainedHyperConnectionSinkhornEnhance_7a5d5a273555874254c11acef95789fa_1",
+          "count_per_iteration": 92.0,
+          "summed_ms_per_iteration": 0.57259
+        },
+        {
+          "type": "Cast_b2717900ea7de2d41ea9c63d23aa269b_high_performance_210000000",
+          "count_per_iteration": 272.0,
+          "summed_ms_per_iteration": 0.56747
+        },
+        {
+          "type": "ScatterUpdate_e1b0109dfcfe48c3210f1a593265d1dc_high_precision_880013000",
+          "count_per_iteration": 46.0,
+          "summed_ms_per_iteration": 0.52613
+        },
+        {
+          "type": "AiInfraManifoldConstrainedHyperConnectionPost_12198cd9f51675f0cd721b3c8d5940a5_0",
+          "count_per_iteration": 92.0,
+          "summed_ms_per_iteration": 0.51877
+        },
+        {
+          "type": "GatherV3_9e31943a1a48bf81ddff1fc6379e0be3_optional_10330",
+          "count_per_iteration": 132.0,
+          "summed_ms_per_iteration": 0.49065
+        },
+        {
+          "type": "MatMulV2_ND_ND_FP16_FP16_false_true_all_98371",
+          "count_per_iteration": 46.0,
+          "summed_ms_per_iteration": 0.48302
+        },
+        {
+          "type": "DynamicQuant_bf16_c1_high_performance_10",
+          "count_per_iteration": 142.0,
+          "summed_ms_per_iteration": 0.46921
+        },
+        {
+          "type": "BatchMatMulV2_ND_ND_FP16_FP16_false_false_all_98433",
+          "count_per_iteration": 46.0,
+          "summed_ms_per_iteration": 0.4487
+        },
+        {
+          "type": "RmsNorm_normal_all_bf16_high_performance_2",
+          "count_per_iteration": 92.0,
+          "summed_ms_per_iteration": 0.38207
+        },
+        {
+          "type": "GatherV3_7beee77dd8bc124a96bc6f1da51c82cc_optional_10330",
+          "count_per_iteration": 88.0,
+          "summed_ms_per_iteration": 0.31347
+        },
+        {
+          "type": "RotaryPositionEmbedding_92ba353a5a8fff1d4725322f6d7a90d5_1051",
+          "count_per_iteration": 46.0,
+          "summed_ms_per_iteration": 0.31036
+        },
+        {
+          "type": "Cast_9f288b80370c6545ffe8cef142d37f5c_high_performance_210000000",
+          "count_per_iteration": 184.0,
+          "summed_ms_per_iteration": 0.27463
+        },
+        {
+          "type": "RotaryPositionEmbedding_92ba353a5a8fff1d4725322f6d7a90d5_1041",
+          "count_per_iteration": 46.0,
+          "summed_ms_per_iteration": 0.25544
+        },
+        {
+          "type": "MoeFinalizeRoutingV2_9dc99a0b36758a4e2cd64afad2cf6896_20034",
+          "count_per_iteration": 44.0,
+          "summed_ms_per_iteration": 0.24225
+        },
+        {
+          "type": "DequantSwigluQuant_bf16_high_performance_30012",
+          "count_per_iteration": 44.0,
+          "summed_ms_per_iteration": 0.23295
+        },
+        {
+          "type": "TopKV2_5c671486fda0d949d7cba9a9754bc2dd_high_performance_2017612701781458944",
+          "count_per_iteration": 44.0,
+          "summed_ms_per_iteration": 0.21409
+        },
+        {
+          "type": "MoeGatingTopK_81369a2fa0455f39b5d19d432d261f57_1",
+          "count_per_iteration": 44.0,
+          "summed_ms_per_iteration": 0.18297
+        },
+        {
+          "type": "GatherV3_e9b6eba7780749dc7a31c6224838748d_optional_10330",
+          "count_per_iteration": 44.0,
+          "summed_ms_per_iteration": 0.17317
+        },
+        {
+          "type": "SwiGlu_3_high_performance_27",
+          "count_per_iteration": 46.0,
+          "summed_ms_per_iteration": 0.15521
+        },
+        {
+          "type": "Mul_ee98c6628030785f610b924ab1557b31_high_performance_210000000",
+          "count_per_iteration": 88.0,
+          "summed_ms_per_iteration": 0.13229
+        },
+        {
+          "type": "Slice_ee29dafe4fe21e12bb8d56ae91626cba_high_performance_524000000",
+          "count_per_iteration": 46.0,
+          "summed_ms_per_iteration": 0.10038
+        },
+        {
+          "type": "Add_ee98c6628030785f610b924ab1557b31_high_performance_210000000",
+          "count_per_iteration": 44.0,
+          "summed_ms_per_iteration": 0.09861
+        },
+        {
+          "type": "MatMulV2_ND_ND_FP16_FP16_false_true_all_98499",
+          "count_per_iteration": 1.0,
+          "summed_ms_per_iteration": 0.09319
+        },
+        {
+          "type": "LogSoftmaxV2",
+          "count_per_iteration": 1.0,
+          "summed_ms_per_iteration": 0.0725
+        },
+        {
+          "type": "Cast_e87590d11ccda8b259ab6b1ea7212319_high_performance_210000000",
+          "count_per_iteration": 44.0,
+          "summed_ms_per_iteration": 0.05533
+        },
+        {
+          "type": "ArgMaxV2",
+          "count_per_iteration": 1.0,
+          "summed_ms_per_iteration": 0.03199
+        },
+        {
+          "type": "TopKV2",
+          "count_per_iteration": 2.0,
+          "summed_ms_per_iteration": 0.02748
+        },
+        {
+          "type": "Cast",
+          "count_per_iteration": 3.0,
+          "summed_ms_per_iteration": 0.01389
+        },
+        {
+          "type": "GatherElements",
+          "count_per_iteration": 1.0,
+          "summed_ms_per_iteration": 0.00988
+        },
+        {
+          "type": "GatherV3_81f85b8118942f9275eea83b86babe7d_optional_10330",
+          "count_per_iteration": 1.0,
+          "summed_ms_per_iteration": 0.00439
+        },
+        {
+          "type": "GatherV3",
+          "count_per_iteration": 1.0,
+          "summed_ms_per_iteration": 0.00318
+        }
+      ]
+    },
+    {
+      "table": "paired-vendor/vendor/PROF_000001_20261016191034354_00191190AOGILJMK/device_6/sqlite/ai_core_op_summary.db",
+      "sha256": "c7729ebda2dbc1b1f9dcb374d11f209da51538e4ebddbfc8e90de052566d9e11",
+      "kernels": [
+        {
+          "type": "AiInfraManifoldConstrainedHyperConnectionPre_b47a89e885f94ce5a9668d271df2d4a3_1",
+          "count_per_iteration": 93.0,
+          "summed_ms_per_iteration": 2.95457775
+        },
+        {
+          "type": "AiInfraSparseFlashAttentionPioneer_d5278b9259418f886fa913564f167179_2114587",
+          "count_per_iteration": 46.0,
+          "summed_ms_per_iteration": 2.335842875
+        },
+        {
+          "type": "MatMulV2_ND_ND_FP16_FP16_false_true_all_98513",
+          "count_per_iteration": 178.0,
+          "summed_ms_per_iteration": 2.179357625
+        },
+        {
+          "type": "QuantBatchMatmulV3_ND_ND_int8_int8_fp32_bf16_high_performance_25",
+          "count_per_iteration": 98.0,
+          "summed_ms_per_iteration": 1.565561875
+        },
+        {
+          "type": "GroupedMatmul_7027ddb93c25b26c6a749b5e1bdcd245_34529280514",
+          "count_per_iteration": 88.0,
+          "summed_ms_per_iteration": 1.5498615
+        },
+        {
+          "type": "AiInfraFusedCausalConv1d_35c4c74c1fae0fea32fe578f438ae985_2",
+          "count_per_iteration": 138.0,
+          "summed_ms_per_iteration": 0.68693725
+        },
+        {
+          "type": "RmsNorm_normal_all_bf16_high_performance_0",
+          "count_per_iteration": 194.0,
+          "summed_ms_per_iteration": 0.6771595
+        },
+        {
+          "type": "BatchMatMulV2_ND_ND_FP16_FP16_false_false_all_98371",
+          "count_per_iteration": 46.0,
+          "summed_ms_per_iteration": 0.665976
+        },
+        {
+          "type": "MatMulV2_ND_ND_FP32_FP32_false_false_all_65603",
+          "count_per_iteration": 44.0,
+          "summed_ms_per_iteration": 0.612294875
+        },
+        {
+          "type": "ManifoldConstrainedHyperConnectionSinkhornEnhance_7a5d5a273555874254c11acef95789fa_1",
+          "count_per_iteration": 92.0,
+          "summed_ms_per_iteration": 0.57203375
+        },
+        {
+          "type": "AiInfraManifoldConstrainedHyperConnectionPost_12198cd9f51675f0cd721b3c8d5940a5_0",
+          "count_per_iteration": 92.0,
+          "summed_ms_per_iteration": 0.5197215
+        },
+        {
+          "type": "GatherV3_9e31943a1a48bf81ddff1fc6379e0be3_optional_10330",
+          "count_per_iteration": 132.0,
+          "summed_ms_per_iteration": 0.51852175
+        },
+        {
+          "type": "Cast_b2717900ea7de2d41ea9c63d23aa269b_high_performance_210000000",
+          "count_per_iteration": 272.0,
+          "summed_ms_per_iteration": 0.50975975
+        },
+        {
+          "type": "MatMulV2_ND_ND_FP16_FP16_false_true_all_98371",
+          "count_per_iteration": 46.0,
+          "summed_ms_per_iteration": 0.48085975
+        },
+        {
+          "type": "DynamicQuant_bf16_c1_high_performance_10",
+          "count_per_iteration": 142.0,
+          "summed_ms_per_iteration": 0.47330025
+        },
+        {
+          "type": "ScatterUpdate_e1b0109dfcfe48c3210f1a593265d1dc_high_precision_880013000",
+          "count_per_iteration": 46.0,
+          "summed_ms_per_iteration": 0.470949
+        },
+        {
+          "type": "BatchMatMulV2_ND_ND_FP16_FP16_false_false_all_98433",
+          "count_per_iteration": 46.0,
+          "summed_ms_per_iteration": 0.440918125
+        },
+        {
+          "type": "RmsNorm_normal_all_bf16_high_performance_2",
+          "count_per_iteration": 92.0,
+          "summed_ms_per_iteration": 0.38122375
+        },
+        {
+          "type": "GatherV3_7beee77dd8bc124a96bc6f1da51c82cc_optional_10330",
+          "count_per_iteration": 88.0,
+          "summed_ms_per_iteration": 0.3276835
+        },
+        {
+          "type": "RotaryPositionEmbedding_92ba353a5a8fff1d4725322f6d7a90d5_1051",
+          "count_per_iteration": 46.0,
+          "summed_ms_per_iteration": 0.313733125
+        },
+        {
+          "type": "Cast_9f288b80370c6545ffe8cef142d37f5c_high_performance_210000000",
+          "count_per_iteration": 184.0,
+          "summed_ms_per_iteration": 0.26257975
+        },
+        {
+          "type": "RotaryPositionEmbedding_92ba353a5a8fff1d4725322f6d7a90d5_1041",
+          "count_per_iteration": 46.0,
+          "summed_ms_per_iteration": 0.254930125
+        },
+        {
+          "type": "MoeFinalizeRoutingV2_9dc99a0b36758a4e2cd64afad2cf6896_20034",
+          "count_per_iteration": 44.0,
+          "summed_ms_per_iteration": 0.241129625
+        },
+        {
+          "type": "DequantSwigluQuant_bf16_high_performance_30012",
+          "count_per_iteration": 44.0,
+          "summed_ms_per_iteration": 0.223158875
+        },
+        {
+          "type": "TopKV2_5c671486fda0d949d7cba9a9754bc2dd_high_performance_2017612701781458944",
+          "count_per_iteration": 44.0,
+          "summed_ms_per_iteration": 0.220148875
+        },
+        {
+          "type": "MoeGatingTopK_81369a2fa0455f39b5d19d432d261f57_1",
+          "count_per_iteration": 44.0,
+          "summed_ms_per_iteration": 0.18253725
+        },
+        {
+          "type": "GatherV3_e9b6eba7780749dc7a31c6224838748d_optional_10330",
+          "count_per_iteration": 44.0,
+          "summed_ms_per_iteration": 0.17386575
+        },
+        {
+          "type": "SwiGlu_3_high_performance_27",
+          "count_per_iteration": 46.0,
+          "summed_ms_per_iteration": 0.15545575
+        },
+        {
+          "type": "Mul_ee98c6628030785f610b924ab1557b31_high_performance_210000000",
+          "count_per_iteration": 88.0,
+          "summed_ms_per_iteration": 0.13115525
+        },
+        {
+          "type": "Add_ee98c6628030785f610b924ab1557b31_high_performance_210000000",
+          "count_per_iteration": 44.0,
+          "summed_ms_per_iteration": 0.1022035
+        },
+        {
+          "type": "Slice_ee29dafe4fe21e12bb8d56ae91626cba_high_performance_524000000",
+          "count_per_iteration": 46.0,
+          "summed_ms_per_iteration": 0.10159375
+        },
+        {
+          "type": "MatMulV2_ND_ND_FP16_FP16_false_true_all_98499",
+          "count_per_iteration": 1.0,
+          "summed_ms_per_iteration": 0.09727375
+        },
+        {
+          "type": "LogSoftmaxV2",
+          "count_per_iteration": 1.0,
+          "summed_ms_per_iteration": 0.073933
+        },
+        {
+          "type": "Cast_e87590d11ccda8b259ab6b1ea7212319_high_performance_210000000",
+          "count_per_iteration": 44.0,
+          "summed_ms_per_iteration": 0.05608175
+        },
+        {
+          "type": "ArgMaxV2",
+          "count_per_iteration": 1.0,
+          "summed_ms_per_iteration": 0.031811375
+        },
+        {
+          "type": "TopKV2",
+          "count_per_iteration": 2.0,
+          "summed_ms_per_iteration": 0.027461
+        },
+        {
+          "type": "Cast",
+          "count_per_iteration": 3.0,
+          "summed_ms_per_iteration": 0.0119505
+        },
+        {
+          "type": "GatherElements",
+          "count_per_iteration": 1.0,
+          "summed_ms_per_iteration": 0.0104905
+        },
+        {
+          "type": "GatherV3_81f85b8118942f9275eea83b86babe7d_optional_10330",
+          "count_per_iteration": 1.0,
+          "summed_ms_per_iteration": 0.004120125
+        },
+        {
+          "type": "GatherV3",
+          "count_per_iteration": 1.0,
+          "summed_ms_per_iteration": 0.00361
+        }
+      ]
+    },
+    {
+      "table": "paired-vendor/vendor/PROF_000001_20261016191034354_00191190AOGILJMK/device_7/sqlite/ai_core_op_summary.db",
+      "sha256": "70ddab06c6aa0bbc632165dcae65e86eec790674b1c863d4d44f05a40bab133f",
+      "kernels": [
+        {
+          "type": "AiInfraManifoldConstrainedHyperConnectionPre_b47a89e885f94ce5a9668d271df2d4a3_1",
+          "count_per_iteration": 93.0,
+          "summed_ms_per_iteration": 2.94614
+        },
+        {
+          "type": "AiInfraSparseFlashAttentionPioneer_d5278b9259418f886fa913564f167179_2114587",
+          "count_per_iteration": 46.0,
+          "summed_ms_per_iteration": 2.33638
+        },
+        {
+          "type": "MatMulV2_ND_ND_FP16_FP16_false_true_all_98513",
+          "count_per_iteration": 178.0,
+          "summed_ms_per_iteration": 2.18786
+        },
+        {
+          "type": "QuantBatchMatmulV3_ND_ND_int8_int8_fp32_bf16_high_performance_25",
+          "count_per_iteration": 98.0,
+          "summed_ms_per_iteration": 1.58219
+        },
+        {
+          "type": "GroupedMatmul_7027ddb93c25b26c6a749b5e1bdcd245_34529280514",
+          "count_per_iteration": 88.0,
+          "summed_ms_per_iteration": 1.39768
+        },
+        {
+          "type": "AiInfraFusedCausalConv1d_35c4c74c1fae0fea32fe578f438ae985_2",
+          "count_per_iteration": 138.0,
+          "summed_ms_per_iteration": 0.68664
+        },
+        {
+          "type": "RmsNorm_normal_all_bf16_high_performance_0",
+          "count_per_iteration": 194.0,
+          "summed_ms_per_iteration": 0.67901
+        },
+        {
+          "type": "BatchMatMulV2_ND_ND_FP16_FP16_false_false_all_98371",
+          "count_per_iteration": 46.0,
+          "summed_ms_per_iteration": 0.64754
+        },
+        {
+          "type": "MatMulV2_ND_ND_FP32_FP32_false_false_all_65603",
+          "count_per_iteration": 44.0,
+          "summed_ms_per_iteration": 0.58953
+        },
+        {
+          "type": "ManifoldConstrainedHyperConnectionSinkhornEnhance_7a5d5a273555874254c11acef95789fa_1",
+          "count_per_iteration": 92.0,
+          "summed_ms_per_iteration": 0.57264
+        },
+        {
+          "type": "Cast_b2717900ea7de2d41ea9c63d23aa269b_high_performance_210000000",
+          "count_per_iteration": 272.0,
+          "summed_ms_per_iteration": 0.54259
+        },
+        {
+          "type": "AiInfraManifoldConstrainedHyperConnectionPost_12198cd9f51675f0cd721b3c8d5940a5_0",
+          "count_per_iteration": 92.0,
+          "summed_ms_per_iteration": 0.5173
+        },
+        {
+          "type": "ScatterUpdate_e1b0109dfcfe48c3210f1a593265d1dc_high_precision_880013000",
+          "count_per_iteration": 46.0,
+          "summed_ms_per_iteration": 0.49168
+        },
+        {
+          "type": "GatherV3_9e31943a1a48bf81ddff1fc6379e0be3_optional_10330",
+          "count_per_iteration": 132.0,
+          "summed_ms_per_iteration": 0.48993
+        },
+        {
+          "type": "MatMulV2_ND_ND_FP16_FP16_false_true_all_98371",
+          "count_per_iteration": 46.0,
+          "summed_ms_per_iteration": 0.48275
+        },
+        {
+          "type": "DynamicQuant_bf16_c1_high_performance_10",
+          "count_per_iteration": 142.0,
+          "summed_ms_per_iteration": 0.46886
+        },
+        {
+          "type": "BatchMatMulV2_ND_ND_FP16_FP16_false_false_all_98433",
+          "count_per_iteration": 46.0,
+          "summed_ms_per_iteration": 0.45111
+        },
+        {
+          "type": "RmsNorm_normal_all_bf16_high_performance_2",
+          "count_per_iteration": 92.0,
+          "summed_ms_per_iteration": 0.38122
+        },
+        {
+          "type": "GatherV3_7beee77dd8bc124a96bc6f1da51c82cc_optional_10330",
+          "count_per_iteration": 88.0,
+          "summed_ms_per_iteration": 0.31676
+        },
+        {
+          "type": "RotaryPositionEmbedding_92ba353a5a8fff1d4725322f6d7a90d5_1051",
+          "count_per_iteration": 46.0,
+          "summed_ms_per_iteration": 0.3101
+        },
+        {
+          "type": "Cast_9f288b80370c6545ffe8cef142d37f5c_high_performance_210000000",
+          "count_per_iteration": 184.0,
+          "summed_ms_per_iteration": 0.27292
+        },
+        {
+          "type": "RotaryPositionEmbedding_92ba353a5a8fff1d4725322f6d7a90d5_1041",
+          "count_per_iteration": 46.0,
+          "summed_ms_per_iteration": 0.25534
+        },
+        {
+          "type": "MoeFinalizeRoutingV2_9dc99a0b36758a4e2cd64afad2cf6896_20034",
+          "count_per_iteration": 44.0,
+          "summed_ms_per_iteration": 0.24082
+        },
+        {
+          "type": "DequantSwigluQuant_bf16_high_performance_30012",
+          "count_per_iteration": 44.0,
+          "summed_ms_per_iteration": 0.236
+        },
+        {
+          "type": "TopKV2_5c671486fda0d949d7cba9a9754bc2dd_high_performance_2017612701781458944",
+          "count_per_iteration": 44.0,
+          "summed_ms_per_iteration": 0.21547
+        },
+        {
+          "type": "MoeGatingTopK_81369a2fa0455f39b5d19d432d261f57_1",
+          "count_per_iteration": 44.0,
+          "summed_ms_per_iteration": 0.18266
+        },
+        {
+          "type": "GatherV3_e9b6eba7780749dc7a31c6224838748d_optional_10330",
+          "count_per_iteration": 44.0,
+          "summed_ms_per_iteration": 0.1722
+        },
+        {
+          "type": "SwiGlu_3_high_performance_27",
+          "count_per_iteration": 46.0,
+          "summed_ms_per_iteration": 0.15577
+        },
+        {
+          "type": "Mul_ee98c6628030785f610b924ab1557b31_high_performance_210000000",
+          "count_per_iteration": 88.0,
+          "summed_ms_per_iteration": 0.13087
+        },
+        {
+          "type": "Add_ee98c6628030785f610b924ab1557b31_high_performance_210000000",
+          "count_per_iteration": 44.0,
+          "summed_ms_per_iteration": 0.10036
+        },
+        {
+          "type": "Slice_ee29dafe4fe21e12bb8d56ae91626cba_high_performance_524000000",
+          "count_per_iteration": 46.0,
+          "summed_ms_per_iteration": 0.09775
+        },
+        {
+          "type": "MatMulV2_ND_ND_FP16_FP16_false_true_all_98499",
+          "count_per_iteration": 1.0,
+          "summed_ms_per_iteration": 0.0928
+        },
+        {
+          "type": "LogSoftmaxV2",
+          "count_per_iteration": 1.0,
+          "summed_ms_per_iteration": 0.07379
+        },
+        {
+          "type": "Cast_e87590d11ccda8b259ab6b1ea7212319_high_performance_210000000",
+          "count_per_iteration": 44.0,
+          "summed_ms_per_iteration": 0.05491
+        },
+        {
+          "type": "ArgMaxV2",
+          "count_per_iteration": 1.0,
+          "summed_ms_per_iteration": 0.03237
+        },
+        {
+          "type": "TopKV2",
+          "count_per_iteration": 2.0,
+          "summed_ms_per_iteration": 0.02881
+        },
+        {
+          "type": "Cast",
+          "count_per_iteration": 3.0,
+          "summed_ms_per_iteration": 0.01275
+        },
+        {
+          "type": "GatherElements",
+          "count_per_iteration": 1.0,
+          "summed_ms_per_iteration": 0.01054
+        },
+        {
+          "type": "GatherV3_81f85b8118942f9275eea83b86babe7d_optional_10330",
+          "count_per_iteration": 1.0,
+          "summed_ms_per_iteration": 0.00402
+        },
+        {
+          "type": "GatherV3",
+          "count_per_iteration": 1.0,
+          "summed_ms_per_iteration": 0.00371
+        }
+      ]
+    }
+  ],
+  "caveats": [
+    "Inclusive task sums overlap across streams and are not TPOT.",
+    "Profiler overhead and cross-rank waits distort latency.",
+    "Iteration count must be established from the capture window."
+  ]
+}
