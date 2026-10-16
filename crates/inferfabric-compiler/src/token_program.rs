@@ -148,12 +148,6 @@ pub fn lower(graph: &Graph, inventory: Option<&Inventory>) -> Result<Program> {
     let mut attention_metadata = None;
     let mut route_quantizations = BTreeMap::new();
     for (logical, n) in graph.nodes.iter().enumerate() {
-        if n.attrs.get("cache_dtype").is_some_and(|v| v != "bf16") {
-            return Err(invalid(format!(
-                "{}: requested {} cache has no qualified Ascend attention/cache kernel; refusing BF16 substitution",
-                n.name, n.attrs["cache_dtype"]
-            )));
-        }
         let mut inputs: Vec<usize> = n.inputs.iter().map(|&i| outputs[i]).collect();
         for (slot, input) in inputs.iter_mut().enumerate() {
             if p.instructions[*input].kind != 0 {
@@ -321,6 +315,10 @@ pub fn lower(graph: &Graph, inventory: Option<&Inventory>) -> Result<Program> {
                 "bf16",
             )];
         }
+        if n.op == "cache_append" && n.attrs.get("cache_dtype").is_some_and(|v|v!="bf16") {
+            let id=emit(&mut p,logical,&n.name,"cache_quantize_append",inputs,n.attrs.clone(),4,0,"opaque");
+            outputs.push(id);continue;
+        }
         if n.op == "cache_norm_rope_append" {
             let packed = emit(
                 &mut p,
@@ -334,6 +332,17 @@ pub fn lower(graph: &Graph, inventory: Option<&Inventory>) -> Result<Program> {
                 "bf16",
             );
             inputs = vec![packed, inputs[2]];
+            if n.attrs.get("cache_dtype").is_some_and(|v| v != "bf16") {
+                let normalized = emit(&mut p, logical, &n.name, "cache_normalize",
+                    vec![packed], n.attrs.iter().filter(|(k,_)| matches!(k.as_str(), "weight"|"eps"|"theta")).map(|(k,v)|(k.clone(),v.clone())).collect(),
+                    0, 576, "bf16");
+                let attrs = n.attrs.iter().filter(|(k,_)| k.starts_with("cache_")).map(|(k,v)|(k.clone(),v.clone())).collect();
+                let cache = emit(&mut p, logical, &n.name, "cache_quantize_append",
+                    vec![normalized, inputs[1]], attrs, 4, 0, "opaque");
+                outputs.push(cache);
+                continue;
+            }
+
         }
         if n.op == "expert_reduce" {
             let rows = emit(
@@ -515,6 +524,12 @@ pub fn lower(graph: &Graph, inventory: Option<&Inventory>) -> Result<Program> {
                 meta
             };
             inputs.push(meta);
+            if p.instructions[inputs[1]].op == "cache_quantize_append" {
+                let attrs = p.instructions[inputs[1]].attrs.clone();
+                let decoded = emit(&mut p, logical, &n.name, "cache_dequantize",
+                    vec![inputs[1]], attrs, 0, graph.max_context.div_ceil(16) * 16 * 576, "bf16");
+                inputs.push(decoded);
+            }
         }
         // Expand the query recipe before serialization. Every conversion and
         // materialization has its own SSA value and scheduling position.
@@ -629,7 +644,7 @@ impl Program {
         let mut names = std::collections::BTreeSet::new();
         for (id, i) in self.instructions.iter().enumerate() {
             if i.kind > 7
-                || i.width > 200000
+                || (i.width > 200000 && !(i.op == "cache_dequantize" && i.width == self.max_context.div_ceil(16)*16*576))
                 || i.inputs.len() > 8
                 || i.attrs.len() > 16
                 || !names.insert(&i.name)
@@ -751,6 +766,9 @@ pub fn recipes(p: &Program, graph: &Graph) -> Vec<serde_json::Value> {
             "mla_query" => (&["aclnnBatchMatMul", "aclnnCast", "aclnnRotaryPositionEmbedding", "aclnnCast", "aclnnCat"], "strided BF16 → FP32 rotary extraction → BF16 rounding; packed with latent query", "immutable weights packed once; rotary and concatenation temporaries"),
             "mla_value" => (&["aclnnBatchMatMul"], "BF16 heads", "immutable weights packed once; new output"),
             "sink_normalize" => (&["aclnnRmsNorm", "aclrtMemcpyAsync"], "initialization only after first preparation", "persistent normalized sink"),
+            "cache_normalize" => (&["aclnnAiInfraKvRmsNormRopeCache"], "BF16 RMS normalization and rotary encoding into temporary row", "temporary 16-row vendor output; only first row consumed"),
+            "cache_quantize_append" => (&["if_cache_quantize"], "explicit symmetric per-token-head quantization; ties away from zero; signed INT4 low nibble first", "persistent packed payload + FP32 scales; BF16 learned sinks remain constants"),
+            "cache_dequantize" => (&["if_cache_dequantize"], "explicit packed cache decode to BF16; future rows zeroed; all device resident", "leased BF16 attention scratch, reusable across layers; no persistent BF16 cache mirror"),
             "cache_append" => (&["aclnnInplaceIndexCopy"], "cache mutation; latent and rotary packing", "persistent paged cache"),
             "cache_norm_rope_append" => (&["aclnnAiInfraKvRmsNormRopeCache"], "explicit packed input; fused BF16 normalization, rotation and cache write", "persistent paged cache + required vendor outputs; sink copy during preparation only"),
             "latent_attention" => (&["aclnnAiInfraFusedInferAttentionSink"], "consumes explicit metadata dependency; BF16 attention with learned sinks", "persistent metadata/cache; new output"),
@@ -776,7 +794,7 @@ pub fn recipes(p: &Program, graph: &Graph) -> Vec<serde_json::Value> {
             "linear" if i.kernel=="paired_bf16" => "Once before replay: two BF16 parameter copies pack the selected projection rows.",
             "expert_gmm" => "Once before replay: copy owner-local INT8 weights and lossless BF16 scales into grouped banks. No FP32 scale round-trip.",
             "sink_normalize" => "Once before replay: normalize checkpoint sink rows and pack BF16 latent/rotary constants; subsequent tokens borrow the prepared result.",
-            "cache_append" | "cache_norm_rope_append" => "Once before replay: copy prepared constant sinks into persistent cache state; initialize metadata from control inputs.",
+            "cache_quantize_append" | "cache_append" | "cache_norm_rope_append" => "Once before replay: copy prepared constant sinks into persistent cache state; initialize metadata from control inputs.",
             "mhc_pre_project" | "mhc_merge" => "Once before replay: fold scalar checkpoint parameters and upload prepared mHC coefficients.",
             "router_projection" => "Once before replay: transpose/convert checkpoint gate parameters and upload FP32 weights and bias.",
             "mome_inplace" => "Once before replay: transpose convolution weights and initialize recurrent state and control indices.",
@@ -786,6 +804,7 @@ pub fn recipes(p: &Program, graph: &Graph) -> Vec<serde_json::Value> {
             0=>vec![serde_json::json!({"name":"value","dtype":i.dtype,"shape":[i.width]})],
             2=>vec![serde_json::json!({"name":"expert_ids","dtype":"int32","shape":[8]}),serde_json::json!({"name":"scores","dtype":"f32","shape":[8]})],
             3=>vec![serde_json::json!({"name":"packed_rows","dtype":"bf16","shape":[8,i.width]}),serde_json::json!({"name":"groups","dtype":"int64","shape":[32]}),serde_json::json!({"name":"inverse_indices","dtype":"int32","shape":[8]})],
+            4 if i.op=="cache_quantize_append"=>vec![serde_json::json!({"name":"cache_payload","dtype":i.attrs["cache_dtype"],"shape":[p.max_context.div_ceil(16)*16,1,576]}),serde_json::json!({"name":"cache_scales","dtype":"f32","shape":[p.max_context.div_ceil(16)*16,1]})],
             5=>vec![serde_json::json!({"name":"quantized","dtype":"int8","shape":[1,i.width]}),serde_json::json!({"name":"scales","dtype":"f32","shape":[1]})],
             6=>vec![serde_json::json!({"name":"quantized_rows","dtype":"int8","shape":[8,i.width]}),serde_json::json!({"name":"scales","dtype":"f32","shape":[8]}),serde_json::json!({"name":"groups","dtype":"int64","shape":[32]}),serde_json::json!({"name":"inverse_indices","dtype":"int32","shape":[8]})],
             7=>vec![serde_json::json!({"name":"metadata_effect","dtype":"int32","shape":[1024]})],

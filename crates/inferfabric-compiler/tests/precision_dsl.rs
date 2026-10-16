@@ -31,15 +31,27 @@ fn dtype_and_runtime_quantization_are_typed_dsl_values() {
     }
 }
 #[test]
-fn quantized_cache_specs_are_preserved_but_not_silently_substituted() {
+fn quantized_cache_has_explicit_storage_and_decode_instructions() {
     let source = include_str!("../../../examples/openpangu/92b-tp8-ep8.inferfabric");
     for dtype in ["int8", "int4"] {
         let s=source.replacen("eps = 1e-5, theta = 6400000", &format!("eps = 1e-5, theta = 6400000, cache_dtype={dtype}, cache_scale_dtype=f32, cache_quantization=per_token_head_symmetric"),1);
         let ModelDefinition::Execution { graph, .. } = definition(&s).unwrap() else {
             panic!()
         };
-        let err = lower(&graph, None).unwrap_err().to_string();
-        assert!(err.contains("refusing BF16 substitution"));
+        let p=lower(&graph,None).unwrap();
+        p.validate().unwrap();
+        for op in ["cache_normalize","cache_quantize_append","cache_dequantize"] {
+            assert_eq!(p.instructions.iter().filter(|i|i.op==op).count(),46);
+        }
+        assert!(!p.instructions.iter().any(|i|i.op=="cache_norm_rope_append"));
+        for i in p.instructions.iter().filter(|i|i.op=="latent_attention") {
+            assert_eq!(i.inputs.len(),4);
+            let decoded=&p.instructions[i.inputs[3]];
+            assert_eq!(decoded.op,"cache_dequantize");
+            assert_eq!(decoded.attrs["cache_dtype"],dtype);
+            assert_eq!(decoded.inputs,vec![i.inputs[1]]);
+            assert_eq!(decoded.width,512*576);
+        }
         assert!(definition(&s.replace("cache_scale_dtype=f32", "cache_scale_dtype=bf16")).is_err());
     }
 }

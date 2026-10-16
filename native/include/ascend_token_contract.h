@@ -234,7 +234,20 @@ inline void validate_kernels(const Plan &p) {
       if (n.attrs.count("cache_dtype")) { attrs.push_back("cache_dtype");eq("cache_dtype","bf16"); }
       check({{0, 576}, {0, 73728}}, attrs, {4, 0});
     }
-    else if (n.op == "cache_norm_rope_append") {
+    else if (p.physical && n.op == "cache_normalize") {
+      check({{0,576}}, {"weight","eps","theta"}, {0,576});
+      eq("eps","1e-5");eq("theta","6400000");
+    } else if(p.physical && (n.op=="cache_quantize_append" || n.op=="cache_dequantize")) {
+      std::vector<std::string> attrs{"cache_dtype","cache_scale_dtype","cache_quantization"};
+      if(n.op=="cache_quantize_append")check({{0,576},{0,73728}},attrs,{4,0});
+      else {
+        check({{4,0}},attrs,{0,((p.context+15)/16)*16*576});
+        const auto &source=p.nodes[n.inputs[0]];
+        if(source.op!="cache_quantize_append" || source.attrs!=n.attrs)error();
+      }
+      if(n.text("cache_dtype")!="int8" && n.text("cache_dtype")!="int4")error();
+      eq("cache_scale_dtype","f32");eq("cache_quantization","per_token_head_symmetric");
+    } else if (n.op == "cache_norm_rope_append") {
       std::vector<std::string> attrs{"weight", "eps", "theta"};
       if (n.attrs.count("cache_dtype")) { attrs.push_back("cache_dtype");eq("cache_dtype","bf16"); }
       if(p.physical) check({{0,576},{0,73728}},attrs,{4,0});
@@ -243,7 +256,11 @@ inline void validate_kernels(const Plan &p) {
       eq("theta", "6400000");
     } else if (n.op == "latent_attention") {
       if(p.physical) {
-        check({{0,3456},{4,0},{7,0}},{"scale_dim","window","selection"},{0,3072});
+        if(p.nodes[n.inputs.at(1)].op=="cache_quantize_append") {
+          check({{0,3456},{4,0},{7,0},{0,((p.context+15)/16)*16*576}},{"scale_dim","window","selection"},{0,3072});
+          const auto &decoded=p.nodes[n.inputs[3]];
+          if(decoded.op!="cache_dequantize" || decoded.inputs!=std::vector<uint32_t>{n.inputs[1]})error();
+        } else check({{0,3456},{4,0},{7,0}},{"scale_dim","window","selection"},{0,3072});
         if(p.nodes[n.inputs[2]].op!="attention_metadata")error();
       } else check({{0, 3456}, {4, 0}}, {"scale_dim", "window", "selection"},{0,3072});
       eq("scale_dim", "192");
@@ -320,15 +337,16 @@ inline void validate_kernels(const Plan &p) {
       else {auto &d=p.nodes[n.inputs[0]];if(d.op!="expert_swiglu_down" || d.inputs.back()!=n.inputs[1])error();}
     }
     if (n.kind == 1 || n.kind == 4) {
-      int inputs = 0, posts = 0, att = 0, all = 0;
+      int inputs = 0, posts = 0, att = 0, dec = 0, all = 0;
       for (auto &c : p.nodes)
         if (std::find(c.inputs.begin(), c.inputs.end(), i) != c.inputs.end()) {
           ++all;
           inputs += c.op == "mhc_input";
           posts += c.op == "mhc_post";
           att += c.op == "latent_attention";
+          dec += c.op == "cache_dequantize";
         }
-      if (n.kind == 4 && (all != 1 || att != 1))
+      if (n.kind == 4 && (att != 1 || (n.op=="cache_quantize_append" ? (all!=2 || dec!=1) : all!=1)))
         error();
       if(n.kind==1) {
         if(n.op=="mhc_pre_project") {
@@ -393,9 +411,9 @@ inline void validate_bindings(const Plan &program,
     }
     else if (n.op == "linear")
       linear(name, width, n.width);
-    else if (n.op == "norm" || n.op == "optional_norm" || n.op == "cache_norm_rope_append") {
+    else if (n.op == "norm" || n.op == "optional_norm" || n.op == "cache_norm_rope_append" || n.op == "cache_normalize") {
       if (n.op != "optional_norm" || weights.count(name + ".weight"))
-        require(name + ".weight", {n.op=="cache_norm_rope_append"?512:width}, DType::Bf16);
+        require(name + ".weight", {(n.op=="cache_norm_rope_append" || n.op=="cache_normalize")?512:width}, DType::Bf16);
     } else if (n.op == "mome" || n.op == "mome_inplace")
       require(name + ".weight", {width, 1, 3}, DType::Bf16);
     else if (n.op == "mhc_pre" || n.op == "mhc_merge" || n.op == "mhc_pre_project") {

@@ -317,3 +317,29 @@ has an explicit `--prepare-arena` switch for the initial measurement run; omit i
 when verifying the bound plan against an existing qualified output fixture.
 The preparation driver checks answer anchors and residency; use the benchmark's
 unchanged qualified fixture for exact-output regression validation.
+
+
+## Integer KV-cache kernels
+
+Rust model compilation remains local cross-compilation. Build the native Ascend C
+storage kernels inside the assigned Docker container before configuring the decoder:
+
+```sh
+source /usr/local/Ascend/cann/set_env.sh
+cmake -S native/kernels -B cache-build -DSOC_VERSION=Ascend910_9391 -DCMAKE_BUILD_TYPE=Release
+cmake --build cache-build -j8
+cmake -S native -B native-build -DIF_CACHE_KERNEL_LIBRARY="$PWD/cache-build/lib/libinferfabric_cache.a"
+cmake --build native-build --target openpangu_decode cache_quantization_probe -j8
+native-build/cache_quantization_probe
+```
+
+Select the actual device SoC when using another machine. The static device library
+is linked into the decoder and therefore covered by its arena fingerprint. Rebuild
+and reprepare the arena after changing it. INT8/INT4 plans contain explicit
+quantize-write and dequantization instructions; the default DSL remains BF16.
+Full-model numerical and performance evidence is recorded separately from the
+storage-kernel probe in the [cache report](validation/2026-10-16-integer-cache/README.md).
+Prepared audit directories also contain `memory-rank-N.json`: device HBM before
+model initialization and after generation, including checkpoint parameters,
+prepared storage, graph and runtime overhead. Device-wide figures can include
+other processes; use arena manifests to inspect this executor's exact bindings.

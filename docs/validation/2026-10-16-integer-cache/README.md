@@ -31,3 +31,20 @@ native-build/cache_quantization_probe
 
 The scalar storage implementation establishes a correctness baseline. It does
 not yet claim competitive bandwidth or fused quantized attention.
+
+## Milestone 2: full decoder integration
+
+Both formats completed all 46 layers with TP8/EP8 and ACL graph replay.
+`int8-results.json` and `int4-results.json` retain the complete output records.
+The arithmetic, France-capital, and Chinese Beijing-description checks passed.
+These are short-prompt semantic checks plus the independently checked numerical
+storage kernels, not a general quality benchmark or bit-identical BF16 claim.
+INT4 changes wording and continuation length. Subsequent exact-record comparisons
+use each format's own saved results solely to check replay consistency.
+
+Each integer-cache plan has 2,753 physical instructions, including 46 each of
+cache normalization, quantize/write, and dequantization. Native plan validation
+checks all eight rank bindings and rejects 28 malformed contracts, including
+cache scale type, storage format, scratch extent, and missing dependencies.
+The model's default BF16 definition is unchanged. Frozen-arena measurements and
+same-binary BF16 regression are recorded below when complete.

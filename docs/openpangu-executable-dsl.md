@@ -67,11 +67,37 @@ the author supplies a floating-point input. BF16 projections reject quantized
 inputs; the executor cannot insert a hidden quantization operation.
 
 Cache operations accept `cache_dtype=bf16` (the default), `int8`, or `int4`.
-Integer cache declarations also require `cache_scale_dtype=f32` and
-`cache_quantization=per_token_head_symmetric`. These declarations preserve the
-requested numerical contract in the logical plan. The current Ascend backend
-rejects INT8/INT4 cache compilation because no matching attention/cache kernel
-has been qualified; it never substitutes BF16 silently.
+Integer storage requires `cache_scale_dtype=f32` and
+`cache_quantization=per_token_head_symmetric`:
+
+```inferfabric
+let cache = cache_norm_rope_append(kc, kr, sinks,
+    weight=w.kv_a_layernorm, eps=1e-5, theta=6400000,
+    cache_dtype=int4, cache_scale_dtype=f32,
+    cache_quantization=per_token_head_symmetric);
+```
+
+Both integer formats execute on device. The physical plan expands the write into
+`cache_normalize` followed by `cache_quantize_append`. Before attention it emits
+`cache_dequantize`, whose BF16 result is an explicit attention dependency. The
+packed cache and its FP32 scales persist; the BF16 scratch is leased from the
+frozen arena and reused across layers. There is no persistent BF16 cache mirror
+and no host activation transfer. Learned sink constants retain BF16 precision.
+The generic viewer exposes these operations through its precision filter.
+
+The storage contract uses signed symmetric ranges [-127,127] and [-7,7],
+nearest rounding with ties away from zero, and a scale of 1 for an all-zero row.
+INT4 packs the earlier element into the low nibble. One FP32 scale covers the
+combined latent/rotary row for each token/head. Dequantization rounds to BF16.
+Page padding and temporary storage are included in the physical storage contract.
+
+Build the Ascend C cache library before the native decoder; see
+[integer-cache qualification](validation/2026-10-16-integer-cache/README.md).
+A decoder built without that library rejects an integer-cache plan before ACL
+initialization. These kernels implement compressed storage with explicit
+reconstruction for the existing attention API; fused attention on packed inputs
+remains a performance optimization. Quantization is lossy, so compare model
+quality as well as memory and latency before selecting it for a workload.
 
 The 92B backend now lowers the logical graph to 2,661 executable instructions.
 Routing, expert quantization/zeroing/GMM/reduction, mHC mixing, cache packing and

@@ -1,3 +1,4 @@
+#include "cache_quantization.h"
 // Device-resident execution of a validated generic token program.
 // No activation or routing value has a host representation.
 #include "ascend_token_contract.h"
@@ -95,7 +96,7 @@ struct Decoder {
   aclmdlRI decode_graph = nullptr;
   V graph_output;
   std::vector<std::unique_ptr<inferfabric::PreparedKernel>> graph_kernels;
-  std::unique_ptr<DeviceTensor> token_index, position_index, cache_position,
+  std::unique_ptr<DeviceTensor> token_index, position_index, cache_position, zero_cache_position,
       rotary_cos, rotary_sin, rotary_cos_bf16, rotary_sin_bf16, sequence_length64, query_length64, attention_metadata, attention_mask;
   int64_t cube_cores = 0, vector_cores = 0;
   bool metadata_enqueued = false;
@@ -137,6 +138,8 @@ struct Decoder {
         std::make_unique<DeviceTensor>(std::vector<int64_t>{1}, ACL_INT32, 4);
     cache_position =
         std::make_unique<DeviceTensor>(std::vector<int64_t>{1}, ACL_INT64, 8);
+    zero_cache_position=std::make_unique<DeviceTensor>(std::vector<int64_t>{1},ACL_INT64,8);
+    resident::control_upload(*zero_cache_position,std::vector<int64_t>{0});
     sequence_length64 =
         std::make_unique<DeviceTensor>(std::vector<int64_t>{1}, ACL_INT64, 8);
     rotary_cos =
@@ -640,6 +643,50 @@ struct Decoder {
             "fused cache normalization/rotary prepare");
     run(aclnnAiInfraKvRmsNormRopeCache, bytes, e);
   }
+  V normalize_cache_row(const V &input, const std::string &norm_name) {
+    if(input.size()!=576 || input.dtype()!=ACL_BF16)throw std::runtime_error("cache normalize contract");
+    View kv(input.data(), {1,1,1,576},ACL_BF16);
+    auto &gamma=w(norm_name+".weight"); View norm_weight(gamma.data,{512},ACL_BF16);
+    DeviceTensor row({1,16,1,576},ACL_BF16,2);
+    DeviceTensor rope_out({1,1,1,64},ACL_BF16,2),latent_out({1,1,1,512},ACL_BF16,2);
+    char cache_mode[]="PA",rotary_mode[]="half",quant_mode[]="none";
+    uint64_t bytes=0;aclOpExecutor *e=nullptr;
+    checked(prepared::query("cache_normalize",false,aclnnAiInfraKvRmsNormRopeCacheGetWorkspaceSize,
+        kv.t,norm_weight.t,rotary_cos_bf16->tensor,rotary_sin_bf16->tensor,zero_cache_position->tensor,
+        nullptr,row.tensor,nullptr,nullptr,nullptr,nullptr,nullptr,1e-5,cache_mode,rotary_mode,quant_mode,
+        true,rope_out.tensor,latent_out.tensor,&bytes,&e),"normalize cache row prepare");
+    run(aclnnAiInfraKvRmsNormRopeCache,bytes,e);
+    return result(row).view(0,576);
+  }
+  void quantize_cache(const V &input,const V &sinks,const std::string &name,unsigned bits) {
+#ifdef IF_CACHE_KERNELS
+    auto &ptr=attention_states[name];
+    if(!ptr){
+      resident::TransferScope constants(resident::TransferRole::ControlInput);
+      ptr=std::make_unique<AttentionState>(bits,((program.context+15)/16)*16);
+      prepared::Context::InitializationCopies declared(execution);
+      to_device(ptr->sink,sinks);
+    }
+    if(ptr->cache_bits!=bits || input.size()!=576 || input.dtype()!=ACL_BF16)throw std::runtime_error("integer cache storage contract");
+    execution.require_stream(stream);
+    if_cache_quantize(input.data(),ptr->key.data,ptr->scales->data,cache_position->data,576,program.context,bits,stream);
+#else
+    (void)input;(void)sinks;(void)name;(void)bits;
+    throw std::runtime_error("integer cache kernels not built");
+#endif
+  }
+  V dequantize_cache(const std::string &name) {
+#ifdef IF_CACHE_KERNELS
+    auto &state=*attention_states.at(name);
+    if(state.cache_bits==16 || !state.scales)throw std::runtime_error("cache dequantization contract");
+    V decoded(state.cache_capacity*576,ACL_BF16);
+    execution.require_stream(stream);
+    if_cache_dequantize(state.key.data,state.scales->data,decoded.data(),cache_position->data,576,state.cache_capacity,state.cache_bits,stream);
+    return decoded;
+#else
+    (void)name;throw std::runtime_error("integer cache kernels not built");
+#endif
+  }
   void prepare_attention_metadata(bool cleared = false) {
     if (metadata_enqueued) return;
     if(!cleared) execution.zero(attention_metadata->data, attention_metadata->bytes);
@@ -655,10 +702,11 @@ struct Decoder {
     run(aclnnAiInfraFusedInferAttentionSinkMetadata, bytes, e);
     metadata_enqueued = true;
   }
-  V attend(const V &queries, const std::string &state_name) {
+  V attend(const V &queries, const std::string &state_name, const V *decoded=nullptr) {
     if(!program.physical) prepare_attention_metadata();
     if(!metadata_enqueued) throw std::runtime_error("missing planned attention metadata");
     auto &state = *attention_states.at(state_name);
+    if((state.cache_bits!=16) != bool(decoded))throw std::runtime_error("unplanned cache conversion");
     auto query = cast(queries, ACL_BF16);
     auto *q = execution.strided_descriptor(query.data(), 3456,
         {1, 6, 512}, {3456, 576, 1}, ACL_BF16);
@@ -667,11 +715,11 @@ struct Decoder {
         {1, 6, 64}, {3456, 576, 1}, ACL_BF16);
     // Preserve the actual backing extent and view offset for paged cache views.
     auto cache_view = [&](int64_t width, int64_t offset) {
-      int64_t shape[] = {32, 16, width};
-      int64_t storage[] = {32, 16, 576};
+      int64_t shape[] = {state.cache_capacity/16, 16, width};
+      int64_t storage[] = {state.cache_capacity/16, 16, 576};
       int64_t strides[] = {16 * 576, 576, 1};
       return aclCreateTensor(shape, 3, ACL_BF16, strides, offset, ACL_FORMAT_ND,
-                             storage, 3, state.key.data);
+                             storage, 3, decoded?decoded->data():state.key.data);
     };
     struct List {
       aclTensorList *value = nullptr;
@@ -1117,6 +1165,10 @@ int main(int argc, char **argv) {
     auto execution = inferfabric::execution::Plan::read(std::string(argv[1]) +
                                                         "/execution.bin");
     inferfabric::execution::validate_kernels(execution);
+#ifndef IF_CACHE_KERNELS
+    for(const auto &n:execution.nodes)if(n.op=="cache_quantize_append")
+      throw std::runtime_error("plan requires integer cache kernels; build native/kernels first");
+#endif
     if(!execution.physical) throw std::runtime_error("execution requires a physical IFTOKN02 program");
     bool frozen_bundle=std::filesystem::exists(std::filesystem::path(argv[1])/"arena.json");
     for(int rank=0;rank<8;++rank) frozen_bundle=frozen_bundle || std::filesystem::exists(std::filesystem::path(argv[1])/("arena-rank-"+std::to_string(rank)+".txt"));
@@ -1151,6 +1203,8 @@ int main(int argc, char **argv) {
           const auto &plan = initialization[rank];
           openpangu::checked(aclrtSetDevice(plan.device), "device");
           {
+            size_t memory_free_before=0,memory_total=0;
+            openpangu::checked(aclrtGetMemInfo(ACL_HBM_MEM,&memory_free_before,&memory_total),"memory baseline");
             auto arena_path=std::filesystem::path(argv[1]) / ("arena-rank-"+std::to_string(rank)+".txt");
             pangu::Decoder decoder(plan, argv[2], info, execution,
                 (std::filesystem::exists(std::filesystem::path(argv[1])/"arena.json") || std::filesystem::exists(arena_path))?arena_path.string():"",
@@ -1189,6 +1243,16 @@ int main(int argc, char **argv) {
               std::ofstream out(std::filesystem::path(dir) /
                                 ("rank-" + std::to_string(rank) + ".json"));
               decoder.execution.write(out);
+              size_t memory_free_after=0,total_after=0;
+              openpangu::checked(aclrtGetMemInfo(ACL_HBM_MEM,&memory_free_after,&total_after),"memory snapshot");
+              std::ofstream memory(std::filesystem::path(dir)/("memory-rank-"+std::to_string(rank)+".json"));
+              memory << "{\"rank\":" << rank << ",\"device\":" << plan.device
+                     << ",\"hbm_total_bytes\":" << total_after
+                     << ",\"hbm_free_before_decoder_bytes\":" << memory_free_before
+                     << ",\"hbm_free_after_generation_bytes\":" << memory_free_after
+                     << ",\"hbm_used_after_generation_bytes\":" << total_after-memory_free_after
+                     << ",\"hbm_growth_bytes\":" << int64_t(memory_free_before)-int64_t(memory_free_after) << "}\n";
+              if(!memory)throw std::runtime_error("memory audit write");
               if (!out)
                 throw std::runtime_error("prepared audit write");
             }

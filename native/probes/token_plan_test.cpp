@@ -40,7 +40,7 @@ int main(int argc, char **argv) {
     }
     reject([](auto &x) {
       for (auto &n : x.nodes)
-        if (n.op == "rope" || n.op == "cache_norm_rope_append") {
+        if (n.op == "rope" || n.op == "cache_norm_rope_append" || n.op == "cache_normalize") {
           n.attrs["theta"] = "1";
           break;
         }
@@ -116,6 +116,13 @@ int main(int argc, char **argv) {
       reject([](auto &x){for(auto &n:x.nodes)if(n.op=="latent_attention"){n.inputs.pop_back();break;}});
       reject([](auto &x){for(auto &n:x.nodes)if(n.op=="expert_act_quantize"){n.inputs[0]=0;break;}});
       reject([](auto &x){for(auto &n:x.nodes)if(n.op=="mhc_sinkhorn"){n.inputs[0]=0;break;}});
+    }
+    if(std::any_of(p.nodes.begin(),p.nodes.end(),[](const auto &n){return n.op=="cache_quantize_append";})) {
+      reject([](auto &x){for(auto &n:x.nodes)if(n.op=="cache_quantize_append"){n.attrs["cache_dtype"]="int2";break;}});
+      reject([](auto &x){for(auto &n:x.nodes)if(n.op=="cache_quantize_append"){n.attrs["cache_scale_dtype"]="bf16";break;}});
+      reject([](auto &x){for(auto &n:x.nodes)if(n.op=="cache_dequantize"){n.attrs["cache_dtype"]="bf16";break;}});
+      reject([](auto &x){for(auto &n:x.nodes)if(n.op=="cache_dequantize"){n.width--;break;}});
+      reject([](auto &x){for(auto &n:x.nodes)if(n.op=="latent_attention"){n.inputs[3]=0;break;}});
     }
     auto init = inferfabric::initialization::Plan::read(std::string(argv[1]) +
                                                         "/rank-0.bin");

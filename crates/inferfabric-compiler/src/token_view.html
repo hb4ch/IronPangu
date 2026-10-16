@@ -246,6 +246,7 @@
         <option value="all">All work</option>
         <option value="comm">Collectives / EP</option>
         <option value="cast">Casts</option>
+        <option value="precision">Quantization / cache precision</option>
         <option value="copy">Copies / materialization</option>
         <option value="kernel">Compute kernels</option></select
       ><button id="mode">Show instructions in this scope</button>
@@ -344,6 +345,7 @@
         (f === "all" ||
           (f === "comm" && isComm(i)) ||
           (f === "cast" && r.apis.includes("aclnnCast")) ||
+          (f === "precision" && (i.attrs.cache_dtype || /quantiz/i.test(i.op))) ||
           (f === "copy" &&
             (i.op === "copy" ||
               /copy|packing|concat|materializ|packed input|staging/i.test(
@@ -423,7 +425,7 @@
           const id = item,
             i = ins[id],
             r = recipes[id];
-          return `<tr><td><button class="name" data-ins="${id}">#${id} ${esc(i.name)}</button><small>${esc(i.op)} · ${esc(r.granularity)}</small></td><td>${r.apis.map((x) => `<code>${esc(x)}</code>`).join("<br>") || esc(r.internal)}<small>${esc(r.internal)}</small></td><td>${badge(i.kind === 5 ? "int8 + f32 scale" : i.dtype, i.op === "cast" ? "cast" : "")}${i.kind === 0 ? `<small>[${i.width}] per rank</small>` : ""}<small>${esc(r.materialization)}</small></td><td>${badge(placement(id))}<small>${esc(r.communication)}</small></td></tr>`;
+          return `<tr><td><button class="name" data-ins="${id}">#${id} ${esc(i.name)}</button><small>${esc(i.op)} · ${esc(r.granularity)}</small></td><td>${r.apis.map((x) => `<code>${esc(x)}</code>`).join("<br>") || esc(r.internal)}<small>${esc(r.internal)}</small></td><td>${badge(i.attrs.cache_dtype ? i.attrs.cache_dtype + " cache / f32 scales" : i.kind === 5 ? "int8 + f32 scale" : i.dtype, i.op === "cast" ? "cast" : "")}${i.kind === 0 ? `<small>[${i.width}] per rank</small>` : ""}<small>${esc(r.materialization)}</small></td><td>${badge(placement(id))}<small>${esc(r.communication)}</small></td></tr>`;
         })
         .join("");
       $("#content").innerHTML =

@@ -17,7 +17,7 @@ V execute_token() {
     const auto &n = program.nodes[i];
     execution.instruction(int64_t(i),
         n.op=="copy" || n.op=="repeat" || n.op=="concat" || n.op=="expert_pack",
-        n.op=="sink_normalize" || n.op=="cache_append" || n.op=="cache_norm_rope_append" || n.op=="expert_gmm" || (n.op=="linear" && n.kernel=="paired_bf16"));
+        n.op=="cache_quantize_append" || n.op=="sink_normalize" || n.op=="cache_append" || n.op=="cache_norm_rope_append" || n.op=="expert_gmm" || (n.op=="linear" && n.kernel=="paired_bf16"));
     inferfabric::profiling::Scope timing(n.op.c_str(), true);
     auto input = [&](size_t j) -> Value & {
       return *values.at(n.inputs.at(j));
@@ -135,12 +135,19 @@ V execute_token() {
     else if (n.op == "cache_append") {
       append_cache(tensor(0), tensor(1), n.name, pos);
       result = n.name;
+    } else if(n.op=="cache_normalize") {
+      result=normalize_cache_row(tensor(0),weight());
+    } else if(n.op=="cache_quantize_append") {
+      quantize_cache(tensor(0),tensor(1),n.name,n.text("cache_dtype")=="int8"?8:4);
+      result=n.name;
+    } else if(n.op=="cache_dequantize") {
+      result=dequantize_cache(std::get<std::string>(input(0)));
     } else if (n.op == "cache_norm_rope_append") {
       if(program.physical) append_normalized_cache(tensor(0),tensor(1),weight(),n.name,pos);
       else append_normalized_cache(resident::concat(tensor(0),tensor(1)),tensor(2),weight(),n.name,pos);
       result = n.name;
     } else if (n.op == "latent_attention")
-      result = attend(tensor(0), std::get<std::string>(input(1)));
+      result = attend(tensor(0), std::get<std::string>(input(1)),n.inputs.size()==4?&tensor(3):nullptr);
     else if (n.op == "swiglu")
       result = n.inputs.size() == 1 ? activate(tensor(0)) : activate(tensor(0), tensor(1));
     else if (n.op == "router")
