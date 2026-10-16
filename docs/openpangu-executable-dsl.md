@@ -104,4 +104,6 @@ separate milestones. Existing kernel plugin ABI support remains available.
 
 ## Qualification
 
+[Reusable-module NPU qualification](validation/2026-10-16-reusable-dsl/README.md): the 107-line source expands to the same 2,109 operations; all eight initialization programs and the complete three-prompt results are byte-identical to the flat-DSL baseline. The report includes expanded JSON with source mappings and a Graphviz diagram.
+
 [Full NPU evidence and plan-control experiment](validation/2026-10-15-dsl-execution/README.md): all 33 tokens across three prompts match the pinned offline reference. Recorded results, including logits/top-five values, are identical to the preceding native decoder.

@@ -76,3 +76,7 @@ operation order, input IDs, output, numerical attributes and concrete bindings
 must match exactly. Hygienic node names and source metadata may differ. Weight
 initialization binaries must remain byte-identical, followed by full NPU output
 comparison. This is stronger than checking only graph size or a few operators.
+
+The migration passed the [full 92B NPU qualification](validation/2026-10-16-reusable-dsl/README.md),
+with all 33 output tokens matching and complete recorded results byte-identical
+to the flat-DSL baseline. The report includes the expanded JSON and Graphviz graph.

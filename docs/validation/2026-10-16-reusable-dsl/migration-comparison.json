@@ -1,0 +1,17 @@
+{
+  "source_lines": 107,
+  "previous_source_lines": 2221,
+  "source_sha256": "5c38203a159aff8037994643e9631b1ad164843f4374807f1c1967a2eed160dc",
+  "expanded_nodes": 2109,
+  "same_primitive_operations_dependencies_attributes": true,
+  "same_output_node": true,
+  "same_all_eight_initialization_binaries": true,
+  "same_native_executable": true,
+  "byte_identical_complete_results_json": true,
+  "max_expansion_stack_depth": 5,
+  "all_source_spans_within_authoring_input": true,
+  "native_executable_sha256": "b1f076aadda7d0c2074091dde70e50f6cf1af4953cb06d74204aefa198545fd5",
+  "new_execution_sha256": "46fa67de15080a6ccf370ea852f2d7a6744b532603bdf73ded7f59c34a082513",
+  "old_execution_sha256": "cf6a8aa8431ffa04a8369e4ff2672309232fb29582c9b13235fc56eb3c33a314",
+  "execution_difference": "Hygienic node names replace manually numbered names; source metadata is kept in execution.json and does not enter binary encoding."
+}
