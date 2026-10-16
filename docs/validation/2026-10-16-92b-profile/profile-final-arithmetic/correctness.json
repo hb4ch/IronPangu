@@ -1,0 +1,8 @@
+{
+  "case": "arithmetic",
+  "tokens": 8,
+  "complete_records_exact": true,
+  "activation_host_transfers": 0,
+  "captured_decode_iterations": 2,
+  "vendor": false
+}

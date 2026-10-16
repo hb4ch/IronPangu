@@ -253,3 +253,14 @@ view paginates to 24 calls, preserving large-model usability.
 Each milestone is committed/pushed independently. No NPU numerical requalification
 is implied by local schema/viewer tests. Native numerical changes require full
 model qualification and a broader corpus/context suite than the three-prompt baseline.
+
+## Measured optimization priorities (2026-10-16)
+
+The full resident 92B TP8/EP8 decode profile measures approximately 2.06 s per
+step, dominated by collective submission, per-call synchronization and temporary
+allocation/copies. The [measured optimization plan](92b-decode-optimization-plan.md)
+orders prepared buffer execution, capture, distribution-aware collective removal,
+device-routed expert dispatch and MLA fusion, with numerical and residency gates.
+Its [evidence](validation/2026-10-16-92b-profile/README.md) distinguishes lightweight
+wall timings from intrusive CANN device tracing. These measurements guide upcoming
+physical planning work; they do not certify an optimized prepared executor.
