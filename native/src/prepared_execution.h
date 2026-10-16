@@ -43,6 +43,7 @@ class Context {
   std::map<size_t, std::vector<Block *>> free_;
   std::map<void *, Block *> owned_;
   std::map<std::string, aclTensor *> descriptors_;
+  std::map<std::string, aclTensor *> strided_descriptors_;
   std::map<std::string, Invocation> invocations_;
   std::map<std::string, Counts> counts_;
   struct Graph {
@@ -89,6 +90,8 @@ public:
     for (auto &[key, invocation] : invocations_)
       aclDestroyAclOpExecutor(invocation.executor);
     for (auto &[key, tensor] : descriptors_)
+      aclDestroyTensor(tensor);
+    for (auto &[key, tensor] : strided_descriptors_)
       aclDestroyTensor(tensor);
     aclDestroyScalar(one_);
     for (auto &block : blocks_)
@@ -179,6 +182,43 @@ public:
     return tensor;
   }
   aclScalar *one() const { return one_; }
+  // Bounded strided views of existing storage; no allocation, upload or fence.
+  aclTensor *strided_descriptor(void *pointer, int64_t storage_elements,
+                                const std::vector<int64_t> &shape,
+                                const std::vector<int64_t> &strides,
+                                aclDataType dtype) {
+    require_stream(stream);
+    if (!pointer || storage_elements <= 0 || shape.empty() ||
+        shape.size() != strides.size())
+      throw std::runtime_error("invalid strided descriptor");
+    int64_t remaining = storage_elements - 1;
+    for (size_t i = 0; i < shape.size(); ++i) {
+      if (shape[i] <= 0 || strides[i] <= 0 ||
+          shape[i] - 1 > remaining / strides[i])
+        throw std::runtime_error("strided descriptor exceeds storage");
+      remaining -= (shape[i] - 1) * strides[i];
+    }
+    std::string key;
+    key_part(key, "strided");
+    key_part(key, pointer);
+    key_part(key, dtype);
+    key_part(key, storage_elements);
+    key_part(key, shape.size());
+    for (auto d : shape)
+      key_part(key, d);
+    for (auto s : strides)
+      key_part(key, s);
+    auto found = strided_descriptors_.find(key);
+    if (found != strided_descriptors_.end())
+      return found->second;
+    auto *tensor =
+        aclCreateTensor(shape.data(), shape.size(), dtype, strides.data(), 0,
+                        ACL_FORMAT_ND, &storage_elements, 1, pointer);
+    if (!tensor)
+      throw std::runtime_error("strided tensor descriptor");
+    strided_descriptors_.emplace(std::move(key), tensor);
+    return tensor;
+  }
   void *workspace(size_t bytes) {
     if (bytes > workspace_bytes_) {
       // The previous workspace remains allocated; subsequent reuse is ordered

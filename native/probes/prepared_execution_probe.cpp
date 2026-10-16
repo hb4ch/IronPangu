@@ -9,6 +9,26 @@ int main() {
     {
       prepared::Context context;
       openpangu::DeviceTensor results({128, 4}, ACL_BF16, 2);
+      auto *strided = context.strided_descriptor(results.data, 512, {2, 3, 4},
+                                                 {256, 8, 1}, ACL_BF16);
+      if (strided != context.strided_descriptor(results.data, 512, {2, 3, 4},
+                                                {256, 8, 1}, ACL_BF16) ||
+          strided == context.strided_descriptor(results.data, 512, {2, 3, 4},
+                                                {128, 8, 1}, ACL_BF16))
+        throw std::runtime_error("strided descriptor cache key mismatch");
+      for (auto strides :
+           {std::vector<int64_t>{512, 8, 1}, std::vector<int64_t>{256, 0, 1},
+            std::vector<int64_t>{256, 8}}) {
+        bool bounds_rejected = false;
+        try {
+          context.strided_descriptor(results.data, 512, {2, 3, 4}, strides,
+                                     ACL_BF16);
+        } catch (const std::runtime_error &) {
+          bounds_rejected = true;
+        }
+        if (!bounds_rejected)
+          throw std::runtime_error("invalid strided view accepted");
+      }
       aclrtStream foreign = nullptr;
       prepared::check(aclrtCreateStream(&foreign), "foreign stream");
       bool rejected = false;

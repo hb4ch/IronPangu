@@ -10,6 +10,7 @@
 #include "resident_transfer.h"
 #include <aclnn_ai_infra_fused_causal_conv1d.h>
 #include <aclnn_ai_infra_sparse_flash_attention_pioneer.h>
+#include <aclnnop/aclnn_batch_matmul.h>
 #include <aclnnop/aclnn_dequant_swiglu_quant.h>
 #include <aclnnop/aclnn_dynamic_quant.h>
 #include <aclnnop/aclnn_grouped_matmul_v5.h>
@@ -411,13 +412,14 @@ struct Decoder {
     return result(s.out);
   }
   V rope(const V &input, int pos) {
-    if (input.size() != 64 || pos != current_position)
+    if (!input.size() || input.size() % 64 || pos != current_position)
       throw std::runtime_error("rotary shape/position contract");
     // Preserve FP32 products/sum and the existing final BF16 rounding while
     // fusing the half rotation, products and sum into one vendor operation.
     auto value = cast(input, ACL_FLOAT);
-    DeviceTensor out({1, 1, 1, 64}, ACL_FLOAT, 4);
-    View x(value.data(), {1, 1, 1, 64}, ACL_FLOAT),
+    int64_t heads = input.size() / 64;
+    DeviceTensor out({1, heads, 1, 64}, ACL_FLOAT, 4);
+    View x(value.data(), {1, heads, 1, 64}, ACL_FLOAT),
         cos(rotary_cos->data, {1, 1, 1, 64}, ACL_FLOAT),
         sin(rotary_sin->data, {1, 1, 1, 64}, ACL_FLOAT);
     uint64_t bytes = 0;
@@ -432,31 +434,44 @@ struct Decoder {
   V absorb_query(const V &q, const std::string &weight_name, int pos,
                  bool local_heads) {
     auto &weight = w(weight_name + ".weight");
-    std::vector<V> queries;
+    auto local =
+        cast(resident::slice(q, local_heads ? 0 : rank * 1152, 1152), ACL_BF16);
+    auto *input = execution.strided_descriptor(local.data(), 1152, {6, 1, 128},
+                                               {192, 128, 1}, ACL_BF16);
+    auto *bank =
+        execution.strided_descriptor(weight.data, 6 * 256 * 512, {6, 128, 512},
+                                     {256 * 512, 512, 1}, ACL_BF16);
+    auto projected = batched_matrix(input, bank, 6, 512);
+    std::vector<V> rotary;
+    for (int head = 0; head < 6; ++head)
+      rotary.push_back(resident::slice(local, head * 192 + 128, 64));
+    auto rotated = rope(resident::concat(rotary), pos);
+    std::vector<V> parts;
     for (int head = 0; head < 6; ++head) {
-      size_t offset = ((local_heads ? 0 : rank * 6) + head) * 192;
-      auto no = resident::slice(q, offset, 128),
-           rot = rope(resident::slice(q, offset + 128, 64), pos);
-      auto query =
-          matrix(no, static_cast<uint16_t *>(weight.data) + head * 256 * 512,
-                 128, 512, false);
-      query = resident::concat(query, rot);
-      queries.push_back(query);
+      parts.push_back(resident::slice(projected, head * 512, 512));
+      parts.push_back(resident::slice(rotated, head * 64, 64));
     }
-    return resident::concat(queries);
+    return resident::concat(parts);
+  }
+  V batched_matrix(aclTensor *input, aclTensor *weight, int heads, int width) {
+    DeviceTensor out({heads, 1, width}, ACL_BF16, 2);
+    uint64_t bytes = 0;
+    aclOpExecutor *e = nullptr;
+    checked(prepared::query("aclnnBatchMatMul", true,
+                            aclnnBatchMatMulGetWorkspaceSize, input, weight,
+                            out.tensor, 0, &bytes, &e),
+            "batched matrix prepare");
+    run(aclnnBatchMatMul, bytes, e);
+    return result(out);
   }
   V expand_value(const V &values, const std::string &weight_name) {
     auto &weight = w(weight_name + ".weight");
-    std::vector<V> local;
-    for (int head = 0; head < 6; ++head) {
-      auto value = resident::slice(values, head * 512, 512);
-      auto out = matrix(value,
-                        static_cast<uint16_t *>(weight.data) +
-                            (head * 256 + 128) * 512,
-                        128, 512);
-      local.push_back(out);
-    }
-    return resident::concat(local);
+    auto value = cast(values, ACL_BF16);
+    View input(value.data(), {6, 1, 512}, ACL_BF16);
+    auto *bank = execution.strided_descriptor(
+        static_cast<uint16_t *>(weight.data) + 128 * 512, (6 * 256 - 128) * 512,
+        {6, 512, 128}, {256 * 512, 1, 512}, ACL_BF16);
+    return batched_matrix(input.t, bank, 6, 128);
   }
   V normalize_sinks(const std::string &state_name,
                     const std::string &weight_name,

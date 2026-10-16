@@ -172,6 +172,7 @@ pub fn lower(graph: &Graph, devices: &[u32]) -> Result<Plan> {
                     "expert_reduce" => "ascend_token_v1/expert_reduce/vector_weighted_sum_fp32_v1".into(),
                     "mhc_pre" | "mhc_merge" => format!("ascend_token_v1/{}/inference_outputs_v1", n.op),
                     "rope" => "ascend_token_v1/rope/fused_fp32_v1".into(),
+                    "mla_query" | "mla_value" => format!("ascend_token_v1/{}/batched_heads_bf16_v1", n.op),
                     _ => format!("ascend_token_v1/{}", n.op),
                 },
                 location: Location::Device, eligible: true, rejection: None,
