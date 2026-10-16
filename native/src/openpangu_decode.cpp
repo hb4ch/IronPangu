@@ -12,6 +12,7 @@
 #include <aclnn_ai_infra_sparse_flash_attention_pioneer.h>
 #include <aclnnop/aclnn_dequant_swiglu_quant.h>
 #include <aclnnop/aclnn_dynamic_quant.h>
+#include <aclnnop/aclnn_grouped_matmul_v5.h>
 #include <aclnnop/aclnn_index_copy.h>
 #include <aclnnop/aclnn_quant_matmul_v5.h>
 #include <aclnnop/aclnn_rms_norm.h>
@@ -99,6 +100,9 @@ struct Decoder {
   inferfabric::initialization::ParameterStore weights;
   std::map<std::string, inferfabric::initialization::ParameterId> bindings;
   std::map<std::string, Host> host;
+  std::map<inferfabric::initialization::ParameterId,
+           inferfabric::initialization::DType>
+      source_types;
   Decoder(const inferfabric::initialization::Plan &p, const std::string &root,
           HcclRootInfo &info, const inferfabric::execution::Plan &execution)
       : rank(p.rank), program(execution),
@@ -110,6 +114,8 @@ struct Decoder {
             p, root, inferfabric::initialization::acl_device_memory())) {
     for (const auto &parameter : p.parameters)
       bindings.emplace(parameter.name, parameter.id);
+    for (const auto &load : p.instructions)
+      source_types.emplace(load.destination, load.source_dtype);
     stream = this->execution.stream;
     token_index =
         std::make_unique<DeviceTensor>(std::vector<int64_t>{1}, ACL_INT32, 4);
@@ -370,9 +376,9 @@ struct Decoder {
     aclOpExecutor *e = nullptr;
     checked(prepared::query("mHC.pre", false, api.pre_size, s.x.tensor,
                             s.phi.tensor, s.alpha.tensor, s.beta.tensor,
-                            nullptr, 1, 1e-6, 1e-6, s.input.tensor, s.post.tensor,
-                            s.res.tensor, s.rms.tensor, s.mix.tensor,
-                            s.pre_weights.tensor, &bytes, &e),
+                            nullptr, 1, 1e-6, 1e-6, s.input.tensor,
+                            s.post.tensor, s.res.tensor, s.rms.tensor,
+                            s.mix.tensor, s.pre_weights.tensor, &bytes, &e),
             "mHC pre prepare");
     run(api.pre, bytes, e);
     if (!merge) {
@@ -539,7 +545,7 @@ struct Decoder {
     return result(output);
   }
   struct Routes {
-    V ids, scores;
+    V ids, scores, order, groups;
   };
   struct ExpertRows {
     std::vector<V> rows;
@@ -560,18 +566,20 @@ struct Decoder {
     }
     to_device(ptr->input, x, ACL_FLOAT);
     ptr->launch();
-    return {resident::from_device(ptr->ids.data, 8, ACL_INT32),
-            result(ptr->scores, ACL_FLOAT)};
+    Routes routes{
+        result(ptr->ids, ACL_INT32), result(ptr->scores, ACL_FLOAT), {}, {}};
+    prepare_routes(routes);
+    return routes;
   }
   struct ExpertBank {
-    V weights, scales;
+    V weights, scales, grouped_scales;
     int n, k;
     ExpertBank(int count, int rows, int columns)
         : weights(size_t(count) * rows * columns, ACL_INT8),
           scales(size_t(count) * rows), n(rows), k(columns) {}
   };
   std::map<std::string, std::unique_ptr<ExpertBank>> expert_banks;
-  V route_index_table, route_owner_table;
+  V route_owner_table;
   V select(const V &source, const V &indices, size_t rows, size_t width) {
     if (source.size() != rows * width)
       throw std::runtime_error("indexed device selection shape");
@@ -588,22 +596,6 @@ struct Decoder {
     run(aclnnIndexSelect, bytes, e);
     return out;
   }
-  V local_route_ids(const Routes &routes) {
-    if (!route_index_table.size()) {
-      DeviceTensor ids({256}, ACL_INT32, 4), owners({256}, ACL_FLOAT, 4);
-      std::vector<int32_t> iv(256);
-      Host ov(256);
-      for (int j = 0; j < 256; ++j) {
-        iv[j] = j % 32;
-        ov[j] = j / 32 == rank ? 1.f : 0.f;
-      }
-      resident::control_upload(ids, iv);
-      resident::control_upload(owners, ov);
-      route_index_table = resident::from_device(ids.data, 256, ACL_INT32);
-      route_owner_table = result(owners, ACL_FLOAT);
-    }
-    return select(route_index_table, routes.ids, 256, 1);
-  }
   ExpertBank &bank(const std::string &pattern) {
     auto &ptr = expert_banks[pattern];
     if (ptr)
@@ -616,6 +608,10 @@ struct Decoder {
     for (int j = 0; j < 32; ++j) {
       auto name = expert_name(pattern, rank * 32 + j);
       auto &weight = w(name + ".weight"), &scale = w(name + ".weight_scale");
+      if (source_types.at(scale.descriptor.id) !=
+          inferfabric::initialization::DType::Bf16)
+        throw std::runtime_error(
+            "grouped expert requires lossless BF16 checkpoint scales");
       if (weight.bytes != size_t(n) * k || scale.bytes != size_t(n) * 4)
         throw std::runtime_error("expert bank shape");
       resident::copy(static_cast<char *>(ptr->weights.data()) +
@@ -624,18 +620,65 @@ struct Decoder {
       resident::copy(static_cast<float *>(ptr->scales.data()) + size_t(j) * n,
                      scale.data, scale.bytes);
     }
+    ptr->grouped_scales = cast(ptr->scales, ACL_BF16);
     return *ptr;
   }
-  V selected_linear(const V &x, const V &index, ExpertBank &bank,
-                    bool fused = false) {
-    auto weight = select(bank.weights, index, 32, size_t(bank.n) * bank.k);
-    auto scales = select(bank.scales, index, 32, bank.n);
-    auto value = cast(x, ACL_BF16);
-    View input(value.data(), {1, int64_t(x.size())}, ACL_BF16);
-    DeviceTensor quant({1, bank.k}, ACL_INT8, 1), scale({1}, ACL_FLOAT, 4),
-        out({1, bank.n}, ACL_BF16, 2);
-    View wv(weight.data(), {bank.n, bank.k}, ACL_INT8),
-        sv(scales.data(), {bank.n}, ACL_FLOAT);
+  // Group-list entries and selected weight offsets remain on device. Zero
+  // count terminates the sparse list; unused capacity has no matmul work.
+  V sparse_group_table, sparse_group_padding, route_priority;
+  void prepare_routes(Routes &routes) {
+    if (!sparse_group_table.size()) {
+      DeviceTensor table({256, 2}, ACL_INT64, 8),
+          padding({24, 2}, ACL_INT64, 8), owners({256}, ACL_FLOAT, 4),
+          priority({8}, ACL_FLOAT, 4);
+      std::vector<int64_t> entries(512);
+      Host owner(256), position(8);
+      for (int i = 0; i < 256; ++i) {
+        entries[2 * i] = i % 32;
+        entries[2 * i + 1] = i / 32 == rank ? 1 : 0;
+        owner[i] = float(entries[2 * i + 1]);
+      }
+      for (int i = 0; i < 8; ++i)
+        position[i] = float(8 - i);
+      resident::control_upload(table, entries);
+      resident::control_upload(padding, std::vector<int64_t>(48, 0));
+      resident::control_upload(owners, owner);
+      resident::control_upload(priority, position);
+      sparse_group_table = result(table, ACL_INT64);
+      sparse_group_padding = result(padding, ACL_INT64);
+      route_owner_table = result(owners, ACL_FLOAT);
+      route_priority = result(priority, ACL_FLOAT);
+    }
+    // Local entries come first, in original route order. Foreign entries have
+    // zero counts; sparse GMM stops there, including the zero-local-expert
+    // case.
+    auto owners = select(route_owner_table, routes.ids, 256, 1);
+    auto priority = binary(owners, route_priority, '*');
+    V sorted(8), order(8, ACL_INT64);
+    uint64_t bytes = 0;
+    aclOpExecutor *e = nullptr;
+    checked(prepared::query("route_owner_order", false,
+                            aclnnTopkGetWorkspaceSize, priority.tensor(), 8, -1,
+                            true, true, sorted.tensor(), order.tensor(), &bytes,
+                            &e),
+            "route order prepare");
+    run(aclnnTopk, bytes, e);
+    routes.order = order;
+    auto ids = select(routes.ids, order, 8, 1);
+    routes.groups = resident::concat(select(sparse_group_table, ids, 256, 2),
+                                     sparse_group_padding);
+  }
+  ExpertRows grouped_linear(const V &batch, const Routes &routes,
+                            ExpertBank &bank, bool fused = false) {
+    const int rows = 8;
+    if (batch.dtype() != ACL_BF16 ||
+        batch.size() != size_t(rows * bank.k * (fused ? 2 : 1)))
+      throw std::runtime_error("grouped expert input contract");
+    const auto &groups = routes.groups;
+    View input(batch.data(), {rows, bank.k * (fused ? 2 : 1)}, ACL_BF16);
+    View group_view(groups.data(), {32, 2}, ACL_INT64);
+    DeviceTensor quant({rows, bank.k}, ACL_INT8, 1),
+        scale({rows}, ACL_FLOAT, 4), out({rows, bank.n}, ACL_BF16, 2);
     uint64_t bytes = 0;
     aclOpExecutor *e = nullptr;
     if (fused) {
@@ -645,23 +688,61 @@ struct Decoder {
                               nullptr, nullptr, nullptr, nullptr, nullptr,
                               nullptr, true, mode, quant.tensor, scale.tensor,
                               &bytes, &e),
-              "resident expert activation prepare");
+              "grouped expert activation prepare");
       run(aclnnDequantSwigluQuant, bytes, e);
     } else {
       checked(prepared::query("aclnnDynamicQuant", false,
                               aclnnDynamicQuantGetWorkspaceSize, input.t,
                               nullptr, quant.tensor, scale.tensor, &bytes, &e),
-              "resident expert quant prepare");
+              "grouped expert quant prepare");
       run(aclnnDynamicQuant, bytes, e);
     }
-    checked(prepared::query("aclnnQuantMatmulV5", false,
-                            aclnnQuantMatmulV5GetWorkspaceSize, quant.tensor,
-                            wv.t, scale.tensor, sv.t, nullptr, nullptr, nullptr,
-                            nullptr, nullptr, false, true, 0, out.tensor,
-                            &bytes, &e),
-            "resident expert matmul prepare");
-    run(aclnnQuantMatmulV5, bytes, e);
-    return result(out);
+    // Unselected rows are defined zero, including ranks with no local route.
+    execution.zero(out.data, out.bytes);
+    // ACL tensor lists own their element descriptors. Give them independent
+    // descriptors, never pointers owned by the prepared descriptor cache.
+    struct List {
+      aclTensorList *value;
+      List(void *data, std::vector<int64_t> shape, aclDataType dtype,
+           bool transpose = false) {
+        auto dims = shape;
+        std::vector<int64_t> strides(shape.size(), 1);
+        for (size_t j = shape.size() - 1; j > 0; --j)
+          strides[j - 1] = strides[j] * shape[j];
+        if (transpose) {
+          std::swap(dims[dims.size() - 2], dims.back());
+          std::swap(strides[strides.size() - 2], strides.back());
+        }
+        auto *tensor =
+            aclCreateTensor(dims.data(), dims.size(), dtype, strides.data(), 0,
+                            ACL_FORMAT_ND, shape.data(), shape.size(), data);
+        if (!tensor)
+          throw std::runtime_error("grouped tensor descriptor");
+        value = aclCreateTensorList(&tensor, 1);
+        if (!value) {
+          aclDestroyTensor(tensor);
+          throw std::runtime_error("grouped tensor list");
+        }
+      }
+      ~List() { aclDestroyTensorList(value); }
+    } xs(quant.data, {rows, bank.k}, ACL_INT8),
+        ws(bank.weights.data(), {32, bank.n, bank.k}, ACL_INT8, true),
+        ss(bank.grouped_scales.data(), {32, bank.n}, ACL_BF16),
+        ts(scale.data, {rows}, ACL_FLOAT),
+        ys(out.data, {rows, bank.n}, ACL_BF16);
+    checked(prepared::query("aclnnGroupedMatmulV5", false,
+                            aclnnGroupedMatmulV5GetWorkspaceSize, xs.value,
+                            ws.value, nullptr, ss.value, nullptr, nullptr,
+                            nullptr, ts.value, group_view.t, nullptr, nullptr,
+                            nullptr, 3, 0, 2, 0, nullptr, ys.value, nullptr,
+                            nullptr, &bytes, &e),
+            "grouped expert matmul prepare");
+    run(aclnnGroupedMatmulV5, bytes, e);
+    ExpertRows output;
+    auto value = result(out);
+    for (int i = 0; i < rows; ++i)
+      output.rows.push_back(value.view(size_t(i) * bank.n, bank.n));
+    return output;
   }
   int emit(const V &resident_logits, int step) {
     auto logits = cast(resident_logits, ACL_FLOAT);

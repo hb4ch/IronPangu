@@ -25,6 +25,10 @@ pub fn lower(graph: &Graph, devices: &[u32]) -> Result<Plan> {
     ));
     source.extend_from_slice(include_bytes!("../../../native/CMakeLists.txt"));
     source.extend_from_slice(include_bytes!("../../../native/src/openpangu_ops.h"));
+    source.extend_from_slice(include_bytes!("../../../native/src/openpangu_mhc.h"));
+    source.extend_from_slice(include_bytes!(
+        "../../../native/src/openpangu_decoder_state.h"
+    ));
     source.extend_from_slice(include_bytes!("token_physical.rs"));
     source.extend_from_slice(include_bytes!("../../../native/src/resident_tensor.h"));
     source.extend_from_slice(include_bytes!("../../../native/src/resident_transfer.h"));
@@ -120,7 +124,7 @@ pub fn lower(graph: &Graph, devices: &[u32]) -> Result<Plan> {
         }
         if matches!(n.op.as_str(), "expert_linear" | "expert_swiglu_down") {
             boundaries.push(Boundary {kind: BoundaryKind::PersistentState,
-                detail: "Device-packed owner-local expert weight banks; eight device-indexed slots per rank, including masked foreign routes. Additional bank memory and compute are not yet optimized".into()});
+                detail: "Device-packed owner-local expert banks; device-only owner ordering and sparse grouped INT8 matmul skip foreign routes and zero-local ranks. BF16 checkpoint scales are required for lossless scale storage; grouped dequantization is a distinct numerical implementation. Bank memory remains additional to loaded checkpoint storage".into()});
         }
         if i == graph.output {
             boundaries.push(Boundary {kind: BoundaryKind::Synchronize,
@@ -153,7 +157,7 @@ pub fn lower(graph: &Graph, devices: &[u32]) -> Result<Plan> {
             name: n.name.clone(), logical_nodes: vec![i], inputs: n.inputs.clone(), collective,
             candidates: vec![Candidate {
                 id: format!("ascend.token.device_resident.{}.v1", n.op),
-                contract_revision: revision.clone(), numerical_contract: format!("ascend_token_v1/{}", n.op),
+                contract_revision: revision.clone(), numerical_contract: if matches!(n.op.as_str(), "expert_linear" | "expert_swiglu_down") { format!("ascend_token_v1/{}/sparse_gmm_bf16_scales_v1", n.op) } else { format!("ascend_token_v1/{}", n.op) },
                 location: Location::Device, eligible: true, rejection: None,
                 workspace_bound_bytes: None, capture_qualified: false, boundaries,
                 unresolved: vec!["Runtime-prepared descriptors/pool are not a frozen physical arena; internal device DAG and static full memory bound remain unresolved".into(),

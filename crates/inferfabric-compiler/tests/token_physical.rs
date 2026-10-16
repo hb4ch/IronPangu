@@ -46,6 +46,23 @@ fn physical_inspection_preserves_qualified_92b_program() {
             .count(),
         321
     );
+    for step in &physical.schedules[0].steps {
+        let logical = &graph.nodes[step.operation.logical_nodes[0]];
+        if matches!(logical.op.as_str(), "expert_linear" | "expert_swiglu_down") {
+            let kernel = &step.operation.candidates[0];
+            assert!(
+                kernel
+                    .numerical_contract
+                    .ends_with("sparse_gmm_bf16_scales_v1")
+            );
+            assert!(
+                kernel
+                    .boundaries
+                    .iter()
+                    .any(|b| b.detail.contains("skip foreign routes"))
+            );
+        }
+    }
     // Reusable buffers use stream ordering; only the explicit request output
     // may advertise host completion. Do not regress to one fence per operator.
     let completions: Vec<_> = physical.schedules[0]

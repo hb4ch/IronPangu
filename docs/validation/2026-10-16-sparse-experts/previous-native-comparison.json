@@ -1,0 +1,23 @@
+[
+  {
+    "case": "arithmetic",
+    "exact_tokens": true,
+    "exact_records": false,
+    "max_selected_logit_abs_delta": 4,
+    "max_selected_logprob_abs_delta": 0.037269
+  },
+  {
+    "case": "geography",
+    "exact_tokens": true,
+    "exact_records": false,
+    "max_selected_logit_abs_delta": 4,
+    "max_selected_logprob_abs_delta": 0.030453299999999996
+  },
+  {
+    "case": "chinese",
+    "exact_tokens": true,
+    "exact_records": false,
+    "max_selected_logit_abs_delta": 5.0,
+    "max_selected_logprob_abs_delta": 0.498607
+  }
+]

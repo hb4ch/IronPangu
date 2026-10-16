@@ -92,3 +92,9 @@ claim a frozen arena or exact total HBM.
 
 [Full graph evidence](validation/2026-10-16-native-graph/README.md) ·
 [Shared device views: 63.67 ms/token](validation/2026-10-16-device-views/README.md)
+
+The [sparse grouped-expert milestone](validation/2026-10-16-sparse-experts/README.md)
+replaces fixed foreign-route compute and weight gathers with device-ordered sparse
+group lists and direct bank reads. Its numerical contract is explicit: full greedy
+sequences match the pinned reference, while grouped dequantization changes some
+logits. Graph replay matches its independently checked eager output records exactly.

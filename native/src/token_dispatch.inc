@@ -88,32 +88,27 @@ V execute_token() {
       result = route(tensor(0), weight(), n.name);
     else if (n.op == "expert_linear") {
       const auto &r = std::get<Routes>(input(1));
-      auto indices = local_route_ids(r);
-      auto &b = bank(weight());
-      ExpertRows out;
-      out.rows.reserve(r.ids.size());
-      for (size_t j = 0; j < r.ids.size(); ++j)
-        out.rows.push_back(
-            selected_linear(tensor(0), resident::slice(indices, j, 1), b));
-      result = std::move(out);
+      V batch = cast(tensor(0), ACL_BF16);
+      auto row = batch;
+      for (size_t j = 1; j < r.ids.size(); ++j)
+        batch = resident::concat(batch, row);
+      result = grouped_linear(batch, r, bank(weight()));
     } else if (n.op == "expert_swiglu_down") {
       const auto &r = std::get<Routes>(input(2));
-      auto indices = local_route_ids(r);
-      auto &b = bank(weight());
       const auto &gate = std::get<ExpertRows>(input(0)),
                  &up = std::get<ExpertRows>(input(1));
-      ExpertRows out;
-      out.rows.reserve(r.ids.size());
-      for (size_t j = 0; j < r.ids.size(); ++j)
-        out.rows.push_back(
-            selected_linear(resident::concat(gate.rows.at(j), up.rows.at(j)),
-                            resident::slice(indices, j, 1), b, true));
-      result = std::move(out);
+      V batch;
+      for (size_t j = 0; j < r.ids.size(); ++j) {
+        auto row = resident::concat(gate.rows.at(j), up.rows.at(j));
+        batch = j ? resident::concat(batch, row) : row;
+      }
+      result = grouped_linear(batch, r, bank(weight()), true);
     } else if (n.op == "expert_reduce") {
       const auto &r = std::get<Routes>(input(1));
       const auto &rows = std::get<ExpertRows>(input(0));
-      auto owners = select(route_owner_table, r.ids, 256, 1);
-      auto scores = binary(r.scores, owners, '*');
+      auto owners =
+          select(route_owner_table, select(r.ids, r.order, 8, 1), 256, 1);
+      auto scores = binary(select(r.scores, r.order, 8, 1), owners, '*');
       V out(n.width);
       execution.zero(out.data(), out.bytes());
       for (size_t j = 0; j < r.ids.size(); ++j)

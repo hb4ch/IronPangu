@@ -37,12 +37,15 @@ def main():
     parser.add_argument('--timeout', type=float, default=900)
     parser.add_argument('--resident-audit', action='store_true', help='Require transfer and prepared-execution audits for every rank/run')
     parser.add_argument('--decode-graph', action='store_true', help='Capture/replay the device-resident token program')
+    parser.add_argument('--hccl-base-port', type=int, help='Reserve a fresh 32-port HCCL range per fresh-process run')
     args = parser.parse_args()
     if args.repeats < 1 or args.timeout <= 0:
         parser.error('positive repeats/timeout required')
     out = Path(args.output)
     out.mkdir(parents=True, exist_ok=False)
     fixtures = json.loads(Path(args.cases).read_text())
+    if args.hccl_base_port is not None and not (1024 <= args.hccl_base_port and args.hccl_base_port + 32 * args.repeats * len(fixtures) <= 65535):
+        parser.error('HCCL port ranges must fit in 1024..65535')
     results = []
     intervals = []
     for repeat in range(args.repeats):
@@ -50,6 +53,8 @@ def main():
             name = f"{case['case']}-{repeat}"
             command = [args.binary, args.plan, args.checkpoint, '32', *map(str, case['input_ids'])]
             env = os.environ.copy()
+            if args.hccl_base_port is not None:
+                env['HCCL_IF_BASE_PORT'] = str(args.hccl_base_port + 32 * len(results))
             env.pop('INFERFABRIC_PROFILE_DIR', None)
             env.pop('INFERFABRIC_PROFILE_VENDOR', None)
             if args.decode_graph:
@@ -123,11 +128,12 @@ def main():
                       'output_tokens': len(rows), 'process_to_first_output_s': (receipts[0]-start)/1e9,
                       'decode_span_s': (receipts[-1]-receipts[0])/1e9, 'tpot': stats(elapsed),
                       'interval_ms': elapsed, 'receipt_offset_ns': [t-start for t in receipts],
-                      'exact_qualified_tokens': True, 'resident_prepared_audit': args.resident_audit, 'outputs': rows}
+                      'hccl_base_port': env.get('HCCL_IF_BASE_PORT'), 'exact_qualified_tokens': True, 'resident_prepared_audit': args.resident_audit, 'outputs': rows}
             results.append(result)
             (out/'runs.json').write_text(json.dumps(results, indent=2)+'\n')
             print(json.dumps({k:v for k,v in result.items() if k not in ('outputs','receipt_offset_ns','interval_ms')}), flush=True)
     summary = {'format': 'inferfabric.native-tpot.v1', 'binary_sha256': hashlib.sha256(Path(args.binary).read_bytes()).hexdigest(),
+               'qualification_cases_sha256': hashlib.sha256(Path(args.cases).read_bytes()).hexdigest(),
                'execution_plan_sha256': hashlib.sha256((Path(args.plan)/'execution.bin').read_bytes()).hexdigest(),
                'clock': 'perf_counter_ns on the NPU host inside Docker; flushed stdout receipts',
                'method': 'exclude first output; includes native decode, selection, consensus and output delivery',
