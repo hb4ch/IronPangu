@@ -1,0 +1,27 @@
+{
+  "exact_sequences": true,
+  "cases": [
+    {
+      "case": "arithmetic",
+      "exact_token_match": true,
+      "native_tokens": 8,
+      "reference_tokens": 8,
+      "max_selected_logprob_abs_delta": 0.012257214684605597
+    },
+    {
+      "case": "geography",
+      "exact_token_match": true,
+      "native_tokens": 8,
+      "reference_tokens": 8,
+      "max_selected_logprob_abs_delta": 0.030431295505523683
+    },
+    {
+      "case": "chinese",
+      "exact_token_match": true,
+      "native_tokens": 17,
+      "reference_tokens": 17,
+      "max_selected_logprob_abs_delta": 0.3653277104053497
+    }
+  ],
+  "scope": "greedy token equality on these prompts; not bitwise logit equality or broad quality qualification"
+}

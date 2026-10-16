@@ -57,7 +57,7 @@ V execute_token() {
     else if (n.op == "gather")
       result = gather(tensor(0));
     else if (n.op == "allreduce")
-      result = sum(tensor(0));
+      result = sum(tensor(0), n.attrs.count("dtype") && n.text("dtype") == "bf16");
     else if (n.op == "mome")
       result = mome(tensor(0), weight(), pos, n.name);
     else if (n.op == "slice") {

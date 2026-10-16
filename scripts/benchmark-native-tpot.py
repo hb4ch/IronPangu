@@ -100,6 +100,8 @@ def main():
                         os.killpg(process.pid, signal.SIGKILL)
                         process.wait()
                     process.stdout.close()
+            # Retain diagnostics even when a numerical or residency gate fails.
+            (out/f'{name}.outputs.json').write_text(json.dumps(rows, indent=2)+'\n')
             if [r['token'] for r in rows] != case['output_ids']:
                 raise RuntimeError(f'{name}: output differs from qualified native sequence')
             if args.resident_audit:
@@ -128,7 +130,10 @@ def main():
                       'output_tokens': len(rows), 'process_to_first_output_s': (receipts[0]-start)/1e9,
                       'decode_span_s': (receipts[-1]-receipts[0])/1e9, 'tpot': stats(elapsed),
                       'interval_ms': elapsed, 'receipt_offset_ns': [t-start for t in receipts],
-                      'hccl_base_port': env.get('HCCL_IF_BASE_PORT'), 'exact_qualified_tokens': True, 'resident_prepared_audit': args.resident_audit, 'outputs': rows}
+                      'hccl_base_port': env.get('HCCL_IF_BASE_PORT'),
+                      'hccl_expansion_mode_env': env.get('HCCL_OP_EXPANSION_MODE'),
+                      'hccl_deterministic_env': env.get('HCCL_DETERMINISTIC'),
+                      'exact_qualified_tokens': True, 'resident_prepared_audit': args.resident_audit, 'outputs': rows}
             results.append(result)
             (out/'runs.json').write_text(json.dumps(results, indent=2)+'\n')
             print(json.dumps({k:v for k,v in result.items() if k not in ('outputs','receipt_offset_ns','interval_ms')}), flush=True)
@@ -138,6 +143,8 @@ def main():
                'clock': 'perf_counter_ns on the NPU host inside Docker; flushed stdout receipts',
                'method': 'exclude first output; includes native decode, selection, consensus and output delivery',
                'batch_size': 1, 'decode_graph': args.decode_graph, 'repeats': args.repeats, 'runs': len(results), 'pooled_tpot': stats(intervals),
+               'hccl_expansion_mode_env': os.environ.get('HCCL_OP_EXPANSION_MODE'),
+               'hccl_deterministic_env': os.environ.get('HCCL_DETERMINISTIC'),
                'decode_tokens_per_second': 1000/statistics.mean(intervals),
                'notes': ['Fresh native process per case; loading/prefill excluded from TPOT.',
                          'Fresh process per request; graph mode is recorded separately; no concurrent batching; short-context baseline.',

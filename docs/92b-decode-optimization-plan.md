@@ -1,6 +1,27 @@
 # 92B decode profiling and optimization plan — 2026-10-16
 
-The native device-resident TP8/EP8 path is dominated by host orchestration,
+## Implementation progress
+
+The historical profile below started at 2,046.86 ms/token. The qualified path
+now reaches **21.1723 ms/token** on the same short-context TP8/EP8 workload.
+Prepared invocations, reusable buffers, full device graph replay, BF16 views,
+owner-local grouped experts, column-parallel projections, paired expert GEMMs,
+fused cache writes/routing and borrowed operands are implemented. The latest
+[dense-attention validation](validation/2026-10-16-dense-attention/README.md)
+includes full output tests, rank audits and an inspectable physical plan.
+
+OmniInfer's optimized reference is 18.1171 ms/token; parity remains open.
+One newly identified configuration difference is collective execution:
+OmniInfer defaults communicator expansion to AIV, while these native milestones
+used HOST. AIV and deterministic reduction are being qualified before changing
+the native default. Global fences and activation host fallback remain forbidden.
+
+The measurements and original implementation sequence below are retained as
+historical evidence, not a description of today's bottlenecks.
+
+## Original profile
+
+The initial native device-resident TP8/EP8 path was dominated by host orchestration,
 collective submission and synchronization. Faster GEMMs alone will not fix the
 current approximately two-second token latency. This document records measured
 bottlenecks and the implementation order; the optimizations below are not yet

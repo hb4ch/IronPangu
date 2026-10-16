@@ -110,6 +110,14 @@ C++/CANN builds and NPU execution remain inside Docker.
 
 ## Current backend boundary
 
+Collective precision can be declared explicitly:
+`allreduce(x, dtype = "bf16")` or `allreduce(x, dtype = "f32")`.
+Omitting `dtype` preserves FP32 reduction. Input conversion, collective payload,
+output storage and physical numerical contract follow that declaration; other
+dtypes are rejected by both authoring and native validation. The canonical 92B
+DSL retains FP32: the BF16/AIV experiment did not improve on the qualified HOST
+path. See [collective qualification](validation/2026-10-16-collective-contracts/README.md).
+
 `ascend_token_v1` is the qualified TP8/EP8, BF16/W8A8 correctness backend:
 2560 hidden, 48 MLA heads, 512 latent, 128+64 query dimensions, 128 learned sinks,
 4 mHC streams, 3-tap MoME, 256 experts/top-8, and vocabulary 151552. These are

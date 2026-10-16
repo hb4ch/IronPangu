@@ -264,16 +264,18 @@ struct Decoder {
     }
     return result(b);
   }
-  V sum(const V &x) {
-    auto a = cast(x, ACL_FLOAT);
-    DeviceTensor b({int64_t(x.size())}, ACL_FLOAT, 4);
+  V sum(const V &x, bool bf16 = false) {
+    auto dtype = bf16 ? ACL_BF16 : ACL_FLOAT;
+    auto a = cast(x, dtype);
+    DeviceTensor b({int64_t(x.size())}, dtype, bf16 ? 2 : 4);
     {
       inferfabric::profiling::Scope timing("HcclAllReduce");
-      checked(HcclAllReduce(a.data(), b.data, x.size(), HCCL_DATA_TYPE_FP32,
+      checked(HcclAllReduce(a.data(), b.data, x.size(),
+                            bf16 ? HCCL_DATA_TYPE_BFP16 : HCCL_DATA_TYPE_FP32,
                             HCCL_REDUCE_SUM, comm, stream),
               "all reduce");
     }
-    return result(b, ACL_FLOAT);
+    return result(b, dtype);
   }
   V matrix(const V &x, void *weight, int rows, int cols,
            bool transposed = true) {

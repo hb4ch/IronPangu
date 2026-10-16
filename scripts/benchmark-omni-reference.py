@@ -57,6 +57,8 @@ def main():
     summary={'parallelism':{'tp':8,'ep':8},'batch':1,'context':512,'max_batched_tokens':512,
              'eager':a.eager,'devices':os.environ.get('ASCEND_RT_VISIBLE_DEVICES'),
              'profiled':a.profile,'latency_comparable':not a.profile,
+             'hccl_expansion_mode_env':os.environ.get('HCCL_OP_EXPANSION_MODE'),
+             'hccl_deterministic_env':os.environ.get('HCCL_DETERMINISTIC'),
              'mean_ms':sum(intervals)/len(intervals),'intervals':len(intervals),
              'method':'host perf_counter_ns at each offline engine.step output; exclude first token',
              'prefix_caching':False,'logprobs':5,'max_output_tokens':32}

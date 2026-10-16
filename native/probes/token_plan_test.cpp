@@ -66,6 +66,13 @@ int main(int argc, char **argv) {
           break;
         }
     });
+    reject([](auto &x) {
+      for (auto &n : x.nodes)
+        if (n.op == "allreduce") {
+          n.attrs["dtype"] = "f16";
+          break;
+        }
+    });
     auto init = inferfabric::initialization::Plan::read(std::string(argv[1]) +
                                                         "/rank-0.bin");
     init.parameters[0].shape[0] = 1;

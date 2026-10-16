@@ -70,8 +70,14 @@ inline void validate_kernels(const Plan &p) {
         error();
     } else if (n.op == "gather")
       check({{0, tensor(0)}}, {}, {0, tensor(0) * 8});
-    else if (n.op == "allreduce")
-      check({{0, tensor(0)}}, {}, {0, tensor(0)});
+    else if (n.op == "allreduce") {
+      std::vector<std::string> attrs;
+      if (n.attrs.count("dtype")) {
+        attrs.push_back("dtype");
+        if (n.text("dtype") != "f32" && n.text("dtype") != "bf16") error();
+      }
+      check({{0, tensor(0)}}, attrs, {0, tensor(0)});
+    }
     else if (n.op == "mome") {
       std::vector<std::string> attrs{"weight", "taps"};
       if (n.attrs.count("placement")) {

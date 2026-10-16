@@ -160,7 +160,14 @@ impl Node {
             }
             "allreduce" => {
                 let w = tensor(0)?;
-                self.schema(inputs, &[Tensor(w)], &[])?;
+                let mut attrs = vec![];
+                if let Some(dtype) = self.attrs.get("dtype") {
+                    attrs.push("dtype");
+                    if !["f32", "bf16"].contains(&dtype.as_str()) {
+                        return fail(self, "unsupported collective dtype");
+                    }
+                }
+                self.schema(inputs, &[Tensor(w)], &attrs)?;
                 Tensor(w)
             }
             "mome" => {

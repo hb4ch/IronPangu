@@ -4,6 +4,26 @@ use inferfabric_plan::physical::{self, Cost, CostSource};
 use sha2::{Digest, Sha256};
 
 #[test]
+fn collective_precision_is_explicit_and_matches_physical_storage() {
+    let mut graph: Graph = serde_json::from_str(include_str!(
+        "../../../docs/validation/2026-10-16-reusable-dsl/execution.json"
+    )).unwrap();
+    let index = graph.nodes.iter().position(|n| n.op == "allreduce").unwrap();
+    for dtype in ["bf16", "f32"] {
+        graph.nodes[index].attrs.insert("dtype".into(), dtype.into());
+        let plan = lower(&graph, &[0, 1, 2, 3, 4, 5, 6, 7]).unwrap();
+        for rank in &plan.schedules {
+            let value = &rank.values[index];
+            assert_eq!(value.dtype.as_deref(), Some(dtype));
+            assert_eq!(value.payload_bytes, Some(value.shape[0] * if dtype == "bf16" { 2 } else { 4 }));
+            assert_eq!(rank.steps[index].operation.collective.as_ref().unwrap().dtype, dtype);
+        }
+    }
+    graph.nodes[index].attrs.insert("dtype".into(), "f16".into());
+    assert!(graph.validate().is_err());
+}
+
+#[test]
 fn physical_inspection_preserves_qualified_92b_program() {
     let graph: Graph = serde_json::from_str(include_str!(
         "../../../docs/validation/2026-10-16-reusable-dsl/execution.json"
