@@ -202,34 +202,6 @@
         font-size: 11px;
         color: #73829a;
       }
-      .stage-row {
-        display: grid;
-        grid-template-columns: 1fr 24px 1.3fr 24px 1fr;
-        align-items: center;
-        margin-bottom: 28px;
-      }
-      .stage {
-        border: 1px solid var(--border);
-        background: white;
-        padding: 16px;
-        border-radius: 10px;
-        min-height: 96px;
-        box-shadow: 0 2px 3px #1b325505;
-        text-align: left;
-        color: inherit;
-      }
-      .stage b {
-        display: block;
-        font-size: 14px;
-        margin: 7px 0;
-      }
-      .stage small {
-        color: #78869c;
-      }
-      .arrow {
-        text-align: center;
-        color: #8c9cb2;
-      }
       .section-title {
         display: flex;
         justify-content: space-between;
@@ -240,12 +212,12 @@
         font-size: 11px;
         color: #78879b;
       }
-      .layer-grid {
+      .scope-grid {
         display: grid;
         grid-template-columns: repeat(auto-fill, minmax(136px, 1fr));
         gap: 10px;
       }
-      .layer-card {
+      .scope-card {
         background: white;
         border: 1px solid var(--border);
         border-radius: 9px;
@@ -254,17 +226,25 @@
         color: inherit;
         border-top: 3px solid #6186de;
       }
-      .layer-card:hover {
+      .scope-card:hover {
         border-color: #346de2;
         box-shadow: 0 3px 12px #244a8a12;
         transform: translateY(-1px);
       }
-      .layer-card b {
+      .scope-card {
+        overflow-wrap: anywhere;
+      }
+      .page-controls {
+        align-items: center;
+        margin: 0 0 20px;
+        justify-content: space-between;
+      }
+      .scope-card b {
         display: block;
         font-size: 13px;
         margin-bottom: 6px;
       }
-      .layer-card small {
+      .scope-card small {
         color: #7b889c;
         font-size: 10px;
       }
@@ -275,10 +255,6 @@
         background: #edf2fc;
         color: #4771bc;
         font-size: 10px;
-      }
-      .pill.moe {
-        background: #f0edfa;
-        color: #7c61ad;
       }
       .note {
         font-size: 11px;
@@ -550,12 +526,6 @@
         .status {
           display: none;
         }
-        .stage-row {
-          grid-template-columns: 1fr;
-        }
-        .arrow {
-          padding: 4px;
-        }
         .metrics {
           flex-wrap: wrap;
         }
@@ -569,13 +539,13 @@
           Infer<span>Fabric</span>
           <span style="font-weight: 400; color: #b8c9df">/ Plan inspector</span>
         </div>
-        <div class="tag">MODEL → MODULE → OPERATION</div>
+        <div class="tag">PLAN → SCOPE → OPERATION</div>
       </div>
       <div class="status">Expanded execution DAG · offline artifact</div>
     </header>
     <div class="shell">
       <nav>
-        <h3>MODEL EXPLORER</h3>
+        <h3>PLAN EXPLORER</h3>
         <input
           id="search"
           aria-label="Search operations or weight bindings"
@@ -606,9 +576,11 @@
     </script>
     <script>
       "use strict";
-      const { graph: plan, types } = JSON.parse(
-        document.getElementById("plan-data").textContent,
-      );
+      const {
+        graph: plan,
+        types,
+        node_metadata: metadata,
+      } = JSON.parse(document.getElementById("plan-data").textContent);
       const $ = (s) => document.querySelector(s),
         esc = (v) =>
           String(v).replace(
@@ -628,7 +600,7 @@
       const root = {
         id: "root",
         label: plan.name,
-        module: "Model",
+        module: "Plan",
         children: [],
         leaves: [],
         parent: null,
@@ -640,13 +612,22 @@
         p.leaves.push(i);
         const frames = n.source?.frames || [];
         frames.forEach((f, k) => {
-          if (f.module === "fold" && frames[k + 1]) return;
-          let g = groups.get(f.instance);
+          const id =
+            "scope:" +
+            JSON.stringify(
+              frames
+                .slice(0, k + 1)
+                .map((frame) => [frame.module, frame.instance]),
+            );
+          let g = groups.get(id);
           if (!g) {
-            const layer = f.instance.match(/\.i(\d+)\.block$/);
+            const prefix = p.frame?.instance + ".";
             g = {
-              id: f.instance,
-              label: layer ? "Layer " + layer[1] : f.instance.split(".").pop(),
+              id,
+              label:
+                p.frame && f.instance.startsWith(prefix)
+                  ? f.instance.slice(prefix.length)
+                  : f.instance,
               module: f.module,
               children: [],
               leaves: [],
@@ -661,7 +642,10 @@
         });
         const leaf = {
           id: "op:" + i,
-          label: n.name.split(".").pop(),
+          label:
+            p.frame && n.name.startsWith(p.frame.instance + ".")
+              ? n.name.slice(p.frame.instance.length + 1)
+              : n.name,
           index: i,
           parent: p,
           leaves: [i],
@@ -669,9 +653,9 @@
         p.children.push(leaf);
         leaves.push(leaf);
       });
-      const layerGroups = root.children.filter(
-        (x) => x.module === "DecoderBlock",
-      );
+      const PAGE_SIZE = 24;
+      let pageIndex = 0,
+        rootDiagram = false;
       let scope = root,
         selected = null,
         zoom = 1,
@@ -717,19 +701,62 @@
           .querySelectorAll("[data-op]")
           .forEach((b) => (b.onclick = () => reveal(+b.dataset.op)));
       }
-      function navigate(g) {
-        location.hash = encodeURIComponent(g.id);
+      function navigate(g, page = 0, diagram = false) {
+        location.hash =
+          encodeURIComponent(g.id) +
+          "&page=" +
+          page +
+          (diagram ? "&view=graph" : "");
       }
       function reveal(i) {
-        let id = leaves[i].parent.id;
-        if (id === "root") {
-          id =
-            i < (layerGroups[0]?.leaves[0] ?? nodes.length)
-              ? "shell:Input"
-              : "shell:Output";
-        }
-        location.hash = encodeURIComponent(id) + "&op=" + i;
-        if (scope.id === id) select(leaves[i]);
+        const leaf = leaves[i],
+          parent = leaf.parent;
+        const page = Math.floor(parent.children.indexOf(leaf) / PAGE_SIZE);
+        location.hash =
+          encodeURIComponent(parent.id) +
+          "&page=" +
+          page +
+          "&op=" +
+          i +
+          "&view=graph";
+        if (
+          scope === parent &&
+          pageIndex === page &&
+          (parent !== root || rootDiagram)
+        )
+          select(leaf);
+      }
+      function isAncestor(g) {
+        for (let p = scope; p; p = p.parent) if (p === g) return true;
+        return false;
+      }
+      function pageChildren() {
+        return scope.children.slice(
+          pageIndex * PAGE_SIZE,
+          (pageIndex + 1) * PAGE_SIZE,
+        );
+      }
+      function pager() {
+        const pages = Math.ceil(scope.children.length / PAGE_SIZE);
+        return (
+          '<div class="tools page-controls"><button id="previous-page" ' +
+          (pageIndex === 0 ? "disabled" : "") +
+          '>← Previous</button><span class="subtle">Items ' +
+          (pageIndex * PAGE_SIZE + 1) +
+          "–" +
+          Math.min((pageIndex + 1) * PAGE_SIZE, scope.children.length) +
+          " / " +
+          scope.children.length +
+          '</span><button id="next-page" ' +
+          (pageIndex + 1 >= pages ? "disabled" : "") +
+          ">Next →</button></div>"
+        );
+      }
+      function bindPager() {
+        $("#previous-page").onclick = () =>
+          navigate(scope, pageIndex - 1, rootDiagram);
+        $("#next-page").onclick = () =>
+          navigate(scope, pageIndex + 1, rootDiagram);
       }
       function crumbs() {
         let list = [],
@@ -772,9 +799,7 @@
               " <small>" +
               esc(c.module) +
               "</small></button>" +
-              (scope === c || scope.id.startsWith(c.id + ".")
-                ? moduleNav(c, depth + 1)
-                : ""),
+              (isAncestor(c) ? moduleNav(c, depth + 1) : ""),
           )
           .join("");
       }
@@ -814,22 +839,8 @@
         el.innerHTML =
           '<button class="nav-model ' +
           (scope === root ? "active" : "") +
-          '" data-scope="root">◈ Model overview</button><h3>DECODER LAYERS</h3>' +
-          layerGroups
-            .map(
-              (g) =>
-                '<button data-scope="' +
-                esc(g.id) +
-                '" class="' +
-                (scope.id.startsWith(g.id) ? "active" : "") +
-                '">' +
-                esc(g.label) +
-                " <small>" +
-                g.leaves.length +
-                " ops</small></button>" +
-                (scope.id.startsWith(g.id) ? moduleNav(g, 1) : ""),
-            )
-            .join("");
+          '" data-scope="root">◈ Plan overview</button><h3>SCOPE HIERARCHY</h3>' +
+          moduleNav(root, 0);
         el.querySelectorAll("[data-scope]").forEach(
           (b) => (b.onclick = () => navigate(groups.get(b.dataset.scope))),
         );
@@ -839,10 +850,7 @@
         if (g.index !== undefined) {
           const i = g.index,
             n = nodes[i],
-            weights = Object.entries(n.attrs).filter(
-              ([k]) =>
-                k === "weight" || (k === "norm" && n.op === "sink_normalize"),
-            );
+            weights = metadata[i].bindings.map((b) => [b.attribute, b.value]);
           panel.innerHTML =
             '<div class="eyebrow">Operation #' +
             i +
@@ -904,7 +912,7 @@
               : '<span class="subtle">No source metadata in this artifact</span>');
         } else {
           const b = bounds(g),
-            weighted = g.leaves.filter((i) => nodes[i].attrs.weight),
+            weighted = g.leaves.filter((i) => metadata[i].bindings.length),
             counts = {};
           g.leaves.forEach(
             (i) => (counts[nodes[i].op] = (counts[nodes[i].op] || 0) + 1),
@@ -915,7 +923,7 @@
             "</div><h2>" +
             esc(g.label) +
             '</h2><div class="path">' +
-            esc(g.id === "root" ? plan.name : g.id) +
+            esc(g.frame?.instance ?? plan.name) +
             "</div>" +
             (g !== scope
               ? '<button class="primary" id="expand-module">Expand module →</button>'
@@ -966,83 +974,57 @@
           );
       }
       function overview() {
-        const w = $("#workspace"),
-          firstLayer = layerGroups[0]?.leaves[0] ?? nodes.length,
-          lastLayer = layerGroups.at(-1)?.leaves.at(-1) ?? -1;
-        w.innerHTML =
-          '<div class="eyebrow">Compiled model / logical execution</div><h1>' +
+        const children = pageChildren();
+        $("#workspace").innerHTML =
+          '<div class="eyebrow">Compiled plan / logical execution</div><h1>' +
           esc(plan.name) +
-          '</h1><p>Explore the model structure. Open a layer, then expand attention, feed-forward and projection modules.</p><div class="metrics"><div class="metric"><strong>' +
+          '</h1><p>Explore the authored scope hierarchy. Names and module types below come directly from expansion metadata.</p><div class="metrics"><div class="metric"><strong>' +
           nodes.length.toLocaleString() +
           '</strong><span>primitive operations</span></div><div class="metric"><strong>' +
-          layerGroups.length +
-          '</strong><span>decoder layers</span></div><div class="metric"><strong>' +
+          root.children.filter((g) => g.module).length +
+          '</strong><span>top-level scopes</span></div><div class="metric"><strong>' +
           plan.max_context +
           '</strong><span>context bound</span></div><div class="metric"><strong>' +
-          [...groups.keys()]
-            .filter((id) => !id.startsWith("shell:"))
-            .length.toLocaleString() +
-          '</strong><span>model / module scopes</span></div></div><div class="stage-row"><button class="stage" id="entry"><div class="eyebrow">01 / Input</div><b>Embedding & streams</b><small>' +
-          firstLayer +
-          ' operations · inspect input</small></button><div class="arrow">→</div><div class="stage"><div class="eyebrow">02 / Decoder</div><b>' +
-          layerGroups.length +
-          ' repeated blocks</b><small>Attention · residuals · dense / routed FFN</small></div><div class="arrow">→</div><button class="stage" id="exit"><div class="eyebrow">03 / Output</div><b>Merge, norm & logits</b><small>' +
-          Math.max(0, nodes.length - lastLayer - 1) +
-          ' operations · inspect output</small></button></div><div class="section-title"><h2>Decoder stack</h2><span>Select a layer to inspect its DAG →</span></div><div class="layer-grid">' +
-          layerGroups
-            .map((g) => {
-              const moe = g.leaves.some((i) => nodes[i].op === "router"),
-                attn = g.leaves
-                  .map((i) => nodes[i])
-                  .find((n) => n.op === "latent_attention");
-              return (
-                '<button class="layer-card" data-layer="' +
+          (groups.size - 1) +
+          '</strong><span>expansion scopes</span></div></div><div class="section-title"><h2>Plan contents</h2><button class="ref" id="root-diagram">View dependencies →</button></div>' +
+          pager() +
+          '<div class="scope-grid">' +
+          children
+            .map(
+              (g) =>
+                '<button class="scope-card" data-item="' +
                 esc(g.id) +
                 '"><b>' +
                 esc(g.label) +
-                '</b><span class="pill ' +
-                (moe ? "moe" : "") +
-                '">' +
-                (moe ? "Routed MoE" : "Dense FFN") +
+                '</b><span class="pill">' +
+                esc(g.module ?? nodes[g.index].op) +
                 "</span><br><small>" +
-                g.leaves.length +
-                " ops · window " +
-                esc(attn?.attrs.window ?? "—") +
-                "</small></button>"
-              );
-            })
+                esc(
+                  g.module
+                    ? g.leaves.length +
+                        " ops · " +
+                        g.children.length +
+                        (g.children.length === 1 ? " child" : " children")
+                    : shape(g.index),
+                ) +
+                "</small></button>",
+            )
             .join("") +
-          '</div><div class="note">The overview collapses all primitive operations. Shapes come from the compiler type checker; weights and dependencies come directly from the expanded plan. No timing or physical-memory estimates are inferred.</div>';
-        w.querySelectorAll("[data-layer]").forEach(
-          (b) => (b.onclick = () => navigate(groups.get(b.dataset.layer))),
-        );
-        $("#entry").onclick = () =>
-          showShell(
-            "Input",
-            root.children.filter((g) => g.leaves.every((i) => i < firstLayer)),
-          );
-        $("#exit").onclick = () =>
-          showShell(
-            "Output",
-            root.children.filter((g) => g.leaves.every((i) => i > lastLayer)),
-          );
+          '</div><div class="note">All source frames are preserved. Operations without expansion metadata stay directly in their parent scope. Each page shows at most ' +
+          PAGE_SIZE +
+          " items; no model stages are inferred.</div>";
+        $("#workspace")
+          .querySelectorAll("[data-item]")
+          .forEach((el) => {
+            const g = children.find((g) => g.id === el.dataset.item);
+            el.onclick = () => (g.module ? navigate(g) : reveal(g.index));
+          });
+        $("#root-diagram").onclick = () => navigate(root, pageIndex, true);
+        bindPager();
         inspect(root);
       }
-      function showShell(label, children) {
-        const id = "shell:" + label;
-        if (!groups.has(id))
-          groups.set(id, {
-            id,
-            label,
-            module: "Model stage",
-            children,
-            leaves: children.flatMap((g) => g.leaves),
-            parent: root,
-          });
-        navigate(groups.get(id));
-      }
       function graphView() {
-        const children = scope.children;
+        const children = pageChildren();
         const owner = new Map();
         children.forEach((g) => g.leaves.forEach((i) => owner.set(i, g.id)));
         const edgeMap = new Map();
@@ -1096,8 +1078,9 @@
             ),
           );
         layout = { width, height };
-        const b = bounds(scope);
+        const b = bounds({ leaves: children.flatMap((g) => g.leaves) });
         $("#workspace").innerHTML =
+          pager() +
           '<div class="scope-head"><div class="eyebrow">' +
           esc(scope.module) +
           " / " +
@@ -1106,7 +1089,7 @@
           esc(scope.label) +
           "</h1><p>" +
           scope.leaves.length +
-          ' primitive operations in this scope. Select a card for details; double-click a module to expand.</p><div class="legend"><span><i></i>Operation</span><span><i class="module"></i>Collapsed module</span><span><i class="state"></i>State / routing</span></div></div><div class="boundary"><span class="boundary-label">Incoming</span>' +
+          ' primitive operations in this scope. Select a card for details; double-click a module to expand.</p><div class="legend"><span><i></i>Operation</span><span><i class="module"></i>Collapsed module</span><span><i class="state"></i>Typed handle</span></div></div><div class="boundary"><span class="boundary-label">Incoming</span>' +
           b.inputs.map(ref).join("") +
           '</div><div id="graph-viewport"><div id="graph-size"><div id="graph"><svg id="edges" width="' +
           width +
@@ -1175,15 +1158,7 @@
                 isModule = !!g.module,
                 n = nodes[g.index],
                 state =
-                  n &&
-                  [
-                    "mhc_pre",
-                    "mhc_post",
-                    "mhc_merge",
-                    "cache_append",
-                    "mome",
-                    "router",
-                  ].includes(n.op);
+                  n && !["tensor", "experts"].includes(types[g.index].kind);
               return (
                 '<button class="node ' +
                 (isModule ? "module" : state ? "state" : "") +
@@ -1222,6 +1197,7 @@
             el.ondblclick = () => g.module && navigate(g);
           });
         bindRefs($("#workspace"));
+        bindPager();
         fit();
         inspect(scope);
       }
@@ -1243,32 +1219,29 @@
         crumbs();
         navigation();
         selected = null;
-        scope === root ? overview() : graphView();
+        scope === root && !rootDiagram ? overview() : graphView();
         $("#workspace").scrollTop = 0;
       }
       function loadHash() {
-        const [id, op] = decodeURIComponent(location.hash.slice(1)).split(
-          "&op=",
-        );
-        if (id === "shell:Input" || id === "shell:Output") {
-          const first = layerGroups[0]?.leaves[0] ?? nodes.length,
-            last = layerGroups.at(-1)?.leaves.at(-1) ?? -1;
-          const input = id === "shell:Input",
-            children = root.children.filter((g) =>
-              g.leaves.every((i) => (input ? i < first : i > last)),
-            );
-          groups.set(id, {
-            id,
-            label: input ? "Input" : "Output",
-            module: "Model stage",
-            children,
-            leaves: children.flatMap((g) => g.leaves),
-            parent: root,
-          });
+        const [encoded, ...rest] = location.hash.slice(1).split("&");
+        let id;
+        try {
+          id = decodeURIComponent(encoded);
+        } catch {
+          id = "root";
         }
+        const params = new URLSearchParams(rest.join("&"));
         scope = groups.get(id) || root;
+        pageIndex = Math.min(
+          Math.max(0, Number(params.get("page")) || 0),
+          Math.max(0, Math.ceil(scope.children.length / PAGE_SIZE) - 1),
+        );
+        pageIndex = Math.floor(pageIndex);
+        rootDiagram = params.get("view") === "graph";
         render();
-        if (op !== undefined && leaves[+op]) select(leaves[+op]);
+        const op = params.get("op");
+        if (op !== null && leaves[+op] && pageChildren().includes(leaves[+op]))
+          select(leaves[+op]);
       }
       $("#search").oninput = navigation;
       $("#up").onclick = () => scope.parent && navigate(scope.parent);
@@ -1299,6 +1272,13 @@
         get visibleCount() {
           return document.querySelectorAll(".node").length;
         },
+        get pageIndex() {
+          return pageIndex;
+        },
+        get visibleItems() {
+          return pageChildren();
+        },
+        pageSize: PAGE_SIZE,
         nodeCount: nodes.length,
         shape,
         groups,

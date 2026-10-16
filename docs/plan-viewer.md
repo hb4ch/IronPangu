@@ -5,11 +5,15 @@ in a browser. It is a self-contained HTML artifact with no server, CDN, fonts,
 JavaScript packages or network access required at viewing time. GitHub displays
 HTML as source; download the file and open it locally to use the viewer.
 
-The overview shows the input stage, 46 collapsed decoder layers and the output
-stage. Select a layer to see its immediate operations and collapsed modules.
+The overview shows the plan's immediate scopes and operations, in expansion
+order. Labels come from recorded instance paths and module names, without
+recognizing particular architectures or guessing input/decoder/output stages.
+Select a scope to see its immediate operations and collapsed child scopes.
 Select a module and choose **Expand module**, or double-click its card. Breadcrumbs,
 the sidebar and **Up** return to enclosing scopes. Only the current scope's
-children are rendered: the qualified 92B plan has at most 19 visible DAG cards.
+children are rendered, with at most 24 items per page. **View dependencies**
+switches the root overview to its DAG. **Previous** and **Next** paginate both
+overview cards and DAGs, including flat graphs with no source metadata.
 
 Selecting an operation shows:
 
@@ -21,8 +25,10 @@ Selecting an operation shows:
 Edges aggregate real dependencies between collapsed modules. Selecting a card
 highlights its incoming/outgoing edges. Search matches operation names, instance
 paths and attribute values, including weights; results navigate directly to the
-containing scope. **Fit**, **+** and **−** control diagram scale. Browser history
-and URL fragments preserve scope/operation navigation. **Esc** goes up; **/**
+containing scope and page. Page-boundary dependencies remain clickable even
+when their producer/consumer is not on the current page. **Fit**, **+** and **−**
+control diagram scale. Browser history and URL fragments preserve scope, page
+and operation navigation. **Esc** goes up; **/**
 focuses search.
 
 Shapes are exported by Rust's existing `Graph::validate()` type checker, not
@@ -30,8 +36,17 @@ reconstructed by a separate browser implementation. Tensor shapes here are the
 logical flattened per-invocation widths of `ascend_token_v1`; expert widths and
 state handles are distinguished. The graph does not encode activation dtype,
 physical buffer layouts, stream schedules or execution timings, so the viewer
-does not invent them. Module grouping comes from expansion provenance; the
-92B overview recognizes `DecoderBlock` instances.
+does not invent them. Binding roles are exported as compiler metadata; the browser
+does not recognize operator-specific binding attributes. Its generic typed-handle
+styling likewise uses output type metadata, not an operator-name list.
+
+Every expansion frame is preserved, including compile-time iteration frames.
+Scope identity uses the full ancestry of module/instance pairs, so equal local
+instance names under different parents or module types do not collide. Labels
+remove a parent's instance prefix only when it actually matches. Operations
+without provenance remain direct children of the plan. This viewer is generic
+over the supported token execution IR; it does not add support for unrelated IR
+formats or backend operator contracts.
 
 ## Generate
 
@@ -57,16 +72,26 @@ cargo test -p inferfabric-compiler
 cargo clippy -p inferfabric-compiler --all-targets -- -D warnings
 npm install --prefix .deploy/plan-view-test --no-audit --no-fund playwright@1.64.1
 node scripts/test-plan-viewer.cjs execution.html
+node scripts/test-plan-viewer.cjs execution.html --flat
+cargo run -p inferfabric-compiler --example view_token_plan -- \
+  crates/inferfabric-compiler/tests/fixtures/viewer-scopes.json renamed.html
+node scripts/test-plan-viewer.cjs renamed.html
 ```
 
 The browser check requires an installed Playwright Chromium browser, or set
 `PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH` to an existing Chrome/Edge executable.
 An optional third argument names an existing screenshot output directory.
+`--flat` writes a synthetic fixture under `.deploy/` with renamed operations and
+all expansion metadata removed, then tests the viewer against it.
 
-The 92B browser check visits all 413 module scopes, compares every scope's rendered
-edges with the underlying graph, verifies overview collapse, nested expansion,
-search, producer navigation, browser back, input/output stages and narrow viewport
-layout. It checks a real projection's validated width and weight binding, and
-requires zero JavaScript errors and zero HTTP requests. Overview and attention
-screenshots were also visually inspected. This is viewer validation; the recorded
+The browser check derives expectations from each supplied artifact. The 92B run
+visits 460 scopes including the root and iteration frames, across 462 pages. The
+flat 2,109-operation fixture covers 88 pages; a seven-operation fixture covers six
+scopes with arbitrary module names, uneven nesting and repeated local instance
+names. Checks compare all rendered edges with the underlying graph, preserve
+every provenance frame, and exercise pagination, nested expansion, search,
+dependency links, browser history, shapes, bindings and narrow viewport layout.
+All runs require zero JavaScript errors and zero HTTP requests. Rust tests also
+check deterministic HTML output, validation and safe embedding. Overview and
+operation screenshots were visually inspected. This is viewer validation; the recorded
 NPU numerical qualification remains the same previously tested execution program.

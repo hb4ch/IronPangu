@@ -14,12 +14,33 @@ pub fn render(graph: &Graph) -> Result<String> {
             Type::Cache => serde_json::json!({"kind":"cache"}),
         })
         .collect();
+    // Binding roles belong to the validated operator schema, not to the browser.
+    // Keep all attributes in the graph as well; this metadata only identifies
+    // which attributes represent checkpoint bindings for the detail panel.
+    let node_metadata: Vec<_> = graph
+        .nodes
+        .iter()
+        .map(|node| {
+            let bindings: Vec<_> = node
+                .attrs
+                .iter()
+                .filter(|(key, _)| {
+                    key.as_str() == "weight"
+                        || (node.op == "sink_normalize" && key.as_str() == "norm")
+                })
+                .map(|(key, value)| serde_json::json!({"attribute":key,"value":value}))
+                .collect();
+            serde_json::json!({"bindings":bindings})
+        })
+        .collect();
     // JSON lives in a script data block. Escape HTML delimiters even for imported
     // graphs whose names/source frames did not originate in the DSL lexer.
-    let data = serde_json::to_string(&serde_json::json!({"graph":graph,"types":types}))
-        .map_err(|e| invalid(e.to_string()))?
-        .replace('&', "\\u0026")
-        .replace('<', "\\u003c")
-        .replace('>', "\\u003e");
+    let data = serde_json::to_string(
+        &serde_json::json!({"graph":graph,"types":types,"node_metadata":node_metadata}),
+    )
+    .map_err(|e| invalid(e.to_string()))?
+    .replace('&', "\\u0026")
+    .replace('<', "\\u003c")
+    .replace('>', "\\u003e");
     Ok(include_str!("token_view.html").replace("__PLAN_DATA__", &data))
 }

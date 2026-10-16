@@ -1,0 +1,164 @@
+{
+  "name": "RenamedScopeFixture",
+  "max_context": 128,
+  "eos": 0,
+  "nodes": [
+    {
+      "name": "lookup",
+      "op": "embedding",
+      "inputs": [],
+      "attrs": {
+        "vocab": "151552",
+        "weight": "dictionary",
+        "width": "2560"
+      }
+    },
+    {
+      "name": "phase.fanout",
+      "op": "repeat",
+      "inputs": [
+        0
+      ],
+      "attrs": {
+        "count": "4"
+      },
+      "source": {
+        "start": 0,
+        "end": 1,
+        "frames": [
+          {
+            "module": "Prepare",
+            "instance": "phase",
+            "start": 0,
+            "end": 1
+          }
+        ]
+      }
+    },
+    {
+      "name": "tail.shared.merge",
+      "op": "mhc_merge",
+      "inputs": [
+        1
+      ],
+      "attrs": {
+        "weight": "combine",
+        "streams": "4",
+        "sinkhorn": "20",
+        "eps": "1e-6"
+      },
+      "source": {
+        "start": 0,
+        "end": 1,
+        "frames": [
+          {
+            "module": "Finalize",
+            "instance": "tail",
+            "start": 0,
+            "end": 1
+          },
+          {
+            "module": "Reduce",
+            "instance": "shared",
+            "start": 0,
+            "end": 1
+          }
+        ]
+      }
+    },
+    {
+      "name": "tail.shared.value",
+      "op": "mhc_input",
+      "inputs": [
+        2
+      ],
+      "attrs": {},
+      "source": {
+        "start": 0,
+        "end": 1,
+        "frames": [
+          {
+            "module": "Finalize",
+            "instance": "tail",
+            "start": 0,
+            "end": 1
+          },
+          {
+            "module": "Reduce",
+            "instance": "shared",
+            "start": 0,
+            "end": 1
+          }
+        ]
+      }
+    },
+    {
+      "name": "tail.shared.normalized",
+      "op": "norm",
+      "inputs": [
+        3
+      ],
+      "attrs": {
+        "weight": "normalizer",
+        "eps": "1e-5"
+      },
+      "source": {
+        "start": 0,
+        "end": 1,
+        "frames": [
+          {
+            "module": "Finalize",
+            "instance": "tail",
+            "start": 0,
+            "end": 1
+          },
+          {
+            "module": "Normalize",
+            "instance": "shared",
+            "start": 0,
+            "end": 1
+          }
+        ]
+      }
+    },
+    {
+      "name": "tail.project.local",
+      "op": "linear",
+      "inputs": [
+        4
+      ],
+      "attrs": {
+        "weight": "projection",
+        "width": "18944",
+        "placement": "tp_rows"
+      },
+      "source": {
+        "start": 0,
+        "end": 1,
+        "frames": [
+          {
+            "module": "Finalize",
+            "instance": "tail",
+            "start": 0,
+            "end": 1
+          },
+          {
+            "module": "Project",
+            "instance": "project",
+            "start": 0,
+            "end": 1
+          }
+        ]
+      }
+    },
+    {
+      "name": "result",
+      "op": "gather",
+      "inputs": [
+        5
+      ],
+      "attrs": {}
+    }
+  ],
+  "output": 6
+}
