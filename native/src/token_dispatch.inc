@@ -39,10 +39,7 @@ V execute_token() {
       run(aclnnIndexSelect, bytes, executor);
       result = this->result(output);
     } else if (n.op == "repeat") {
-      V v = tensor(0);
-      for (uint32_t j = 1; j < n.integer("count"); ++j)
-        v = resident::concat(v, tensor(0));
-      result = v;
+      result = resident::repeat(tensor(0), n.integer("count"));
     } else if (n.op == "mhc_pre" || n.op == "mhc_merge")
       result = pre(tensor(0), weight(), n.op == "mhc_merge", n.name);
     else if (n.op == "mhc_input")
@@ -88,34 +85,25 @@ V execute_token() {
       result = route(tensor(0), weight(), n.name);
     else if (n.op == "expert_linear") {
       const auto &r = std::get<Routes>(input(1));
-      V batch = cast(tensor(0), ACL_BF16);
-      auto row = batch;
-      for (size_t j = 1; j < r.ids.size(); ++j)
-        batch = resident::concat(batch, row);
+      auto batch = resident::repeat(cast(tensor(0), ACL_BF16), r.ids.size());
       result = grouped_linear(batch, r, bank(weight()));
     } else if (n.op == "expert_swiglu_down") {
       const auto &r = std::get<Routes>(input(2));
       const auto &gate = std::get<ExpertRows>(input(0)),
                  &up = std::get<ExpertRows>(input(1));
-      V batch;
+      std::vector<V> parts;
       for (size_t j = 0; j < r.ids.size(); ++j) {
-        auto row = resident::concat(gate.rows.at(j), up.rows.at(j));
-        batch = j ? resident::concat(batch, row) : row;
+        parts.push_back(gate.rows.at(j));
+        parts.push_back(up.rows.at(j));
       }
-      result = grouped_linear(batch, r, bank(weight()), true);
+      result = grouped_linear(resident::concat(parts), r, bank(weight()), true);
     } else if (n.op == "expert_reduce") {
       const auto &r = std::get<Routes>(input(1));
       const auto &rows = std::get<ExpertRows>(input(0));
       auto owners =
           select(route_owner_table, select(r.ids, r.order, 8, 1), 256, 1);
       auto scores = binary(select(r.scores, r.order, 8, 1), owners, '*');
-      V out(n.width);
-      execution.zero(out.data(), out.bytes());
-      for (size_t j = 0; j < r.ids.size(); ++j)
-        out = binary(
-            out, binary(rows.rows.at(j), resident::slice(scores, j, 1), '*'),
-            '+');
-      result = out;
+      result = weighted_rows(rows, scores, n.width);
     } else if (n.op == "add") {
       result = rounded(binary(tensor(0), tensor(1), '+'));
     } else

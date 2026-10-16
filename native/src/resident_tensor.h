@@ -111,6 +111,33 @@ inline Tensor slice(const Tensor &x, size_t start, size_t count) {
                          start * element_bytes(x.dtype()),
                      count, x.dtype());
 }
+// Pack once instead of repeatedly copying a growing prefix.
+inline Tensor concat(const std::vector<Tensor> &parts) {
+  if (parts.empty())
+    throw std::runtime_error("empty resident concat");
+  size_t count = 0;
+  auto dtype = parts.front().dtype();
+  for (const auto &part : parts) {
+    if (part.dtype() != dtype || part.size() > SIZE_MAX - count)
+      throw std::runtime_error("resident concat contract");
+    count += part.size();
+  }
+  Tensor out(count, dtype);
+  size_t offset = 0;
+  for (const auto &part : parts) {
+    copy(static_cast<char *>(out.data()) + offset, part.data(), part.bytes());
+    offset += part.bytes();
+  }
+  return out;
+}
+inline Tensor repeat(const Tensor &x, size_t count) {
+  if (!count || x.size() > SIZE_MAX / count)
+    throw std::runtime_error("resident repeat bounds");
+  Tensor out(x.size() * count, x.dtype());
+  for (size_t i = 0; i < count; ++i)
+    copy(static_cast<char *>(out.data()) + i * x.bytes(), x.data(), x.bytes());
+  return out;
+}
 inline Tensor concat(const Tensor &a, const Tensor &b) {
   if (a.dtype() != b.dtype() || a.size() > SIZE_MAX - b.size())
     throw std::runtime_error("resident concat contract");

@@ -68,3 +68,13 @@ same execution.bin hash. The six-run benchmark used `--decode-graph
 from this milestone as the exact replay fixture after independent reference
 comparison. Raw interval/output records, binary/fixture/program hashes, and
 numerical comparisons are checked in alongside this document.
+
+## Follow-up graph trace
+
+`device-profile.json` captures two warmed graph decode iterations of this milestone
+on all eight devices and preserves hashes of the parsed profiler databases. The
+full 17-token output passed its exact-record and residency checks during capture.
+On rank 0, mHC pre accounts for approximately 9.69 ms/token, sparse grouped matmul
+2.30 ms/token, and attention 2.36 ms/token. Thousands of remaining elementwise and
+copy tasks motivate the next vector-kernel milestone. Profiling overhead and
+cross-stream overlap preclude treating summed task time as benchmark TPOT.

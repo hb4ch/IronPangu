@@ -98,3 +98,9 @@ replaces fixed foreign-route compute and weight gathers with device-ordered spar
 group lists and direct bank reads. Its numerical contract is explicit: full greedy
 sequences match the pinned reference, while grouped dequantization changes some
 logits. Graph replay matches its independently checked eager output records exactly.
+
+[Inference mHC and vector kernels](validation/2026-10-16-vector-kernels/README.md)
+reduce the qualified graph baseline to 32.39 ms/token. Fused FP32 rotary, one-pass
+packing and vector weighted reduction avoid thousands of small tasks, while the
+mHC inference-output contract enables vendor small-token tiling. These kernel
+numerical contracts are recorded in generated physical metadata.

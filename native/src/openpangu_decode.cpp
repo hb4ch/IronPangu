@@ -15,7 +15,9 @@
 #include <aclnnop/aclnn_grouped_matmul_v5.h>
 #include <aclnnop/aclnn_index_copy.h>
 #include <aclnnop/aclnn_quant_matmul_v5.h>
+#include <aclnnop/aclnn_reduce_sum.h>
 #include <aclnnop/aclnn_rms_norm.h>
+#include <aclnnop/aclnn_rotary_position_embedding.h>
 #include <array>
 #include <filesystem>
 #include <fstream>
@@ -126,9 +128,9 @@ struct Decoder {
     causal_indices = std::make_unique<DeviceTensor>(
         std::vector<int64_t>{1, 1, int64_t(program.context)}, ACL_INT32, 4);
     rotary_cos =
-        std::make_unique<DeviceTensor>(std::vector<int64_t>{32}, ACL_FLOAT, 4);
+        std::make_unique<DeviceTensor>(std::vector<int64_t>{64}, ACL_FLOAT, 4);
     rotary_sin =
-        std::make_unique<DeviceTensor>(std::vector<int64_t>{32}, ACL_FLOAT, 4);
+        std::make_unique<DeviceTensor>(std::vector<int64_t>{64}, ACL_FLOAT, 4);
     checked(HcclCommInitRootInfo(8, &info, rank, &comm), "HCCL");
   }
   ~Decoder() {
@@ -376,7 +378,7 @@ struct Decoder {
     aclOpExecutor *e = nullptr;
     checked(prepared::query("mHC.pre", false, api.pre_size, s.x.tensor,
                             s.phi.tensor, s.alpha.tensor, s.beta.tensor,
-                            nullptr, 1, 1e-6, 1e-6, s.input.tensor,
+                            nullptr, 0, 1e-6, 1e-6, s.input.tensor,
                             s.post.tensor, s.res.tensor, s.rms.tensor,
                             s.mix.tensor, s.pre_weights.tensor, &bytes, &e),
             "mHC pre prepare");
@@ -409,21 +411,27 @@ struct Decoder {
     return result(s.out);
   }
   V rope(const V &input, int pos) {
-    auto v = cast(input, ACL_FLOAT);
-    if (v.size() != 64)
-      throw std::runtime_error("rotary width");
-    if (pos != current_position)
-      throw std::runtime_error("rotary position mismatch");
-    auto cv = result(*rotary_cos, ACL_FLOAT),
-         sv = result(*rotary_sin, ACL_FLOAT);
-    auto a = resident::slice(v, 0, 32), b = resident::slice(v, 32, 32);
-    return rounded(
-        resident::concat(binary(binary(a, cv, '*'), binary(b, sv, '*'), '-'),
-                         binary(binary(b, cv, '*'), binary(a, sv, '*'), '+')));
+    if (input.size() != 64 || pos != current_position)
+      throw std::runtime_error("rotary shape/position contract");
+    // Preserve FP32 products/sum and the existing final BF16 rounding while
+    // fusing the half rotation, products and sum into one vendor operation.
+    auto value = cast(input, ACL_FLOAT);
+    DeviceTensor out({1, 1, 1, 64}, ACL_FLOAT, 4);
+    View x(value.data(), {1, 1, 1, 64}, ACL_FLOAT),
+        cos(rotary_cos->data, {1, 1, 1, 64}, ACL_FLOAT),
+        sin(rotary_sin->data, {1, 1, 1, 64}, ACL_FLOAT);
+    uint64_t bytes = 0;
+    aclOpExecutor *e = nullptr;
+    checked(prepared::query("aclnnRotaryPositionEmbedding", false,
+                            aclnnRotaryPositionEmbeddingGetWorkspaceSize, x.t,
+                            cos.t, sin.t, 0, out.tensor, &bytes, &e),
+            "rotary prepare");
+    run(aclnnRotaryPositionEmbedding, bytes, e);
+    return rounded(result(out, ACL_FLOAT));
   }
   V absorb_query(const V &q, const std::string &weight_name, int pos) {
     auto &weight = w(weight_name + ".weight");
-    V queries;
+    std::vector<V> queries;
     for (int head = 0; head < 6; ++head) {
       size_t offset = (rank * 6 + head) * 192;
       auto no = resident::slice(q, offset, 128),
@@ -432,22 +440,22 @@ struct Decoder {
           matrix(no, static_cast<uint16_t *>(weight.data) + head * 256 * 512,
                  128, 512, false);
       query = resident::concat(query, rot);
-      queries = head ? resident::concat(queries, query) : query;
+      queries.push_back(query);
     }
-    return queries;
+    return resident::concat(queries);
   }
   V expand_value(const V &values, const std::string &weight_name) {
     auto &weight = w(weight_name + ".weight");
-    V local;
+    std::vector<V> local;
     for (int head = 0; head < 6; ++head) {
       auto value = resident::slice(values, head * 512, 512);
       auto out = matrix(value,
                         static_cast<uint16_t *>(weight.data) +
                             (head * 256 + 128) * 512,
                         128, 512);
-      local = head ? resident::concat(local, out) : out;
+      local.push_back(out);
     }
-    return local;
+    return resident::concat(local);
   }
   V normalize_sinks(const std::string &state_name,
                     const std::string &weight_name,
@@ -548,6 +556,7 @@ struct Decoder {
     V ids, scores, order, groups;
   };
   struct ExpertRows {
+    V packed;
     std::vector<V> rows;
   };
   Routes route(const V &x, const std::string &p,
@@ -740,9 +749,37 @@ struct Decoder {
     run(aclnnGroupedMatmulV5, bytes, e);
     ExpertRows output;
     auto value = result(out);
+    output.packed = value;
     for (int i = 0; i < rows; ++i)
       output.rows.push_back(value.view(size_t(i) * bank.n, bank.n));
     return output;
+  }
+  V weighted_rows(const ExpertRows &rows, const V &scores, size_t width) {
+    if (scores.dtype() != ACL_FLOAT ||
+        rows.packed.size() != scores.size() * width)
+      throw std::runtime_error("weighted expert reduction contract");
+    auto input = cast(rows.packed, ACL_FLOAT);
+    V products(input.size()), out(width);
+    View x(input.data(), {int64_t(scores.size()), int64_t(width)}, ACL_FLOAT),
+        s(scores.data(), {int64_t(scores.size()), 1}, ACL_FLOAT),
+        y(products.data(), {int64_t(scores.size()), int64_t(width)}, ACL_FLOAT);
+    uint64_t bytes = 0;
+    aclOpExecutor *e = nullptr;
+    checked(prepared::query("aclnnMul", true, aclnnMulGetWorkspaceSize, x.t,
+                            s.t, y.t, &bytes, &e),
+            "expert weighted rows prepare");
+    run(aclnnMul, bytes, e);
+    int64_t axis = 0;
+    auto *axes = aclCreateIntArray(&axis, 1);
+    if (!axes)
+      throw std::runtime_error("expert reduction axes");
+    auto status =
+        prepared::query("aclnnReduceSum", false, aclnnReduceSumGetWorkspaceSize,
+                        y.t, axes, false, ACL_FLOAT, out.tensor(), &bytes, &e);
+    aclDestroyIntArray(axes);
+    checked(status, "expert reduction prepare");
+    run(aclnnReduceSum, bytes, e);
+    return out;
   }
   int emit(const V &resident_logits, int step) {
     auto logits = cast(resident_logits, ACL_FLOAT);
@@ -824,11 +861,11 @@ struct Decoder {
     for (int i = 0; i <= pos; ++i)
       indices[i] = i;
     resident::control_upload(*causal_indices, indices);
-    Host c(32), sn(32);
+    Host c(64), sn(64);
     for (int i = 0; i < 32; ++i) {
       float angle = float(pos) / std::pow(6400000.f, float(2 * i) / 64);
-      c[i] = roundbf(std::cos(angle));
-      sn[i] = roundbf(std::sin(angle));
+      c[i] = c[i + 32] = roundbf(std::cos(angle));
+      sn[i] = sn[i + 32] = roundbf(std::sin(angle));
     }
     resident::control_upload(*rotary_cos, c);
     resident::control_upload(*rotary_sin, sn);

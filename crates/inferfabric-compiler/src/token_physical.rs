@@ -109,6 +109,16 @@ pub fn lower(graph: &Graph, devices: &[u32]) -> Result<Plan> {
         }];
         if matches!(
             n.op.as_str(),
+            "mhc_pre" | "mhc_merge" | "expert_reduce" | "rope" | "mla_query"
+        ) {
+            boundaries.push(Boundary {kind: BoundaryKind::InternalLaunches, detail: match n.op.as_str() {
+                "mhc_pre" | "mhc_merge" => "mHC inference-only output flag permits the vendor small-token tiling; no training auxiliary values are consumed",
+                "expert_reduce" => "One FP32 broadcast multiply and vector reduction over owner-ordered expert rows; parallel reduction is a distinct numerical contract",
+                _ => "Fused rotary operation in FP32 followed by BF16 rounding; shared position-derived controls remain device-resident",
+            }.into()});
+        }
+        if matches!(
+            n.op.as_str(),
             "rope" | "mla_query" | "mome" | "cache_append"
         ) {
             boundaries.push(Boundary {kind: BoundaryKind::ControlUpload,
@@ -157,7 +167,13 @@ pub fn lower(graph: &Graph, devices: &[u32]) -> Result<Plan> {
             name: n.name.clone(), logical_nodes: vec![i], inputs: n.inputs.clone(), collective,
             candidates: vec![Candidate {
                 id: format!("ascend.token.device_resident.{}.v1", n.op),
-                contract_revision: revision.clone(), numerical_contract: if matches!(n.op.as_str(), "expert_linear" | "expert_swiglu_down") { format!("ascend_token_v1/{}/sparse_gmm_bf16_scales_v1", n.op) } else { format!("ascend_token_v1/{}", n.op) },
+                contract_revision: revision.clone(), numerical_contract: match n.op.as_str() {
+                    "expert_linear" | "expert_swiglu_down" => format!("ascend_token_v1/{}/sparse_gmm_bf16_scales_v1", n.op),
+                    "expert_reduce" => "ascend_token_v1/expert_reduce/vector_weighted_sum_fp32_v1".into(),
+                    "mhc_pre" | "mhc_merge" => format!("ascend_token_v1/{}/inference_outputs_v1", n.op),
+                    "rope" => "ascend_token_v1/rope/fused_fp32_v1".into(),
+                    _ => format!("ascend_token_v1/{}", n.op),
+                },
                 location: Location::Device, eligible: true, rejection: None,
                 workspace_bound_bytes: None, capture_qualified: false, boundaries,
                 unresolved: vec!["Runtime-prepared descriptors/pool are not a frozen physical arena; internal device DAG and static full memory bound remain unresolved".into(),
