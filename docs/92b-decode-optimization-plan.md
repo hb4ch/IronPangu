@@ -13,8 +13,20 @@ includes full output tests, rank audits and an inspectable physical plan.
 OmniInfer's optimized reference is 18.1817 ms/token; parity remains open.
 One newly identified configuration difference is collective execution:
 OmniInfer defaults communicator expansion to AIV, while these native milestones
-used HOST. AIV and deterministic reduction are being qualified before changing
-the native default. Global fences and activation host fallback remain forbidden.
+used HOST. AIV and deterministic FP32/BF16 reductions were qualified; they
+were slower, so HOST remains selected. See the
+[collective experiments](validation/2026-10-16-collective-contracts/README.md).
+Global fences and activation host fallback remain forbidden.
+
+The next target is mHC preprocessing: its profiled kernel duration remains
+roughly 2.86 ms/token versus 1.55 ms in the reference trace. API V2, NCL input
+metadata and staging phi did not establish a useful improvement. Compare
+actual tiling/workspace/cache behavior before replacing the kernel. A separate
+candidate is fusing query rotary extraction, rotation and packing while
+preserving FP32 intermediate arithmetic and final BF16 rounding. Every change
+must pass the full independent-reference output check, warmed graph fixture
+check and per-rank residency audits before the matched TP8/EP8 timing gate.
+See [rejected experiments](validation/2026-10-16-refreshed-profile/README.md).
 
 The measurements and original implementation sequence below are retained as
 historical evidence, not a description of today's bottlenecks.
