@@ -50,8 +50,14 @@ formats or backend operator contracts.
 
 ## Generate
 
+**Physical plan** switches the current scope to per-rank call order and activation
+storage views. Select a call to inspect implementation selection, alternatives,
+cost provenance, workspace bounds, lifetimes, collective signatures and opaque
+host/device boundaries. Unknown costs/HBM remain unknown; this initial physical
+artifact is inspection-only. See [the physical design and status](native-physical-planning.md).
+
 `compile-token` now includes `execution.html` in its atomically published bundle,
-alongside the binary, JSON, DOT and per-rank initialization plans. This does not
+alongside `physical.json`, the binary, JSON, DOT and per-rank initialization plans. This does not
 change executable binary formats or native runtime behavior.
 
 To inspect a previously saved graph without checkpoint access or NPU occupation,
@@ -64,6 +70,7 @@ cargo run -p inferfabric-compiler --example view_token_plan -- \
 
 The renderer validates the graph before exporting. Source metadata is retained,
 and embedded JSON is escaped so graph labels cannot terminate the data block.
+An optional third argument to `view_token_plan` writes the physical JSON separately.
 
 ## Verification
 

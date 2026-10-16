@@ -1,5 +1,13 @@
 # InferFabric IR reference
 
+Native physical extension (2026-10-16): `inferfabric-plan::physical::Plan`, named
+format `inferfabric.physical.v1`, is a verified inspection IR with generic candidate,
+cost, value, boundary, collective, schedule-template and rank-binding records.
+It does not replace the executable CPU v1 schema or `IFTOKN01`. See
+[native physical planning](native-physical-planning.md) for current limitations and
+the transition to executable device-buffer plans. The token viewer consumes this
+metadata directly and does not infer hardware costs or physical allocations.
+
 Updated 2026-09-08. This catalog separates implemented formats from the proposed DSL v1 frontend and future native physical extensions. There is currently no single representation shared by every historical path. The field definitions in the linked Rust sources are authoritative; new physical-path JSON objects reject unknown fields.
 
 ## Pipeline and version ownership

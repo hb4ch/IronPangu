@@ -1,5 +1,7 @@
 # Physical planning and execution
 
+**Native extension (2026-10-16):** [physical planning and device-buffer contracts](native-physical-planning.md) records the accepted cost-guided design, current inspection IR and staged native implementation. The CPU implementation below remains supported.
+
 Updated 2026-09-08. The SQL-style plan/execute boundary is part of the target architecture. A working local implementation exists in `inferfabric-plan`: static f32 CPU graphs, checked physical planning, binary loading/execution, and standalone HTML explanation. It does not replace the existing Ascend/Qwen serving path or implement the proposed v1 text parser.
 
 ## 1. The boundary

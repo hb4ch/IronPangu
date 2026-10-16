@@ -3,6 +3,40 @@ use inferfabric_authoring::execution::{Graph, Type};
 use inferfabric_model::{Result, invalid};
 
 pub fn render(graph: &Graph) -> Result<String> {
+    let physical = crate::token_physical::lower(graph, &[0, 1, 2, 3, 4, 5, 6, 7])?;
+    render_with_physical(graph, &physical)
+}
+
+pub fn render_with_physical(
+    graph: &Graph,
+    physical: &inferfabric_plan::physical::Plan,
+) -> Result<String> {
+    inferfabric_plan::physical::verify(physical)?;
+    let graph_digest = crate::token_physical::digest(
+        &serde_json::to_vec(graph).map_err(|e| invalid(e.to_string()))?,
+    );
+    if physical.logical_digest != graph_digest {
+        return Err(invalid(
+            "physical plan does not belong to this logical graph",
+        ));
+    }
+    for schedule in &physical.schedules {
+        if schedule.steps.len() != graph.nodes.len()
+            || schedule
+                .steps
+                .iter()
+                .zip(&graph.nodes)
+                .enumerate()
+                .any(|(i, (s, n))| {
+                    s.operation.logical_nodes != vec![i]
+                        || s.operation.inputs != n.inputs
+                        || s.operation.name != n.name
+                })
+            || schedule.outputs != vec![graph.output]
+        {
+            return Err(invalid("physical/logical mapping mismatch"));
+        }
+    }
     let types: Vec<_> = graph
         .validate()?
         .into_iter()
@@ -36,7 +70,7 @@ pub fn render(graph: &Graph) -> Result<String> {
     // JSON lives in a script data block. Escape HTML delimiters even for imported
     // graphs whose names/source frames did not originate in the DSL lexer.
     let data = serde_json::to_string(
-        &serde_json::json!({"graph":graph,"types":types,"node_metadata":node_metadata}),
+        &serde_json::json!({"graph":graph,"types":types,"node_metadata":node_metadata,"physical":physical}),
     )
     .map_err(|e| invalid(e.to_string()))?
     .replace('&', "\\u0026")

@@ -2,6 +2,7 @@
 mod binary;
 mod execute;
 pub mod ir;
+pub mod physical;
 mod planner;
 mod verify;
 pub mod visualize;

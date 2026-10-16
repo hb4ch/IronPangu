@@ -275,6 +275,7 @@ pub fn write_bundle(
 ) -> Result<()> {
     let plans = initialization_plans(graph, topology, inventory)?;
     let binary = graph.encode()?;
+    let physical = crate::token_physical::lower(graph, &topology.devices)?;
     if output.exists() {
         return Err(invalid(
             "token bundle output already exists; choose a new directory",
@@ -318,7 +319,11 @@ pub fn write_bundle(
         crate::write_atomic(&staging.join("execution.dot"), graph.dot()?.as_bytes())?;
         crate::write_atomic(
             &staging.join("execution.html"),
-            crate::token_view::render(graph)?.as_bytes(),
+            crate::token_view::render_with_physical(graph, &physical)?.as_bytes(),
+        )?;
+        crate::write_atomic(
+            &staging.join("physical.json"),
+            &serde_json::to_vec_pretty(&physical).map_err(|e| invalid(e.to_string()))?,
         )?;
         crate::write_atomic(&staging.join("plan.json"), &serde_json::to_vec_pretty(&serde_json::json!({"format":"inferfabric.token-bundle.v1","executable":true,"topology":topology,"nodes":graph.nodes.len(),"checkpoint_metadata_sha256":inventory.metadata_sha256})).map_err(|e|invalid(e.to_string()))?)?;
         std::fs::rename(&staging, output)?;

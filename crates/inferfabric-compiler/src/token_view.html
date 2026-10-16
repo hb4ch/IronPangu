@@ -530,6 +530,46 @@
           flex-wrap: wrap;
         }
       }
+      .physical-controls {
+        display: flex;
+        gap: 16px;
+        margin: 16px 0;
+      }
+      .physical-controls select {
+        padding: 7px;
+        border: 1px solid #ccd7e6;
+        border-radius: 5px;
+        background: white;
+        color: #314864;
+      }
+      .physical-table {
+        overflow: auto;
+        border: 1px solid #dce4ef;
+        border-radius: 8px;
+        background: white;
+      }
+      .physical-table table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 11px;
+      }
+      .physical-table th,
+      .physical-table td {
+        padding: 12px;
+        text-align: left;
+        border-bottom: 1px solid #edf0f5;
+        overflow-wrap: anywhere;
+        max-width: 260px;
+      }
+      .physical-table th {
+        background: #eaf0f9;
+      }
+      .physical-table tr:hover {
+        background: #f5f8fe;
+      }
+      .physical-table .ref {
+        font-size: 11px;
+      }
     </style>
   </head>
   <body>
@@ -562,6 +602,7 @@
           <div id="crumbs"></div>
           <div class="tools">
             <button id="up" title="Parent scope">↑ Up</button
+            ><button id="physical-mode">Physical plan</button
             ><button id="fit">Fit</button
             ><button id="minus" aria-label="Zoom out">−</button
             ><button id="plus" aria-label="Zoom in">+</button>
@@ -580,6 +621,7 @@
         graph: plan,
         types,
         node_metadata: metadata,
+        physical,
       } = JSON.parse(document.getElementById("plan-data").textContent);
       const $ = (s) => document.querySelector(s),
         esc = (v) =>
@@ -656,6 +698,9 @@
       const PAGE_SIZE = 24;
       let pageIndex = 0,
         rootDiagram = false;
+      let physicalMode = false,
+        rankIndex = 0,
+        physicalTab = "schedule";
       let scope = root,
         selected = null,
         zoom = 1,
@@ -954,6 +999,8 @@
           if ($("#expand-module"))
             $("#expand-module").onclick = () => navigate(g);
         }
+        if (g.index !== undefined)
+          panel.insertAdjacentHTML("beforeend", physicalDetails(g.index));
         bindRefs(panel);
       }
       function select(g) {
@@ -1215,11 +1262,246 @@
         );
         scale();
       }
+
+      function currentSchedule() {
+        return physical.schedules.find(
+          (s) => s.id === physical.ranks[rankIndex].schedule,
+        );
+      }
+      function physicalSteps() {
+        const ids = new Set(scope.leaves);
+        return currentSchedule().steps.filter((s) =>
+          s.operation.logical_nodes.some((i) => ids.has(i)),
+        );
+      }
+      function navigatePhysical(page) {
+        location.hash =
+          encodeURIComponent(scope.id) +
+          "&view=physical&page=" +
+          page +
+          "&rank=" +
+          rankIndex;
+      }
+      function bytes(v) {
+        return v === null || v === undefined
+          ? "Unresolved"
+          : v.toLocaleString() + " B";
+      }
+      function physicalDetails(i) {
+        const s = currentSchedule(),
+          step = s.steps.find((x) => x.operation.logical_nodes.includes(i));
+        if (!step) return "";
+        const c = step.operation.candidates[step.selected],
+          v = s.values[step.id];
+        return (
+          "<h3>Physical decision · rank " +
+          physical.ranks[rankIndex].rank +
+          '</h3><div class="note">Inspection plan · not consumed by the native executor</div><dl><dt>Selected implementation</dt><dd>' +
+          esc(c.id) +
+          "</dd><dt>Why selected</dt><dd>" +
+          esc(step.selection_reason) +
+          "</dd><dt>Cost source / predicted duration</dt><dd>" +
+          esc(c.cost.source) +
+          " / " +
+          (c.cost.estimate_ns === null
+            ? "Unknown"
+            : c.cost.estimate_ns + " ns") +
+          "</dd><dt>Evidence</dt><dd>" +
+          esc(c.cost.evidence ?? "No hardware measurements") +
+          "</dd><dt>Stream / serial position</dt><dd>" +
+          step.stream +
+          " / " +
+          step.id +
+          "</dd><dt>Data / serial / reuse dependencies</dt><dd>" +
+          esc(
+            JSON.stringify([
+              step.data_dependencies,
+              step.order_dependencies,
+              step.reuse_dependencies,
+            ]),
+          ) +
+          "</dd><dt>Output location / layout</dt><dd>" +
+          esc(v.location + " / " + v.layout) +
+          "</dd><dt>Payload / inclusive lifetime</dt><dd>" +
+          bytes(v.payload_bytes) +
+          " / [" +
+          v.lifetime.join(", ") +
+          "]</dd><dt>Arena offset / workspace bound</dt><dd>" +
+          bytes(v.arena_offset) +
+          " / " +
+          bytes(c.workspace_bound_bytes) +
+          "</dd><dt>Capture qualified</dt><dd>" +
+          c.capture_qualified +
+          "</dd></dl>" +
+          (step.operation.collective
+            ? '<h3>Collective</h3><div class="path">' +
+              esc(JSON.stringify(step.operation.collective)) +
+              "</div>"
+            : "") +
+          "<h3>Backend boundaries (opaque call)</h3>" +
+          c.boundaries
+            .map(
+              (b) =>
+                '<div class="source-frame"><b>' +
+                esc(b.kind) +
+                "</b>" +
+                esc(b.detail) +
+                "</div>",
+            )
+            .join("") +
+          "<h3>Considered candidates</h3>" +
+          step.operation.candidates
+            .map(
+              (k, j) =>
+                '<div class="source-frame"><b>' +
+                esc(k.id) +
+                (j === step.selected ? " · selected" : "") +
+                "</b>" +
+                esc(k.rejection ?? "Eligible") +
+                "<br>" +
+                esc(k.cost.source) +
+                "</div>",
+            )
+            .join("") +
+          "<h3>Unresolved requirements</h3>" +
+          c.unresolved
+            .map((x) => '<p class="subtle">' + esc(x) + "</p>")
+            .join("") +
+          '<h3>Contract source fingerprint</h3><div class="path">' +
+          esc(c.contract_revision) +
+          "</div>"
+        );
+      }
+      function physicalView() {
+        const schedule = currentSchedule(),
+          steps = physicalSteps(),
+          shown = steps.slice(
+            pageIndex * PAGE_SIZE,
+            (pageIndex + 1) * PAGE_SIZE,
+          );
+        $("#workspace").innerHTML =
+          '<div class="eyebrow">Physical planning / inspection only</div><h1>' +
+          esc(scope.label) +
+          '</h1><p>Conservative serial order. Backend calls have opaque internals; these rows are not individual device launches. No timestamps are fabricated.</p><div class="physical-controls"><label>Rank <select id="physical-rank">' +
+          physical.ranks
+            .map(
+              (r, i) =>
+                '<option value="' +
+                i +
+                '" ' +
+                (rankIndex === i ? "selected" : "") +
+                ">Rank " +
+                r.rank +
+                " · device " +
+                r.device +
+                "</option>",
+            )
+            .join("") +
+          '</select></label><select id="physical-tab" aria-label="Physical view"><option value="schedule">Schedule & kernel selection</option><option value="memory">Activation storage</option></select></div><div class="metrics"><div class="metric"><strong>' +
+          steps.length +
+          '</strong><span>calls in scope</span></div><div class="metric"><strong>' +
+          bytes(schedule.known_host_payload_peak_bytes) +
+          '</strong><span>rank-wide known host peak (partial)</span></div><div class="metric"><strong>' +
+          (schedule.estimated_serial_ns === null
+            ? "Unknown"
+            : schedule.estimated_serial_ns + " ns") +
+          '</strong><span>rank-wide estimated serial time</span></div></div><div class="note">' +
+          esc(schedule.activation_policy) +
+          '. Device HBM total: unresolved. Stream overlap: disabled. All ranks reference the same schedule template with explicit device bindings.</div><div class="tools page-controls" style="margin-top:20px"><button id="physical-prev" ' +
+          (pageIndex === 0 ? "disabled" : "") +
+          '>← Previous</button><span class="subtle">Calls ' +
+          (pageIndex * PAGE_SIZE + 1) +
+          "–" +
+          Math.min((pageIndex + 1) * PAGE_SIZE, steps.length) +
+          " / " +
+          steps.length +
+          '</span><button id="physical-next" ' +
+          ((pageIndex + 1) * PAGE_SIZE >= steps.length ? "disabled" : "") +
+          '>Next →</button></div><div class="physical-table"><table><thead><tr><th>Order / source</th>' +
+          (physicalTab === "memory"
+            ? "<th>Output payload</th><th>Location / lifetime</th><th>Allocation</th>"
+            : "<th>Selected implementation</th><th>Lane / dependencies</th><th>Cost</th>") +
+          "</tr></thead><tbody>" +
+          shown
+            .map((step) => {
+              const c = step.operation.candidates[step.selected],
+                v = schedule.values[step.id];
+              return (
+                '<tr><td><button class="ref" data-physical-step="' +
+                step.id +
+                '">#' +
+                step.id +
+                " " +
+                esc(step.operation.name) +
+                "</button></td>" +
+                (physicalTab === "memory"
+                  ? "<td>" +
+                    bytes(v.payload_bytes) +
+                    "<br>" +
+                    esc(v.dtype ?? "Opaque") +
+                    "</td><td>" +
+                    esc(v.location) +
+                    "<br>[" +
+                    v.lifetime.join(", ") +
+                    "]</td><td>No planned reuse<br>Offset: " +
+                    bytes(v.arena_offset) +
+                    "</td>"
+                  : "<td>" +
+                    esc(c.id) +
+                    "</td><td>stream " +
+                    step.stream +
+                    "<br>data " +
+                    esc(step.data_dependencies.join(", ") || "—") +
+                    "<br>order " +
+                    esc(step.order_dependencies.join(", ") || "—") +
+                    "</td><td>" +
+                    esc(c.cost.source) +
+                    "<br>" +
+                    (c.cost.estimate_ns === null
+                      ? "Unmeasured"
+                      : c.cost.estimate_ns + " ns") +
+                    "</td>") +
+                "</tr>"
+              );
+            })
+            .join("") +
+          '</tbody></table></div><div class="note">' +
+          physical.limitations.map(esc).join("<br>") +
+          "</div>";
+        $("#physical-tab").value = physicalTab;
+        $("#physical-tab").onchange = (e) => {
+          physicalTab = e.target.value;
+          physicalView();
+        };
+        $("#physical-rank").onchange = (e) => {
+          rankIndex = +e.target.value;
+          navigatePhysical(pageIndex);
+        };
+        $("#physical-prev").onclick = () => navigatePhysical(pageIndex - 1);
+        $("#physical-next").onclick = () => navigatePhysical(pageIndex + 1);
+        $("#workspace")
+          .querySelectorAll("[data-physical-step]")
+          .forEach(
+            (b) =>
+              (b.onclick = () => {
+                const step = schedule.steps[+b.dataset.physicalStep];
+                select(leaves[step.operation.logical_nodes[0]]);
+              }),
+          );
+        inspect(scope);
+      }
       function render() {
         crumbs();
         navigation();
         selected = null;
-        scope === root && !rootDiagram ? overview() : graphView();
+        physicalMode
+          ? physicalView()
+          : scope === root && !rootDiagram
+            ? overview()
+            : graphView();
+        $("#physical-mode").textContent = physicalMode
+          ? "Logical graph"
+          : "Physical plan";
         $("#workspace").scrollTop = 0;
       }
       function loadHash() {
@@ -1232,9 +1514,20 @@
         }
         const params = new URLSearchParams(rest.join("&"));
         scope = groups.get(id) || root;
+        physicalMode = params.get("view") === "physical";
+        rankIndex = Math.min(
+          physical.ranks.length - 1,
+          Math.max(0, Math.floor(Number(params.get("rank")) || 0)),
+        );
         pageIndex = Math.min(
           Math.max(0, Number(params.get("page")) || 0),
-          Math.max(0, Math.ceil(scope.children.length / PAGE_SIZE) - 1),
+          Math.max(
+            0,
+            Math.ceil(
+              (physicalMode ? physicalSteps().length : scope.children.length) /
+                PAGE_SIZE,
+            ) - 1,
+          ),
         );
         pageIndex = Math.floor(pageIndex);
         rootDiagram = params.get("view") === "graph";
@@ -1243,6 +1536,8 @@
         if (op !== null && leaves[+op] && pageChildren().includes(leaves[+op]))
           select(leaves[+op]);
       }
+      $("#physical-mode").onclick = () =>
+        physicalMode ? navigate(scope) : navigatePhysical(0);
       $("#search").oninput = navigation;
       $("#up").onclick = () => scope.parent && navigate(scope.parent);
       $("#fit").onclick = fit;
@@ -1279,6 +1574,12 @@
           return pageChildren();
         },
         pageSize: PAGE_SIZE,
+        get physicalMode() {
+          return physicalMode;
+        },
+        get rankIndex() {
+          return rankIndex;
+        },
         nodeCount: nodes.length,
         shape,
         groups,

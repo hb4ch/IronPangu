@@ -95,6 +95,7 @@ dependencies = [
  "inferfabric-dsl",
  "inferfabric-ir",
  "inferfabric-model",
+ "inferfabric-plan",
  "serde",
  "serde_json",
  "sha2",

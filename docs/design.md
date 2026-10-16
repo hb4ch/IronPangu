@@ -1,5 +1,7 @@
 # InferFabric: an Ascend-native inference compiler and runtime
 
+**2026-10-16 physical-planning design:** [native physical planning and device-buffer execution](native-physical-planning.md) specifies generic kernel selection, memory reuse, per-rank scheduling, hardware-calibrated costs and inspectable decisions. Its milestone status distinguishes conservative inspection artifacts from executable native plans.
+
 Status: target design, with partial implementation updates through 7 September 2026
 
 Implementation update: native single-request Qwen3.5-2B text inference now runs through the vLLM 0.25.1 Rust frontend, with qualified ACLNN operators and full-model graph replay. See the [native milestone](npu-native-milestone.md) for validation and limits. The separate mock scheduler covers structural rank plans and PD ownership; native PD, continuous batching and distributed execution remain outstanding. The full design below is the target architecture.

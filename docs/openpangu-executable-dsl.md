@@ -52,6 +52,7 @@ The result contains:
 | `execution.json` | Complete dataflow with instance paths, input IDs, attributes, source spans and module call stacks |
 | `execution.dot` | Graphviz graph of every operation and dependency |
 | `execution.html` | Offline hierarchical viewer: model overview, expandable layers/modules, validated types, bindings and dependency navigation |
+| `physical.json` | Verified conservative physical inspection plan: implementation choices, rank bindings, serial dependencies, host lifetimes and explicit unresolved requirements; not a native executable |
 | `execution.bin` | Versioned `IFTOKN01` program consumed by the native executor |
 | `rank-N.init.json` | Readable permanent initialization IR |
 | `rank-N.bin` | Executable `IFINIT01` initialization program |

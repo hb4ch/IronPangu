@@ -244,6 +244,46 @@ const { chromium } = require(
       await page.locator("#up").click();
       await page.waitForFunction(() => planInspector.scope === "root");
     }
+
+    await page.locator("#physical-mode").click();
+    await page.waitForFunction(() => planInspector.physicalMode);
+    const physicalInfo = await page.evaluate(() => {
+      const p = JSON.parse(
+        document.querySelector("#plan-data").textContent,
+      ).physical;
+      return { ranks: p.ranks.length, steps: p.schedules[0].steps.length };
+    });
+    assert.ok((await page.locator("[data-physical-step]").count()) <= 24);
+    await page
+      .locator("#physical-rank")
+      .selectOption(String(physicalInfo.ranks - 1));
+    await page.waitForFunction(
+      (i) => planInspector.rankIndex === i,
+      physicalInfo.ranks - 1,
+    );
+    if (physicalInfo.steps > 24) {
+      await page.locator("#physical-next").click();
+      await page.waitForFunction(() => planInspector.pageIndex === 1);
+    }
+    await page.locator("#physical-tab").selectOption("memory");
+    assert.match(
+      await page.locator("#workspace").innerText(),
+      /Device HBM total: unresolved/,
+    );
+    await page.locator("[data-physical-step]").first().click();
+    assert.match(
+      await page.locator("#inspector").innerText(),
+      /Physical decision/i,
+    );
+    assert.match(await page.locator("#inspector").innerText(), /Unknown/);
+    assert.match(
+      await page.locator("#inspector").innerText(),
+      /Contract source fingerprint/i,
+    );
+    if (screenshotDir)
+      await page.screenshot({
+        path: path.join(screenshotDir, "plan-physical.png"),
+      });
     await page.setViewportSize({ width: 760, height: 900 });
     assert.equal(
       await page.evaluate(

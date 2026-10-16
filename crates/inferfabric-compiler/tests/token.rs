@@ -136,6 +136,9 @@ fn bundle_publication_is_complete_and_refuses_overwrite() {
     for rank in 0..8 {
         assert!(output.join(format!("rank-{rank}.bin")).is_file());
     }
+    let physical: inferfabric_plan::physical::Plan =
+        serde_json::from_slice(&std::fs::read(output.join("physical.json")).unwrap()).unwrap();
+    inferfabric_plan::physical::verify(&physical).unwrap();
     assert!(
         inferfabric_compiler::token::write_bundle(&graph, &parallel, &inventory, &output).is_err()
     );
