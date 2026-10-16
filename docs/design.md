@@ -1,5 +1,7 @@
 # InferFabric: an Ascend-native inference compiler and runtime
 
+**2026-10-17 serving design:** [product serving execution and scheduling](product-serving-plan.md) defines the next 92B milestones: persistent vLLM Rust integration, pooled paged state, packed/chunked prefill, continuous batching and hybrid radix prefix caching. This is a proposed implementation plan, with separate production and long-context acceptance gates.
+
 **2026-10-16 physical-planning design:** [native physical planning and device-buffer execution](native-physical-planning.md) specifies generic kernel selection, memory reuse, per-rank scheduling, hardware-calibrated costs and inspectable decisions. Its milestone status distinguishes conservative inspection artifacts from executable native plans.
 
 Status: target design, with partial implementation updates through 7 September 2026
