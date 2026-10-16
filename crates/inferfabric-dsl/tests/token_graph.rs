@@ -9,7 +9,7 @@ fn full_decoder_is_explicit_and_round_trips_through_compiled_authoring() {
     let ModelDefinition::Execution { graph, parallel } = &model else {
         panic!("expected executable graph")
     };
-    assert_eq!(graph.nodes.len(), 1699);
+    assert_eq!(graph.nodes.len(), 1701);
     assert_eq!(graph.nodes.iter().filter(|n| n.op == "router").count(), 44);
     assert_eq!(
         graph
@@ -119,9 +119,13 @@ fn reusable_model_preserves_layers_with_explicit_communication_layouts() {
     .unwrap();
     assert_eq!(graph.max_context, baseline.max_context);
     assert_eq!(graph.eos, baseline.eos);
-    assert_eq!(baseline.nodes.len() - graph.nodes.len(), 410);
+    assert_eq!(baseline.nodes.len() - graph.nodes.len(), 408);
+    assert_eq!(graph.nodes.iter().filter(|n| n.op == "linear")
+        .map(|n| 1 + usize::from(n.attrs.contains_key("paired_weight"))).sum::<usize>(),
+        baseline.nodes.iter().filter(|n| n.op == "linear").count());
+    assert_eq!(graph.nodes.iter().filter(|n| n.op == "linear" && n.attrs.contains_key("paired_weight")).count(), 90);
+    assert_eq!(graph.nodes.iter().filter(|n| n.op == "swiglu" && n.inputs.len() == 1).count(), 44);
     for op in [
-        "linear",
         "mhc_pre",
         "mhc_post",
         "mome",
@@ -168,7 +172,7 @@ fn reusable_model_preserves_layers_with_explicit_communication_layouts() {
             assert_eq!(graph.nodes[node.inputs[0]].attrs["placement"], "tp_rows");
         }
         if node.op == "linear" && node.attrs["weight"].contains("shared_experts") {
-            shared += 1;
+            shared += 1 + usize::from(node.attrs.contains_key("paired_weight"));
             assert_eq!(node.attrs["placement"], "replicated");
         }
     }

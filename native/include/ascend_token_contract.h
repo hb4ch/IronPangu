@@ -63,7 +63,12 @@ inline void validate_kernels(const Plan &p) {
       check({{0, a}}, {"weight", "eps"}, {0, a});
       eq("eps", "1e-5");
     } else if (n.op == "linear") {
-      check({{0, tensor(0)}}, {"weight", "width", "placement"}, {0, w()});
+      if (n.attrs.count("paired_weight")) {
+        auto first = w(), second = n.integer("paired_width");
+        if (!second || second > 200000 - first || n.text("placement") != "replicated") error();
+        check({{0, tensor(0)}}, {"weight", "width", "placement", "paired_weight", "paired_width"}, {0, first + second});
+      } else
+        check({{0, tensor(0)}}, {"weight", "width", "placement"}, {0, w()});
       if (n.text("placement") != "tp_rows" &&
           n.text("placement") != "tp_columns" &&
           n.text("placement") != "replicated")
@@ -142,8 +147,13 @@ inline void validate_kernels(const Plan &p) {
       auto window = n.integer("window");
       if ((window != 512 && window != 2048) || p.context > window)
         error();
-    } else if (n.op == "swiglu")
-      check({{0, tensor(0)}, {0, tensor(0)}}, {}, {0, tensor(0)});
+    } else if (n.op == "swiglu") {
+      if (n.inputs.size() == 1) {
+        if (!tensor(0) || tensor(0) % 2) error();
+        check({{0, tensor(0)}}, {}, {0, tensor(0) / 2});
+      } else
+        check({{0, tensor(0)}, {0, tensor(0)}}, {}, {0, tensor(0)});
+    }
     else if (n.op == "router") {
       check({{0, 2560}}, {"weight", "experts", "topk", "scoring", "scale"},
             {2, 0});
@@ -239,6 +249,10 @@ inline void validate_bindings(const Plan &program,
     auto width = n.inputs.empty() ? 0 : program.nodes[n.inputs[0]].width;
     if (n.op == "embedding")
       require(name + ".weight", {151552, 2560}, DType::Bf16);
+    else if (n.op == "linear" && n.attrs.count("paired_weight")) {
+      require(name + ".weight", {n.integer("width"), width}, DType::Bf16);
+      require(n.text("paired_weight") + ".weight", {n.integer("paired_width"), width}, DType::Bf16);
+    }
     else if (n.op == "linear")
       linear(name, width, n.width);
     else if (n.op == "norm" || n.op == "optional_norm" || n.op == "cache_norm_rope_append") {

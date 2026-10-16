@@ -104,6 +104,7 @@ struct Decoder {
   std::map<std::string, std::unique_ptr<openpangu::Router>> routers;
   const inferfabric::execution::Plan &program;
   std::map<std::string, std::unique_ptr<MhcState>> mhc_states;
+  std::map<std::pair<std::string, std::string>, std::unique_ptr<DeviceTensor>> paired_projections;
   std::map<std::string, std::unique_ptr<MomeState>> mome_states;
   std::map<std::string, std::unique_ptr<AttentionState>> attention_states;
   std::map<std::string, V> prepared_sinks;
@@ -326,6 +327,20 @@ struct Decoder {
     auto output = distributed ? gather(result) : result;
     trace(name, output);
     return output;
+  }
+  V linear_pair(const std::string &first, const std::string &second, const V &x) {
+    auto &a = w(first + ".weight"), &b = w(second + ".weight");
+    if (a.dtype != inferfabric::initialization::DType::Bf16 || b.dtype != a.dtype ||
+        a.descriptor.shape[1] != int64_t(x.size()) || b.descriptor.shape[1] != int64_t(x.size()))
+      throw std::runtime_error("paired projection dtype/shape");
+    int64_t rows = a.descriptor.shape[0] + b.descriptor.shape[0];
+    auto &packed = paired_projections[{first, second}];
+    if (!packed) {
+      packed = std::make_unique<DeviceTensor>(std::vector<int64_t>{rows, int64_t(x.size())}, ACL_BF16, 2);
+      execution.copy(packed->data, a.data, a.bytes);
+      execution.copy(static_cast<char *>(packed->data) + a.bytes, b.data, b.bytes);
+    }
+    return matrix(x, packed->data, rows, x.size());
   }
   void trace(const std::string &, const V &) {}
   V norm(const V &x, const std::string &name) {
@@ -689,8 +704,12 @@ struct Decoder {
     return result(state.out);
   }
   V activate(const V &gate, const V &up) {
-    int width = gate.size();
-    V joined = resident::concat(gate, up);
+    return activate(resident::concat(gate, up));
+  }
+  V activate(const V &joined) {
+    if (!joined.size() || joined.size() % 2)
+      throw std::runtime_error("packed activation shape");
+    int width = joined.size() / 2;
     auto input = cast(joined, ACL_BF16);
     DeviceTensor output({1, width}, ACL_BF16, 2);
     auto descriptor = [](void *data, int64_t columns,

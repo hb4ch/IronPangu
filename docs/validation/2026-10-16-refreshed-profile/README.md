@@ -22,3 +22,8 @@ Inclusive kernel sums are not additive TPOT; kernels and communication overlap,
 profiling perturbs execution, and the reference trace used a different prompt.
 Unprofiled wall times decide whether an optimization is retained. The current
 profile is diagnostic evidence, not a performance parity claim.
+
+An eight-cube/eight-vector scope around one-row BF16 projections with both
+weight dimensions <=2560 passed full output and replay audits, but measured
+21.3748 ms/token. It was reverted; smaller core allocations did not improve
+this workload. The experiment summary is retained alongside this report.

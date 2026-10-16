@@ -60,7 +60,7 @@ pub fn render_with_physical(
                 .iter()
                 .filter(|(key, _)| {
                     key.as_str() == "weight"
-                        || (node.op == "expert_linear" && key.as_str() == "paired_weight")
+                        || (matches!(node.op.as_str(), "linear" | "expert_linear") && key.as_str() == "paired_weight")
                         || (node.op == "sink_normalize" && key.as_str() == "norm")
                 })
                 .map(|(key, value)| serde_json::json!({"attribute":key,"value":value}))

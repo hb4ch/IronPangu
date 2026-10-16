@@ -145,13 +145,23 @@ impl Node {
             }
             "linear" => {
                 let w = tensor(0)?;
-                self.schema(inputs, &[Tensor(w)], &["weight", "width", "placement"])?;
+                let mut attrs = vec!["weight", "width", "placement"];
+                let mut output = width()?;
+                if self.attrs.contains_key("paired_weight") {
+                    attrs.extend(["paired_weight", "paired_width"]);
+                    let paired = self.integer("paired_width")?;
+                    if paired == 0 || paired > 200000 - output || self.attrs.get("placement").map(String::as_str) != Some("replicated") {
+                        return fail(self, "paired projection requires bounded widths and replicated placement");
+                    }
+                    output += paired;
+                }
+                self.schema(inputs, &[Tensor(w)], &attrs)?;
                 if !["tp_rows", "tp_columns", "replicated"]
                     .contains(&self.attrs["placement"].as_str())
                 {
                     return fail(self, "unknown linear placement");
                 }
-                Tensor(width()?)
+                Tensor(output)
             }
             "gather" => {
                 let w = tensor(0)?;
@@ -297,8 +307,14 @@ impl Node {
             }
             "swiglu" => {
                 let w = tensor(0)?;
-                self.schema(inputs, &[Tensor(w), Tensor(w)], &[])?;
-                Tensor(w)
+                if inputs.len() == 1 {
+                    self.schema(inputs, &[Tensor(w)], &[])?;
+                    if w == 0 || w % 2 != 0 { return fail(self, "packed SwiGLU needs equal halves"); }
+                    Tensor(w / 2)
+                } else {
+                    self.schema(inputs, &[Tensor(w), Tensor(w)], &[])?;
+                    Tensor(w)
+                }
             }
             "router" => {
                 self.schema(

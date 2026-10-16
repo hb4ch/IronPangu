@@ -56,6 +56,43 @@ plan P for Renamed {target=ascend_token_v1;tp=8;ep=8;devices=[0,1,2,3,4,5,6,7];m
     (graph, parallel, inventory)
 }
 #[test]
+fn paired_projection_binds_both_replicated_bf16_matrices() {
+    let (mut graph, parallel, mut inventory) = fixture();
+    graph.nodes[1].attrs.extend([
+        ("placement".into(), "replicated".into()),
+        ("width".into(), "9472".into()),
+        ("paired_weight".into(), "other".into()),
+        ("paired_width".into(), "9472".into()),
+    ]);
+    let weight = inventory.tensors.get_mut("projection.weight").unwrap();
+    weight.dtype = "BF16".into();
+    weight.shape[0] = 9472;
+    weight.bytes = 9472 * 2560 * 2;
+    let other = weight.clone();
+    inventory.tensors.insert("other.weight".into(), other);
+    let plans = initialization_plans(&graph, &parallel, &inventory).unwrap();
+    for plan in plans {
+        assert_eq!(plan.parameters.len(), 3);
+        for name in ["projection.weight", "other.weight"] {
+            let p = plan.parameters.iter().find(|p| p.name == name).unwrap();
+            assert_eq!(p.shape, vec![9472, 2560]);
+            assert_eq!(p.dtype, DType::Bf16);
+        }
+    }
+    let mut bad = graph.clone();
+    bad.nodes[1].attrs.remove("paired_width");
+    assert!(bad.validate().is_err());
+    bad = graph.clone();
+    bad.nodes[1].attrs.remove("placement");
+    assert!(bad.validate().is_err());
+    bad = graph.clone();
+    bad.nodes[1].attrs.insert("placement".into(), "tp_rows".into());
+    assert!(bad.validate().is_err());
+    inventory.tensors.get_mut("other.weight").unwrap().dtype = "I8".into();
+    assert!(initialization_plans(&graph, &parallel, &inventory).is_err());
+}
+
+#[test]
 fn graph_drives_binding_sharding_and_scale_cast_without_model_names() {
     let (graph, parallel, mut inventory) = fixture();
     inventory.tensors.insert(

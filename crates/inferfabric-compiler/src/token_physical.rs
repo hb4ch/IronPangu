@@ -131,6 +131,16 @@ pub fn lower(graph: &Graph, devices: &[u32]) -> Result<Plan> {
             boundaries.push(Boundary { kind: BoundaryKind::InternalLaunches,
                 detail: "Input-column TP slice loaded by generic strided initialization; local dynamic quantization and BF16 partial output. Cross-rank sum and its declared precision belong to a separate explicit allreduce node; no implicit gather".into() });
         }
+        if n.op == "linear" && n.attrs.contains_key("paired_weight") {
+            let Type::Tensor(input_width) = types[n.inputs[0]] else { unreachable!() };
+            let packed_bytes = 2 * input_width as u64 * (n.integer("width")? + n.integer("paired_width")?) as u64;
+            boundaries.push(Boundary { kind: BoundaryKind::PersistentState,
+                detail: format!("Two explicitly bound replicated BF16 projections share an input. Pack their rows once on device before capture, then execute one matmul; {packed_bytes} additional bytes per distinct pair. Loaded source parameters are retained; no per-token packing or host transfer") });
+        }
+        if n.op == "swiglu" && n.inputs.len() == 1 {
+            boundaries.push(Boundary { kind: BoundaryKind::InternalLaunches,
+                detail: "Packed equal gate/up halves are borrowed directly by the compiled SwiGLU kernel; no activation concatenation copy".into() });
+        }
         if matches!(
             n.op.as_str(),
             "mhc_pre" | "mhc_merge" | "expert_reduce" | "rope" | "mla_query" | "mla_value"
@@ -205,6 +215,7 @@ pub fn lower(graph: &Graph, devices: &[u32]) -> Result<Plan> {
                     "allreduce" => format!("ascend_token_v1/allreduce/{}", n.attrs.get("dtype").map(String::as_str).unwrap_or("f32")),
                     "expert_linear" if n.attrs.contains_key("paired_weight") => "ascend_token_v1/expert_linear/paired_fused_routing_gmm_bf16_scales_v1".into(),
                     "linear" if n.attrs.get("placement").is_some_and(|p| p == "tp_columns") => "ascend_token_v1/linear/local_columns_bf16_partial_v1".into(),
+                    "linear" if n.attrs.contains_key("paired_weight") => "ascend_token_v1/linear/paired_replicated_bf16_v1".into(),
                     "expert_linear" | "expert_swiglu_down" => format!("ascend_token_v1/{}/count_gmm_bf16_scales_v1", n.op),
                     "expert_reduce" => "ascend_token_v1/expert_reduce/fused_finalize_inverse_fp32_v1".into(),
                     "mhc_pre" | "mhc_merge" => format!("ascend_token_v1/{}/inference_outputs_v1", n.op),

@@ -7,7 +7,7 @@ A compile-time fold instantiates the blocks, choosing dense/MoE branches and
 attention windows. Scoped weights resolve checkpoint bindings without repeated
 full paths. See [module syntax and expansion rules](dsl-modules.md).
 
-The compiler expands this source into 1,699 primitive operations. The initial
+The compiler expands this source into 1,701 primitive operations. The initial
 module migration preserved all 2,109 operations of the qualified flat graph;
 the current placement leaves one gather and 92 explicit all-reduces per token. Shared experts are replicated
 as in the matched OmniInfer configuration, while MLA query projection emits only
@@ -109,6 +109,13 @@ has stale aggregate size metadata. It does not suppress shape or shard checks.
 C++/CANN builds and NPU execution remain inside Docker.
 
 ## Current backend boundary
+
+Two replicated BF16 projections can share one launch:
+`linear(x, weight=w.a, paired_weight=w.b, width=1024, paired_width=576, placement="replicated")`.
+The result concatenates the two outputs in binding order. Slices remain device
+views. For equal gate/up halves, `swiglu(packed)` consumes them directly; the
+existing `swiglu(gate, up)` form remains valid. Packing is an initialization-time
+device operation with an explicit additional-memory cost in the physical viewer.
 
 Collective precision can be declared explicitly:
 `allreduce(x, dtype = "bf16")` or `allreduce(x, dtype = "f32")`.

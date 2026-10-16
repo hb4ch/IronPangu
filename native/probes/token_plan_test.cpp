@@ -73,6 +73,32 @@ int main(int argc, char **argv) {
           break;
         }
     });
+    if (std::any_of(p.nodes.begin(), p.nodes.end(), [](const auto &n) {
+          return n.op == "linear" && n.attrs.count("paired_weight");
+        })) {
+      reject([](auto &x) {
+        for (auto &n : x.nodes) if (n.op == "linear" && n.attrs.count("paired_weight")) {
+          n.attrs["paired_width"] = "0";
+          break;
+        }
+      });
+      reject([](auto &x) {
+        for (auto &n : x.nodes) if (n.op == "linear" && n.attrs.count("paired_weight")) {
+          n.attrs["placement"] = "tp_rows";
+          break;
+        }
+      });
+    }
+    if (std::any_of(p.nodes.begin(), p.nodes.end(), [](const auto &n) {
+          return n.op == "swiglu" && n.inputs.size() == 1;
+        })) {
+      reject([](auto &x) {
+        for (auto &n : x.nodes) if (n.op == "swiglu" && n.inputs.size() == 1) {
+          n.inputs.push_back(n.inputs[0]);
+          break;
+        }
+      });
+    }
     auto init = inferfabric::initialization::Plan::read(std::string(argv[1]) +
                                                         "/rank-0.bin");
     init.parameters[0].shape[0] = 1;

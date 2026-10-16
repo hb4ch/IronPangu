@@ -114,6 +114,11 @@ pub fn initialization_plans(
                     DType::Bf16,
                     false,
                 )?,
+                "linear" if n.attrs.contains_key("paired_weight") => {
+                    b.add(format!("{name}.weight"), vec![n.integer("width")? as u64, width], DType::Bf16, false)?;
+                    b.add(format!("{}.weight", n.attrs["paired_weight"]),
+                          vec![n.integer("paired_width")? as u64, width], DType::Bf16, false)?;
+                }
                 "linear" => b.linear(
                     name,
                     width,

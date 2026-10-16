@@ -3,14 +3,14 @@
 ## Implementation progress
 
 The historical profile below started at 2,046.86 ms/token. The qualified path
-now reaches **21.1723 ms/token** on the same short-context TP8/EP8 workload.
+now reaches **20.0132 ms/token** on the same short-context TP8/EP8 workload.
 Prepared invocations, reusable buffers, full device graph replay, BF16 views,
 owner-local grouped experts, column-parallel projections, paired expert GEMMs,
 fused cache writes/routing and borrowed operands are implemented. The latest
-[dense-attention validation](validation/2026-10-16-dense-attention/README.md)
+[paired-projection validation](validation/2026-10-16-paired-projections/README.md)
 includes full output tests, rank audits and an inspectable physical plan.
 
-OmniInfer's optimized reference is 18.1171 ms/token; parity remains open.
+OmniInfer's optimized reference is 18.1817 ms/token; parity remains open.
 One newly identified configuration difference is collective execution:
 OmniInfer defaults communicator expansion to AIV, while these native milestones
 used HOST. AIV and deterministic reduction are being qualified before changing

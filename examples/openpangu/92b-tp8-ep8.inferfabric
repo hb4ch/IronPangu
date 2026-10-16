@@ -15,9 +15,11 @@ module PlacedLinear(x, w, width, parallel) {
 }
 
 module DenseFFN(x, w, intermediate, parallel) {
-    let gate = PlacedLinear(x, w.gate_proj, intermediate, parallel);
-    let up = PlacedLinear(x, w.up_proj, intermediate, parallel);
-    let activated = swiglu(gate, up);
+    let activated = choose(parallel,
+        swiglu(PlacedLinear(x, w.gate_proj, intermediate, true),
+               PlacedLinear(x, w.up_proj, intermediate, true)),
+        swiglu(linear(x, weight = w.gate_proj, paired_weight = w.up_proj,
+                      width = intermediate, paired_width = intermediate, placement = "replicated")));
     let output = choose(parallel,
         allreduce(linear(activated, weight = w.down_proj, width = 2560, placement = "tp_columns")),
         linear(activated, weight = w.down_proj, width = 2560, placement = "replicated"));
@@ -39,12 +41,14 @@ module RoutedMoE(x, w) {
 }
 
 module MLAAttention(x, w, window) {
-    let qa = linear(x, weight = w.q_a_proj, width = 1024, placement = "replicated");
+    let qkv = linear(x, weight = w.q_a_proj, paired_weight = w.kv_a_proj_with_mqa,
+                     width = 1024, paired_width = 576, placement = "replicated");
+    let qa = slice(qkv, start = 0, width = 1024);
     let qc = mome(qa, weight = w.qa_conv, taps = 3);
     let qn = norm(qc, weight = w.q_a_layernorm, eps = 1e-5);
     let q = linear(qn, weight = w.q_b_proj, width = 1152, placement = "tp_rows");
 
-    let kv = linear(x, weight = w.kv_a_proj_with_mqa, width = 576, placement = "replicated");
+    let kv = slice(qkv, start = 1024, width = 576);
     let latent = slice(kv, start = 0, width = 512);
     let kr = slice(kv, start = 512, width = 64);
     let kc = mome(latent, weight = w.compresskv_conv, taps = 3);

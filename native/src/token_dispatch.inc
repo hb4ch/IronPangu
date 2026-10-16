@@ -53,7 +53,9 @@ V execute_token() {
       result = bindings.count(weight() + ".weight") ? norm(tensor(0), weight())
                                                     : tensor(0);
     else if (n.op == "linear")
-      result = linear(weight(), tensor(0));
+      result = n.attrs.count("paired_weight")
+                   ? linear_pair(weight(), n.text("paired_weight"), tensor(0))
+                   : linear(weight(), tensor(0));
     else if (n.op == "gather")
       result = gather(tensor(0));
     else if (n.op == "allreduce")
@@ -86,7 +88,7 @@ V execute_token() {
     } else if (n.op == "latent_attention")
       result = attend(tensor(0), std::get<std::string>(input(1)));
     else if (n.op == "swiglu")
-      result = activate(tensor(0), tensor(1));
+      result = n.inputs.size() == 1 ? activate(tensor(0)) : activate(tensor(0), tensor(1));
     else if (n.op == "router")
       result = route(tensor(0), weight(), n.name);
     else if (n.op == "expert_linear") {
