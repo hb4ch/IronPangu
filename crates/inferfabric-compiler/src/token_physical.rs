@@ -124,7 +124,7 @@ pub fn lower(graph: &Graph, devices: &[u32]) -> Result<Plan> {
         ) {
             boundaries.push(Boundary {kind: BoundaryKind::InternalLaunches, detail: match n.op.as_str() {
                 "mhc_pre" | "mhc_merge" => "mHC inference-only output flag permits the vendor small-token tiling; no training auxiliary values are consumed",
-                "expert_reduce" => "Fused FP32 MoeFinalizeRoutingV2 weighted reduction over owner-ordered expert rows with device identity indices; distinct reduction numerical contract",
+                "expert_reduce" => "Fused FP32 MoeFinalizeRoutingV2 weighted reduction uses original router scores and device inverse indices; drop-pad row mapping skips -1 foreign routes without a host count or score reorder",
                 "mla_query" => "One batched BF16 head matmul; immutable strided weight view packed once on device before capture (786432 bytes per rank per distinct view); bounded input view and batched FP32 rotary followed by BF16 rounding",
                 "mla_value" => "One batched BF16 head matmul; immutable transposed weight view packed once on device before capture (786432 bytes per rank per distinct view); no per-token weight repacking or parameter host transfer",
                 _ => "Fused rotary operation in FP32 followed by BF16 rounding; shared position-derived controls remain device-resident",
@@ -147,7 +147,7 @@ pub fn lower(graph: &Graph, devices: &[u32]) -> Result<Plan> {
         }
         if matches!(n.op.as_str(), "expert_linear" | "expert_swiglu_down") {
             boundaries.push(Boundary {kind: BoundaryKind::PersistentState,
-                detail: "Device-packed owner-local expert banks; device-only owner ordering and sparse grouped INT8 matmul skip foreign routes and zero-local ranks. BF16 checkpoint scales are required for lossless scale storage; grouped dequantization is a distinct numerical implementation. Bank memory remains additional to loaded checkpoint storage".into()});
+                detail: "Device-packed owner-local expert banks; MoeInitRoutingV3 filters/sorts/quantizes on device into 32 per-expert counts and inverse row indices. Count-list grouped INT8 matmul skips foreign routes and zero-local ranks. BF16 checkpoint scales are required for lossless scale storage; grouped dequantization is a distinct numerical implementation. Bank memory remains additional to loaded checkpoint storage".into()});
         }
         if n.op == "expert_linear" && n.attrs.contains_key("paired_weight") {
             boundaries.push(Boundary {kind: BoundaryKind::InternalLaunches,
@@ -186,10 +186,10 @@ pub fn lower(graph: &Graph, devices: &[u32]) -> Result<Plan> {
                 id: format!("ascend.token.device_resident.{}.v1", n.op),
                 contract_revision: revision.clone(), numerical_contract: match n.op.as_str() {
                     "cache_norm_rope_append" => "ascend_token_v1/cache_norm_rope_append/fused_bf16_rotary_v1".into(),
-                    "expert_linear" if n.attrs.contains_key("paired_weight") => "ascend_token_v1/expert_linear/paired_sparse_gmm_bf16_scales_v1".into(),
+                    "expert_linear" if n.attrs.contains_key("paired_weight") => "ascend_token_v1/expert_linear/paired_fused_routing_gmm_bf16_scales_v1".into(),
                     "linear" if n.attrs.get("placement").is_some_and(|p| p == "tp_columns") => "ascend_token_v1/linear/local_columns_bf16_partial_v1".into(),
-                    "expert_linear" | "expert_swiglu_down" => format!("ascend_token_v1/{}/sparse_gmm_bf16_scales_v1", n.op),
-                    "expert_reduce" => "ascend_token_v1/expert_reduce/fused_finalize_fp32_v1".into(),
+                    "expert_linear" | "expert_swiglu_down" => format!("ascend_token_v1/{}/count_gmm_bf16_scales_v1", n.op),
+                    "expert_reduce" => "ascend_token_v1/expert_reduce/fused_finalize_inverse_fp32_v1".into(),
                     "mhc_pre" | "mhc_merge" => format!("ascend_token_v1/{}/inference_outputs_v1", n.op),
                     "rope" => "ascend_token_v1/rope/fused_fp32_v1".into(),
                     "mla_query" | "mla_value" => format!("ascend_token_v1/{}/batched_heads_bf16_v1", n.op),

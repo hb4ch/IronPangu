@@ -90,7 +90,7 @@ V execute_token() {
       result = route(tensor(0), weight(), n.name);
     else if (n.op == "expert_linear") {
       const auto &r = std::get<Routes>(input(1));
-      auto batch = resident::repeat(cast(tensor(0), ACL_BF16), r.ids.size());
+      auto batch = cast(tensor(0), ACL_BF16);
       result = grouped_linear(batch, r,
                               bank(weight(), n.attrs.count("paired_weight")
                                                  ? n.text("paired_weight")
@@ -99,7 +99,7 @@ V execute_token() {
       if (n.inputs.size() == 2) {
         const auto &r = std::get<Routes>(input(1));
         const auto &packed = std::get<ExpertRows>(input(0));
-        result = grouped_linear(packed.packed, r, bank(weight()), true);
+        result = grouped_linear(packed.packed, r, bank(weight()), true, &packed);
       } else {
         const auto &r = std::get<Routes>(input(2));
         const auto &gate = std::get<ExpertRows>(input(0)),
@@ -110,15 +110,12 @@ V execute_token() {
           parts.push_back(up.rows.at(j));
         }
         result =
-            grouped_linear(resident::concat(parts), r, bank(weight()), true);
+            grouped_linear(resident::concat(parts), r, bank(weight()), true, &gate);
       }
     } else if (n.op == "expert_reduce") {
       const auto &r = std::get<Routes>(input(1));
       const auto &rows = std::get<ExpertRows>(input(0));
-      auto owners =
-          select(route_owner_table, select(r.ids, r.order, 8, 1), 256, 1);
-      auto scores = binary(select(r.scores, r.order, 8, 1), owners, '*');
-      result = weighted_rows(rows, scores, n.width);
+      result = weighted_rows(rows, r.scores, n.width);
     } else if (n.op == "add") {
       result = rounded(binary(tensor(0), tensor(1), '+'));
     } else

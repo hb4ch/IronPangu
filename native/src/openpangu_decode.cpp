@@ -18,6 +18,7 @@
 #include <aclnnop/aclnn_grouped_matmul_v5.h>
 #include <aclnnop/aclnn_index_copy.h>
 #include <aclnnop/aclnn_moe_finalize_routing_v2.h>
+#include <aclnnop/aclnn_moe_init_routing_v3.h>
 #include <aclnnop/aclnn_quant_matmul_v5.h>
 #include <aclnnop/aclnn_reduce_sum.h>
 #include <aclnnop/aclnn_rms_norm.h>
@@ -612,10 +613,10 @@ struct Decoder {
     return result(output);
   }
   struct Routes {
-    V ids, scores, order, groups;
+    V ids, scores;
   };
   struct ExpertRows {
-    V packed;
+    V packed, groups, indices;
     std::vector<V> rows;
   };
   Routes route(const V &x, const std::string &p,
@@ -634,10 +635,7 @@ struct Decoder {
     }
     to_device(ptr->input, x, ACL_FLOAT);
     ptr->launch();
-    Routes routes{
-        result(ptr->ids, ACL_INT32), result(ptr->scores, ACL_FLOAT), {}, {}};
-    prepare_routes(routes);
-    return routes;
+    return {result(ptr->ids, ACL_INT32), result(ptr->scores, ACL_FLOAT)};
   }
   struct ExpertBank {
     V weights, scales, grouped_scales;
@@ -648,7 +646,6 @@ struct Decoder {
   };
   std::map<std::pair<std::string, std::string>, std::unique_ptr<ExpertBank>>
       expert_banks;
-  V route_owner_table;
   V select(const V &source, const V &indices, size_t rows, size_t width) {
     if (source.size() != rows * width)
       throw std::runtime_error("indexed device selection shape");
@@ -698,63 +695,25 @@ struct Decoder {
     ptr->grouped_scales = cast(ptr->scales, ACL_BF16);
     return *ptr;
   }
-  // Group-list entries and selected weight offsets remain on device. Zero
-  // count terminates the sparse list; unused capacity has no matmul work.
-  V sparse_group_table, sparse_group_padding, route_priority, reduction_indices;
-  void prepare_routes(Routes &routes) {
-    if (!sparse_group_table.size()) {
-      DeviceTensor table({256, 2}, ACL_INT64, 8),
-          padding({24, 2}, ACL_INT64, 8), owners({256}, ACL_FLOAT, 4),
-          priority({8}, ACL_FLOAT, 4), identity({8}, ACL_INT32, 4);
-      std::vector<int64_t> entries(512);
-      Host owner(256), position(8);
-      for (int i = 0; i < 256; ++i) {
-        entries[2 * i] = i % 32;
-        entries[2 * i + 1] = i / 32 == rank ? 1 : 0;
-        owner[i] = float(entries[2 * i + 1]);
-      }
-      for (int i = 0; i < 8; ++i)
-        position[i] = float(8 - i);
-      resident::control_upload(table, entries);
-      resident::control_upload(padding, std::vector<int64_t>(48, 0));
-      resident::control_upload(owners, owner);
-      resident::control_upload(priority, position);
-      resident::control_upload(identity,
-                               std::vector<int32_t>{0, 1, 2, 3, 4, 5, 6, 7});
-      reduction_indices = result(identity, ACL_INT32);
-      sparse_group_table = result(table, ACL_INT64);
-      sparse_group_padding = result(padding, ACL_INT64);
-      route_owner_table = result(owners, ACL_FLOAT);
-      route_priority = result(priority, ACL_FLOAT);
-    }
-    // Local entries come first, in original route order. Foreign entries have
-    // zero counts; sparse GMM stops there, including the zero-local-expert
-    // case.
-    auto owners = select(route_owner_table, routes.ids, 256, 1);
-    auto priority = binary(owners, route_priority, '*');
-    V sorted(8), order(8, ACL_INT64);
-    uint64_t bytes = 0;
-    aclOpExecutor *e = nullptr;
-    checked(prepared::query("route_owner_order", false,
-                            aclnnTopkGetWorkspaceSize, priority.tensor(), 8, -1,
-                            true, true, sorted.tensor(), order.tensor(), &bytes,
-                            &e),
-            "route order prepare");
-    run(aclnnTopk, bytes, e);
-    routes.order = order;
-    auto ids = select(routes.ids, order, 8, 1);
-    routes.groups = resident::concat(select(sparse_group_table, ids, 256, 2),
-                                     sparse_group_padding);
-  }
   ExpertRows grouped_linear(const V &batch, const Routes &routes,
-                            ExpertBank &bank, bool fused = false) {
+                            ExpertBank &bank, bool fused = false,
+                            const ExpertRows *source = nullptr) {
     const int rows = 8;
     if (batch.dtype() != ACL_BF16 ||
-        batch.size() != size_t(rows * bank.k * (fused ? 2 : 1)))
+        batch.size() != size_t(bank.k * (fused ? rows * 2 : 1)))
       throw std::runtime_error("grouped expert input contract");
-    const auto &groups = routes.groups;
-    View input(batch.data(), {rows, bank.k * (fused ? 2 : 1)}, ACL_BF16);
-    View group_view(groups.data(), {32, 2}, ACL_INT64);
+    V groups, indices;
+    if (fused) {
+      if (!source || source->groups.size() != 32 || source->indices.size() != rows)
+        throw std::runtime_error("fused expert routing provenance");
+      groups = source->groups;
+      indices = source->indices;
+    } else {
+      groups = V(32, ACL_INT64);
+      indices = V(rows, ACL_INT32);
+    }
+    View input(batch.data(), {fused ? rows : 1, bank.k * (fused ? 2 : 1)}, ACL_BF16);
+    View group_view(groups.data(), {32}, ACL_INT64);
     DeviceTensor quant({rows, bank.k}, ACL_INT8, 1),
         scale({rows}, ACL_FLOAT, 4), out({rows, bank.n}, ACL_BF16, 2);
     uint64_t bytes = 0;
@@ -769,11 +728,22 @@ struct Decoder {
               "grouped expert activation prepare");
       run(aclnnDequantSwigluQuant, bytes, e);
     } else {
-      checked(prepared::query("aclnnDynamicQuant", false,
-                              aclnnDynamicQuantGetWorkspaceSize, input.t,
-                              nullptr, quant.tensor, scale.tensor, &bytes, &e),
-              "grouped expert quant prepare");
-      run(aclnnDynamicQuant, bytes, e);
+      // One device operation expands/quantizes the token and filters/sorts
+      // routes into this rank's expert interval. Invalid inverse indices are -1.
+      View ids(routes.ids.data(), {1, rows}, ACL_INT32);
+      int64_t bounds[] = {rank * 32, (rank + 1) * 32};
+      auto *range = aclCreateIntArray(bounds, 2);
+      if (!range)
+        throw std::runtime_error("expert interval descriptor");
+      auto status = prepared::query("aclnnMoeInitRoutingV3", false,
+                                     aclnnMoeInitRoutingV3GetWorkspaceSize,
+                                     input.t, ids.t, nullptr, nullptr,
+                                     8, 0, 256, 0, 1, true, 1, range, 0,
+                                     quant.tensor, indices.tensor(), group_view.t,
+                                     scale.tensor, &bytes, &e);
+      aclDestroyIntArray(range);
+      checked(status, "fused expert routing/quantization prepare");
+      run(aclnnMoeInitRoutingV3, bytes, e);
     }
     // Unselected rows are defined zero, including ranks with no local route.
     execution.zero(out.data, out.bytes);
@@ -812,13 +782,15 @@ struct Decoder {
                             aclnnGroupedMatmulV5GetWorkspaceSize, xs.value,
                             ws.value, nullptr, ss.value, nullptr, nullptr,
                             nullptr, ts.value, group_view.t, nullptr, nullptr,
-                            nullptr, 3, 0, 2, 0, nullptr, ys.value, nullptr,
+                            nullptr, 3, 0, 1, 0, nullptr, ys.value, nullptr,
                             nullptr, &bytes, &e),
             "grouped expert matmul prepare");
     run(aclnnGroupedMatmulV5, bytes, e);
     ExpertRows output;
     auto value = result(out);
     output.packed = value;
+    output.groups = groups;
+    output.indices = indices;
     for (int i = 0; i < rows; ++i)
       output.rows.push_back(value.view(size_t(i) * bank.n, bank.n));
     return output;
@@ -826,19 +798,19 @@ struct Decoder {
   V weighted_rows(const ExpertRows &rows, const V &scores, size_t width) {
     if (scores.dtype() != ACL_FLOAT ||
         rows.packed.size() != scores.size() * width ||
-        reduction_indices.size() != scores.size())
+        rows.indices.size() != scores.size())
       throw std::runtime_error("weighted expert reduction contract");
     auto input = cast(rows.packed, ACL_FLOAT);
     V out(width);
-    View x(input.data(), {int64_t(scores.size()), int64_t(width)}, ACL_FLOAT),
+    View x(input.data(), {int64_t(scores.size()), 1, int64_t(width)}, ACL_FLOAT),
         s(scores.data(), {1, int64_t(scores.size())}, ACL_FLOAT),
         y(out.data(), {1, int64_t(width)}, ACL_FLOAT);
     uint64_t bytes = 0;
     aclOpExecutor *e = nullptr;
     checked(prepared::query("aclnnMoeFinalizeRoutingV2", false,
                             aclnnMoeFinalizeRoutingV2GetWorkspaceSize, x.t,
-                            reduction_indices.tensor(), nullptr, nullptr,
-                            nullptr, s.t, nullptr, 0, y.t, &bytes, &e),
+                            rows.indices.tensor(), nullptr, nullptr,
+                            nullptr, s.t, nullptr, 3, y.t, &bytes, &e),
             "fused expert reduction prepare");
     run(aclnnMoeFinalizeRoutingV2, bytes, e);
     return out;

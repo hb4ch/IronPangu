@@ -53,13 +53,13 @@ fn physical_inspection_preserves_qualified_92b_program() {
             assert!(
                 kernel
                     .numerical_contract
-                    .ends_with("sparse_gmm_bf16_scales_v1")
+                    .ends_with("count_gmm_bf16_scales_v1")
             );
             assert!(
                 kernel
                     .boundaries
                     .iter()
-                    .any(|b| b.detail.contains("skip foreign routes"))
+                    .any(|b| b.detail.contains("MoeInitRoutingV3"))
             );
         }
     }

@@ -1,0 +1,26 @@
+{
+  "format": "inferfabric.native-tpot.v1",
+  "binary_sha256": "30935c0d52a500805eb6766143b7a5829123955ce2fbacc2fb88e386d8b92fec",
+  "qualification_cases_sha256": "c1c7740653cd408dc8a1377b2adc0a251b978f24c6c1c4d00cb9b7f571dfbc35",
+  "execution_plan_sha256": "8c03e2c9aec1a0b5ec909d135f4b5579c155a428e0b9f907f528b1f7177c2c36",
+  "clock": "perf_counter_ns on the NPU host inside Docker; flushed stdout receipts",
+  "method": "exclude first output; includes native decode, selection, consensus and output delivery",
+  "batch_size": 1,
+  "decode_graph": true,
+  "repeats": 2,
+  "runs": 6,
+  "pooled_tpot": {
+    "intervals": 60,
+    "mean_ms": 22.1344117,
+    "median_ms": 22.105908499999998,
+    "p95_ms": 22.347055,
+    "min_ms": 22.008783,
+    "max_ms": 22.573166
+  },
+  "decode_tokens_per_second": 45.17852173139076,
+  "notes": [
+    "Fresh native process per case; loading/prefill excluded from TPOT.",
+    "Fresh process per request; graph mode is recorded separately; no concurrent batching; short-context baseline.",
+    "P95 uses nearest-rank empirical percentile; small sample, not a production SLO."
+  ]
+}
