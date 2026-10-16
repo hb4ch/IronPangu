@@ -117,6 +117,13 @@ int main(int argc, char **argv) {
       reject([](auto &x){for(auto &n:x.nodes)if(n.op=="expert_act_quantize"){n.inputs[0]=0;break;}});
       reject([](auto &x){for(auto &n:x.nodes)if(n.op=="mhc_sinkhorn"){n.inputs[0]=0;break;}});
     }
+    if(std::any_of(p.nodes.begin(),p.nodes.end(),[](const auto &n){return n.op=="cache_c8_norm_rope_append";})) {
+      reject([](auto &x){for(auto &n:x.nodes)if(n.op=="cache_c8_norm_rope_append"){n.attrs["cache_quantization"]="per_token_head_symmetric";break;}});
+      reject([](auto &x){for(auto &n:x.nodes)if(n.op=="cache_c8_norm_rope_append"){n.attrs["cache_rope_dtype"]="int8";break;}});
+      reject([](auto &x){for(auto &n:x.nodes)if(n.op=="cache_c8_norm_rope_append"){n.attrs["cache_scale_dtype"]="bf16";break;}});
+      reject([](auto &x){for(auto &n:x.nodes)if(n.op=="packed_latent_attention"){n.inputs[2]=0;break;}});
+      reject([](auto &x){for(auto &n:x.nodes)if(n.op=="packed_latent_attention"){n.inputs[1]=0;break;}});
+    }
     if(std::any_of(p.nodes.begin(),p.nodes.end(),[](const auto &n){return n.op=="cache_quantize_append";})) {
       reject([](auto &x){for(auto &n:x.nodes)if(n.op=="cache_quantize_append"){n.attrs["cache_dtype"]="int2";break;}});
       reject([](auto &x){for(auto &n:x.nodes)if(n.op=="cache_quantize_append"){n.attrs["cache_scale_dtype"]="bf16";break;}});

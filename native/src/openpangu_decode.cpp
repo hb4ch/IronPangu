@@ -12,6 +12,7 @@
 #include "resident_transfer.h"
 #include <aclnn_ai_infra_fused_causal_conv1d.h>
 #include <aclnn_ai_infra_kv_rms_norm_rope_cache.h>
+#include "aclnn_ai_infra_kv_quant_sparse_flash_attention.h"
 #include <aclnn_ai_infra_sparse_flash_attention_pioneer.h>
 #include <aclnn_ai_infra_fused_infer_attention_sink.h>
 #include <aclnn_ai_infra_fused_infer_attention_sink_metadata.h>
@@ -100,6 +101,7 @@ struct Decoder {
       rotary_cos, rotary_sin, rotary_cos_bf16, rotary_sin_bf16, sequence_length64, query_length64, attention_metadata, attention_mask;
   int64_t cube_cores = 0, vector_cores = 0;
   bool metadata_enqueued = false;
+  std::unique_ptr<DeviceTensor> packed_indices, packed_length;
   int rank;
   int current_position = -1;
   std::map<std::string, std::unique_ptr<openpangu::Router>> routers;
@@ -611,13 +613,13 @@ struct Decoder {
 
   void append_normalized_cache(const V &input,
                                const V &sinks, const std::string &norm_name,
-                               const std::string &state_name, int pos) {
+                               const std::string &state_name, int pos, bool packed=false) {
     if (input.size() != 576 || input.dtype()!=ACL_BF16 || pos != current_position)
       throw std::runtime_error("fused cache shape/position contract");
     auto &ptr = attention_states[state_name];
     if (!ptr) {
       resident::TransferScope constants(resident::TransferRole::ControlInput);
-      ptr = std::make_unique<AttentionState>();
+      ptr = std::make_unique<AttentionState>(packed?8:16,((program.context+31)/32)*32,packed);
       prepared::Context::InitializationCopies declared(execution);
       to_device(ptr->sink, sinks);
     }
@@ -629,7 +631,9 @@ struct Decoder {
         latent_out({1, 1, 1, 512}, ACL_BF16, 2);
     // The vendor's absent separate rope cache selects combined [latent, rope]
     // storage, matching the existing paged cache contract. Position stays on device.
-    char cache_mode[] = "PA", rotary_mode[] = "half", quant_mode[] = "none";
+    char cache_mode[] = "PA", rotary_mode[] = "half";
+    char quant_none[]="none", quant_c8[]="pertile128";
+    char *quant_mode=packed?quant_c8:quant_none;
     uint64_t bytes = 0;
     aclOpExecutor *e = nullptr;
     checked(prepared::query("aclnnAiInfraKvRmsNormRopeCache", false,
@@ -686,6 +690,35 @@ struct Decoder {
 #else
     (void)name;throw std::runtime_error("integer cache kernels not built");
 #endif
+  }
+  void prepare_packed_attention_metadata() {
+#ifdef IF_CACHE_KERNELS
+    if(!packed_indices) {
+      packed_indices=std::make_unique<DeviceTensor>(std::vector<int64_t>{1,1,512},ACL_INT32,4);
+      packed_length=std::make_unique<DeviceTensor>(std::vector<int64_t>{1},ACL_INT32,4);
+    }
+    execution.require_stream(stream);
+    if_packed_attention_metadata(cache_position->data,packed_indices->data,packed_length->data,512,stream);
+#else
+    throw std::runtime_error("packed attention metadata kernel not built");
+#endif
+  }
+  V attend_packed(const V &query,const std::string &name) {
+    auto &state=*attention_states.at(name);
+    if(!state.packed_c8 || !packed_indices || query.dtype()!=ACL_BF16 || query.size()!=3456)
+      throw std::runtime_error("packed attention contract");
+    View q(query.data(),{1,6,576},ACL_BF16);
+    auto *sink_values=weight_views.get(state.sink.data,128*576,{128,1,512},{576,576,1},ACL_BF16);
+    char layout[]="TND",cache_layout[]="PA_BSND";
+    uint64_t bytes=0;aclOpExecutor *e=nullptr;
+    checked(prepared::query("aclnnAiInfraKvQuantSparseFlashAttention",false,
+        aclnnAiInfraKvQuantSparseFlashAttentionGetWorkspaceSize,
+        q.t,state.key.tensor,state.key.tensor,packed_indices->tensor,nullptr,nullptr,
+        state.table.tensor,state.qlen.tensor,packed_length->tensor,state.sink.tensor,sink_values,
+        1/std::sqrt(192.0),2,2,1,layout,cache_layout,3,INT64_MAX,INT64_MAX,2,1,128,64,
+        state.out.tensor,&bytes,&e),"packed C8 attention prepare");
+    run(aclnnAiInfraKvQuantSparseFlashAttention,bytes,e);
+    return result(state.out);
   }
   void prepare_attention_metadata(bool cleared = false) {
     if (metadata_enqueued) return;
@@ -1166,7 +1199,7 @@ int main(int argc, char **argv) {
                                                         "/execution.bin");
     inferfabric::execution::validate_kernels(execution);
 #ifndef IF_CACHE_KERNELS
-    for(const auto &n:execution.nodes)if(n.op=="cache_quantize_append")
+    for(const auto &n:execution.nodes)if(n.op=="cache_quantize_append" || n.op=="packed_attention_metadata")
       throw std::runtime_error("plan requires integer cache kernels; build native/kernels first");
 #endif
     if(!execution.physical) throw std::runtime_error("execution requires a physical IFTOKN02 program");

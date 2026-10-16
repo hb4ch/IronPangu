@@ -332,6 +332,10 @@ pub fn lower(graph: &Graph, inventory: Option<&Inventory>) -> Result<Program> {
                 "bf16",
             );
             inputs = vec![packed, inputs[2]];
+            if n.attrs.get("cache_dtype").is_some_and(|v|v=="int8_ds_mla") {
+                let cache=emit(&mut p,logical,&n.name,"cache_c8_norm_rope_append",inputs,n.attrs.clone(),4,0,"opaque");
+                outputs.push(cache);continue;
+            }
             if n.attrs.get("cache_dtype").is_some_and(|v| v != "bf16") {
                 let normalized = emit(&mut p, logical, &n.name, "cache_normalize",
                     vec![packed], n.attrs.iter().filter(|(k,_)| matches!(k.as_str(), "weight"|"eps"|"theta")).map(|(k,v)|(k.clone(),v.clone())).collect(),
@@ -493,6 +497,14 @@ pub fn lower(graph: &Graph, inventory: Option<&Inventory>) -> Result<Program> {
             );
             outputs.push(result);
             continue;
+        }
+        if n.op == "latent_attention" && p.instructions[inputs[1]].op=="cache_c8_norm_rope_append" {
+            let meta=if let Some(id)=p.instructions.iter().position(|i|i.op=="packed_attention_metadata") { id } else {
+                emit(&mut p,logical,&n.name,"packed_attention_metadata",vec![],BTreeMap::new(),7,0,"opaque")
+            };
+            inputs.push(meta);
+            let out=emit(&mut p,logical,&n.name,"packed_latent_attention",inputs,n.attrs.clone(),0,3072,"bf16");
+            outputs.push(out);continue;
         }
         if n.op == "latent_attention" {
             let meta = if let Some(id) = attention_metadata {
@@ -766,6 +778,9 @@ pub fn recipes(p: &Program, graph: &Graph) -> Vec<serde_json::Value> {
             "mla_query" => (&["aclnnBatchMatMul", "aclnnCast", "aclnnRotaryPositionEmbedding", "aclnnCast", "aclnnCat"], "strided BF16 → FP32 rotary extraction → BF16 rounding; packed with latent query", "immutable weights packed once; rotary and concatenation temporaries"),
             "mla_value" => (&["aclnnBatchMatMul"], "BF16 heads", "immutable weights packed once; new output"),
             "sink_normalize" => (&["aclnnRmsNorm", "aclrtMemcpyAsync"], "initialization only after first preparation", "persistent normalized sink"),
+            "packed_attention_metadata" => (&["if_packed_attention_metadata"], "device position -> causal INT32 indices and sequence length", "shared persistent indices and length; no activation transfer"),
+            "cache_c8_norm_rope_append" => (&["aclnnAiInfraKvRmsNormRopeCache"], "fused RMSNorm + BF16 rotary + pertile128 INT8 latent quantization; 4 FP32 scales", "packed PA_BSND rows: 512 INT8 bytes + 64 BF16 rotary + 4 FP32 scales = 656 bytes; no BF16 mirror"),
+            "packed_latent_attention" => (&["aclnnAiInfraKvQuantSparseFlashAttention"], "direct packed C8 attention: quant modes 2, scale repo 1, tile 128, rope 64; BF16 learned sinks", "reads packed cache directly; no full-cache dequantization buffer"),
             "cache_normalize" => (&["aclnnAiInfraKvRmsNormRopeCache"], "BF16 RMS normalization and rotary encoding into temporary row", "temporary 16-row vendor output; only first row consumed"),
             "cache_quantize_append" => (&["if_cache_quantize"], "explicit symmetric per-token-head quantization; ties away from zero; signed INT4 low nibble first", "persistent packed payload + FP32 scales; BF16 learned sinks remain constants"),
             "cache_dequantize" => (&["if_cache_dequantize"], "explicit packed cache decode to BF16; future rows zeroed; all device resident", "leased BF16 attention scratch, reusable across layers; no persistent BF16 cache mirror"),
@@ -794,7 +809,7 @@ pub fn recipes(p: &Program, graph: &Graph) -> Vec<serde_json::Value> {
             "linear" if i.kernel=="paired_bf16" => "Once before replay: two BF16 parameter copies pack the selected projection rows.",
             "expert_gmm" => "Once before replay: copy owner-local INT8 weights and lossless BF16 scales into grouped banks. No FP32 scale round-trip.",
             "sink_normalize" => "Once before replay: normalize checkpoint sink rows and pack BF16 latent/rotary constants; subsequent tokens borrow the prepared result.",
-            "cache_quantize_append" | "cache_append" | "cache_norm_rope_append" => "Once before replay: copy prepared constant sinks into persistent cache state; initialize metadata from control inputs.",
+            "cache_c8_norm_rope_append" | "cache_quantize_append" | "cache_append" | "cache_norm_rope_append" => "Once before replay: copy prepared constant sinks into persistent cache state; initialize metadata from control inputs.",
             "mhc_pre_project" | "mhc_merge" => "Once before replay: fold scalar checkpoint parameters and upload prepared mHC coefficients.",
             "router_projection" => "Once before replay: transpose/convert checkpoint gate parameters and upload FP32 weights and bias.",
             "mome_inplace" => "Once before replay: transpose convolution weights and initialize recurrent state and control indices.",
@@ -804,6 +819,8 @@ pub fn recipes(p: &Program, graph: &Graph) -> Vec<serde_json::Value> {
             0=>vec![serde_json::json!({"name":"value","dtype":i.dtype,"shape":[i.width]})],
             2=>vec![serde_json::json!({"name":"expert_ids","dtype":"int32","shape":[8]}),serde_json::json!({"name":"scores","dtype":"f32","shape":[8]})],
             3=>vec![serde_json::json!({"name":"packed_rows","dtype":"bf16","shape":[8,i.width]}),serde_json::json!({"name":"groups","dtype":"int64","shape":[32]}),serde_json::json!({"name":"inverse_indices","dtype":"int32","shape":[8]})],
+            4 if i.op=="cache_c8_norm_rope_append"=>vec![serde_json::json!({"name":"packed_cache","dtype":"uint8","shape":[p.max_context.div_ceil(32),32,1,656]}),serde_json::json!({"name":"latent_view","dtype":"int8","shape":[p.max_context.div_ceil(32)*32,512],"byte_offset":0,"row_stride_bytes":656}),serde_json::json!({"name":"rotary_view","dtype":"bf16","shape":[p.max_context.div_ceil(32)*32,64],"byte_offset":512,"row_stride_bytes":656}),serde_json::json!({"name":"scale_view","dtype":"f32","shape":[p.max_context.div_ceil(32)*32,4],"byte_offset":640,"row_stride_bytes":656})],
+            7 if i.op=="packed_attention_metadata"=>vec![serde_json::json!({"name":"causal_indices","dtype":"int32","shape":[1,1,512]}),serde_json::json!({"name":"kv_length","dtype":"int32","shape":[1]})],
             4 if i.op=="cache_quantize_append"=>vec![serde_json::json!({"name":"cache_payload","dtype":i.attrs["cache_dtype"],"shape":[p.max_context.div_ceil(16)*16,1,576]}),serde_json::json!({"name":"cache_scales","dtype":"f32","shape":[p.max_context.div_ceil(16)*16,1]})],
             5=>vec![serde_json::json!({"name":"quantized","dtype":"int8","shape":[1,i.width]}),serde_json::json!({"name":"scales","dtype":"f32","shape":[1]})],
             6=>vec![serde_json::json!({"name":"quantized_rows","dtype":"int8","shape":[8,i.width]}),serde_json::json!({"name":"scales","dtype":"f32","shape":[8]}),serde_json::json!({"name":"groups","dtype":"int64","shape":[32]}),serde_json::json!({"name":"inverse_indices","dtype":"int32","shape":[8]})],

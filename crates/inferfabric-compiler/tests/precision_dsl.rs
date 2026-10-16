@@ -187,3 +187,29 @@ fn integer_cache_scratch_is_page_padded_for_short_contexts() {
         assert_eq!(recipes[i]["value_fields"][1]["shape"],serde_json::json!([32,1]));
     }
 }
+
+#[test]
+fn packed_c8_uses_checkpoint_dsa_layers_without_cache_reconstruction() {
+    let source=include_str!("../../../examples/openpangu/92b-tp8-ep8-c8.inferfabric");
+    let ModelDefinition::Execution {graph,..}=definition(source).unwrap() else {panic!()};
+    let p=lower(&graph,None).unwrap();
+    assert_eq!(p,lower(&graph,None).unwrap());
+    assert_eq!(p.instructions.iter().filter(|n|n.op=="cache_c8_norm_rope_append").count(),16);
+    assert_eq!(p.instructions.iter().filter(|n|n.op=="cache_norm_rope_append").count(),30);
+    assert_eq!(p.instructions.iter().filter(|n|n.op=="packed_latent_attention").count(),16);
+    assert_eq!(p.instructions.iter().filter(|n|n.op=="packed_attention_metadata").count(),1);
+    assert!(!p.instructions.iter().any(|n|matches!(n.op.as_str(),"cache_normalize"|"cache_dequantize"|"cache_quantize_append")));
+    for n in p.instructions.iter().filter(|n|n.op=="cache_c8_norm_rope_append") {
+        let layer:usize=n.attrs["weight"].split('.').nth(2).unwrap().parse().unwrap();
+        assert_eq!(layer%3,0);
+        assert_eq!(n.attrs["cache_quantization"],"pertile128");
+        assert_eq!(n.attrs["cache_rope_dtype"],"bf16");
+    }
+    for n in p.instructions.iter().filter(|n|n.op=="packed_latent_attention") {
+        assert_eq!(p.instructions[n.inputs[1]].op,"cache_c8_norm_rope_append");
+        assert_eq!(p.instructions[n.inputs[2]].op,"packed_attention_metadata");
+    }
+    for bad in [source.replace("pertile128","per_token_head_symmetric"),source.replace("cache_rope_dtype = bf16","cache_rope_dtype = int8"),source.replace("cache_scale_dtype = f32","cache_scale_dtype = bf16")] {
+        assert!(definition(&bad).is_err());
+    }
+}

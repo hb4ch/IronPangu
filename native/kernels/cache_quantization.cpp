@@ -65,3 +65,15 @@ extern "C" void if_cache_dequantize(void *packed,void *scales,void *output,void 
   cache_dequantize_kernel<<<32,nullptr,stream>>>((uint8_t*)packed,(uint8_t*)scales,
       (uint8_t*)output,(uint8_t*)position,width,capacity,bits);
 }
+
+// Causal candidates are generated from device control state, once per token.
+extern "C" __global__ __aicore__ void packed_attention_metadata_kernel(
+    GM_ADDR position_addr, GM_ADDR indices_addr, GM_ADDR length_addr, uint32_t capacity) {
+  int64_t position=*((__gm__ int64_t*)position_addr);
+  auto indices=(__gm__ int32_t*)indices_addr;
+  *((__gm__ int32_t*)length_addr)=int32_t(position+1);
+  for(uint32_t i=0;i<capacity;++i)indices[i]=int64_t(i)<=position?int32_t(i):-1;
+}
+extern "C" void if_packed_attention_metadata(void *position,void *indices,void *length,uint32_t capacity,void *stream) {
+  packed_attention_metadata_kernel<<<1,nullptr,stream>>>((uint8_t*)position,(uint8_t*)indices,(uint8_t*)length,capacity);
+}

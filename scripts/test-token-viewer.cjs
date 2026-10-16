@@ -38,3 +38,13 @@ assert(rendered.includes('HcclAllReduce'));assert(rendered.includes('aclnnGroupe
 assert(rendered.includes('owns experts'));
 assert(rendered.includes('Weight bindings / attributes'));
 console.log(JSON.stringify({expert_layer:expertScope.label,full_expert_kernel_and_collective_visible:true,pass:true}));
+
+// Packed structured fields must expose storage offsets rather than just logical widths.
+if(api.data.recipes.some(r=>r.value_fields?.some(f=>f.row_stride_bytes))) {
+  api.go(layer);
+  const packedHtml=element('#content').innerHTML;
+  assert(packedHtml.includes('byte offset 512'));
+  assert(packedHtml.includes('byte offset 640'));
+  assert(packedHtml.includes('row stride 656 bytes'));
+  assert(packedHtml.includes('aclnnAiInfraKvQuantSparseFlashAttention'));
+}

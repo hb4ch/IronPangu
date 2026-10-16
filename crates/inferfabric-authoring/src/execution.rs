@@ -53,8 +53,13 @@ impl Node {
     fn cache_attributes(&self, mut attrs: Vec<&'static str>) -> Result<Vec<&'static str>> {
         if let Some(dtype)=self.attrs.get("cache_dtype") {
             attrs.push("cache_dtype");
-            if !["bf16","int8","int4"].contains(&dtype.as_str()) {return fail(self,"unsupported cache dtype");}
-            if dtype!="bf16" {
+            if !["bf16","int8","int4","int8_ds_mla"].contains(&dtype.as_str()) {return fail(self,"unsupported cache dtype");}
+            if dtype=="int8_ds_mla" {
+                attrs.extend(["cache_scale_dtype","cache_quantization","cache_rope_dtype"]);
+                if self.op!="cache_norm_rope_append" || self.attrs.get("cache_scale_dtype").map(String::as_str)!=Some("f32") || self.attrs.get("cache_quantization").map(String::as_str)!=Some("pertile128") || self.attrs.get("cache_rope_dtype").map(String::as_str)!=Some("bf16") {
+                    return fail(self,"packed MLA C8 requires fused normalization, pertile128 FP32 scales and BF16 rotary");
+                }
+            } else if dtype!="bf16" {
                 attrs.extend(["cache_scale_dtype","cache_quantization"]);
                 if self.attrs.get("cache_scale_dtype").map(String::as_str)!=Some("f32") || self.attrs.get("cache_quantization").map(String::as_str)!=Some("per_token_head_symmetric") {return fail(self,"quantized cache requires FP32 per-token/head symmetric scales");}
             }

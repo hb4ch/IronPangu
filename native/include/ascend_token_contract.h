@@ -36,6 +36,8 @@ inline void validate_kernels(const Plan &p) {
   using T = std::pair<uint32_t, uint32_t>;
   if(p.physical) {
     auto count=[&](const char *op){return std::count_if(p.nodes.begin(),p.nodes.end(),[&](const auto &n){return n.op==op;});};
+    if(count("packed_latent_attention") && count("packed_attention_metadata")!=1)
+      throw std::runtime_error("packed attention metadata must have one declared writer");
     if(count("latent_attention") && (count("attention_metadata")!=1 || count("attention_metadata_zero")!=1))
       throw std::runtime_error("attention metadata must have one declared writer");
   }
@@ -234,6 +236,17 @@ inline void validate_kernels(const Plan &p) {
       if (n.attrs.count("cache_dtype")) { attrs.push_back("cache_dtype");eq("cache_dtype","bf16"); }
       check({{0, 576}, {0, 73728}}, attrs, {4, 0});
     }
+    else if(p.physical && n.op=="cache_c8_norm_rope_append") {
+      check({{0,576},{0,73728}},{"weight","eps","theta","cache_dtype","cache_scale_dtype","cache_quantization","cache_rope_dtype"},{4,0});
+      eq("eps","1e-5");eq("theta","6400000");eq("cache_dtype","int8_ds_mla");
+      eq("cache_scale_dtype","f32");eq("cache_quantization","pertile128");eq("cache_rope_dtype","bf16");
+    } else if(p.physical && n.op=="packed_attention_metadata") {
+      check({}, {}, {7,0});
+    } else if(p.physical && n.op=="packed_latent_attention") {
+      check({{0,3456},{4,0},{7,0}},{"scale_dim","window","selection"},{0,3072});
+      eq("scale_dim","192");eq("selection","all_causal_within_window");
+      if(p.context>n.integer("window") || p.nodes[n.inputs[1]].op!="cache_c8_norm_rope_append" || p.nodes[n.inputs[2]].op!="packed_attention_metadata")error();
+    }
     else if (p.physical && n.op == "cache_normalize") {
       check({{0,576}}, {"weight","eps","theta"}, {0,576});
       eq("eps","1e-5");eq("theta","6400000");
@@ -343,7 +356,7 @@ inline void validate_kernels(const Plan &p) {
           ++all;
           inputs += c.op == "mhc_input";
           posts += c.op == "mhc_post";
-          att += c.op == "latent_attention";
+          att += c.op == "latent_attention" || c.op == "packed_latent_attention";
           dec += c.op == "cache_dequantize";
         }
       if (n.kind == 4 && (att != 1 || (n.op=="cache_quantize_append" ? (all!=2 || dec!=1) : all!=1)))
@@ -411,9 +424,9 @@ inline void validate_bindings(const Plan &program,
     }
     else if (n.op == "linear")
       linear(name, width, n.width);
-    else if (n.op == "norm" || n.op == "optional_norm" || n.op == "cache_norm_rope_append" || n.op == "cache_normalize") {
+    else if (n.op == "norm" || n.op == "optional_norm" || n.op == "cache_norm_rope_append" || n.op == "cache_normalize" || n.op == "cache_c8_norm_rope_append") {
       if (n.op != "optional_norm" || weights.count(name + ".weight"))
-        require(name + ".weight", {(n.op=="cache_norm_rope_append" || n.op=="cache_normalize")?512:width}, DType::Bf16);
+        require(name + ".weight", {(n.op=="cache_norm_rope_append" || n.op=="cache_normalize" || n.op=="cache_c8_norm_rope_append")?512:width}, DType::Bf16);
     } else if (n.op == "mome" || n.op == "mome_inplace")
       require(name + ".weight", {width, 1, 3}, DType::Bf16);
     else if (n.op == "mhc_pre" || n.op == "mhc_merge" || n.op == "mhc_pre_project") {

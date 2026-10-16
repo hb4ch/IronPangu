@@ -17,14 +17,15 @@ struct AttentionState {
   openpangu::DeviceTensor query, key, value, indices, table, qlen, klen, sink,
       sinkvalue, out;
   unsigned cache_bits, cache_capacity;
+  bool packed_c8;
   std::unique_ptr<openpangu::DeviceTensor> scales;
-  explicit AttentionState(unsigned bits=16, unsigned capacity=512)
-      : query({1, 6, 576}, ACL_BF16, 2), key(bits==16?std::vector<int64_t>{32,16,1,576}:std::vector<int64_t>{int64_t(capacity)*576*bits/8}, bits==16?ACL_BF16:ACL_UINT8, bits==16?2:1),
+  explicit AttentionState(unsigned bits=16, unsigned capacity=512, bool packed=false)
+      : query({1, 6, 576}, ACL_BF16, 2), key(packed?std::vector<int64_t>{capacity/32,32,1,656}:(bits==16?std::vector<int64_t>{32,16,1,576}:std::vector<int64_t>{int64_t(capacity)*576*bits/8}), packed?ACL_INT8:(bits==16?ACL_BF16:ACL_UINT8), bits==16?2:1),
         value({1, 16, 1, 512}, ACL_BF16, 2), indices({1, 1, 512}, ACL_INT32, 4),
         table({1, 32}, ACL_INT32, 4), qlen({1}, ACL_INT32, 4),
         klen({1}, ACL_INT32, 4), sink({128, 1, 576}, ACL_BF16, 2),
-        sinkvalue({128, 1, 512}, ACL_BF16, 2), out({1, 6, 512}, ACL_BF16, 2), cache_bits(bits), cache_capacity(bits==16?512:capacity) {
-    if(bits!=16)scales=std::make_unique<openpangu::DeviceTensor>(std::vector<int64_t>{capacity},ACL_FLOAT,4);
+        sinkvalue({128, 1, 512}, ACL_BF16, 2), out({1, 6, 512}, ACL_BF16, 2), cache_bits(bits), cache_capacity(bits==16?512:capacity), packed_c8(packed) {
+    if(bits!=16 && !packed)scales=std::make_unique<openpangu::DeviceTensor>(std::vector<int64_t>{capacity},ACL_FLOAT,4);
     std::vector<int32_t> blocks(32);
     for (int i = 0; i < 32; ++i)
       blocks[i] = i;
