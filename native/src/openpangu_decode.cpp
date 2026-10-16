@@ -207,9 +207,10 @@ struct Decoder {
       throw std::runtime_error("scalar dtype");
     return host.emplace(n, std::move(v)).first->second;
   }
-  V cast(const V &x, aclDataType dtype) {
+  V cast(const V &x, aclDataType dtype, bool declared = false) {
     if (x.dtype() == dtype)
       return x;
+    if(program.physical && !declared) throw std::runtime_error("implicit physical storage conversion forbidden");
     V out(x.size(), dtype);
     uint64_t bytes = 0;
     aclOpExecutor *e = nullptr;
@@ -334,6 +335,7 @@ struct Decoder {
     int64_t rows = a.descriptor.shape[0] + b.descriptor.shape[0];
     auto &packed = paired_projections[{first, second}];
     if (!packed) {
+      prepared::Context::InitializationCopies declared(execution);
       packed = std::make_unique<DeviceTensor>(std::vector<int64_t>{rows, int64_t(x.size())}, ACL_BF16, 2);
       execution.copy(packed->data, a.data, a.bytes);
       execution.copy(static_cast<char *>(packed->data) + a.bytes, b.data, b.bytes);
@@ -397,7 +399,7 @@ struct Decoder {
     V input, residual;
   };
   HC pre(const V &x, const std::string &name, bool merge,
-         const std::string &state_name) {
+         const std::string &state_name, bool defer_sink = false) {
     auto &ptr = mhc_states[state_name];
     if (!ptr) {
       ptr = std::make_unique<MhcState>();
@@ -427,7 +429,7 @@ struct Decoder {
                             s.mix.tensor, s.pre_weights.tensor, &bytes, &e),
             "mHC pre prepare");
     run(api.pre, bytes, e);
-    if (!merge) {
+    if (!merge && !defer_sink) {
       checked(prepared::query("mHC.sink", false, api.sink_size, s.res.tensor, 0,
                               1e-6, 20, s.sink.tensor, nullptr, nullptr, &bytes,
                               &e),
@@ -439,6 +441,12 @@ struct Decoder {
     h.residual = residual;
     h.input = result(s.input);
     return h;
+  }
+  HC sinkhorn(HC h) {
+    if(!h.device) throw std::runtime_error("missing mHC projection");
+    auto &s=*h.device;auto &api=training_api();uint64_t bytes=0;aclOpExecutor *e=nullptr;
+    checked(prepared::query("mHC.sink",false,api.sink_size,s.res.tensor,0,1e-6,20,s.sink.tensor,nullptr,nullptr,&bytes,&e),"mHC Sinkhorn prepare");
+    run(api.sink,bytes,e);return h;
   }
   V post(const V &, const V &branch, const HC &h) {
     if (!h.device)
@@ -557,6 +565,7 @@ struct Decoder {
     auto found = prepared_sinks.find(state_name);
     if (found != prepared_sinks.end())
       return found->second;
+    prepared::Context::InitializationCopies declared(execution);
     auto &sk = w(weight_name + ".param_sink_compressed_kv");
     auto &sr = w(weight_name + ".param_sink_k_pe");
     V values;
@@ -578,6 +587,7 @@ struct Decoder {
     if (!ptr) {
       resident::TransferScope constants(resident::TransferRole::ControlInput);
       ptr = std::make_unique<AttentionState>();
+      prepared::Context::InitializationCopies declared(execution);
       to_device(ptr->sink, sink_values);
     }
     auto &state = *ptr;
@@ -596,18 +606,18 @@ struct Decoder {
     run(aclnnInplaceIndexCopy, bytes, executor);
   }
 
-  void append_normalized_cache(const V &latent, const V &rotary,
+  void append_normalized_cache(const V &input,
                                const V &sinks, const std::string &norm_name,
                                const std::string &state_name, int pos) {
-    if (latent.size() != 512 || rotary.size() != 64 || pos != current_position)
+    if (input.size() != 576 || input.dtype()!=ACL_BF16 || pos != current_position)
       throw std::runtime_error("fused cache shape/position contract");
     auto &ptr = attention_states[state_name];
     if (!ptr) {
       resident::TransferScope constants(resident::TransferRole::ControlInput);
       ptr = std::make_unique<AttentionState>();
+      prepared::Context::InitializationCopies declared(execution);
       to_device(ptr->sink, sinks);
     }
-    auto input = resident::concat(cast(latent, ACL_BF16), cast(rotary, ACL_BF16));
     View kv(input.data(), {1, 1, 1, 576}, ACL_BF16);
     auto &gamma = w(norm_name + ".weight");
     View norm_weight(gamma.data, {512}, ACL_BF16);
@@ -630,9 +640,9 @@ struct Decoder {
             "fused cache normalization/rotary prepare");
     run(aclnnAiInfraKvRmsNormRopeCache, bytes, e);
   }
-  void prepare_attention_metadata() {
+  void prepare_attention_metadata(bool cleared = false) {
     if (metadata_enqueued) return;
-    execution.zero(attention_metadata->data, attention_metadata->bytes);
+    if(!cleared) execution.zero(attention_metadata->data, attention_metadata->bytes);
     char layout[] = "TND", cache_layout[] = "BnBsH";
     uint64_t bytes = 0;
     aclOpExecutor *e = nullptr;
@@ -646,7 +656,8 @@ struct Decoder {
     metadata_enqueued = true;
   }
   V attend(const V &queries, const std::string &state_name) {
-    prepare_attention_metadata();
+    if(!program.physical) prepare_attention_metadata();
+    if(!metadata_enqueued) throw std::runtime_error("missing planned attention metadata");
     auto &state = *attention_states.at(state_name);
     auto query = cast(queries, ACL_BF16);
     auto *q = execution.strided_descriptor(query.data(), 3456,
@@ -741,7 +752,7 @@ struct Decoder {
     V packed, groups, indices;
     std::vector<V> rows;
   };
-  Routes route(const V &x, const std::string &p,
+  V project_route(const V &x, const std::string &p,
                const std::string &state_name) {
     auto &ptr = routers[state_name];
     if (!ptr) {
@@ -764,15 +775,23 @@ struct Decoder {
                             ptr->weight.tensor, ptr->logits.tensor, 0, &bytes, &e),
             "router projection prepare");
     run(aclnnMatmul, bytes, e);
+    return result(ptr->logits, ACL_FLOAT);
+  }
+  Routes select_route(const V &logits,const std::string &state_name) {
+    auto &ptr=routers.at(state_name);
+    if(logits.dtype()!=ACL_FLOAT || logits.data()!=ptr->logits.data) throw std::runtime_error("routing projection provenance");
     ptr->select();
     return {result(ptr->ids, ACL_INT32), result(ptr->scores, ACL_FLOAT)};
   }
+  Routes route(const V &x,const std::string &p,const std::string &state_name) {
+    return select_route(project_route(x,p,state_name),state_name);
+  }
   struct ExpertBank {
-    V weights, scales, grouped_scales;
+    V weights, grouped_scales;
     int n, k;
     ExpertBank(int count, int rows, int columns)
         : weights(size_t(count) * rows * columns, ACL_INT8),
-          scales(size_t(count) * rows), n(rows), k(columns) {}
+          grouped_scales(size_t(count) * rows,ACL_BF16), n(rows), k(columns) {}
   };
   std::map<std::pair<std::string, std::string>, std::unique_ptr<ExpertBank>>
       expert_banks;
@@ -796,6 +815,7 @@ struct Decoder {
     auto &ptr = expert_banks[{pattern, paired}];
     if (ptr)
       return *ptr;
+    prepared::Context::InitializationCopies declared(execution);
     auto &first = w(expert_name(pattern, rank * 32) + ".weight");
     int n = first.descriptor.shape[0], k = first.descriptor.shape[1];
     if (first.dtype != inferfabric::initialization::DType::I8)
@@ -812,25 +832,25 @@ struct Decoder {
               "grouped expert requires lossless BF16 checkpoint scales");
         if (weight.dtype != inferfabric::initialization::DType::I8 ||
             weight.descriptor.shape != first.descriptor.shape ||
-            weight.bytes != size_t(n) * k || scale.bytes != size_t(n) * 4)
+            weight.bytes != size_t(n) * k || scale.bytes != size_t(n) * 2 || scale.dtype != inferfabric::initialization::DType::Bf16)
           throw std::runtime_error("expert bank shape");
         resident::copy(static_cast<char *>(ptr->weights.data()) +
                            size_t(j * projections + projection) * n * k,
                        weight.data, weight.bytes);
-        resident::copy(static_cast<float *>(ptr->scales.data()) +
+        resident::copy(static_cast<uint16_t *>(ptr->grouped_scales.data()) +
                            size_t(j * projections + projection) * n,
                        scale.data, scale.bytes);
       }
     }
-    ptr->grouped_scales = cast(ptr->scales, ACL_BF16);
     return *ptr;
   }
-  ExpertRows grouped_linear(const V &batch, const Routes &routes,
-                            ExpertBank &bank, bool fused = false,
+  struct RoutedQuantized { V values,scales,groups,indices; };
+  RoutedQuantized quantize_experts(const V &batch, const Routes &routes,
+                            int k, bool fused = false,
                             const ExpertRows *source = nullptr) {
     const int rows = 8;
     if (batch.dtype() != ACL_BF16 ||
-        batch.size() != size_t(bank.k * (fused ? rows * 2 : 1)))
+        batch.size() != size_t(k * (fused ? rows * 2 : 1)))
       throw std::runtime_error("grouped expert input contract");
     V groups, indices;
     if (fused) {
@@ -842,10 +862,10 @@ struct Decoder {
       groups = V(32, ACL_INT64);
       indices = V(rows, ACL_INT32);
     }
-    View input(batch.data(), {fused ? rows : 1, bank.k * (fused ? 2 : 1)}, ACL_BF16);
+    View input(batch.data(), {fused ? rows : 1, k * (fused ? 2 : 1)}, ACL_BF16);
     View group_view(groups.data(), {32}, ACL_INT64);
-    DeviceTensor quant({rows, bank.k}, ACL_INT8, 1),
-        scale({rows}, ACL_FLOAT, 4), out({rows, bank.n}, ACL_BF16, 2);
+    DeviceTensor quant({rows, k}, ACL_INT8, 1),
+        scale({rows}, ACL_FLOAT, 4);
     uint64_t bytes = 0;
     aclOpExecutor *e = nullptr;
     if (fused) {
@@ -875,8 +895,19 @@ struct Decoder {
       checked(status, "fused expert routing/quantization prepare");
       run(aclnnMoeInitRoutingV3, bytes, e);
     }
-    // Unselected rows are defined zero, including ranks with no local route.
-    execution.zero(out.data, out.bytes);
+    return {result(quant,ACL_INT8),result(scale,ACL_FLOAT),groups,indices};
+  }
+  ExpertRows zero_expert_output(const RoutedQuantized &q,int width) {
+    ExpertRows output;output.packed=V(size_t(8)*width,ACL_BF16);
+    output.groups=q.groups;output.indices=q.indices;
+    execution.zero(output.packed.data(),output.packed.bytes());
+    for(int i=0;i<8;++i)output.rows.push_back(output.packed.view(size_t(i)*width,width));
+    return output;
+  }
+  ExpertRows expert_gmm(const RoutedQuantized &q,ExpertRows output,ExpertBank &bank) {
+    const int rows=8;
+    if(q.values.dtype()!=ACL_INT8 || q.values.size()!=size_t(rows*bank.k) || q.scales.dtype()!=ACL_FLOAT || q.scales.size()!=rows || q.groups.size()!=32 || output.packed.dtype()!=ACL_BF16 || output.packed.size()!=size_t(rows*bank.n) || output.groups.data()!=q.groups.data() || output.indices.data()!=q.indices.data()) throw std::runtime_error("grouped matmul physical contract");
+    View group_view(q.groups.data(),{32},ACL_INT64);uint64_t bytes=0;aclOpExecutor *e=nullptr;
     // ACL tensor lists own their element descriptors. Give them independent
     // descriptors, never pointers owned by the prepared descriptor cache.
     struct List {
@@ -903,11 +934,11 @@ struct Decoder {
         }
       }
       ~List() { aclDestroyTensorList(value); }
-    } xs(quant.data, {rows, bank.k}, ACL_INT8),
+    } xs(q.values.data(), {rows, bank.k}, ACL_INT8),
         ws(bank.weights.data(), {32, bank.n, bank.k}, ACL_INT8, true),
         ss(bank.grouped_scales.data(), {32, bank.n}, ACL_BF16),
-        ts(scale.data, {rows}, ACL_FLOAT),
-        ys(out.data, {rows, bank.n}, ACL_BF16);
+        ts(q.scales.data(), {rows}, ACL_FLOAT),
+        ys(output.packed.data(), {rows, bank.n}, ACL_BF16);
     checked(prepared::query("aclnnGroupedMatmulV5", false,
                             aclnnGroupedMatmulV5GetWorkspaceSize, xs.value,
                             ws.value, nullptr, ss.value, nullptr, nullptr,
@@ -916,21 +947,27 @@ struct Decoder {
                             nullptr, &bytes, &e),
             "grouped expert matmul prepare");
     run(aclnnGroupedMatmulV5, bytes, e);
-    ExpertRows output;
-    auto value = result(out);
-    output.packed = value;
-    output.groups = groups;
-    output.indices = indices;
-    for (int i = 0; i < rows; ++i)
-      output.rows.push_back(value.view(size_t(i) * bank.n, bank.n));
     return output;
   }
-  V weighted_rows(const ExpertRows &rows, const V &scores, size_t width) {
+  ExpertRows grouped_linear(const V &batch,const Routes &routes,ExpertBank &bank,bool fused=false,const ExpertRows *source=nullptr) {
+    auto q=quantize_experts(batch,routes,bank.k,fused,source);
+    return expert_gmm(q,zero_expert_output(q,bank.n),bank);
+  }
+  ExpertRows pack_expert_rows(const ExpertRows &a,const ExpertRows &b) {
+    if(a.groups.data()!=b.groups.data() || a.indices.data()!=b.indices.data()) throw std::runtime_error("expert packing provenance");
+    ExpertRows result;result.groups=a.groups;result.indices=a.indices;
+    std::vector<V> parts;for(size_t j=0;j<a.rows.size();++j){parts.push_back(a.rows[j]);parts.push_back(b.rows.at(j));}
+    result.packed=resident::concat(parts);
+    for(size_t j=0;j<a.rows.size();++j)result.rows.push_back(result.packed.view(j*(a.rows[j].size()+b.rows[j].size()),a.rows[j].size()+b.rows[j].size()));
+    return result;
+  }
+  V weighted_rows(const ExpertRows &rows, const V &scores, size_t width, const V *prepared_input=nullptr) {
     if (scores.dtype() != ACL_FLOAT ||
         rows.packed.size() != scores.size() * width ||
         rows.indices.size() != scores.size())
       throw std::runtime_error("weighted expert reduction contract");
-    auto input = cast(rows.packed, ACL_FLOAT);
+    auto input = prepared_input ? *prepared_input : cast(rows.packed, ACL_FLOAT);
+    if(input.dtype()!=ACL_FLOAT || input.size()!=rows.packed.size()) throw std::runtime_error("planned expert reduction storage");
     V out(width);
     View x(input.data(), {int64_t(scores.size()), 1, int64_t(width)}, ACL_FLOAT),
         s(scores.data(), {1, int64_t(scores.size())}, ACL_FLOAT),
@@ -946,7 +983,7 @@ struct Decoder {
     return out;
   }
   int emit(const V &resident_logits, int step) {
-    auto logits = cast(resident_logits, ACL_FLOAT);
+    auto logits = cast(resident_logits, ACL_FLOAT,true);
     V top(5), ids(5, ACL_INT64), probs(logits.size());
     uint64_t bytes = 0;
     aclOpExecutor *e = nullptr;
@@ -1080,6 +1117,15 @@ int main(int argc, char **argv) {
     auto execution = inferfabric::execution::Plan::read(std::string(argv[1]) +
                                                         "/execution.bin");
     inferfabric::execution::validate_kernels(execution);
+    if(!execution.physical) throw std::runtime_error("execution requires a physical IFTOKN02 program");
+    bool frozen_bundle=std::filesystem::exists(std::filesystem::path(argv[1])/"arena.json");
+    for(int rank=0;rank<8;++rank) frozen_bundle=frozen_bundle || std::filesystem::exists(std::filesystem::path(argv[1])/("arena-rank-"+std::to_string(rank)+".txt"));
+    if(!frozen_bundle && !std::getenv("INFERFABRIC_PREPARE_ARENA"))
+      throw std::runtime_error("unbound device arena: run explicit INFERFABRIC_PREPARE_ARENA=1 hardware preparation, then bind-prepared-arena.py");
+    if(frozen_bundle) for(int rank=0;rank<8;++rank)
+      if(!std::filesystem::exists(std::filesystem::path(argv[1])/("arena-rank-"+std::to_string(rank)+".txt")))
+        throw std::runtime_error("incomplete frozen arena bundle");
+
     if (prompt.size() + steps > execution.context)
       throw std::runtime_error("execution plan context budget");
     std::vector<inferfabric::initialization::Plan> initialization;
@@ -1107,7 +1153,7 @@ int main(int argc, char **argv) {
           {
             auto arena_path=std::filesystem::path(argv[1]) / ("arena-rank-"+std::to_string(rank)+".txt");
             pangu::Decoder decoder(plan, argv[2], info, execution,
-                std::filesystem::exists(arena_path)?arena_path.string():"",
+                (std::filesystem::exists(std::filesystem::path(argv[1])/"arena.json") || std::filesystem::exists(arena_path))?arena_path.string():"",
                 inferfabric::prepared::ArenaLayout::fingerprint_file(std::string(argv[1])+"/execution.bin"));
             pangu::V logits;
             int pos = 0;

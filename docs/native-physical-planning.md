@@ -306,7 +306,7 @@ All-to-all and AGRS are explicitly unsupported. HCCL transport remains a runtime
 binding. A vendor API is identified as an API, not falsely counted as one device
 kernel launch.
 
-### Remaining work to reach the complete physical DAG
+### Remaining work recorded at the storage-boundary milestone (updated below)
 
 This revision makes operation-boundary storage executable. It does **not** yet
 make all vendor recipes primitive instructions. The following are mandatory
@@ -382,3 +382,43 @@ sizes, and the slots acquired by each instruction during preparation. This usage
 table includes preparation-only buffers; it is not a claim that every listed slot
 is newly allocated on each token. Some backend recipes remain composite, so this
 milestone must not be described as completion of the full primitive execution DAG.
+
+### Per-token composite expansion and strict execution (2026-10-16)
+
+The subsequent expansion completes the **per-token vendor-API DAG** for the
+qualified decoder. It emits 2,661 instructions from 1,701 logical operations:
+
+- mHC projection and Sinkhorn are separate instructions with an exclusive
+  intermediate handle.
+- Router projection and device top-k are separate, with FP32 logits between them.
+- Route filtering/quantization, activation/quantization, output zeroing, grouped
+  matmul, packed-row extraction, FP32 conversion and weighted expert reduction
+  each have explicit inputs. Grouped matmul can mutate only its exclusively used
+  zero-initialized output. Separate gate/up projections share route quantization
+  and explicitly pack their rows before activation.
+- Cache input packing is a separate concatenation. Attention metadata has one
+  zeroing operation and one producer, shared by all attention consumers through
+  explicit dependencies.
+- Dense quantization, query rotary extraction, rotation, rounding, concatenation,
+  residual-add rounding, views and collectives remain explicit instructions.
+
+The runtime rejects implicit dtype conversions. Device copies are permitted only
+by copy/packing opcodes or a declared parameter/state preparation scope on the
+first token before capture. No lazy preparation copy is permitted during capture
+or later tokens. Grouped expert scales now load and pack directly as BF16: the
+previous BF16→FP32→BF16 parameter round-trip and extra FP32 bank are eliminated.
+Dense INT8 matmul retains its distinct FP32 scale contract.
+
+Normal execution requires a complete frozen arena bundle. An unbound bundle may
+run only with explicit `INFERFABRIC_PREPARE_ARENA=1` hardware preparation (or the
+benchmark's `--prepare-arena` switch). Missing rank files cannot silently select
+the pool. Preparation measures vendor workspace; binding freezes addresses and
+allowed instruction-to-slot assignments. Graph and non-graph execution use the
+same contract.
+
+This expansion stops at the declared vendor API boundary: a vendor operation may
+launch multiple internal device kernels. Parameter folding/packing, sink constant
+normalization and recurrent-state initialization remain explicit **preparation
+recipes**, shown separately in the viewer. Their internal graph is not claimed to
+be a fully lowered initialization DAG. The arena preserves the qualified reuse
+policy rather than performing optimal interval packing or measured cost search.

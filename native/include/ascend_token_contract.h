@@ -21,10 +21,25 @@ inline bool exclusive_region(const Plan &p, uint32_t input, size_t owner) {
     for (auto id : p.nodes[j].inputs) if (overlap(id)) return false;
   return true;
 }
+inline uint32_t route_origin(const Plan &p,uint32_t id) {
+  for(size_t depth=0;depth<p.nodes.size();++depth) {
+    const auto &n=p.nodes.at(id);
+    if(n.op=="route_quantize" && n.inputs.size()==2)return n.inputs[1];
+    if((n.op=="expert_gmm" || n.op=="expert_act_quantize" || n.op=="expert_pack") && !n.inputs.empty()) {id=n.inputs[0];continue;}
+    throw std::runtime_error("expert route provenance");
+  }
+  throw std::runtime_error("expert provenance cycle");
+}
 // Specialization capabilities of the registered Ascend kernels. This validates
 // serialized IR independently of Rust before allocating model/device memory.
 inline void validate_kernels(const Plan &p) {
   using T = std::pair<uint32_t, uint32_t>;
+  if(p.physical) {
+    auto count=[&](const char *op){return std::count_if(p.nodes.begin(),p.nodes.end(),[&](const auto &n){return n.op==op;});};
+    if(count("latent_attention") && (count("attention_metadata")!=1 || count("attention_metadata_zero")!=1))
+      throw std::runtime_error("attention metadata must have one declared writer");
+  }
+
   for (size_t i = 0; i < p.nodes.size(); ++i) {
     const auto &n = p.nodes[i];
     std::vector<T> in;
@@ -66,6 +81,41 @@ inline void validate_kernels(const Plan &p) {
     } else if (p.physical && n.op == "quantize") {
       check({{0,tensor(0)}},{"dtype","scheme","scale_dtype"},{5,tensor(0)});
       eq("dtype","int8"); eq("scheme","per_token_symmetric"); eq("scale_dtype","f32");
+    } else if(p.physical && n.op=="mhc_sinkhorn") {
+      check({{1,0}},{},{1,0});
+      if(p.nodes[n.inputs[0]].op!="mhc_pre_project")error();
+    } else if(p.physical && n.op=="router_select") {
+      check({{0,256}},{},{2,0});
+      if(p.nodes[n.inputs[0]].op!="router_projection")error();
+    } else if(p.physical && n.op=="route_quantize") {
+      check({{0,2560},{2,0}},{},{6,2560});
+    } else if(p.physical && n.op=="expert_act_quantize") {
+      check({{3,2048}},{},{6,1024});
+      route_origin(p,n.inputs[0]);
+    } else if(p.physical && n.op=="expert_pack") {
+      check({{3,1024},{3,1024}},{},{3,2048});
+      if(route_origin(p,n.inputs[0])!=route_origin(p,n.inputs[1]))error();
+    } else if(p.physical && n.op=="expert_zero") {
+      if(in.size()!=1 || in[0].first!=6 || (w()!=1024 && w()!=2048 && w()!=2560))error();
+      check({in[0]},{"width"},{3,w()});
+    } else if(p.physical && n.op=="expert_gmm") {
+      if(in.size()!=2 || in[0].first!=6)error();
+      auto output=w()*(n.attrs.count("paired_weight")?2:1);
+      std::vector<std::string> attrs{"weight","width"};if(n.attrs.count("paired_weight"))attrs.push_back("paired_weight");
+      check({{6,in[0].second},{3,output}},attrs,{3,output});
+      auto &zero=p.nodes[n.inputs[1]];
+      if(zero.op!="expert_zero" || zero.inputs!=std::vector<uint32_t>{n.inputs[0]} || p.output==n.inputs[1])error();
+      size_t uses=0;for(auto &consumer:p.nodes)for(auto input:consumer.inputs)uses+=input==n.inputs[1];
+      if(uses!=1)error();
+      route_origin(p,n.inputs[0]);
+    } else if(p.physical && n.op=="expert_values") {
+      if(in.size()!=1 || in[0].first!=3)error();
+      check({in[0]},{},{0,in[0].second*8});
+    } else if(p.physical && n.op=="attention_metadata_zero") {
+      check({},{},{7,0});
+    } else if(p.physical && n.op=="attention_metadata") {
+      check({{7,0}},{},{7,0});
+      if(p.nodes[n.inputs[0]].op!="attention_metadata_zero")error();
     } else if (n.op == "embedding") {
       check({}, {"weight", "width", "vocab"}, {0, 2560});
       eq("width", "2560");
@@ -75,7 +125,7 @@ inline void validate_kernels(const Plan &p) {
       if (!c || c > 16)
         error();
       check({{0, a}}, {"count"}, {0, a * c});
-    } else if (n.op == "mhc_pre" || n.op == "mhc_merge") {
+    } else if (n.op == "mhc_pre" || n.op == "mhc_merge" || n.op == "mhc_pre_project") {
       check({{0, 10240}}, {"weight", "streams", "sinkhorn", "eps"}, {1, 0});
       eq("streams", "4");
       eq("sinkhorn", "20");
@@ -187,12 +237,15 @@ inline void validate_kernels(const Plan &p) {
     else if (n.op == "cache_norm_rope_append") {
       std::vector<std::string> attrs{"weight", "eps", "theta"};
       if (n.attrs.count("cache_dtype")) { attrs.push_back("cache_dtype");eq("cache_dtype","bf16"); }
-      check({{0, 512}, {0, 64}, {0, 73728}}, attrs, {4, 0});
+      if(p.physical) check({{0,576},{0,73728}},attrs,{4,0});
+      else check({{0, 512}, {0, 64}, {0, 73728}}, attrs, {4, 0});
       eq("eps", "1e-5");
       eq("theta", "6400000");
     } else if (n.op == "latent_attention") {
-      check({{0, 3456}, {4, 0}}, {"scale_dim", "window", "selection"},
-            {0, 3072});
+      if(p.physical) {
+        check({{0,3456},{4,0},{7,0}},{"scale_dim","window","selection"},{0,3072});
+        if(p.nodes[n.inputs[2]].op!="attention_metadata")error();
+      } else check({{0, 3456}, {4, 0}}, {"scale_dim", "window", "selection"},{0,3072});
       eq("scale_dim", "192");
       eq("selection", "all_causal_within_window");
       auto window = n.integer("window");
@@ -205,9 +258,9 @@ inline void validate_kernels(const Plan &p) {
       } else
         check({{0, tensor(0)}, {0, tensor(0)}}, {}, {0, tensor(0)});
     }
-    else if (n.op == "router") {
+    else if (n.op == "router" || n.op == "router_projection") {
       check({{0, 2560}}, {"weight", "experts", "topk", "scoring", "scale"},
-            {2, 0});
+            n.op=="router_projection" ? T{0,256} : T{2,0});
       eq("experts", "256");
       eq("topk", "8");
       eq("scoring", "sigmoid_bias_group_topk");
@@ -225,15 +278,17 @@ inline void validate_kernels(const Plan &p) {
       else
         check({{3, 1024}, {3, 1024}, {2, 0}}, {"weight", "width"}, {3, 2560});
       eq("width", "2560");
-    } else if (n.op == "expert_reduce")
-      check({{3, 2560}, {2, 0}}, {}, {0, 2560});
+    } else if (n.op == "expert_reduce") {
+      if(p.physical) check({{0,20480},{3,2560},{2,0}},{},{0,2560});
+      else check({{3,2560},{2,0}},{},{0,2560});
+    }
     else if (n.op == "add" || (p.physical && n.op == "add_f32"))
       check({{0, tensor(0)}, {0, tensor(0)}}, {}, {0, tensor(0)});
     else
       error();
     if (p.physical && n.op != "cast") {
       std::string output_dtype = n.kind == 0 ? "bf16" : "opaque";
-      if (n.op == "add_f32" || n.op == "expert_reduce" || n.op == "rope_f32" || n.op == "query_rotary_extract") output_dtype = "f32";
+      if (n.op == "add_f32" || n.op == "expert_reduce" || n.op == "rope_f32" || n.op == "query_rotary_extract" || n.op == "router_projection") output_dtype = "f32";
       if (n.op == "allreduce") output_dtype = n.attrs.count("dtype") ? n.text("dtype") : "f32";
       if (n.op == "slice" || n.op == "repeat" || n.op == "concat" || (n.op == "optional_norm" && n.kernel == "alias"))
         output_dtype = p.nodes[n.inputs[0]].dtype;
@@ -248,7 +303,7 @@ inline void validate_kernels(const Plan &p) {
         if (v.kind != 0) continue;
         std::string required = "bf16";
         if (n.op == "slice" || n.op == "repeat" || n.op == "concat" || (n.op == "optional_norm" && n.kernel == "alias")) continue;
-        if (n.op == "router" || n.op == "rope" || n.op == "rope_f32" || n.op == "add_f32") required = "f32";
+        if (n.op == "router" || n.op == "rope" || n.op == "rope_f32" || n.op == "router_projection" || n.op == "router_select" || n.op == "expert_reduce" || n.op == "add_f32") required = "f32";
         if (n.op == "allreduce") required = n.attrs.count("dtype") ? n.text("dtype") : "f32";
         if (v.dtype != required) error();
       }
@@ -261,9 +316,8 @@ inline void validate_kernels(const Plan &p) {
       }
     }
     if (n.op == "expert_reduce") {
-      auto &d = p.nodes[n.inputs[0]];
-      if (d.op != "expert_swiglu_down" || d.inputs.back() != n.inputs[1])
-        error();
+      if(p.physical) {if(route_origin(p,n.inputs[1])!=n.inputs[2])error();}
+      else {auto &d=p.nodes[n.inputs[0]];if(d.op!="expert_swiglu_down" || d.inputs.back()!=n.inputs[1])error();}
     }
     if (n.kind == 1 || n.kind == 4) {
       int inputs = 0, posts = 0, att = 0, all = 0;
@@ -276,9 +330,12 @@ inline void validate_kernels(const Plan &p) {
         }
       if (n.kind == 4 && (all != 1 || att != 1))
         error();
-      if (n.kind == 1 && (inputs != 1 || posts != (n.op == "mhc_pre") ||
-                          all != inputs + posts))
-        error();
+      if(n.kind==1) {
+        if(n.op=="mhc_pre_project") {
+          if(all!=1)error();
+          for(auto &c:p.nodes) if(std::find(c.inputs.begin(),c.inputs.end(),i)!=c.inputs.end() && c.op!="mhc_sinkhorn")error();
+        } else if(inputs!=1 || posts!=(n.op=="mhc_pre" || n.op=="mhc_sinkhorn") || all!=inputs+posts) error();
+      }
     }
   }
 }
@@ -313,7 +370,7 @@ inline void validate_bindings(const Plan &program,
       throw std::runtime_error("projection dtype " + name);
     require(name + ".weight", {output, input}, dtype);
     if (dtype == DType::I8)
-      require(name + ".weight_scale", {output, 1}, DType::F32);
+      require(name + ".weight_scale", {output, 1}, quant_only ? DType::Bf16 : DType::F32);
   };
   for (auto &n : program.nodes) {
     if (!n.attrs.count("weight"))
@@ -338,10 +395,10 @@ inline void validate_bindings(const Plan &program,
       linear(name, width, n.width);
     else if (n.op == "norm" || n.op == "optional_norm" || n.op == "cache_norm_rope_append") {
       if (n.op != "optional_norm" || weights.count(name + ".weight"))
-        require(name + ".weight", {width}, DType::Bf16);
+        require(name + ".weight", {n.op=="cache_norm_rope_append"?512:width}, DType::Bf16);
     } else if (n.op == "mome" || n.op == "mome_inplace")
       require(name + ".weight", {width, 1, 3}, DType::Bf16);
-    else if (n.op == "mhc_pre" || n.op == "mhc_merge") {
+    else if (n.op == "mhc_pre" || n.op == "mhc_merge" || n.op == "mhc_pre_project") {
       bool merge = n.op == "mhc_merge";
       require(name + ".norm_gamma", {10240}, DType::F32);
       require(name + ".phi.weight", {merge ? 4 : 24, 10240}, DType::F32);
@@ -355,10 +412,10 @@ inline void validate_bindings(const Plan &program,
       require(name + ".param_sink_compressed_kv", {128, 512}, DType::Bf16);
       require(name + ".param_sink_k_pe", {128, 64}, DType::Bf16);
       require(n.text("norm") + ".weight", {512}, DType::Bf16);
-    } else if (n.op == "router") {
+    } else if (n.op == "router" || n.op == "router_projection") {
       require(name + ".gate.weight", {256, 2560}, DType::Bf16);
       require(name + ".e_score_correction_bias", {256}, DType::F32);
-    } else if (n.op == "expert_linear" || n.op == "expert_swiglu_down") {
+    } else if (n.op == "expert_linear" || n.op == "expert_swiglu_down" || n.op == "expert_gmm") {
       for (int e = int(init.rank) * 32; e < int(init.rank + 1) * 32; ++e) {
         linear(bind_expert(name, e),
                n.op == "expert_swiglu_down" && n.inputs.size() == 2 ? width / 2

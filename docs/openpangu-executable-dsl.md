@@ -73,6 +73,15 @@ requested numerical contract in the logical plan. The current Ascend backend
 rejects INT8/INT4 cache compilation because no matching attention/cache kernel
 has been qualified; it never substitutes BF16 silently.
 
+The 92B backend now lowers the logical graph to 2,661 executable instructions.
+Routing, expert quantization/zeroing/GMM/reduction, mHC mixing, cache packing and
+attention metadata are explicit parts of that program. See
+[physical planning](native-physical-planning.md) for the hardware preparation and
+frozen-arena binding procedure. Execution requires a bound arena; unbound runs
+must explicitly enable `INFERFABRIC_PREPARE_ARENA=1` to produce preparation audits.
+Grouped expert scales are loaded as BF16 directly, while dense INT8 projections
+retain FP32 scales as required by their selected kernel.
+
 Both the DSL and compiled Rust `ModelDefinition::Execution` produce the same
 validated `execution::Graph`. No compiled author gets to bypass validation.
 The compiler rejects unknown operators/attributes, shape/type mismatches,

@@ -69,10 +69,15 @@ impl Bindings<'_> {
             },
         )?;
         if dtype == DType::I8 {
+            if quant_only && self.tensor(&format!("{name}.weight_scale"))?.dtype != "BF16" {
+                return Err(invalid(
+                    "grouped INT8 matmul requires lossless BF16 checkpoint scales",
+                ));
+            }
             self.add(
                 format!("{name}.weight_scale"),
                 vec![output, 1],
-                DType::F32,
+                if quant_only { DType::Bf16 } else { DType::F32 },
                 sharded,
             )?;
         }
@@ -115,9 +120,18 @@ pub fn initialization_plans(
                     false,
                 )?,
                 "linear" if n.attrs.contains_key("paired_weight") => {
-                    b.add(format!("{name}.weight"), vec![n.integer("width")? as u64, width], DType::Bf16, false)?;
-                    b.add(format!("{}.weight", n.attrs["paired_weight"]),
-                          vec![n.integer("paired_width")? as u64, width], DType::Bf16, false)?;
+                    b.add(
+                        format!("{name}.weight"),
+                        vec![n.integer("width")? as u64, width],
+                        DType::Bf16,
+                        false,
+                    )?;
+                    b.add(
+                        format!("{}.weight", n.attrs["paired_weight"]),
+                        vec![n.integer("paired_width")? as u64, width],
+                        DType::Bf16,
+                        false,
+                    )?;
                 }
                 "linear" => b.linear(
                     name,
@@ -369,8 +383,10 @@ pub fn write_bundle(
             )?;
         }
         crate::write_atomic(&staging.join("execution.bin"), &binary)?;
-        crate::write_atomic(&staging.join("device-program.json"),
-            &serde_json::to_vec_pretty(&program).map_err(|e| invalid(e.to_string()))?)?;
+        crate::write_atomic(
+            &staging.join("device-program.json"),
+            &serde_json::to_vec_pretty(&program).map_err(|e| invalid(e.to_string()))?,
+        )?;
         crate::write_atomic(
             &staging.join("execution.json"),
             &serde_json::to_vec_pretty(graph).map_err(|e| invalid(e.to_string()))?,

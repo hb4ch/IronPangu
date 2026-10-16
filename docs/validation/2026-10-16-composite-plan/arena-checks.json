@@ -1,0 +1,1 @@
+{"frozen_rank_audits": 72, "device_reservations_per_rank": 1, "step_allocations": 0, "arena_bytes_per_rank": [12433409088, 12433409088, 12433409088, 12433409088, 12433409088, 12433409088, 12433409088, 12433409088], "slots_per_rank": [3616, 3616, 3616, 3616, 3616, 3616, 3616, 3616]}

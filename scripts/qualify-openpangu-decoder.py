@@ -26,7 +26,8 @@ for name, prompt, anchor in cases:
     command = [args.binary, args.plan, args.checkpoint, '32', *map(str, ids)]
     audit_dir = output / (name + '-transfers')
     audit_dir.mkdir(exist_ok=True)
-    env = dict(os.environ, INFERFABRIC_TRANSFER_AUDIT_DIR=str(audit_dir.resolve()))
+    env = dict(os.environ, INFERFABRIC_TRANSFER_AUDIT_DIR=str(audit_dir.resolve()),
+               INFERFABRIC_PREPARED_AUDIT_DIR=str((output / (name + '-prepared')).resolve()))
     with (output / (name + '.stderr')).open('w') as error:
         run = subprocess.run(command, text=True, stdout=subprocess.PIPE, stderr=error, timeout=900, env=env)
     (output / (name + '.jsonl')).write_text(run.stdout)

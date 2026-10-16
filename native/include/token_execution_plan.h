@@ -75,7 +75,7 @@ struct Plan {
       n.width = number();
       n.name = str();
       n.op = str();
-      if (n.kind > (p.physical ? 5u : 4u) || n.width > 200000 || !names.insert(n.name).second)
+      if (n.kind > (p.physical ? 7u : 4u) || n.width > 200000 || !names.insert(n.name).second)
         throw std::runtime_error("invalid node descriptor");
       auto inputs = number();
       if (inputs > 8)

@@ -1,6 +1,6 @@
 #pragma once
 #include <acl/acl.h>
-#include "frozen_arena.h"
+#include "../include/frozen_arena.h"
 #include <set>
 #include <aclnn/acl_meta.h>
 #include <cstdint>
@@ -47,6 +47,7 @@ class Context {
   ArenaLayout layout_;
   uint64_t program_fingerprint_ = 0;
   int64_t instruction_ = -1;
+  bool copies_allowed_=true, initialization_copies_allowed_=false;
   std::map<int64_t,std::set<size_t>> instruction_slots_;
   void record(Block *b) {
     if(arena_) {
@@ -144,10 +145,10 @@ public:
     auto &available = free_[bytes];
     if (!available.empty()) {
       auto *block = available.back();
+      record(block);
       available.pop_back();
       block->live = true;
       ++reuse_;
-      record(block);
       return block->data;
     }
     if(arena_) throw std::runtime_error("frozen arena exhausted: undeclared allocation at instruction " + std::to_string(instruction_) + " bytes=" + std::to_string(bytes));
@@ -267,6 +268,7 @@ public:
   size_t workspace_capacity() const { return workspace_bytes_; }
   void copy(void *dst, const void *src, size_t bytes) {
     require_stream(stream);
+    if(!copies_allowed_) throw std::runtime_error("undeclared device copy at instruction "+std::to_string(instruction_));
     check(aclrtMemcpyAsync(dst, bytes, src, bytes, ACL_MEMCPY_DEVICE_TO_DEVICE,
                            stream),
           "prepared D2D");
@@ -350,7 +352,18 @@ public:
     }
     return output_host_;
   }
-  void instruction(int64_t id) { instruction_=id; }
+  void instruction(int64_t id,bool copies=false,bool initialization=false) {
+    instruction_=id;copies_allowed_=id<0 || copies;initialization_copies_allowed_=initialization;
+  }
+  struct InitializationCopies {
+    Context &context;bool previous;
+    explicit InitializationCopies(Context &c):context(c),previous(c.copies_allowed_) {
+      if(!c.initialization_copies_allowed_ || c.before_.position!=0 || c.capturing_)
+        throw std::runtime_error("undeclared/late parameter-state preparation copy");
+      c.copies_allowed_=true;
+    }
+    ~InitializationCopies(){context.copies_allowed_=previous;}
+  };
   void begin_step(int position) {
     before_ = {position, allocations_, reuse_, boundaries_};
   }

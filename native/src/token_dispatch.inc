@@ -1,6 +1,6 @@
 // Included inside the backend kernel collection. The program, not this switch,
 // defines the architecture, residual wiring, layer count and weight bindings.
-using Value = std::variant<V, HC, Routes, ExpertRows, std::string, Quantized>;
+using Value = std::variant<V, HC, Routes, ExpertRows, std::string, Quantized, RoutedQuantized, std::monostate>;
 static std::string expert_name(std::string pattern, int expert) {
   auto at = pattern.find("{expert}");
   if (at == std::string::npos)
@@ -15,7 +15,9 @@ V execute_token() {
   auto remaining = program.uses;
   for (size_t i = 0; i < program.nodes.size(); ++i) {
     const auto &n = program.nodes[i];
-    execution.instruction(int64_t(i));
+    execution.instruction(int64_t(i),
+        n.op=="copy" || n.op=="repeat" || n.op=="concat" || n.op=="expert_pack",
+        n.op=="sink_normalize" || n.op=="cache_append" || n.op=="cache_norm_rope_append" || n.op=="expert_gmm" || (n.op=="linear" && n.kernel=="paired_bf16"));
     inferfabric::profiling::Scope timing(n.op.c_str(), true);
     auto input = [&](size_t j) -> Value & {
       return *values.at(n.inputs.at(j));
@@ -29,7 +31,7 @@ V execute_token() {
     auto weight = [&]() -> const std::string & { return n.text("weight"); };
     Value result;
     if (n.op == "cast") {
-      result = cast(tensor(0), n.dtype == "bf16" ? ACL_BF16 : ACL_FLOAT);
+      result = cast(tensor(0), n.dtype == "bf16" ? ACL_BF16 : ACL_FLOAT,true);
     } else if (n.op == "quantize") {
       result = quantize(tensor(0));
     } else if (n.op == "copy") {
@@ -55,6 +57,31 @@ V execute_token() {
               "embedding device index prepare");
       run(aclnnIndexSelect, bytes, executor);
       result = this->result(output);
+    } else if(n.op=="attention_metadata_zero") {
+      execution.zero(attention_metadata->data,attention_metadata->bytes);result=std::monostate{};
+    } else if(n.op=="attention_metadata") {
+      prepare_attention_metadata(true);result=std::monostate{};
+    } else if(n.op=="mhc_pre_project") {
+      result=pre(tensor(0),weight(),false,n.name,true);
+    } else if(n.op=="mhc_sinkhorn") {
+      result=sinkhorn(std::get<HC>(input(0)));
+    } else if(n.op=="router_projection") {
+      result=project_route(tensor(0),weight(),n.name);
+    } else if(n.op=="router_select") {
+      result=select_route(tensor(0),program.nodes[n.inputs[0]].name);
+    } else if(n.op=="route_quantize") {
+      result=quantize_experts(tensor(0),std::get<Routes>(input(1)),n.width);
+    } else if(n.op=="expert_act_quantize") {
+      const auto &rows=std::get<ExpertRows>(input(0));
+      result=quantize_experts(rows.packed,Routes{},n.width,true,&rows);
+    } else if(n.op=="expert_pack") {
+      result=pack_expert_rows(std::get<ExpertRows>(input(0)),std::get<ExpertRows>(input(1)));
+    } else if(n.op=="expert_zero") {
+      result=zero_expert_output(std::get<RoutedQuantized>(input(0)),n.width);
+    } else if(n.op=="expert_gmm") {
+      result=expert_gmm(std::get<RoutedQuantized>(input(0)),std::get<ExpertRows>(input(1)),bank(weight(),n.attrs.count("paired_weight")?n.text("paired_weight"):""));
+    } else if(n.op=="expert_values") {
+      result=std::get<ExpertRows>(input(0)).packed;
     } else if (n.op == "repeat") {
       result = resident::repeat(tensor(0), n.integer("count"));
     } else if (n.op == "mhc_pre" || n.op == "mhc_merge")
@@ -109,7 +136,8 @@ V execute_token() {
       append_cache(tensor(0), tensor(1), n.name, pos);
       result = n.name;
     } else if (n.op == "cache_norm_rope_append") {
-      append_normalized_cache(tensor(0), tensor(1), tensor(2), weight(), n.name, pos);
+      if(program.physical) append_normalized_cache(tensor(0),tensor(1),weight(),n.name,pos);
+      else append_normalized_cache(resident::concat(tensor(0),tensor(1)),tensor(2),weight(),n.name,pos);
       result = n.name;
     } else if (n.op == "latent_attention")
       result = attend(tensor(0), std::get<std::string>(input(1)));
@@ -142,9 +170,9 @@ V execute_token() {
             grouped_linear(resident::concat(parts), r, bank(weight()), true, &gate);
       }
     } else if (n.op == "expert_reduce") {
-      const auto &r = std::get<Routes>(input(1));
-      const auto &rows = std::get<ExpertRows>(input(0));
-      result = weighted_rows(rows, r.scores, n.width);
+      const auto &r = std::get<Routes>(input(program.physical?2:1));
+      const auto &rows = std::get<ExpertRows>(input(program.physical?1:0));
+      result = weighted_rows(rows, r.scores, n.width,program.physical?&tensor(0):nullptr);
     } else if (n.op == "add") {
       result = rounded(binary(tensor(0), tensor(1), '+'));
     } else

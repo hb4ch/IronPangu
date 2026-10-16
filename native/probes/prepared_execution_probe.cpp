@@ -191,6 +191,20 @@ int main() {
         throw std::runtime_error("invocation cache missed stable operands");
       std::cout << audit.str();
     }
+    {
+      const char *path="prepared-arena-test.txt";
+      {std::ofstream manifest(path);manifest<<"IFARENA1 123 "<<prepared::ArenaLayout::fingerprint_file("/proc/self/exe")<<" 516 2\n0 4\n512 4\nbindings 2\n-1 1 0\n7 2 0 1\n";}
+      prepared::Context context(path,123);
+      void *a=context.acquire(4);context.instruction(7,true);void *b=context.acquire(4);
+      if(static_cast<char *>(b)-static_cast<char *>(a)!=512)throw std::runtime_error("arena offsets not followed");
+      context.zero(a,4);context.copy(b,a,4);
+      auto reject=[&](auto fn){bool rejected=false;try{fn();}catch(const std::runtime_error&){rejected=true;}if(!rejected)throw std::runtime_error("unplanned arena operation accepted");};
+      reject([&]{context.acquire(8);});
+      context.instruction(7);reject([&]{context.copy(b,a,4);});
+      context.release(b);context.instruction(8);reject([&]{context.acquire(4);});
+      context.instruction(-1);context.release(a);context.complete();
+      std::remove(path);
+    }
     prepared::check(aclrtResetDevice(0), "reset");
     prepared::check(aclFinalize(), "finalize");
     std::cout << "prepared invocation, ordered reuse, pinned staging and "

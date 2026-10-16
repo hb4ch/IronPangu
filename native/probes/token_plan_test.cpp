@@ -54,7 +54,7 @@ int main(int argc, char **argv) {
     });
     reject([](auto &x) {
       for (auto &n : x.nodes)
-        if (n.op == "expert_swiglu_down") {
+        if (n.op == "expert_swiglu_down" || n.op == "route_quantize") {
           n.inputs.back() = 0;
           break;
         }
@@ -109,6 +109,13 @@ int main(int argc, char **argv) {
           break;
         }
       });
+    }
+    if(std::any_of(p.nodes.begin(),p.nodes.end(),[](const auto &n){return n.op=="expert_gmm";})) {
+      reject([](auto &x){for(auto &n:x.nodes)if(n.op=="expert_gmm"){x.output=n.inputs[1];break;}});
+      reject([](auto &x){for(auto &n:x.nodes)if(n.op=="expert_reduce"){n.inputs[0]=x.nodes[n.inputs[0]].inputs[0];break;}});
+      reject([](auto &x){for(auto &n:x.nodes)if(n.op=="latent_attention"){n.inputs.pop_back();break;}});
+      reject([](auto &x){for(auto &n:x.nodes)if(n.op=="expert_act_quantize"){n.inputs[0]=0;break;}});
+      reject([](auto &x){for(auto &n:x.nodes)if(n.op=="mhc_sinkhorn"){n.inputs[0]=0;break;}});
     }
     auto init = inferfabric::initialization::Plan::read(std::string(argv[1]) +
                                                         "/rank-0.bin");

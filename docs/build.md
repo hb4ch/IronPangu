@@ -295,3 +295,25 @@ The saved reference applies only to the pinned checkpoint/tokenizer in the valid
 ## Model definition inputs
 
 Source readers now require versioned v1 DSL or an `inferfabric.model` v1 artifact emitted by compiled code. Legacy flat key/value files are rejected. All checked-in examples and frontend fixtures are migrated. See [dual authoring and debug-plan commands](model-authoring.md). Rebuild Rust tools/frontend after this source-language change; initialization and decoder binary formats are unchanged.
+## Frozen arena preparation for the 92B token backend
+
+After local Rust cross-compilation and the native Docker build, the physical
+token bundle needs hardware preparation before normal execution. Run this in
+the qualified NPU container with the CANN/vendor environments loaded:
+
+```sh
+INFERFABRIC_PREPARE_ARENA=1 INFERFABRIC_DECODE_GRAPH=1 \
+  python3 scripts/qualify-openpangu-decoder.py \
+    --checkpoint /models/92B --plan compiled-plan \
+    --binary native-build/openpangu_decode --output preparation
+python3 scripts/bind-prepared-arena.py \
+  compiled-plan preparation/arithmetic-prepared bound-plan
+```
+
+Use `bound-plan` for subsequent execution with the same native binary and runtime.
+The normal executor rejects missing, stale, incomplete or exhausted arena
+bindings. Rebuilding the native binary requires preparation again. The benchmark
+has an explicit `--prepare-arena` switch for the initial measurement run; omit it
+when verifying the bound plan against an existing qualified output fixture.
+The preparation driver checks answer anchors and residency; use the benchmark's
+unchanged qualified fixture for exact-output regression validation.

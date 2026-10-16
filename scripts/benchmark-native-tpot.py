@@ -36,6 +36,7 @@ def main():
     parser.add_argument('--repeats', type=int, default=1)
     parser.add_argument('--timeout', type=float, default=900)
     parser.add_argument('--resident-audit', action='store_true', help='Require transfer and prepared-execution audits for every rank/run')
+    parser.add_argument('--prepare-arena', action='store_true', help='Explicit hardware preparation; allow a pool before binding a frozen arena')
     parser.add_argument('--decode-graph', action='store_true', help='Capture/replay the device-resident token program')
     parser.add_argument('--hccl-base-port', type=int, help='Reserve a fresh 32-port HCCL range per fresh-process run')
     args = parser.parse_args()
@@ -53,6 +54,9 @@ def main():
             name = f"{case['case']}-{repeat}"
             command = [args.binary, args.plan, args.checkpoint, '32', *map(str, case['input_ids'])]
             env = os.environ.copy()
+            env.pop('INFERFABRIC_PREPARE_ARENA', None)
+            if args.prepare_arena:
+                env['INFERFABRIC_PREPARE_ARENA'] = '1'
             if args.hccl_base_port is not None:
                 env['HCCL_IF_BASE_PORT'] = str(args.hccl_base_port + 32 * len(results))
             env.pop('INFERFABRIC_PROFILE_DIR', None)

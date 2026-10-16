@@ -106,15 +106,47 @@ mod ownership_tests {
     }
 }
 
+fn emit(
+    p: &mut Program,
+    logical: usize,
+    name: &str,
+    op: &str,
+    inputs: Vec<usize>,
+    attrs: BTreeMap<String, String>,
+    kind: usize,
+    width: usize,
+    dtype: &str,
+) -> usize {
+    let id = p.instructions.len();
+    p.instructions.push(Instruction {
+        logical_node: logical,
+        name: format!("{name}__{op}_{id}"),
+        op: op.into(),
+        inputs,
+        attrs,
+        kind,
+        width,
+        dtype: dtype.into(),
+        kernel: if op == "cast" {
+            "aclnnCast".into()
+        } else {
+            op.into()
+        },
+        reason: "Expanded backend invocation; storage and dependencies are explicit".into(),
+    });
+    id
+}
 pub fn lower(graph: &Graph, inventory: Option<&Inventory>) -> Result<Program> {
     let types = graph.validate()?;
     let mut p = Program {
         format: "inferfabric.token-program.v2".into(), max_context: graph.max_context,
         eos: graph.eos, output: 0, instructions: vec![], conversions_shared: 0, copies_eliminated: 0,
-        limitations: vec!["Dense quantization and MLA query construction are expanded. Other composite vendor recipes retain internal temporaries and launches. Hardware preparation can bind a fixed arena; no claim of a complete primitive kernel DAG.".into()],
+        limitations: vec!["Per-token vendor composites are expanded into declared API invocations, explicit casts, packing and initialization of outputs. Parameter/state preparation remains a declared initialization recipe; vendor-internal kernel launches are opaque. Hardware preparation binds fixed arena slots; this is not a cost-optimized arena packing.".into()],
     };
     let mut outputs = vec![];
     let mut casts = BTreeMap::new();
+    let mut attention_metadata = None;
+    let mut route_quantizations = BTreeMap::new();
     for (logical, n) in graph.nodes.iter().enumerate() {
         if n.attrs.get("cache_dtype").is_some_and(|v| v != "bf16") {
             return Err(invalid(format!(
@@ -276,6 +308,214 @@ pub fn lower(graph: &Graph, inventory: Option<&Inventory>) -> Result<Program> {
             });
             inputs[0] = id;
         }
+        if n.op == "swiglu" && inputs.len() == 2 {
+            inputs = vec![emit(
+                &mut p,
+                logical,
+                &n.name,
+                "concat",
+                inputs,
+                BTreeMap::new(),
+                0,
+                width * 2,
+                "bf16",
+            )];
+        }
+        if n.op == "cache_norm_rope_append" {
+            let packed = emit(
+                &mut p,
+                logical,
+                &n.name,
+                "concat",
+                inputs[..2].to_vec(),
+                BTreeMap::new(),
+                0,
+                576,
+                "bf16",
+            );
+            inputs = vec![packed, inputs[2]];
+        }
+        if n.op == "expert_reduce" {
+            let rows = emit(
+                &mut p,
+                logical,
+                &n.name,
+                "expert_values",
+                vec![inputs[0]],
+                BTreeMap::new(),
+                0,
+                width * 8,
+                "bf16",
+            );
+            let f32rows = emit(
+                &mut p,
+                logical,
+                &n.name,
+                "cast",
+                vec![rows],
+                BTreeMap::from([("dtype".into(), "f32".into())]),
+                0,
+                width * 8,
+                "f32",
+            );
+            inputs.insert(0, f32rows);
+        }
+        if n.op == "mhc_pre" {
+            let pre = emit(
+                &mut p,
+                logical,
+                &n.name,
+                "mhc_pre_project",
+                inputs,
+                n.attrs.clone(),
+                1,
+                0,
+                "opaque",
+            );
+            let sink = emit(
+                &mut p,
+                logical,
+                &n.name,
+                "mhc_sinkhorn",
+                vec![pre],
+                BTreeMap::new(),
+                1,
+                0,
+                "opaque",
+            );
+            outputs.push(sink);
+            continue;
+        }
+        if n.op == "router" {
+            let logits = emit(
+                &mut p,
+                logical,
+                &n.name,
+                "router_projection",
+                inputs,
+                n.attrs.clone(),
+                0,
+                256,
+                "f32",
+            );
+            let selected = emit(
+                &mut p,
+                logical,
+                &n.name,
+                "router_select",
+                vec![logits],
+                BTreeMap::new(),
+                2,
+                0,
+                "opaque",
+            );
+            outputs.push(selected);
+            continue;
+        }
+        if n.op == "expert_linear" || n.op == "expert_swiglu_down" {
+            let q = if n.op == "expert_linear" {
+                let key = (inputs[0], inputs[1]);
+                if let Some(&q) = route_quantizations.get(&key) {
+                    q
+                } else {
+                    let q = emit(
+                        &mut p,
+                        logical,
+                        &n.name,
+                        "route_quantize",
+                        inputs,
+                        BTreeMap::new(),
+                        6,
+                        2560,
+                        "opaque",
+                    );
+                    route_quantizations.insert(key, q);
+                    q
+                }
+            } else {
+                let packed = if inputs.len() == 3 {
+                    emit(
+                        &mut p,
+                        logical,
+                        &n.name,
+                        "expert_pack",
+                        inputs[..2].to_vec(),
+                        BTreeMap::new(),
+                        3,
+                        2048,
+                        "opaque",
+                    )
+                } else {
+                    inputs[0]
+                };
+                emit(
+                    &mut p,
+                    logical,
+                    &n.name,
+                    "expert_act_quantize",
+                    vec![packed],
+                    BTreeMap::new(),
+                    6,
+                    1024,
+                    "opaque",
+                )
+            };
+            let zero = emit(
+                &mut p,
+                logical,
+                &n.name,
+                "expert_zero",
+                vec![q],
+                BTreeMap::from([("width".into(), width.to_string())]),
+                3,
+                width,
+                "opaque",
+            );
+            let result = emit(
+                &mut p,
+                logical,
+                &n.name,
+                "expert_gmm",
+                vec![q, zero],
+                n.attrs.clone(),
+                3,
+                width,
+                "opaque",
+            );
+            outputs.push(result);
+            continue;
+        }
+        if n.op == "latent_attention" {
+            let meta = if let Some(id) = attention_metadata {
+                id
+            } else {
+                let zero = emit(
+                    &mut p,
+                    logical,
+                    &n.name,
+                    "attention_metadata_zero",
+                    vec![],
+                    BTreeMap::new(),
+                    7,
+                    0,
+                    "opaque",
+                );
+                let meta = emit(
+                    &mut p,
+                    logical,
+                    &n.name,
+                    "attention_metadata",
+                    vec![zero],
+                    BTreeMap::new(),
+                    7,
+                    0,
+                    "opaque",
+                );
+                attention_metadata = Some(meta);
+                meta
+            };
+            inputs.push(meta);
+        }
         // Expand the query recipe before serialization. Every conversion and
         // materialization has its own SSA value and scheduling position.
         if n.op == "mla_query" || n.op == "rope" {
@@ -388,7 +628,7 @@ impl Program {
         }
         let mut names = std::collections::BTreeSet::new();
         for (id, i) in self.instructions.iter().enumerate() {
-            if i.kind > 5
+            if i.kind > 7
                 || i.width > 200000
                 || i.inputs.len() > 8
                 || i.attrs.len() > 16
@@ -469,6 +709,18 @@ pub fn recipes(p: &Program, graph: &Graph) -> Vec<serde_json::Value> {
     p.instructions.iter().map(|i| {
         let n = &graph.nodes[i.logical_node];
         let (apis, internal, materialization): (&[&str], &str, &str) = match i.op.as_str() {
+            "mhc_pre_project" => (&["aclnnAiInfraManifoldConstrainedHyperConnectionPre"], "BF16 residual; FP32 mixing; Sinkhorn is separate", "persistent mHC outputs and residual alias"),
+            "mhc_sinkhorn" => (&["aclnnManifoldConstrainedHyperConnectionSinkhornEnhance"], "20 FP32 normalization iterations", "persistent Sinkhorn output; preserves mHC handle"),
+            "router_projection" => (&["aclnnMatmul"], "FP32 gate projection; top-k is separate", "persistent FP32 logits"),
+            "router_select" => (&["aclnnMoeGatingTopK"], "sigmoid/bias group top-k; ids remain on device", "INT32 ids + FP32 scores and normalized logits"),
+            "route_quantize" => (&["aclnnMoeInitRoutingV3"], "owner-local route filtering/sorting and INT8 quantization", "INT8 [8,width], FP32 [8] scales, INT64 [32] groups, INT32 [8] inverse indices"),
+            "expert_act_quantize" => (&["aclnnDequantSwigluQuant"], "packed BF16 SwiGLU and INT8 quantization", "INT8 [8,width] + FP32 [8] scales; borrowed group metadata"),
+            "expert_zero" => (&["aclrtMemsetAsync"], "define unselected expert rows as zero", "fresh BF16 [8,width]; exclusive input to grouped matmul"),
+            "expert_gmm" => (&["aclnnGroupedMatmulV5"], "INT8 grouped matmul; quantization and zeroing are separate", "writes exclusively owned initialized output; packed weights prepared once"),
+            "expert_values" => (&[], "view packed expert rows as a tensor", "alias; no copy"),
+            "expert_pack" => (&["aclrtMemcpyAsync"], "interleave gate/up rows for the same routing decision", "new BF16 packed rows; borrowed routing metadata"),
+            "attention_metadata_zero" => (&["aclrtMemsetAsync"], "initialize metadata output once per token", "persistent metadata buffer"),
+            "attention_metadata" => (&["aclnnAiInfraFusedInferAttentionSinkMetadata"], "device sequence length; shared by attention instructions", "persistent device metadata"),
             "cast" => (&["aclnnCast"], "", "new device output; shared by identical consumers"),
             "quantize" => (&["aclnnDynamicQuant"], "BF16 → signed INT8; per-token symmetric FP32 scale", "explicit INT8 payload + FP32 scale"),
             "copy" => (&["aclrtMemcpyAsync"], "private writable input; source preserved", "new device output"),
@@ -500,13 +752,13 @@ pub fn recipes(p: &Program, graph: &Graph) -> Vec<serde_json::Value> {
             "mla_value" => (&["aclnnBatchMatMul"], "BF16 heads", "immutable weights packed once; new output"),
             "sink_normalize" => (&["aclnnRmsNorm", "aclrtMemcpyAsync"], "initialization only after first preparation", "persistent normalized sink"),
             "cache_append" => (&["aclnnInplaceIndexCopy"], "cache mutation; latent and rotary packing", "persistent paged cache"),
-            "cache_norm_rope_append" => (&["aclrtMemcpyAsync", "aclnnAiInfraKvRmsNormRopeCache"], "pack latent/rotary; fused BF16 normalization, rotation and cache write", "packed input + persistent paged cache"),
-            "latent_attention" => (&["aclnnAiInfraFusedInferAttentionSinkMetadata", "aclnnAiInfraFusedInferAttentionSink"], "device metadata once per token; BF16 attention with learned sinks", "persistent metadata/cache; new output"),
+            "cache_norm_rope_append" => (&["aclnnAiInfraKvRmsNormRopeCache"], "explicit packed input; fused BF16 normalization, rotation and cache write", "persistent paged cache + required vendor outputs; sink copy during preparation only"),
+            "latent_attention" => (&["aclnnAiInfraFusedInferAttentionSink"], "consumes explicit metadata dependency; BF16 attention with learned sinks", "persistent metadata/cache; new output"),
             "swiglu" => (&["aclnnSwiGlu (compiled ABI)"], "compiled CANN recipe; packed equal halves; two-input form first concatenates", "new output; borrowed packed input"),
             "router" => (&["aclnnMatmul", "aclnnMoeGatingTopK"], "FP32 projection and device top-k selection; selection recipe remains composite", "persistent logits/ids/scores"),
             "expert_linear" => (&["aclnnMoeInitRoutingV3", "aclnnGroupedMatmulV5"], "filter/sort/quantize only owner-local routes; INT8 grouped matmul", "packed expert rows, counts and inverse indices"),
             "expert_swiglu_down" => (&["aclnnDequantSwigluQuant", "aclnnGroupedMatmulV5"], "fused activation/quantization; INT8 grouped down projection", "packed expert output + scales"),
-            "expert_reduce" => (&["aclnnCast", "aclnnMoeFinalizeRoutingV2"], "BF16 expert output → FP32; weighted local route reduction", "FP32 local partial output"),
+            "expert_reduce" => (&["aclnnMoeFinalizeRoutingV2"], "consumes explicitly converted FP32 expert rows; weighted local reduction", "FP32 local partial output"),
             _ => (&[], "unresolved backend recipe", "unresolved"),
         };
         let placement = if matches!(i.op.as_str(), "cast"|"copy") { "inherited_input" } else { n.attrs.get("placement").map(String::as_str).unwrap_or(match n.op.as_str() {
@@ -517,10 +769,29 @@ pub fn recipes(p: &Program, graph: &Graph) -> Vec<serde_json::Value> {
         let communication = match i.op.as_str() {
             "allreduce" => "AllReduce(sum), ranks 0–7",
             "gather" => "AllGather, ranks 0–7",
-            "expert_linear" | "expert_swiglu_down" | "expert_reduce" => "EP owner-local compute; explicit downstream AllReduce combines partials",
+            "route_quantize" | "expert_act_quantize" | "expert_gmm" | "expert_zero" | "expert_pack" | "expert_linear" | "expert_swiglu_down" | "expert_reduce" => "EP owner-local compute; explicit downstream AllReduce combines partials",
             _ => "none in this instruction",
         };
-        serde_json::json!({"apis":apis,"internal":internal,"materialization":materialization,"placement":placement,"communication":communication,
-            "granularity":if matches!(i.op.as_str(), "cast"|"quantize"|"query_project"|"query_rotary_extract"|"rope_f32"|"concat_columns"|"add_f32"|"slice"|"gather"|"allreduce") {"instruction"} else {"backend recipe"}})
+        let preparation = match i.op.as_str() {
+            "linear" if i.kernel=="paired_bf16" => "Once before replay: two BF16 parameter copies pack the selected projection rows.",
+            "expert_gmm" => "Once before replay: copy owner-local INT8 weights and lossless BF16 scales into grouped banks. No FP32 scale round-trip.",
+            "sink_normalize" => "Once before replay: normalize checkpoint sink rows and pack BF16 latent/rotary constants; subsequent tokens borrow the prepared result.",
+            "cache_append" | "cache_norm_rope_append" => "Once before replay: copy prepared constant sinks into persistent cache state; initialize metadata from control inputs.",
+            "mhc_pre_project" | "mhc_merge" => "Once before replay: fold scalar checkpoint parameters and upload prepared mHC coefficients.",
+            "router_projection" => "Once before replay: transpose/convert checkpoint gate parameters and upload FP32 weights and bias.",
+            "mome_inplace" => "Once before replay: transpose convolution weights and initialize recurrent state and control indices.",
+            _ => "No parameter/state copy recipe in this instruction.",
+        };
+        let fields:Vec<serde_json::Value>=match i.kind {
+            0=>vec![serde_json::json!({"name":"value","dtype":i.dtype,"shape":[i.width]})],
+            2=>vec![serde_json::json!({"name":"expert_ids","dtype":"int32","shape":[8]}),serde_json::json!({"name":"scores","dtype":"f32","shape":[8]})],
+            3=>vec![serde_json::json!({"name":"packed_rows","dtype":"bf16","shape":[8,i.width]}),serde_json::json!({"name":"groups","dtype":"int64","shape":[32]}),serde_json::json!({"name":"inverse_indices","dtype":"int32","shape":[8]})],
+            5=>vec![serde_json::json!({"name":"quantized","dtype":"int8","shape":[1,i.width]}),serde_json::json!({"name":"scales","dtype":"f32","shape":[1]})],
+            6=>vec![serde_json::json!({"name":"quantized_rows","dtype":"int8","shape":[8,i.width]}),serde_json::json!({"name":"scales","dtype":"f32","shape":[8]}),serde_json::json!({"name":"groups","dtype":"int64","shape":[32]}),serde_json::json!({"name":"inverse_indices","dtype":"int32","shape":[8]})],
+            7=>vec![serde_json::json!({"name":"metadata_effect","dtype":"int32","shape":[1024]})],
+            _=>vec![],
+        };
+        serde_json::json!({"preparation":preparation,"value_fields":fields,"apis":apis,"internal":internal,"materialization":materialization,"placement":placement,"communication":communication,
+            "granularity":if i.op=="sink_normalize" {"initialization recipe"} else {"instruction"}})
     }).collect()
 }
