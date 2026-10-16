@@ -121,8 +121,8 @@ struct Decoder {
            inferfabric::initialization::DType>
       source_types;
   Decoder(const inferfabric::initialization::Plan &p, const std::string &root,
-          HcclRootInfo &info, const inferfabric::execution::Plan &execution, const std::string &arena_path, uint64_t fingerprint)
-      : execution(arena_path,fingerprint), rank(p.rank), program(execution),
+          HcclRootInfo &info, const inferfabric::execution::Plan &execution, const std::string &arena_path, uint64_t fingerprint, const std::string &workspace_path)
+      : execution(arena_path,fingerprint,workspace_path), rank(p.rank), program(execution),
         swiglu(std::getenv("INFERFABRIC_SWIGLU_LIBRARY")
                    ? std::getenv("INFERFABRIC_SWIGLU_LIBRARY")
                    : IF_DEFAULT_SWIGLU_LIBRARY,
@@ -1239,9 +1239,11 @@ int main(int argc, char **argv) {
             size_t memory_free_before=0,memory_total=0;
             openpangu::checked(aclrtGetMemInfo(ACL_HBM_MEM,&memory_free_before,&memory_total),"memory baseline");
             auto arena_path=std::filesystem::path(argv[1]) / ("arena-rank-"+std::to_string(rank)+".txt");
+            auto workspace_path=std::filesystem::path(argv[1]) / ("workspace-rank-"+std::to_string(rank)+".txt");
             pangu::Decoder decoder(plan, argv[2], info, execution,
                 (std::filesystem::exists(std::filesystem::path(argv[1])/"arena.json") || std::filesystem::exists(arena_path))?arena_path.string():"",
-                inferfabric::prepared::ArenaLayout::fingerprint_file(std::string(argv[1])+"/execution.bin"));
+                inferfabric::prepared::ArenaLayout::fingerprint_file(std::string(argv[1])+"/execution.bin"),
+                std::filesystem::exists(workspace_path)?workspace_path.string():"");
             pangu::V logits;
             int pos = 0;
             for (int token : prompt) {

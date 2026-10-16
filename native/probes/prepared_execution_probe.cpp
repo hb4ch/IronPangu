@@ -8,6 +8,23 @@ int main() {
     prepared::check(aclInit(nullptr), "init");
     prepared::check(aclrtSetDevice(0), "device");
     {
+      const char *path="probe-workspace.txt";
+      {std::ofstream out(path);out<<"IFWORKSPACE1 123 "<<prepared::ArenaLayout::fingerprint_file("/proc/self/exe")<<" 1024\n";}
+      {
+        prepared::Context fixed("",123,path);
+        auto *address=fixed.workspace(1);
+        if(address!=fixed.workspace(512) || address!=fixed.workspace(1024))
+          throw std::runtime_error("planned workspace moved");
+        bool rejected=false;
+        try{fixed.workspace(1025);}catch(const std::runtime_error&){rejected=true;}
+        if(!rejected || address!=fixed.workspace(1))throw std::runtime_error("workspace overflow accepted or changed address");
+        std::ostringstream audit;fixed.write(audit);
+        if(audit.str().find("\"growth_allocations\":0")==std::string::npos)
+          throw std::runtime_error("planned workspace grew");
+      }
+      std::remove(path);
+    }
+    {
       prepared::Context context;
       openpangu::DeviceTensor results({128, 4}, ACL_BF16, 2);
       resident::PreparedWeightViews weight_views;
@@ -194,7 +211,10 @@ int main() {
     {
       const char *path="prepared-arena-test.txt";
       {std::ofstream manifest(path);manifest<<"IFARENA1 123 "<<prepared::ArenaLayout::fingerprint_file("/proc/self/exe")<<" 516 2\n0 4\n512 4\nbindings 2\n-1 1 0\n7 2 0 1\n";}
-      prepared::Context context(path,123);
+      const char *workspace_path="prepared-workspace-test.txt";
+      {std::ofstream manifest(workspace_path);manifest<<"IFWORKSPACE1 123 "<<prepared::ArenaLayout::fingerprint_file("/proc/self/exe")<<" 0\n";}
+      prepared::Context context(path,123,workspace_path);
+      std::remove(workspace_path);
       void *a=context.acquire(4);context.instruction(7,true);void *b=context.acquire(4);
       if(static_cast<char *>(b)-static_cast<char *>(a)!=512)throw std::runtime_error("arena offsets not followed");
       context.zero(a,4);context.copy(b,a,4);

@@ -9,6 +9,16 @@
 namespace inferfabric::prepared {
 // Portable hardware-preparation output. Offsets are fixed, 512-byte aligned,
 // disjoint physical slots; logical lifetimes may reuse a slot on one stream.
+struct WorkspacePlan {
+  uint64_t bytes=0;
+  static WorkspacePlan read(const std::string &path,uint64_t program,uint64_t backend) {
+    std::ifstream in(path);std::string magic,extra;uint64_t p=0,b=0;WorkspacePlan w;
+    if(!(in>>magic>>p>>b>>w.bytes) || magic!="IFWORKSPACE1" || p!=program || b!=backend ||
+       w.bytes>(uint64_t(1)<<40) || (in>>extra))
+      throw std::runtime_error("shared workspace plan fingerprint/bounds mismatch");
+    return w;
+  }
+};
 struct ArenaLayout {
   struct Slot { uint64_t offset, bytes; };
   uint64_t fingerprint=0, backend=0, bytes=0;

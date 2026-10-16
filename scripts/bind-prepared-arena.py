@@ -29,6 +29,26 @@ def bind(plan, audits, output):
     for rank in range(ranks):
         audit = json.loads((audits / f"rank-{rank}.json").read_text())
         arena = audit["arena"]
+        workspace = audit["workspace"]
+        if not workspace["planned"] or workspace["growth_allocations"]:
+            raise ValueError("discovery arena cannot bind: plan maximum shared workspace and prepare again")
+        fields = (plan / f"workspace-rank-{rank}.txt").read_text().split()
+        if fields != ["IFWORKSPACE1", expected, arena["backend_fingerprint"], str(workspace["planned_bytes"])]:
+            raise ValueError("shared workspace plan/audit mismatch")
+        if workspace["peak_requested_bytes"] > workspace["planned_bytes"]:
+            raise ValueError("shared workspace bound exceeded")
+        if max(workspace["instruction_requests"].values(), default=0) != workspace["peak_requested_bytes"]:
+            raise ValueError("inconsistent prepared workspace requests")
+        slot = workspace["slot"]
+        if workspace["planned_bytes"]:
+            if slot != 0 or arena["slots"][slot]["bytes"] != workspace["planned_bytes"]:
+                raise ValueError("shared workspace must have one permanent first slot")
+            for instruction in workspace["instruction_requests"]:
+                if slot not in arena["instruction_slots"].get(instruction, []):
+                    raise ValueError("workspace user lacks planned slot binding")
+        elif slot is not None:
+            raise ValueError("zero workspace must not allocate a slot")
+        arena["workspace"] = workspace
         if arena["program_fingerprint"] != expected:
             raise ValueError("preparation audit belongs to another program")
         if arena["format"] != "inferfabric.frozen-arena.v1":

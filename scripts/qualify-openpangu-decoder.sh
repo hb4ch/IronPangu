@@ -11,6 +11,9 @@ cmake --build native-build --target openpangu_decode -j4
 test -f "$2/execution.bin"
 mkdir -p "$3/plan"
 cp "$2/"*.bin "$3/plan/"
+if [[ -f "$2/workspace.json" ]]; then
+  cp "$2/workspace.json" "$2/"workspace-rank-*.txt "$3/plan/"
+fi
 if [[ -f "$2/arena.json" ]]; then
   cp "$2/arena.json" "$2/"arena-rank-*.txt "$3/plan/"
 fi

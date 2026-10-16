@@ -306,9 +306,22 @@ INFERFABRIC_PREPARE_ARENA=1 INFERFABRIC_DECODE_GRAPH=1 \
   python3 scripts/qualify-openpangu-decoder.py \
     --checkpoint /models/92B --plan compiled-plan \
     --binary native-build/openpangu_decode --output preparation
+python3 scripts/plan-shared-workspace.py compiled-plan workspace-plan \
+  preparation/arithmetic-prepared preparation/geography-prepared preparation/chinese-prepared
+INFERFABRIC_PREPARE_ARENA=1 INFERFABRIC_DECODE_GRAPH=1 \
+  python3 scripts/qualify-openpangu-decoder.py \
+    --checkpoint /models/92B --plan workspace-plan \
+    --binary native-build/openpangu_decode --output fixed-preparation
 python3 scripts/bind-prepared-arena.py \
-  compiled-plan preparation/arithmetic-prepared bound-plan
+  workspace-plan fixed-preparation/arithmetic-prepared bound-plan
 ```
+
+The first run discovers workspace demands. `plan-shared-workspace.py` merges their
+maximum per rank and records program/backend fingerprints. The second run starts
+with one fixed workspace lease before any model buffers are allocated. Only this
+second, zero-growth preparation can bind an arena. Requests above the planned
+maximum fail; changing runtime shapes or implementations requires discovery again.
+See [shared workspace planning](shared-workspace-planning.md).
 
 Use `bound-plan` for subsequent execution with the same native binary and runtime.
 The normal executor rejects missing, stale, incomplete or exhausted arena

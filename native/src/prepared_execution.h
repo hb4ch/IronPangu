@@ -74,7 +74,10 @@ class Context {
   std::vector<std::pair<void *, size_t>> uploads_;
   size_t upload_index_ = 0;
   void *workspace_ = nullptr;
-  size_t workspace_bytes_ = 0;
+  size_t workspace_bytes_ = 0, planned_workspace_bytes_ = 0, peak_workspace_request_ = 0;
+  bool workspace_planned_ = false;
+  uint64_t workspace_growths_ = 0;
+  std::map<int64_t,size_t> workspace_requests_;
   aclScalar *one_ = nullptr;
   void *output_host_ = nullptr;
   size_t output_capacity_ = 0;
@@ -88,9 +91,15 @@ class Context {
 
 public:
   aclrtStream stream = nullptr;
-  explicit Context(const std::string &arena_path = "", uint64_t fingerprint = 0) : program_fingerprint_(fingerprint) {
+  explicit Context(const std::string &arena_path = "", uint64_t fingerprint = 0, const std::string &workspace_path = "") : program_fingerprint_(fingerprint) {
     if (active)
       throw std::runtime_error("nested prepared execution context");
+    if(!workspace_path.empty()) {
+      planned_workspace_bytes_=WorkspacePlan::read(workspace_path,fingerprint,ArenaLayout::fingerprint_file("/proc/self/exe")).bytes;
+      workspace_planned_=true;
+    }
+    if(!arena_path.empty() && !workspace_planned_)
+      throw std::runtime_error("frozen arena requires a shared workspace plan");
     check(aclrtCreateStream(&stream), "prepared stream");
     float one = 1;
     one_ = aclCreateScalar(&one, ACL_FLOAT);
@@ -110,6 +119,12 @@ public:
       for(auto i=blocks_.rbegin();i!=blocks_.rend();++i) free_[(*i)->bytes].push_back(i->get());
     }
     active = this;
+    if(planned_workspace_bytes_) {
+      // Reserve before any model/control allocations. The lease stays live for
+      // the entire context; every vendor call and graph sees this one address.
+      workspace_=acquire(planned_workspace_bytes_);
+      workspace_bytes_=planned_workspace_bytes_;
+    }
   }
   Context(const Context &) = delete;
   Context &operator=(const Context &) = delete;
@@ -254,7 +269,13 @@ public:
     return tensor;
   }
   void *workspace(size_t bytes) {
+    require_stream(stream);
+    if(workspace_planned_ && bytes>planned_workspace_bytes_)
+      throw std::runtime_error("shared workspace exceeds planned maximum at instruction "+std::to_string(instruction_));
+    peak_workspace_request_=std::max(peak_workspace_request_,bytes);
+    workspace_requests_[instruction_]=std::max(workspace_requests_[instruction_],bytes);
     if (bytes > workspace_bytes_) {
+      ++workspace_growths_;
       // The previous workspace remains allocated; subsequent reuse is ordered
       // after all its previous users on the same stream.
       if (workspace_)
@@ -439,7 +460,13 @@ public:
       out << "{\"name\":\"" << graph.name << "\",\"replays\":" << graph.replays
           << '}';
     }
-    out << "],\"arena\":{\"format\":\"inferfabric.frozen-arena.v1\",\"frozen\":" << (arena_?"true":"false")
+    out << "],\"workspace\":{\"planned\":" << (workspace_planned_?"true":"false")
+        << ",\"planned_bytes\":" << planned_workspace_bytes_ << ",\"peak_requested_bytes\":" << peak_workspace_request_
+        << ",\"growth_allocations\":" << workspace_growths_ << ",\"slot\":";
+    if(workspace_) out<<owned_.at(workspace_)->slot;else out<<"null";
+    out<<",\"instruction_requests\":{";
+    first=true;for(const auto &[id,bytes]:workspace_requests_) {if(!first)out<<',';first=false;out<<'"'<<id<<"\":"<<bytes;}
+    out<<"}},\"arena\":{\"format\":\"inferfabric.frozen-arena.v1\",\"frozen\":" << (arena_?"true":"false")
         << ",\"backend_fingerprint\":\"" << ArenaLayout::fingerprint_file("/proc/self/exe") << "\""
         << ",\"program_fingerprint\":\"" << program_fingerprint_ << "\",\"slots\":[";
     uint64_t offset=0;

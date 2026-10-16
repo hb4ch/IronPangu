@@ -26,6 +26,18 @@ int main() {
     reject([&]{load(replace("7 2 1 2","-1 2 1 2"));});
     reject([&]{load(valid+"extra");});
     reject([&]{load(replace("bindings 2","bindings 3"));});
+    auto workspace=[&](const std::string &text,uint64_t program=123,uint64_t backend=456) {
+      {std::ofstream out(path);out<<text;}
+      return inferfabric::prepared::WorkspacePlan::read(path,program,backend);
+    };
+    if(workspace("IFWORKSPACE1 123 456 1024").bytes!=1024 || workspace("IFWORKSPACE1 123 456 0").bytes!=0)
+      throw std::runtime_error("valid workspace plan changed");
+    reject([&]{workspace("IFWORKSPACE1 123 456 1024",124);});
+    reject([&]{workspace("IFWORKSPACE1 123 456 1024",123,457);});
+    reject([&]{workspace("IFWORKSPACE1 123 456 1099511627777");});
+    reject([&]{workspace("IFWORKSPACE1 123 456 -1");});
+    reject([&]{workspace("IFWORKSPACE1 123 456 1024 extra");});
+    reject([&]{workspace("IFWORKSPACE1 123 456");});
     std::remove(path);
     std::cout<<"frozen arena: valid layout and "<<rejected<<" negative contracts passed\n";
   } catch(const std::exception &e) {std::remove(path);std::cerr<<e.what()<<'\n';return 1;}

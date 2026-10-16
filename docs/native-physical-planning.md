@@ -422,3 +422,12 @@ normalization and recurrent-state initialization remain explicit **preparation
 recipes**, shown separately in the viewer. Their internal graph is not claimed to
 be a fully lowered initialization DAG. The arena preserves the qualified reuse
 policy rather than performing optimal interval packing or measured cost search.
+
+## Planned maximum shared workspace (2026-10-17)
+
+Hardware preparation now has a discovery stage followed by a fresh preparation
+with a fingerprint-bound maximum workspace reservation. Arena binding rejects
+growing/discovery pools. One permanent workspace lease serves all instructions
+on the owning stream, and an oversized demand fails before kernel enqueue.
+The viewer records capacity, per-instruction demand and the shared slot.
+See [the protocol](shared-workspace-planning.md).
