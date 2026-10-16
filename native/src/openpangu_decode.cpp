@@ -12,6 +12,8 @@
 #include <aclnn_ai_infra_fused_causal_conv1d.h>
 #include <aclnn_ai_infra_kv_rms_norm_rope_cache.h>
 #include <aclnn_ai_infra_sparse_flash_attention_pioneer.h>
+#include <aclnn_ai_infra_fused_infer_attention_sink.h>
+#include <aclnn_ai_infra_fused_infer_attention_sink_metadata.h>
 #include <aclnnop/aclnn_batch_matmul.h>
 #include <aclnnop/aclnn_cat.h>
 #include <aclnnop/aclnn_dequant_swiglu_quant.h>
@@ -93,8 +95,10 @@ struct Decoder {
   aclmdlRI decode_graph = nullptr;
   V graph_output;
   std::vector<std::unique_ptr<inferfabric::PreparedKernel>> graph_kernels;
-  std::unique_ptr<DeviceTensor> token_index, position_index, cache_position, sequence_length,
-      causal_indices, rotary_cos, rotary_sin, rotary_cos_bf16, rotary_sin_bf16;
+  std::unique_ptr<DeviceTensor> token_index, position_index, cache_position,
+      rotary_cos, rotary_sin, rotary_cos_bf16, rotary_sin_bf16, sequence_length64, query_length64, attention_metadata, attention_mask;
+  int64_t cube_cores = 0, vector_cores = 0;
+  bool metadata_enqueued = false;
   int rank;
   int current_position = -1;
   std::map<std::string, std::unique_ptr<openpangu::Router>> routers;
@@ -132,10 +136,8 @@ struct Decoder {
         std::make_unique<DeviceTensor>(std::vector<int64_t>{1}, ACL_INT32, 4);
     cache_position =
         std::make_unique<DeviceTensor>(std::vector<int64_t>{1}, ACL_INT64, 8);
-    sequence_length =
-        std::make_unique<DeviceTensor>(std::vector<int64_t>{1}, ACL_INT32, 4);
-    causal_indices = std::make_unique<DeviceTensor>(
-        std::vector<int64_t>{1, 1, int64_t(program.context)}, ACL_INT32, 4);
+    sequence_length64 =
+        std::make_unique<DeviceTensor>(std::vector<int64_t>{1}, ACL_INT64, 8);
     rotary_cos =
         std::make_unique<DeviceTensor>(std::vector<int64_t>{64}, ACL_FLOAT, 4);
     rotary_sin =
@@ -144,6 +146,18 @@ struct Decoder {
         std::make_unique<DeviceTensor>(std::vector<int64_t>{1, 1, 1, 64}, ACL_BF16, 2);
     rotary_sin_bf16 =
         std::make_unique<DeviceTensor>(std::vector<int64_t>{1, 1, 1, 64}, ACL_BF16, 2);
+    query_length64 = std::make_unique<DeviceTensor>(std::vector<int64_t>{1}, ACL_INT64, 8);
+    attention_metadata = std::make_unique<DeviceTensor>(std::vector<int64_t>{1024}, ACL_INT32, 4);
+    resident::control_upload(*query_length64, std::vector<int64_t>{1});
+    attention_mask = std::make_unique<DeviceTensor>(std::vector<int64_t>{2048, 2048}, ACL_BOOL, 1);
+    std::vector<uint8_t> mask(2048 * 2048);
+    for (int i = 0; i < 2048; ++i) for (int j = i + 1; j < 2048; ++j) mask[i * 2048 + j] = 1;
+    resident::control_upload(*attention_mask, mask);
+    int32_t device = -1;
+    checked(aclrtGetDevice(&device), "attention device");
+    checked(aclrtGetDeviceInfo(device, ACL_DEV_ATTR_CUBE_CORE_NUM, &cube_cores), "attention cube cores");
+    checked(aclrtGetDeviceInfo(device, ACL_DEV_ATTR_VECTOR_CORE_NUM, &vector_cores), "attention vector cores");
+    if (cube_cores <= 0 || vector_cores <= 0) throw std::runtime_error("attention core contract");
     checked(HcclCommInitRootInfo(8, &info, rank, &comm), "HCCL");
   }
   ~Decoder() {
@@ -602,24 +616,74 @@ struct Decoder {
             "fused cache normalization/rotary prepare");
     run(aclnnAiInfraKvRmsNormRopeCache, bytes, e);
   }
-  V attend(const V &queries, const std::string &state_name) {
-    auto &state = *attention_states.at(state_name);
-    auto query = cast(queries, ACL_BF16);
-    View query_view(query.data(), {1, 6, 576}, ACL_BF16);
+  void prepare_attention_metadata() {
+    if (metadata_enqueued) return;
+    execution.zero(attention_metadata->data, attention_metadata->bytes);
+    char layout[] = "TND", cache_layout[] = "BnBsH";
     uint64_t bytes = 0;
     aclOpExecutor *e = nullptr;
-    char layout[] = "TND", cache_layout[] = "PA_BSND";
-    checked(prepared::query(
-                "aclnnAiInfraSparseFlashAttentionPioneer", false,
-                aclnnAiInfraSparseFlashAttentionPioneerGetWorkspaceSize,
-                query_view.t, state.key.tensor, state.value.tensor,
-                causal_indices->tensor, state.table.tensor, state.qlen.tensor,
-                sequence_length->tensor, nullptr, nullptr, state.sink.tensor,
-                state.sinkvalue.tensor, 1 / std::sqrt(192.0), 1, layout,
-                cache_layout, 3, INT64_MAX, INT64_MAX, 2, false,
-                state.out.tensor, nullptr, nullptr, &bytes, &e),
-            "MLA attention prepare");
-    run(aclnnAiInfraSparseFlashAttentionPioneer, bytes, e);
+    checked(prepared::query("attention_metadata", false,
+        aclnnAiInfraFusedInferAttentionSinkMetadataGetWorkspaceSize,
+        query_length64->tensor, sequence_length64->tensor,
+        6, 1, 512, 512, 1, 4, int64_t(program.context) - 1, 0,
+        layout, cache_layout, 0, 128, 64, 16, cube_cores, vector_cores,
+        attention_metadata->tensor, &bytes, &e), "attention metadata prepare");
+    run(aclnnAiInfraFusedInferAttentionSinkMetadata, bytes, e);
+    metadata_enqueued = true;
+  }
+  V attend(const V &queries, const std::string &state_name) {
+    prepare_attention_metadata();
+    auto &state = *attention_states.at(state_name);
+    auto query = cast(queries, ACL_BF16);
+    auto *q = execution.strided_descriptor(query.data(), 3456,
+        {1, 6, 512}, {3456, 576, 1}, ACL_BF16);
+    auto *qr = execution.strided_descriptor(
+        static_cast<uint16_t *>(query.data()) + 512, 2944,
+        {1, 6, 64}, {3456, 576, 1}, ACL_BF16);
+    // Preserve the actual backing extent and view offset for paged cache views.
+    auto cache_view = [&](int64_t width, int64_t offset) {
+      int64_t shape[] = {32, 16, width};
+      int64_t storage[] = {32, 16, 576};
+      int64_t strides[] = {16 * 576, 576, 1};
+      return aclCreateTensor(shape, 3, ACL_BF16, strides, offset, ACL_FORMAT_ND,
+                             storage, 3, state.key.data);
+    };
+    struct List {
+      aclTensorList *value = nullptr;
+      explicit List(aclTensor *tensor) {
+        if (!tensor) throw std::runtime_error("attention cache view");
+        value = aclCreateTensorList(&tensor, 1);
+        if (!value) {
+          aclDestroyTensor(tensor);
+          throw std::runtime_error("attention cache list");
+        }
+      }
+      ~List() { aclDestroyTensorList(value); }
+    } keys(cache_view(512, 0)), values(cache_view(512, 0));
+    auto rope_cache = std::unique_ptr<aclTensor, decltype(&aclDestroyTensor)>(
+        cache_view(64, 512), aclDestroyTensor);
+    if (!rope_cache) throw std::runtime_error("attention rotary cache view");
+    auto *sink = weight_views.get(state.sink.data, 128 * 576,
+                                  {128, 1, 512}, {576, 576, 1}, ACL_BF16);
+    auto *sink_rope = weight_views.get(
+        static_cast<uint16_t *>(state.sink.data) + 512, 128 * 576 - 512,
+        {128, 1, 64}, {576, 576, 1}, ACL_BF16);
+    View output(state.out.data, {1, 6, 512}, ACL_BF16);
+    char layout[] = "TND";
+    uint64_t bytes = 0;
+    aclOpExecutor *e = nullptr;
+    checked(prepared::query("aclnnAiInfraFusedInferAttentionSink", false,
+        aclnnAiInfraFusedInferAttentionSinkGetWorkspaceSize,
+        q, keys.value, values.value,
+        nullptr, attention_mask->tensor, query_length64->tensor, sequence_length64->tensor,
+        nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr,
+        state.table.tensor, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr,
+        qr, rope_cache.get(), nullptr, nullptr, attention_metadata->tensor,
+        sink, sink_rope, sink,
+        6, 1 / std::sqrt(192.0), int64_t(program.context) - 1, 0, layout,
+        1, 4, 0, 16, 0, false, 0, 0, 0, 0,
+        output.t, nullptr, &bytes, &e), "dense sink attention prepare");
+    run(aclnnAiInfraFusedInferAttentionSink, bytes, e);
     return result(state.out);
   }
   V activate(const V &gate, const V &up) {
@@ -939,11 +1003,7 @@ struct Decoder {
     resident::control_upload(*token_index, std::vector<int32_t>{id});
     resident::control_upload(*position_index, std::vector<int32_t>{pos});
     resident::control_upload(*cache_position, std::vector<int64_t>{pos});
-    resident::control_upload(*sequence_length, std::vector<int32_t>{pos + 1});
-    std::vector<int32_t> indices(program.context, -1);
-    for (int i = 0; i <= pos; ++i)
-      indices[i] = i;
-    resident::control_upload(*causal_indices, indices);
+    resident::control_upload(*sequence_length64, std::vector<int64_t>{pos + 1});
     Host c(64), sn(64);
     for (int i = 0; i < 32; ++i) {
       float angle = float(pos) / std::pow(6400000.f, float(2 * i) / 64);

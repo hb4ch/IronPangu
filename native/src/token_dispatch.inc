@@ -9,6 +9,7 @@ static std::string expert_name(std::string pattern, int expert) {
   return pattern;
 }
 V execute_token() {
+  metadata_enqueued = false;
   int pos = current_position;
   std::vector<std::unique_ptr<Value>> values(program.nodes.size());
   auto remaining = program.uses;

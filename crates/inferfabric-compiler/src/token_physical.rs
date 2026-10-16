@@ -118,6 +118,14 @@ pub fn lower(graph: &Graph, devices: &[u32]) -> Result<Plan> {
             boundaries.push(Boundary { kind: BoundaryKind::InternalLaunches,
                 detail: "Fused KV RMS normalization, half-rotary and paged cache write; BF16 input, gamma and rotary coefficients, epsilon 1e-5. Position is a device control input. Combined latent/rotary cache remains device resident; no implicit readback or fallback. Numerical contract differs from separate FP32 rotary".into() });
         }
+        if n.op == "latent_attention" {
+            boundaries.push(Boundary { kind: BoundaryKind::InternalLaunches,
+                detail: "Dense FusedInferAttentionSink in TND sliding-window mode implements the validated all-causal-within-window contract (context <=512 and <=window). Bounded noncontiguous paged KV views stay on device. One AICPU metadata operation per rank/token is shared by attention nodes and captured for replay; no host length readback. This is a distinct numerical kernel from sparse Pioneer".into() });
+            boundaries.push(Boundary { kind: BoundaryKind::PersistentState,
+                detail: "Immutable sink latent/rotary views are packed once before capture (147456 bytes per distinct cache); a shared 4 MiB compressed causal mask and 4096-byte metadata buffer remain device resident".into() });
+            boundaries.push(Boundary { kind: BoundaryKind::ControlUpload,
+                detail: "Upload only sequence length each token; query length and causal mask are initialization constants. No per-token candidate-index upload".into() });
+        }
         if n.op == "linear" && n.attrs.get("placement").is_some_and(|p| p == "tp_columns") {
             boundaries.push(Boundary { kind: BoundaryKind::InternalLaunches,
                 detail: "Input-column TP slice loaded by generic strided initialization; local dynamic quantization and BF16 partial output. Cross-rank FP32 sum is a separate explicit allreduce node; no implicit gather".into() });
