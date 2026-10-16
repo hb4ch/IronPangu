@@ -1,0 +1,1276 @@
+{
+  "format": "inferfabric.cache-precision-qualification.v1",
+  "scope": "TP8/EP8, 46-layer 92B, context capacity 512, batch one, three short prompts; per-format exact replay records; not a broad quality benchmark",
+  "variants": {
+    "bf16": {
+      "persistent_cache_payload_plus_scales_bytes_per_rank": 27131904,
+      "arena_bytes_per_rank": [
+        12433409600,
+        12433409600,
+        12433409600,
+        12433409600,
+        12433409600,
+        12433409600,
+        12433409600,
+        12433409600
+      ],
+      "arena_slots_per_rank": [
+        3617,
+        3617,
+        3617,
+        3617,
+        3617,
+        3617,
+        3617,
+        3617
+      ],
+      "measurements": {
+        "tpot": {
+          "tpot": {
+            "intervals": 30,
+            "mean_ms": 17.733428566666667,
+            "median_ms": 17.651721000000002,
+            "p95_ms": 18.469751,
+            "min_ms": 17.556105,
+            "max_ms": 18.789514
+          },
+          "runs": 3,
+          "output_records": 33,
+          "rank_audits": 24,
+          "checked_token_steps": 568,
+          "zero_token_allocations_and_internal_fences": true,
+          "zero_activation_host_transfers": true,
+          "binary_sha256": "117e1481f0e3b466aa5ca6bddabacbbce5aeb3a1289f2db1ea1adc7bc5ab72a1",
+          "execution_plan_sha256": "0ba0ca6c4adad584108affd0b3e205f75097d501eb9630382f1384fba863f4cc",
+          "qualification_cases_sha256": "7a9eafc79473c5843741a3c657d692374d71f8b658f65e00f3ae5fa28a8a6cab",
+          "hbm_used_after_generation_bytes_median": 33683335168.0,
+          "hbm_growth_bytes_median": 33366648832.0,
+          "memory_samples": [
+            {
+              "rank": 0,
+              "device": 0,
+              "hbm_total_bytes": 65787658240,
+              "hbm_free_before_decoder_bytes": 65315528704,
+              "hbm_free_after_generation_bytes": 31968485376,
+              "hbm_used_after_generation_bytes": 33819172864,
+              "hbm_growth_bytes": 33347043328
+            },
+            {
+              "rank": 1,
+              "device": 1,
+              "hbm_total_bytes": 65796046848,
+              "hbm_free_before_decoder_bytes": 65606320128,
+              "hbm_free_after_generation_bytes": 32242966528,
+              "hbm_used_after_generation_bytes": 33553080320,
+              "hbm_growth_bytes": 33363353600
+            },
+            {
+              "rank": 2,
+              "device": 2,
+              "hbm_total_bytes": 65787658240,
+              "hbm_free_before_decoder_bytes": 65341878272,
+              "hbm_free_after_generation_bytes": 31970652160,
+              "hbm_used_after_generation_bytes": 33817006080,
+              "hbm_growth_bytes": 33371226112
+            },
+            {
+              "rank": 3,
+              "device": 3,
+              "hbm_total_bytes": 65796046848,
+              "hbm_free_before_decoder_bytes": 65605283840,
+              "hbm_free_after_generation_bytes": 32238477312,
+              "hbm_used_after_generation_bytes": 33557569536,
+              "hbm_growth_bytes": 33366806528
+            },
+            {
+              "rank": 4,
+              "device": 4,
+              "hbm_total_bytes": 65787658240,
+              "hbm_free_before_decoder_bytes": 65334546432,
+              "hbm_free_after_generation_bytes": 31962259456,
+              "hbm_used_after_generation_bytes": 33825398784,
+              "hbm_growth_bytes": 33372286976
+            },
+            {
+              "rank": 5,
+              "device": 5,
+              "hbm_total_bytes": 65796046848,
+              "hbm_free_before_decoder_bytes": 65625075712,
+              "hbm_free_after_generation_bytes": 32259551232,
+              "hbm_used_after_generation_bytes": 33536495616,
+              "hbm_growth_bytes": 33365524480
+            },
+            {
+              "rank": 6,
+              "device": 6,
+              "hbm_total_bytes": 65787658240,
+              "hbm_free_before_decoder_bytes": 65350508544,
+              "hbm_free_after_generation_bytes": 31979302912,
+              "hbm_used_after_generation_bytes": 33808355328,
+              "hbm_growth_bytes": 33371205632
+            },
+            {
+              "rank": 7,
+              "device": 7,
+              "hbm_total_bytes": 65796046848,
+              "hbm_free_before_decoder_bytes": 65604575232,
+              "hbm_free_after_generation_bytes": 32237731840,
+              "hbm_used_after_generation_bytes": 33558315008,
+              "hbm_growth_bytes": 33366843392
+            },
+            {
+              "rank": 0,
+              "device": 0,
+              "hbm_total_bytes": 65787658240,
+              "hbm_free_before_decoder_bytes": 65333964800,
+              "hbm_free_after_generation_bytes": 31969529856,
+              "hbm_used_after_generation_bytes": 33818128384,
+              "hbm_growth_bytes": 33364434944
+            },
+            {
+              "rank": 1,
+              "device": 1,
+              "hbm_total_bytes": 65796046848,
+              "hbm_free_before_decoder_bytes": 65608753152,
+              "hbm_free_after_generation_bytes": 32242262016,
+              "hbm_used_after_generation_bytes": 33553784832,
+              "hbm_growth_bytes": 33366491136
+            },
+            {
+              "rank": 2,
+              "device": 2,
+              "hbm_total_bytes": 65787658240,
+              "hbm_free_before_decoder_bytes": 65340837888,
+              "hbm_free_after_generation_bytes": 31971700736,
+              "hbm_used_after_generation_bytes": 33815957504,
+              "hbm_growth_bytes": 33369137152
+            },
+            {
+              "rank": 3,
+              "device": 3,
+              "hbm_total_bytes": 65796046848,
+              "hbm_free_before_decoder_bytes": 65601753088,
+              "hbm_free_after_generation_bytes": 32238784512,
+              "hbm_used_after_generation_bytes": 33557262336,
+              "hbm_growth_bytes": 33362968576
+            },
+            {
+              "rank": 4,
+              "device": 4,
+              "hbm_total_bytes": 65787658240,
+              "hbm_free_before_decoder_bytes": 65332834304,
+              "hbm_free_after_generation_bytes": 31962836992,
+              "hbm_used_after_generation_bytes": 33824821248,
+              "hbm_growth_bytes": 33369997312
+            },
+            {
+              "rank": 5,
+              "device": 5,
+              "hbm_total_bytes": 65796046848,
+              "hbm_free_before_decoder_bytes": 65625575424,
+              "hbm_free_after_generation_bytes": 32259084288,
+              "hbm_used_after_generation_bytes": 33536962560,
+              "hbm_growth_bytes": 33366491136
+            },
+            {
+              "rank": 6,
+              "device": 6,
+              "hbm_total_bytes": 65787658240,
+              "hbm_free_before_decoder_bytes": 65351389184,
+              "hbm_free_after_generation_bytes": 31978115072,
+              "hbm_used_after_generation_bytes": 33809543168,
+              "hbm_growth_bytes": 33373274112
+            },
+            {
+              "rank": 7,
+              "device": 7,
+              "hbm_total_bytes": 65796046848,
+              "hbm_free_before_decoder_bytes": 65600794624,
+              "hbm_free_after_generation_bytes": 32237862912,
+              "hbm_used_after_generation_bytes": 33558183936,
+              "hbm_growth_bytes": 33362931712
+            },
+            {
+              "rank": 0,
+              "device": 0,
+              "hbm_total_bytes": 65787658240,
+              "hbm_free_before_decoder_bytes": 65334861824,
+              "hbm_free_after_generation_bytes": 31967780864,
+              "hbm_used_after_generation_bytes": 33819877376,
+              "hbm_growth_bytes": 33367080960
+            },
+            {
+              "rank": 1,
+              "device": 1,
+              "hbm_total_bytes": 65796046848,
+              "hbm_free_before_decoder_bytes": 65608089600,
+              "hbm_free_after_generation_bytes": 32242524160,
+              "hbm_used_after_generation_bytes": 33553522688,
+              "hbm_growth_bytes": 33365565440
+            },
+            {
+              "rank": 2,
+              "device": 2,
+              "hbm_total_bytes": 65787658240,
+              "hbm_free_before_decoder_bytes": 65341640704,
+              "hbm_free_after_generation_bytes": 31970377728,
+              "hbm_used_after_generation_bytes": 33817280512,
+              "hbm_growth_bytes": 33371262976
+            },
+            {
+              "rank": 3,
+              "device": 3,
+              "hbm_total_bytes": 65796046848,
+              "hbm_free_before_decoder_bytes": 65604517888,
+              "hbm_free_after_generation_bytes": 32239128576,
+              "hbm_used_after_generation_bytes": 33556918272,
+              "hbm_growth_bytes": 33365389312
+            },
+            {
+              "rank": 4,
+              "device": 4,
+              "hbm_total_bytes": 65787658240,
+              "hbm_free_before_decoder_bytes": 65334845440,
+              "hbm_free_after_generation_bytes": 31962734592,
+              "hbm_used_after_generation_bytes": 33824923648,
+              "hbm_growth_bytes": 33372110848
+            },
+            {
+              "rank": 5,
+              "device": 5,
+              "hbm_total_bytes": 65796046848,
+              "hbm_free_before_decoder_bytes": 65623089152,
+              "hbm_free_after_generation_bytes": 32260005888,
+              "hbm_used_after_generation_bytes": 33536040960,
+              "hbm_growth_bytes": 33363083264
+            },
+            {
+              "rank": 6,
+              "device": 6,
+              "hbm_total_bytes": 65787658240,
+              "hbm_free_before_decoder_bytes": 65350717440,
+              "hbm_free_after_generation_bytes": 31978622976,
+              "hbm_used_after_generation_bytes": 33809035264,
+              "hbm_growth_bytes": 33372094464
+            },
+            {
+              "rank": 7,
+              "device": 7,
+              "hbm_total_bytes": 65796046848,
+              "hbm_free_before_decoder_bytes": 65602174976,
+              "hbm_free_after_generation_bytes": 32237969408,
+              "hbm_used_after_generation_bytes": 33558077440,
+              "hbm_growth_bytes": 33364205568
+            }
+          ]
+        }
+      }
+    },
+    "int8": {
+      "persistent_cache_payload_plus_scales_bytes_per_rank": 13660160,
+      "arena_bytes_per_rank": [
+        12420527680,
+        12420527680,
+        12420527680,
+        12420527680,
+        12420527680,
+        12420527680,
+        12420527680,
+        12420527680
+      ],
+      "arena_slots_per_rank": [
+        3664,
+        3664,
+        3664,
+        3664,
+        3664,
+        3664,
+        3664,
+        3664
+      ],
+      "measurements": {
+        "tpot": {
+          "tpot": {
+            "intervals": 30,
+            "mean_ms": 21.985683033333334,
+            "median_ms": 21.904791,
+            "p95_ms": 22.868813,
+            "min_ms": 21.806505,
+            "max_ms": 22.999604
+          },
+          "runs": 3,
+          "output_records": 33,
+          "rank_audits": 24,
+          "checked_token_steps": 568,
+          "zero_token_allocations_and_internal_fences": true,
+          "zero_activation_host_transfers": true,
+          "binary_sha256": "117e1481f0e3b466aa5ca6bddabacbbce5aeb3a1289f2db1ea1adc7bc5ab72a1",
+          "execution_plan_sha256": "ca0466e6462602fa7565f97f01c0319bec3f4c20431bc8b88441242343dc5044",
+          "qualification_cases_sha256": "300a7a16b46c133c6d7767b1b8b3558650231d83b02b6ec21ccfa3ef430286ab",
+          "hbm_used_after_generation_bytes_median": 33670809600.0,
+          "hbm_growth_bytes_median": 33354020864.0,
+          "memory_samples": [
+            {
+              "rank": 0,
+              "device": 0,
+              "hbm_total_bytes": 65787658240,
+              "hbm_free_before_decoder_bytes": 65343782912,
+              "hbm_free_after_generation_bytes": 31982440448,
+              "hbm_used_after_generation_bytes": 33805217792,
+              "hbm_growth_bytes": 33361342464
+            },
+            {
+              "rank": 1,
+              "device": 1,
+              "hbm_total_bytes": 65796046848,
+              "hbm_free_before_decoder_bytes": 65609551872,
+              "hbm_free_after_generation_bytes": 32256335872,
+              "hbm_used_after_generation_bytes": 33539710976,
+              "hbm_growth_bytes": 33353216000
+            },
+            {
+              "rank": 2,
+              "device": 2,
+              "hbm_total_bytes": 65787658240,
+              "hbm_free_before_decoder_bytes": 65342853120,
+              "hbm_free_after_generation_bytes": 31981334528,
+              "hbm_used_after_generation_bytes": 33806323712,
+              "hbm_growth_bytes": 33361518592
+            },
+            {
+              "rank": 3,
+              "device": 3,
+              "hbm_total_bytes": 65796046848,
+              "hbm_free_before_decoder_bytes": 65605869568,
+              "hbm_free_after_generation_bytes": 32252477440,
+              "hbm_used_after_generation_bytes": 33543569408,
+              "hbm_growth_bytes": 33353392128
+            },
+            {
+              "rank": 4,
+              "device": 4,
+              "hbm_total_bytes": 65787658240,
+              "hbm_free_before_decoder_bytes": 65333563392,
+              "hbm_free_after_generation_bytes": 31975546880,
+              "hbm_used_after_generation_bytes": 33812111360,
+              "hbm_growth_bytes": 33358016512
+            },
+            {
+              "rank": 5,
+              "device": 5,
+              "hbm_total_bytes": 65796046848,
+              "hbm_free_before_decoder_bytes": 65621880832,
+              "hbm_free_after_generation_bytes": 32270557184,
+              "hbm_used_after_generation_bytes": 33525489664,
+              "hbm_growth_bytes": 33351323648
+            },
+            {
+              "rank": 6,
+              "device": 6,
+              "hbm_total_bytes": 65787658240,
+              "hbm_free_before_decoder_bytes": 65348980736,
+              "hbm_free_after_generation_bytes": 31991099392,
+              "hbm_used_after_generation_bytes": 33796558848,
+              "hbm_growth_bytes": 33357881344
+            },
+            {
+              "rank": 7,
+              "device": 7,
+              "hbm_total_bytes": 65796046848,
+              "hbm_free_before_decoder_bytes": 65605607424,
+              "hbm_free_after_generation_bytes": 32250986496,
+              "hbm_used_after_generation_bytes": 33545060352,
+              "hbm_growth_bytes": 33354620928
+            },
+            {
+              "rank": 0,
+              "device": 0,
+              "hbm_total_bytes": 65787658240,
+              "hbm_free_before_decoder_bytes": 65341898752,
+              "hbm_free_after_generation_bytes": 31981658112,
+              "hbm_used_after_generation_bytes": 33806000128,
+              "hbm_growth_bytes": 33360240640
+            },
+            {
+              "rank": 1,
+              "device": 1,
+              "hbm_total_bytes": 65796046848,
+              "hbm_free_before_decoder_bytes": 65609101312,
+              "hbm_free_after_generation_bytes": 32256839680,
+              "hbm_used_after_generation_bytes": 33539207168,
+              "hbm_growth_bytes": 33352261632
+            },
+            {
+              "rank": 2,
+              "device": 2,
+              "hbm_total_bytes": 65787658240,
+              "hbm_free_before_decoder_bytes": 65341145088,
+              "hbm_free_after_generation_bytes": 31981195264,
+              "hbm_used_after_generation_bytes": 33806462976,
+              "hbm_growth_bytes": 33359949824
+            },
+            {
+              "rank": 3,
+              "device": 3,
+              "hbm_total_bytes": 65796046848,
+              "hbm_free_before_decoder_bytes": 65605693440,
+              "hbm_free_after_generation_bytes": 32252772352,
+              "hbm_used_after_generation_bytes": 33543274496,
+              "hbm_growth_bytes": 33352921088
+            },
+            {
+              "rank": 4,
+              "device": 4,
+              "hbm_total_bytes": 65787658240,
+              "hbm_free_before_decoder_bytes": 65331793920,
+              "hbm_free_after_generation_bytes": 31974744064,
+              "hbm_used_after_generation_bytes": 33812914176,
+              "hbm_growth_bytes": 33357049856
+            },
+            {
+              "rank": 5,
+              "device": 5,
+              "hbm_total_bytes": 65796046848,
+              "hbm_free_before_decoder_bytes": 65621790720,
+              "hbm_free_after_generation_bytes": 32270925824,
+              "hbm_used_after_generation_bytes": 33525121024,
+              "hbm_growth_bytes": 33350864896
+            },
+            {
+              "rank": 6,
+              "device": 6,
+              "hbm_total_bytes": 65787658240,
+              "hbm_free_before_decoder_bytes": 65347764224,
+              "hbm_free_after_generation_bytes": 31990808576,
+              "hbm_used_after_generation_bytes": 33796849664,
+              "hbm_growth_bytes": 33356955648
+            },
+            {
+              "rank": 7,
+              "device": 7,
+              "hbm_total_bytes": 65796046848,
+              "hbm_free_before_decoder_bytes": 65604747264,
+              "hbm_free_after_generation_bytes": 32251326464,
+              "hbm_used_after_generation_bytes": 33544720384,
+              "hbm_growth_bytes": 33353420800
+            },
+            {
+              "rank": 0,
+              "device": 0,
+              "hbm_total_bytes": 65787658240,
+              "hbm_free_before_decoder_bytes": 64241442816,
+              "hbm_free_after_generation_bytes": 31982211072,
+              "hbm_used_after_generation_bytes": 33805447168,
+              "hbm_growth_bytes": 32259231744
+            },
+            {
+              "rank": 1,
+              "device": 1,
+              "hbm_total_bytes": 65796046848,
+              "hbm_free_before_decoder_bytes": 65609232384,
+              "hbm_free_after_generation_bytes": 32256499712,
+              "hbm_used_after_generation_bytes": 33539547136,
+              "hbm_growth_bytes": 33352732672
+            },
+            {
+              "rank": 2,
+              "device": 2,
+              "hbm_total_bytes": 65787658240,
+              "hbm_free_before_decoder_bytes": 65340481536,
+              "hbm_free_after_generation_bytes": 31980691456,
+              "hbm_used_after_generation_bytes": 33806966784,
+              "hbm_growth_bytes": 33359790080
+            },
+            {
+              "rank": 3,
+              "device": 3,
+              "hbm_total_bytes": 65796046848,
+              "hbm_free_before_decoder_bytes": 65605578752,
+              "hbm_free_after_generation_bytes": 32253071360,
+              "hbm_used_after_generation_bytes": 33542975488,
+              "hbm_growth_bytes": 33352507392
+            },
+            {
+              "rank": 4,
+              "device": 4,
+              "hbm_total_bytes": 65787658240,
+              "hbm_free_before_decoder_bytes": 65332654080,
+              "hbm_free_after_generation_bytes": 31975841792,
+              "hbm_used_after_generation_bytes": 33811816448,
+              "hbm_growth_bytes": 33356812288
+            },
+            {
+              "rank": 5,
+              "device": 5,
+              "hbm_total_bytes": 65796046848,
+              "hbm_free_before_decoder_bytes": 65623277568,
+              "hbm_free_after_generation_bytes": 32270409728,
+              "hbm_used_after_generation_bytes": 33525637120,
+              "hbm_growth_bytes": 33352867840
+            },
+            {
+              "rank": 6,
+              "device": 6,
+              "hbm_total_bytes": 65787658240,
+              "hbm_free_before_decoder_bytes": 65350164480,
+              "hbm_free_after_generation_bytes": 31990792192,
+              "hbm_used_after_generation_bytes": 33796866048,
+              "hbm_growth_bytes": 33359372288
+            },
+            {
+              "rank": 7,
+              "device": 7,
+              "hbm_total_bytes": 65796046848,
+              "hbm_free_before_decoder_bytes": 65602228224,
+              "hbm_free_after_generation_bytes": 32251666432,
+              "hbm_used_after_generation_bytes": 33544380416,
+              "hbm_growth_bytes": 33350561792
+            }
+          ]
+        },
+        "eager": {
+          "tpot": {
+            "intervals": 30,
+            "mean_ms": 149.71985953333333,
+            "median_ms": 136.3677925,
+            "p95_ms": 178.577712,
+            "min_ms": 125.878643,
+            "max_ms": 213.096967
+          },
+          "runs": 3,
+          "output_records": 33,
+          "rank_audits": 24,
+          "checked_token_steps": 568,
+          "zero_token_allocations_and_internal_fences": true,
+          "zero_activation_host_transfers": true,
+          "binary_sha256": "117e1481f0e3b466aa5ca6bddabacbbce5aeb3a1289f2db1ea1adc7bc5ab72a1",
+          "execution_plan_sha256": "ca0466e6462602fa7565f97f01c0319bec3f4c20431bc8b88441242343dc5044",
+          "qualification_cases_sha256": "300a7a16b46c133c6d7767b1b8b3558650231d83b02b6ec21ccfa3ef430286ab",
+          "hbm_used_after_generation_bytes_median": 33660938240.0,
+          "hbm_growth_bytes_median": 33344413696.0,
+          "memory_samples": [
+            {
+              "rank": 0,
+              "device": 0,
+              "hbm_total_bytes": 65787658240,
+              "hbm_free_before_decoder_bytes": 65314504704,
+              "hbm_free_after_generation_bytes": 31992684544,
+              "hbm_used_after_generation_bytes": 33794973696,
+              "hbm_growth_bytes": 33321820160
+            },
+            {
+              "rank": 1,
+              "device": 1,
+              "hbm_total_bytes": 65796046848,
+              "hbm_free_before_decoder_bytes": 65607753728,
+              "hbm_free_after_generation_bytes": 32263479296,
+              "hbm_used_after_generation_bytes": 33532567552,
+              "hbm_growth_bytes": 33344274432
+            },
+            {
+              "rank": 2,
+              "device": 2,
+              "hbm_total_bytes": 65787658240,
+              "hbm_free_before_decoder_bytes": 65342742528,
+              "hbm_free_after_generation_bytes": 31997079552,
+              "hbm_used_after_generation_bytes": 33790578688,
+              "hbm_growth_bytes": 33345662976
+            },
+            {
+              "rank": 3,
+              "device": 3,
+              "hbm_total_bytes": 65796046848,
+              "hbm_free_before_decoder_bytes": 65602592768,
+              "hbm_free_after_generation_bytes": 32263684096,
+              "hbm_used_after_generation_bytes": 33532362752,
+              "hbm_growth_bytes": 33338908672
+            },
+            {
+              "rank": 4,
+              "device": 4,
+              "hbm_total_bytes": 65787658240,
+              "hbm_free_before_decoder_bytes": 65333501952,
+              "hbm_free_after_generation_bytes": 31988879360,
+              "hbm_used_after_generation_bytes": 33798778880,
+              "hbm_growth_bytes": 33344622592
+            },
+            {
+              "rank": 5,
+              "device": 5,
+              "hbm_total_bytes": 65796046848,
+              "hbm_free_before_decoder_bytes": 65622966272,
+              "hbm_free_after_generation_bytes": 32285360128,
+              "hbm_used_after_generation_bytes": 33510686720,
+              "hbm_growth_bytes": 33337606144
+            },
+            {
+              "rank": 6,
+              "device": 6,
+              "hbm_total_bytes": 65787658240,
+              "hbm_free_before_decoder_bytes": 65348767744,
+              "hbm_free_after_generation_bytes": 32003244032,
+              "hbm_used_after_generation_bytes": 33784414208,
+              "hbm_growth_bytes": 33345523712
+            },
+            {
+              "rank": 7,
+              "device": 7,
+              "hbm_total_bytes": 65796046848,
+              "hbm_free_before_decoder_bytes": 65601814528,
+              "hbm_free_after_generation_bytes": 32259252224,
+              "hbm_used_after_generation_bytes": 33536794624,
+              "hbm_growth_bytes": 33342562304
+            },
+            {
+              "rank": 0,
+              "device": 0,
+              "hbm_total_bytes": 65787658240,
+              "hbm_free_before_decoder_bytes": 65313521664,
+              "hbm_free_after_generation_bytes": 31988322304,
+              "hbm_used_after_generation_bytes": 33799335936,
+              "hbm_growth_bytes": 33325199360
+            },
+            {
+              "rank": 1,
+              "device": 1,
+              "hbm_total_bytes": 65796046848,
+              "hbm_free_before_decoder_bytes": 65606221824,
+              "hbm_free_after_generation_bytes": 32267558912,
+              "hbm_used_after_generation_bytes": 33528487936,
+              "hbm_growth_bytes": 33338662912
+            },
+            {
+              "rank": 2,
+              "device": 2,
+              "hbm_total_bytes": 65787658240,
+              "hbm_free_before_decoder_bytes": 65343553536,
+              "hbm_free_after_generation_bytes": 31992328192,
+              "hbm_used_after_generation_bytes": 33795330048,
+              "hbm_growth_bytes": 33351225344
+            },
+            {
+              "rank": 3,
+              "device": 3,
+              "hbm_total_bytes": 65796046848,
+              "hbm_free_before_decoder_bytes": 65605242880,
+              "hbm_free_after_generation_bytes": 32260231168,
+              "hbm_used_after_generation_bytes": 33535815680,
+              "hbm_growth_bytes": 33345011712
+            },
+            {
+              "rank": 4,
+              "device": 4,
+              "hbm_total_bytes": 65787658240,
+              "hbm_free_before_decoder_bytes": 65336070144,
+              "hbm_free_after_generation_bytes": 31983505408,
+              "hbm_used_after_generation_bytes": 33804152832,
+              "hbm_growth_bytes": 33352564736
+            },
+            {
+              "rank": 5,
+              "device": 5,
+              "hbm_total_bytes": 65796046848,
+              "hbm_free_before_decoder_bytes": 65623638016,
+              "hbm_free_after_generation_bytes": 32285569024,
+              "hbm_used_after_generation_bytes": 33510477824,
+              "hbm_growth_bytes": 33338068992
+            },
+            {
+              "rank": 6,
+              "device": 6,
+              "hbm_total_bytes": 65787658240,
+              "hbm_free_before_decoder_bytes": 65347796992,
+              "hbm_free_after_generation_bytes": 31999684608,
+              "hbm_used_after_generation_bytes": 33787973632,
+              "hbm_growth_bytes": 33348112384
+            },
+            {
+              "rank": 7,
+              "device": 7,
+              "hbm_total_bytes": 65796046848,
+              "hbm_free_before_decoder_bytes": 65604132864,
+              "hbm_free_after_generation_bytes": 32258584576,
+              "hbm_used_after_generation_bytes": 33537462272,
+              "hbm_growth_bytes": 33345548288
+            },
+            {
+              "rank": 0,
+              "device": 0,
+              "hbm_total_bytes": 65787658240,
+              "hbm_free_before_decoder_bytes": 64240197632,
+              "hbm_free_after_generation_bytes": 31987527680,
+              "hbm_used_after_generation_bytes": 33800130560,
+              "hbm_growth_bytes": 32252669952
+            },
+            {
+              "rank": 1,
+              "device": 1,
+              "hbm_total_bytes": 65796046848,
+              "hbm_free_before_decoder_bytes": 65608187904,
+              "hbm_free_after_generation_bytes": 32267481088,
+              "hbm_used_after_generation_bytes": 33528565760,
+              "hbm_growth_bytes": 33340706816
+            },
+            {
+              "rank": 2,
+              "device": 2,
+              "hbm_total_bytes": 65787658240,
+              "hbm_free_before_decoder_bytes": 65342738432,
+              "hbm_free_after_generation_bytes": 31992143872,
+              "hbm_used_after_generation_bytes": 33795514368,
+              "hbm_growth_bytes": 33350594560
+            },
+            {
+              "rank": 3,
+              "device": 3,
+              "hbm_total_bytes": 65796046848,
+              "hbm_free_before_decoder_bytes": 65605255168,
+              "hbm_free_after_generation_bytes": 32259989504,
+              "hbm_used_after_generation_bytes": 33536057344,
+              "hbm_growth_bytes": 33345265664
+            },
+            {
+              "rank": 4,
+              "device": 4,
+              "hbm_total_bytes": 65787658240,
+              "hbm_free_before_decoder_bytes": 65332891648,
+              "hbm_free_after_generation_bytes": 31988338688,
+              "hbm_used_after_generation_bytes": 33799319552,
+              "hbm_growth_bytes": 33344552960
+            },
+            {
+              "rank": 5,
+              "device": 5,
+              "hbm_total_bytes": 65796046848,
+              "hbm_free_before_decoder_bytes": 65624137728,
+              "hbm_free_after_generation_bytes": 32281477120,
+              "hbm_used_after_generation_bytes": 33514569728,
+              "hbm_growth_bytes": 33342660608
+            },
+            {
+              "rank": 6,
+              "device": 6,
+              "hbm_total_bytes": 65787658240,
+              "hbm_free_before_decoder_bytes": 65350205440,
+              "hbm_free_after_generation_bytes": 31999287296,
+              "hbm_used_after_generation_bytes": 33788370944,
+              "hbm_growth_bytes": 33350918144
+            },
+            {
+              "rank": 7,
+              "device": 7,
+              "hbm_total_bytes": 65796046848,
+              "hbm_free_before_decoder_bytes": 65603182592,
+              "hbm_free_after_generation_bytes": 32262799360,
+              "hbm_used_after_generation_bytes": 33533247488,
+              "hbm_growth_bytes": 33340383232
+            }
+          ]
+        }
+      }
+    },
+    "int4": {
+      "persistent_cache_payload_plus_scales_bytes_per_rank": 6877184,
+      "arena_bytes_per_rank": [
+        12413744704,
+        12413744704,
+        12413744704,
+        12413744704,
+        12413744704,
+        12413744704,
+        12413744704,
+        12413744704
+      ],
+      "arena_slots_per_rank": [
+        3664,
+        3664,
+        3664,
+        3664,
+        3664,
+        3664,
+        3664,
+        3664
+      ],
+      "measurements": {
+        "tpot": {
+          "tpot": {
+            "intervals": 43,
+            "mean_ms": 21.949221720930232,
+            "median_ms": 21.876536,
+            "p95_ms": 22.757373,
+            "min_ms": 21.694545,
+            "max_ms": 23.118434
+          },
+          "runs": 3,
+          "output_records": 46,
+          "rank_audits": 24,
+          "checked_token_steps": 672,
+          "zero_token_allocations_and_internal_fences": true,
+          "zero_activation_host_transfers": true,
+          "binary_sha256": "117e1481f0e3b466aa5ca6bddabacbbce5aeb3a1289f2db1ea1adc7bc5ab72a1",
+          "execution_plan_sha256": "b6993583de51ae550440e35be65e8b5df9a5a763edbf7a4dacb3750203dc0ac9",
+          "qualification_cases_sha256": "bcc0dacf902bc7ca23d1291535b4345aa65bba19b264a5f1c1de749d549c82b1",
+          "hbm_used_after_generation_bytes_median": 33664497664.0,
+          "hbm_growth_bytes_median": 33347620864.0,
+          "memory_samples": [
+            {
+              "rank": 0,
+              "device": 0,
+              "hbm_total_bytes": 65787658240,
+              "hbm_free_before_decoder_bytes": 65336086528,
+              "hbm_free_after_generation_bytes": 31987945472,
+              "hbm_used_after_generation_bytes": 33799712768,
+              "hbm_growth_bytes": 33348141056
+            },
+            {
+              "rank": 1,
+              "device": 1,
+              "hbm_total_bytes": 65796046848,
+              "hbm_free_before_decoder_bytes": 65608798208,
+              "hbm_free_after_generation_bytes": 32262795264,
+              "hbm_used_after_generation_bytes": 33533251584,
+              "hbm_growth_bytes": 33346002944
+            },
+            {
+              "rank": 2,
+              "device": 2,
+              "hbm_total_bytes": 65787658240,
+              "hbm_free_before_decoder_bytes": 65340186624,
+              "hbm_free_after_generation_bytes": 31987499008,
+              "hbm_used_after_generation_bytes": 33800159232,
+              "hbm_growth_bytes": 33352687616
+            },
+            {
+              "rank": 3,
+              "device": 3,
+              "hbm_total_bytes": 65796046848,
+              "hbm_free_before_decoder_bytes": 65606557696,
+              "hbm_free_after_generation_bytes": 32259579904,
+              "hbm_used_after_generation_bytes": 33536466944,
+              "hbm_growth_bytes": 33346977792
+            },
+            {
+              "rank": 4,
+              "device": 4,
+              "hbm_total_bytes": 65787658240,
+              "hbm_free_before_decoder_bytes": 65334173696,
+              "hbm_free_after_generation_bytes": 31980998656,
+              "hbm_used_after_generation_bytes": 33806659584,
+              "hbm_growth_bytes": 33353175040
+            },
+            {
+              "rank": 5,
+              "device": 5,
+              "hbm_total_bytes": 65796046848,
+              "hbm_free_before_decoder_bytes": 65623728128,
+              "hbm_free_after_generation_bytes": 32277393408,
+              "hbm_used_after_generation_bytes": 33518653440,
+              "hbm_growth_bytes": 33346334720
+            },
+            {
+              "rank": 6,
+              "device": 6,
+              "hbm_total_bytes": 65787658240,
+              "hbm_free_before_decoder_bytes": 65347002368,
+              "hbm_free_after_generation_bytes": 31995957248,
+              "hbm_used_after_generation_bytes": 33791700992,
+              "hbm_growth_bytes": 33351045120
+            },
+            {
+              "rank": 7,
+              "device": 7,
+              "hbm_total_bytes": 65796046848,
+              "hbm_free_before_decoder_bytes": 65605156864,
+              "hbm_free_after_generation_bytes": 32258056192,
+              "hbm_used_after_generation_bytes": 33537990656,
+              "hbm_growth_bytes": 33347100672
+            },
+            {
+              "rank": 0,
+              "device": 0,
+              "hbm_total_bytes": 65787658240,
+              "hbm_free_before_decoder_bytes": 65340489728,
+              "hbm_free_after_generation_bytes": 31987961856,
+              "hbm_used_after_generation_bytes": 33799696384,
+              "hbm_growth_bytes": 33352527872
+            },
+            {
+              "rank": 1,
+              "device": 1,
+              "hbm_total_bytes": 65796046848,
+              "hbm_free_before_decoder_bytes": 65609412608,
+              "hbm_free_after_generation_bytes": 32262963200,
+              "hbm_used_after_generation_bytes": 33533083648,
+              "hbm_growth_bytes": 33346449408
+            },
+            {
+              "rank": 2,
+              "device": 2,
+              "hbm_total_bytes": 65787658240,
+              "hbm_free_before_decoder_bytes": 65338388480,
+              "hbm_free_after_generation_bytes": 31987453952,
+              "hbm_used_after_generation_bytes": 33800204288,
+              "hbm_growth_bytes": 33350934528
+            },
+            {
+              "rank": 3,
+              "device": 3,
+              "hbm_total_bytes": 65796046848,
+              "hbm_free_before_decoder_bytes": 65606602752,
+              "hbm_free_after_generation_bytes": 32259682304,
+              "hbm_used_after_generation_bytes": 33536364544,
+              "hbm_growth_bytes": 33346920448
+            },
+            {
+              "rank": 4,
+              "device": 4,
+              "hbm_total_bytes": 65787658240,
+              "hbm_free_before_decoder_bytes": 65332473856,
+              "hbm_free_after_generation_bytes": 31980556288,
+              "hbm_used_after_generation_bytes": 33807101952,
+              "hbm_growth_bytes": 33351917568
+            },
+            {
+              "rank": 5,
+              "device": 5,
+              "hbm_total_bytes": 65796046848,
+              "hbm_free_before_decoder_bytes": 65624084480,
+              "hbm_free_after_generation_bytes": 32277610496,
+              "hbm_used_after_generation_bytes": 33518436352,
+              "hbm_growth_bytes": 33346473984
+            },
+            {
+              "rank": 6,
+              "device": 6,
+              "hbm_total_bytes": 65787658240,
+              "hbm_free_before_decoder_bytes": 65349402624,
+              "hbm_free_after_generation_bytes": 31995895808,
+              "hbm_used_after_generation_bytes": 33791762432,
+              "hbm_growth_bytes": 33353506816
+            },
+            {
+              "rank": 7,
+              "device": 7,
+              "hbm_total_bytes": 65796046848,
+              "hbm_free_before_decoder_bytes": 65604476928,
+              "hbm_free_after_generation_bytes": 32258236416,
+              "hbm_used_after_generation_bytes": 33537810432,
+              "hbm_growth_bytes": 33346240512
+            },
+            {
+              "rank": 0,
+              "device": 0,
+              "hbm_total_bytes": 65787658240,
+              "hbm_free_before_decoder_bytes": 65339580416,
+              "hbm_free_after_generation_bytes": 31988367360,
+              "hbm_used_after_generation_bytes": 33799290880,
+              "hbm_growth_bytes": 33351213056
+            },
+            {
+              "rank": 1,
+              "device": 1,
+              "hbm_total_bytes": 65796046848,
+              "hbm_free_before_decoder_bytes": 65610125312,
+              "hbm_free_after_generation_bytes": 32263491584,
+              "hbm_used_after_generation_bytes": 33532555264,
+              "hbm_growth_bytes": 33346633728
+            },
+            {
+              "rank": 2,
+              "device": 2,
+              "hbm_total_bytes": 65787658240,
+              "hbm_free_before_decoder_bytes": 65340895232,
+              "hbm_free_after_generation_bytes": 31988207616,
+              "hbm_used_after_generation_bytes": 33799450624,
+              "hbm_growth_bytes": 33352687616
+            },
+            {
+              "rank": 3,
+              "device": 3,
+              "hbm_total_bytes": 65796046848,
+              "hbm_free_before_decoder_bytes": 65604784128,
+              "hbm_free_after_generation_bytes": 32259276800,
+              "hbm_used_after_generation_bytes": 33536770048,
+              "hbm_growth_bytes": 33345507328
+            },
+            {
+              "rank": 4,
+              "device": 4,
+              "hbm_total_bytes": 65787658240,
+              "hbm_free_before_decoder_bytes": 65334575104,
+              "hbm_free_after_generation_bytes": 31980765184,
+              "hbm_used_after_generation_bytes": 33806893056,
+              "hbm_growth_bytes": 33353809920
+            },
+            {
+              "rank": 5,
+              "device": 5,
+              "hbm_total_bytes": 65796046848,
+              "hbm_free_before_decoder_bytes": 65623724032,
+              "hbm_free_after_generation_bytes": 32277807104,
+              "hbm_used_after_generation_bytes": 33518239744,
+              "hbm_growth_bytes": 33345916928
+            },
+            {
+              "rank": 6,
+              "device": 6,
+              "hbm_total_bytes": 65787658240,
+              "hbm_free_before_decoder_bytes": 65347162112,
+              "hbm_free_after_generation_bytes": 31996653568,
+              "hbm_used_after_generation_bytes": 33791004672,
+              "hbm_growth_bytes": 33350508544
+            },
+            {
+              "rank": 7,
+              "device": 7,
+              "hbm_total_bytes": 65796046848,
+              "hbm_free_before_decoder_bytes": 65603276800,
+              "hbm_free_after_generation_bytes": 32258060288,
+              "hbm_used_after_generation_bytes": 33537986560,
+              "hbm_growth_bytes": 33345216512
+            }
+          ]
+        },
+        "eager": {
+          "tpot": {
+            "intervals": 43,
+            "mean_ms": 137.26246239534885,
+            "median_ms": 128.243179,
+            "p95_ms": 163.359769,
+            "min_ms": 120.391074,
+            "max_ms": 165.213372
+          },
+          "runs": 3,
+          "output_records": 46,
+          "rank_audits": 24,
+          "checked_token_steps": 672,
+          "zero_token_allocations_and_internal_fences": true,
+          "zero_activation_host_transfers": true,
+          "binary_sha256": "117e1481f0e3b466aa5ca6bddabacbbce5aeb3a1289f2db1ea1adc7bc5ab72a1",
+          "execution_plan_sha256": "b6993583de51ae550440e35be65e8b5df9a5a763edbf7a4dacb3750203dc0ac9",
+          "qualification_cases_sha256": "bcc0dacf902bc7ca23d1291535b4345aa65bba19b264a5f1c1de749d549c82b1",
+          "hbm_used_after_generation_bytes_median": 33656401920.0,
+          "hbm_growth_bytes_median": 33338812416.0,
+          "memory_samples": [
+            {
+              "rank": 0,
+              "device": 0,
+              "hbm_total_bytes": 65787658240,
+              "hbm_free_before_decoder_bytes": 65333977088,
+              "hbm_free_after_generation_bytes": 31995035648,
+              "hbm_used_after_generation_bytes": 33792622592,
+              "hbm_growth_bytes": 33338941440
+            },
+            {
+              "rank": 1,
+              "device": 1,
+              "hbm_total_bytes": 65796046848,
+              "hbm_free_before_decoder_bytes": 65606205440,
+              "hbm_free_after_generation_bytes": 32269848576,
+              "hbm_used_after_generation_bytes": 33526198272,
+              "hbm_growth_bytes": 33336356864
+            },
+            {
+              "rank": 2,
+              "device": 2,
+              "hbm_total_bytes": 65787658240,
+              "hbm_free_before_decoder_bytes": 65343873024,
+              "hbm_free_after_generation_bytes": 32002940928,
+              "hbm_used_after_generation_bytes": 33784717312,
+              "hbm_growth_bytes": 33340932096
+            },
+            {
+              "rank": 3,
+              "device": 3,
+              "hbm_total_bytes": 65796046848,
+              "hbm_free_before_decoder_bytes": 65604874240,
+              "hbm_free_after_generation_bytes": 32266002432,
+              "hbm_used_after_generation_bytes": 33530044416,
+              "hbm_growth_bytes": 33338871808
+            },
+            {
+              "rank": 4,
+              "device": 4,
+              "hbm_total_bytes": 65787658240,
+              "hbm_free_before_decoder_bytes": 65334902784,
+              "hbm_free_after_generation_bytes": 31988994048,
+              "hbm_used_after_generation_bytes": 33798664192,
+              "hbm_growth_bytes": 33345908736
+            },
+            {
+              "rank": 5,
+              "device": 5,
+              "hbm_total_bytes": 65796046848,
+              "hbm_free_before_decoder_bytes": 65626357760,
+              "hbm_free_after_generation_bytes": 32287985664,
+              "hbm_used_after_generation_bytes": 33508061184,
+              "hbm_growth_bytes": 33338372096
+            },
+            {
+              "rank": 6,
+              "device": 6,
+              "hbm_total_bytes": 65787658240,
+              "hbm_free_before_decoder_bytes": 65348763648,
+              "hbm_free_after_generation_bytes": 32006078464,
+              "hbm_used_after_generation_bytes": 33781579776,
+              "hbm_growth_bytes": 33342685184
+            },
+            {
+              "rank": 7,
+              "device": 7,
+              "hbm_total_bytes": 65796046848,
+              "hbm_free_before_decoder_bytes": 65603518464,
+              "hbm_free_after_generation_bytes": 32264876032,
+              "hbm_used_after_generation_bytes": 33531170816,
+              "hbm_growth_bytes": 33338642432
+            },
+            {
+              "rank": 0,
+              "device": 0,
+              "hbm_total_bytes": 65787658240,
+              "hbm_free_before_decoder_bytes": 64234680320,
+              "hbm_free_after_generation_bytes": 31994327040,
+              "hbm_used_after_generation_bytes": 33793331200,
+              "hbm_growth_bytes": 32240353280
+            },
+            {
+              "rank": 1,
+              "device": 1,
+              "hbm_total_bytes": 65796046848,
+              "hbm_free_before_decoder_bytes": 65607979008,
+              "hbm_free_after_generation_bytes": 32270319616,
+              "hbm_used_after_generation_bytes": 33525727232,
+              "hbm_growth_bytes": 33337659392
+            },
+            {
+              "rank": 2,
+              "device": 2,
+              "hbm_total_bytes": 65787658240,
+              "hbm_free_before_decoder_bytes": 65342996480,
+              "hbm_free_after_generation_bytes": 32003170304,
+              "hbm_used_after_generation_bytes": 33784487936,
+              "hbm_growth_bytes": 33339826176
+            },
+            {
+              "rank": 3,
+              "device": 3,
+              "hbm_total_bytes": 65796046848,
+              "hbm_free_before_decoder_bytes": 65604513792,
+              "hbm_free_after_generation_bytes": 32266326016,
+              "hbm_used_after_generation_bytes": 33529720832,
+              "hbm_growth_bytes": 33338187776
+            },
+            {
+              "rank": 4,
+              "device": 4,
+              "hbm_total_bytes": 65787658240,
+              "hbm_free_before_decoder_bytes": 65331814400,
+              "hbm_free_after_generation_bytes": 31989669888,
+              "hbm_used_after_generation_bytes": 33797988352,
+              "hbm_growth_bytes": 33342144512
+            },
+            {
+              "rank": 5,
+              "device": 5,
+              "hbm_total_bytes": 65796046848,
+              "hbm_free_before_decoder_bytes": 65626443776,
+              "hbm_free_after_generation_bytes": 32286728192,
+              "hbm_used_after_generation_bytes": 33509318656,
+              "hbm_growth_bytes": 33339715584
+            },
+            {
+              "rank": 6,
+              "device": 6,
+              "hbm_total_bytes": 65787658240,
+              "hbm_free_before_decoder_bytes": 65350754304,
+              "hbm_free_after_generation_bytes": 32005505024,
+              "hbm_used_after_generation_bytes": 33782153216,
+              "hbm_growth_bytes": 33345249280
+            },
+            {
+              "rank": 7,
+              "device": 7,
+              "hbm_total_bytes": 65796046848,
+              "hbm_free_before_decoder_bytes": 65601339392,
+              "hbm_free_after_generation_bytes": 32264822784,
+              "hbm_used_after_generation_bytes": 33531224064,
+              "hbm_growth_bytes": 33336516608
+            },
+            {
+              "rank": 0,
+              "device": 0,
+              "hbm_total_bytes": 65787658240,
+              "hbm_free_before_decoder_bytes": 65313157120,
+              "hbm_free_after_generation_bytes": 31994290176,
+              "hbm_used_after_generation_bytes": 33793368064,
+              "hbm_growth_bytes": 33318866944
+            },
+            {
+              "rank": 1,
+              "device": 1,
+              "hbm_total_bytes": 65796046848,
+              "hbm_free_before_decoder_bytes": 65606447104,
+              "hbm_free_after_generation_bytes": 32270589952,
+              "hbm_used_after_generation_bytes": 33525456896,
+              "hbm_growth_bytes": 33335857152
+            },
+            {
+              "rank": 2,
+              "device": 2,
+              "hbm_total_bytes": 65787658240,
+              "hbm_free_before_decoder_bytes": 65341743104,
+              "hbm_free_after_generation_bytes": 31998836736,
+              "hbm_used_after_generation_bytes": 33788821504,
+              "hbm_growth_bytes": 33342906368
+            },
+            {
+              "rank": 3,
+              "device": 3,
+              "hbm_total_bytes": 65796046848,
+              "hbm_free_before_decoder_bytes": 65602789376,
+              "hbm_free_after_generation_bytes": 32270491648,
+              "hbm_used_after_generation_bytes": 33525555200,
+              "hbm_growth_bytes": 33332297728
+            },
+            {
+              "rank": 4,
+              "device": 4,
+              "hbm_total_bytes": 65787658240,
+              "hbm_free_before_decoder_bytes": 65334521856,
+              "hbm_free_after_generation_bytes": 31993335808,
+              "hbm_used_after_generation_bytes": 33794322432,
+              "hbm_growth_bytes": 33341186048
+            },
+            {
+              "rank": 5,
+              "device": 5,
+              "hbm_total_bytes": 65796046848,
+              "hbm_free_before_decoder_bytes": 65625669632,
+              "hbm_free_after_generation_bytes": 32286916608,
+              "hbm_used_after_generation_bytes": 33509130240,
+              "hbm_growth_bytes": 33338753024
+            },
+            {
+              "rank": 6,
+              "device": 6,
+              "hbm_total_bytes": 65787658240,
+              "hbm_free_before_decoder_bytes": 65348530176,
+              "hbm_free_after_generation_bytes": 32005586944,
+              "hbm_used_after_generation_bytes": 33782071296,
+              "hbm_growth_bytes": 33342943232
+            },
+            {
+              "rank": 7,
+              "device": 7,
+              "hbm_total_bytes": 65796046848,
+              "hbm_free_before_decoder_bytes": 65602793472,
+              "hbm_free_after_generation_bytes": 32264998912,
+              "hbm_used_after_generation_bytes": 33531047936,
+              "hbm_growth_bytes": 33337794560
+            }
+          ]
+        }
+      }
+    }
+  }
+}

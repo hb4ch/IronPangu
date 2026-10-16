@@ -99,7 +99,7 @@ reconstruction for the existing attention API; fused attention on packed inputs
 remains a performance optimization. Quantization is lossy, so compare model
 quality as well as memory and latency before selecting it for a workload.
 
-The 92B backend now lowers the logical graph to 2,661 executable instructions.
+The BF16-cache 92B graph lowers to 2,661 executable instructions; INT8/INT4 cache variants lower to 2,753.
 Routing, expert quantization/zeroing/GMM/reduction, mHC mixing, cache packing and
 attention metadata are explicit parts of that program. See
 [physical planning](native-physical-planning.md) for the hardware preparation and
@@ -131,7 +131,7 @@ The result contains:
 | `execution.dot` | Graphviz graph of every operation and dependency |
 | `execution.html` | Offline hierarchical viewer: model overview, expandable layers/modules, validated types, bindings and dependency navigation |
 | `physical.json` | Verified conservative physical inspection plan: implementation choices, rank bindings, serial dependencies, host lifetimes and explicit unresolved requirements; not a native executable |
-| `execution.bin` | Versioned `IFTOKN01` program consumed by the native executor |
+| `execution.bin` | Versioned `IFTOKN02` physical program consumed by the native executor |
 | `rank-N.init.json` | Readable permanent initialization IR |
 | `rank-N.bin` | Executable `IFINIT01` initialization program |
 | `plan.json` | Bundle metadata and topology |
@@ -139,10 +139,10 @@ The result contains:
 The native executable requires `execution.bin`; it has no fallback model loop.
 Before ACL initialization it checks every kernel contract and all eight ranks'
 parameter bindings. During execution it follows the program, verifies result
-shapes/finite tensor values, and releases intermediate host values at last use.
+storage types/shapes, and releases intermediate device leases at last use.
 State is keyed by graph-node identity, so repeated weight bindings do not alias
-MoME, mHC or KV state accidentally. Kernel scratch and device state still use
-the existing backend allocations; this is not a new device arena optimizer.
+MoME, mHC or KV state accidentally. Hardware preparation binds kernel scratch
+and persistent device state to fixed arena slots before normal execution.
 
 ## Build and run
 

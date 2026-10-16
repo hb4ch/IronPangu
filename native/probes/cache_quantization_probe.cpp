@@ -11,7 +11,7 @@ int main(){try{
   const unsigned width=576,rows=512;
   DeviceTensor input({width},ACL_BF16,2),packed({rows*width*bits/8},ACL_UINT8,1),scales({rows},ACL_FLOAT,4),position({1},ACL_INT64,8),output({rows*width},ACL_BF16,2);
   std::vector<uint16_t> x(width);for(unsigned j=0;j<width;++j)x[j]=bf(float(int(j%61)-30)/13.f);
-  input.upload(x);packed.upload(std::vector<uint8_t>(packed.bytes,0xa5));scales.upload(std::vector<float>(rows,-1));
+  input.upload(x);packed.upload(std::vector<uint8_t>(packed.bytes,0xa5));scales.upload(std::vector<float>(rows,1));
   for(int64_t row:{0,1,31,511}){
    position.upload(std::vector<int64_t>{row});
    if_cache_quantize(input.data,packed.data,scales.data,position.data,width,rows,bits,stream);
@@ -26,7 +26,7 @@ int main(){try{
   if_cache_quantize(input.data,packed.data,scales.data,position.data,width,rows,bits,stream);
   if_cache_dequantize(packed.data,scales.data,output.data,position.data,width,rows,bits,stream);
   checked(aclmdlRICaptureEnd(stream,&graph),"capture end");
-  for(int64_t row:{0,1}){
+  for(int64_t row:{0,1,511,0}){
    if(row==1){std::fill(x.begin(),x.end(),0);input.upload(x);}
    position.upload(std::vector<int64_t>{row});checked(aclmdlRIExecuteAsync(graph,stream),"replay");checked(aclrtSynchronizeStream(stream),"fence");
    auto y=output.read<uint16_t>();auto p=packed.read<uint8_t>();auto s=scales.read<float>();

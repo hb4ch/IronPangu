@@ -168,3 +168,22 @@ fn separate_expert_projections_share_explicit_route_quantization() {
         assert_eq!(gate.inputs[0], up.inputs[0]);
     }
 }
+#[test]
+fn integer_cache_scratch_is_page_padded_for_short_contexts() {
+    let source=include_str!("../../../examples/openpangu/92b-tp8-ep8.inferfabric")
+        .replace("context = 512", "context = 17")
+        .replace("max_model_len = 512", "max_model_len = 17")
+        .replacen("eps = 1e-5, theta = 6400000", "eps = 1e-5, theta = 6400000, cache_dtype=int4, cache_scale_dtype=f32, cache_quantization=per_token_head_symmetric", 1);
+    let ModelDefinition::Execution {graph,..}=definition(&source).unwrap() else {panic!()};
+    let p=lower(&graph,None).unwrap();
+    p.validate().unwrap();
+    for i in p.instructions.iter().filter(|i|i.op=="cache_dequantize") {
+        assert_eq!(i.width,32*576);
+    }
+    let recipes=inferfabric_compiler::token_program::recipes(&p,&graph);
+    for (i,n) in p.instructions.iter().enumerate().filter(|(_,n)|n.op=="cache_quantize_append") {
+        assert_eq!(n.attrs["cache_dtype"],"int4");
+        assert_eq!(recipes[i]["value_fields"][0]["shape"],serde_json::json!([32,1,576]));
+        assert_eq!(recipes[i]["value_fields"][1]["shape"],serde_json::json!([32,1]));
+    }
+}

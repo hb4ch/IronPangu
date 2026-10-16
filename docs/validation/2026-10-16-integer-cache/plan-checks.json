@@ -1,0 +1,76 @@
+[
+  {
+    "dtype": "int8",
+    "physical_instructions": 2753,
+    "explicit_cache_instructions": {
+      "cache_normalize": 46,
+      "cache_quantize_append": 46,
+      "cache_dequantize": 46
+    },
+    "one_shared_full_cache_scratch_per_rank": true,
+    "scratch_slots": [
+      [
+        193
+      ],
+      [
+        193
+      ],
+      [
+        193
+      ],
+      [
+        193
+      ],
+      [
+        193
+      ],
+      [
+        193
+      ],
+      [
+        193
+      ],
+      [
+        193
+      ]
+    ],
+    "precision_filter_present": true
+  },
+  {
+    "dtype": "int4",
+    "physical_instructions": 2753,
+    "explicit_cache_instructions": {
+      "cache_normalize": 46,
+      "cache_quantize_append": 46,
+      "cache_dequantize": 46
+    },
+    "one_shared_full_cache_scratch_per_rank": true,
+    "scratch_slots": [
+      [
+        193
+      ],
+      [
+        193
+      ],
+      [
+        193
+      ],
+      [
+        193
+      ],
+      [
+        193
+      ],
+      [
+        193
+      ],
+      [
+        193
+      ],
+      [
+        193
+      ]
+    ],
+    "precision_filter_present": true
+  }
+]

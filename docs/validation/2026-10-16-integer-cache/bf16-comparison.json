@@ -1,0 +1,63 @@
+{
+  "comparison": "unchanged BF16 fixture; greedy sequence agreement only, not a broad quality evaluation",
+  "variants": {
+    "int8": [
+      {
+        "case": "arithmetic",
+        "bf16_tokens": 8,
+        "quantized_tokens": 8,
+        "identical_token_sequence": true,
+        "common_prefix_tokens": 8,
+        "max_logit_difference_on_common_prefix": 9,
+        "text": "1 + 1 = 2<|message_end|>"
+      },
+      {
+        "case": "geography",
+        "bf16_tokens": 8,
+        "quantized_tokens": 8,
+        "identical_token_sequence": true,
+        "common_prefix_tokens": 8,
+        "max_logit_difference_on_common_prefix": 10,
+        "text": "The capital of France is Paris.<|message_end|>"
+      },
+      {
+        "case": "chinese",
+        "bf16_tokens": 17,
+        "quantized_tokens": 17,
+        "identical_token_sequence": true,
+        "common_prefix_tokens": 17,
+        "max_logit_difference_on_common_prefix": 5,
+        "text": "北京是中国的首都，拥有悠久的历史、丰富的文化遗产和现代化的城市风貌。<|message_end|>"
+      }
+    ],
+    "int4": [
+      {
+        "case": "arithmetic",
+        "bf16_tokens": 8,
+        "quantized_tokens": 21,
+        "identical_token_sequence": false,
+        "common_prefix_tokens": 7,
+        "max_logit_difference_on_common_prefix": 14,
+        "text": "1 + 1 = 2 😊\n\nIs there anything else you'd like to know?<|message_end|>"
+      },
+      {
+        "case": "geography",
+        "bf16_tokens": 8,
+        "quantized_tokens": 8,
+        "identical_token_sequence": true,
+        "common_prefix_tokens": 8,
+        "max_logit_difference_on_common_prefix": 10,
+        "text": "The capital of France is Paris.<|message_end|>"
+      },
+      {
+        "case": "chinese",
+        "bf16_tokens": 17,
+        "quantized_tokens": 17,
+        "identical_token_sequence": true,
+        "common_prefix_tokens": 17,
+        "max_logit_difference_on_common_prefix": 42.5,
+        "text": "北京是中国的首都，拥有悠久的历史、丰富的文化遗产和现代化的城市风貌。<|message_end|>"
+      }
+    ]
+  }
+}
