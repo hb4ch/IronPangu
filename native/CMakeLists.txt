@@ -127,3 +127,7 @@ endif()
 add_executable(token_plan_test probes/token_plan_test.cpp)
 target_link_libraries(token_plan_test PRIVATE inferfabric_initialization)
 target_compile_options(token_plan_test PRIVATE -Wall -Wextra -Werror)
+
+add_executable(resident_transfer_test probes/resident_transfer_test.cpp)
+target_include_directories(resident_transfer_test PRIVATE "${ACL_INCLUDE}")
+target_compile_options(resident_transfer_test PRIVATE -Wall -Wextra -Werror)

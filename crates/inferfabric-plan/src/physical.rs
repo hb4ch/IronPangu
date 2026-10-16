@@ -45,6 +45,10 @@ pub enum Location {
 pub enum BoundaryKind {
     HostToDevice,
     DeviceToHost,
+    ControlUpload,
+    ParameterUpload,
+    ParameterReadback,
+    RequestOutput,
     Synchronize,
     DynamicAllocation,
     InternalLaunches,
@@ -182,6 +186,20 @@ pub fn choose(candidates: &[Candidate]) -> Result<(usize, String)> {
     }
     let mut ids = BTreeSet::new();
     for c in candidates {
+        // Residency is an admission constraint, before cost evaluation. Even a
+        // rejected or cheaper host implementation must not enter this search space.
+        if c.location != Location::Device
+            || c.boundaries.iter().any(|b| {
+                matches!(
+                    b.kind,
+                    BoundaryKind::HostToDevice | BoundaryKind::DeviceToHost
+                )
+            })
+        {
+            return Err(invalid(
+                "activation host fallback is forbidden by device residency",
+            ));
+        }
         check_cost(&c.cost)?;
         if c.id.is_empty()
             || !ids.insert(&c.id)
@@ -310,7 +328,7 @@ pub fn serial_plan(
         values[i].lifetime[1] = n;
     }
     let peak = host_peak(&values, n)?;
-    let p=Plan{format:FORMAT.into(),name,target,logical_digest,policy:"serial-conservative-v1".into(),executable:false,ranks:devices.iter().enumerate().map(|(rank,&device)|Rank{rank,device,schedule:0}).collect(),groups:vec![Group{id:"all_ranks".into(),ranks:(0..devices.len()).collect()}],schedules:vec![Schedule{id:0,steps,values,outputs,known_host_payload_peak_bytes:peak,memory_complete:false,activation_policy:"existing ownership; no arena reuse or device memory budget claimed".into(),cost_complete:sum.is_some(),estimated_serial_ns:sum}],limitations:vec!["Inspection IR only: native executor still consumes the token program, not this physical plan".into(),"Backend calls retain opaque internals; boundary annotations are not independently executable launches".into(),"Device workspace, internal temporaries, persistent-state sizes and binary identities require backend preparation/probes".into(),"Known host payload peak excludes opaque handles, container capacity, allocator overhead and device memory".into(),"No measured hardware costs, overlap, reuse or capture qualification is implied".into()]};
+    let p=Plan{format:FORMAT.into(),name,target,logical_digest,policy:"serial-device-resident-v1".into(),executable:false,ranks:devices.iter().enumerate().map(|(rank,&device)|Rank{rank,device,schedule:0}).collect(),groups:vec![Group{id:"all_ranks".into(),ranks:(0..devices.len()).collect()}],schedules:vec![Schedule{id:0,steps,values,outputs,known_host_payload_peak_bytes:peak,memory_complete:false,activation_policy:"device-only activations; host fallback forbidden; no arena reuse or complete device memory budget claimed".into(),cost_complete:sum.is_some(),estimated_serial_ns:sum}],limitations:vec!["Inspection IR only: native executor still consumes the token program, not this physical plan".into(),"Backend calls retain opaque internals; boundary annotations are not independently executable launches".into(),"Device workspace, internal temporaries, persistent-state sizes and binary identities require backend preparation/probes".into(),"Known host payload peak excludes opaque handles, container capacity, allocator overhead and device memory".into(),"No measured hardware costs, overlap, reuse or capture qualification is implied".into()]};
     verify(&p)?;
     Ok(p)
 }
@@ -318,7 +336,7 @@ pub fn serial_plan(
 pub fn verify(p: &Plan) -> Result<()> {
     if p.format != FORMAT
         || p.executable
-        || p.policy != "serial-conservative-v1"
+        || p.policy != "serial-device-resident-v1"
         || p.schedules.len() != 1
         || p.ranks.is_empty()
         || p.ranks.len() > 256
@@ -400,7 +418,8 @@ pub fn verify(p: &Plan) -> Result<()> {
         ends[i] = n;
     }
     for (i, v) in s.values.iter().enumerate() {
-        if v.lifetime != [i, ends[i]]
+        if v.location != Location::Device
+            || v.lifetime != [i, ends[i]]
             || v.arena_offset.is_some()
             || !s.steps[i].operation.logical_nodes.contains(&v.logical_node)
             || v.alignment.is_some_and(|a| a == 0 || !a.is_power_of_two())

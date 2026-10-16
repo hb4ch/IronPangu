@@ -27,6 +27,51 @@ Generation length is dynamic; plans describe bounded invocations, not unrolled
 whole conversations. The Rust serving scheduler chooses an eligible shape variant;
 physical scheduling controls work inside that invocation.
 
+## Mandatory device-residency invariant — 2026-10-16
+
+Activation tensors, routing IDs/scores, expert outputs, collective buffers and
+KV/recurrent state remain on the device for the entire invocation. There is no
+host fallback option, cost tradeoff, diagnostic activation-download flag or
+implicit offloading. Future KV offloading requires a separate explicit contract.
+The physical selector rejects every host/opaque candidate and unclassified
+host-transfer boundary **before** reading costs, even an ineligible candidate.
+All intermediate value locations must be device-resident.
+
+The native `resident::Tensor` owns shared device storage and exposes no host
+iterators/read/upload API. Device copies, casts, arithmetic, rotary application,
+routing selection, expert reduction, greedy argmax and output log-softmax execute
+on Ascend. Dispatch still follows the generic expanded token program, including
+source-defined modules, dependencies and weight bindings. Unsupported operators
+or layouts fail validation; there is no alternative host implementation.
+
+Explicit transfer roles are limited to:
+
+- **Control input:** token-position/sequence metadata, static indices and rotary
+  coefficients computed from positions. No device activation is downloaded to
+  produce these inputs.
+- **Parameter preparation:** one-time transformations of immutable checkpoint
+  weights (mHC folding, convolution layout, router transpose), currently using
+  host C++ preparation. These are parameters, never graph activations.
+- **Request output:** selected token consensus IDs (64 bytes per rank per output
+  step) and top-five IDs/logits/log-probabilities (80 extra bytes on rank zero).
+  Full vocabulary logits remain on device. Prefill exports none of these outputs.
+
+`resident_transfer.h` guards the executor translation unit's synchronous and
+asynchronous ACL host copies. Unclassified copies throw; scoped explicit roles
+record counts/bytes. `INFERFABRIC_TRANSFER_AUDIT_DIR` writes per-rank JSON. The
+qualification driver verifies every rank's ledger and exact output-byte bounds.
+This covers executor-owned transfers, not undocumented internal vendor-library
+control traffic. Initial checkpoint ingestion is handled separately by the
+permanent initialization executor.
+
+The first resident EP implementation packs owner-local expert weights on device,
+selects weights using device route IDs, and executes eight fixed route slots per
+rank. Foreign-owner slots compute then receive zero device-side coefficients.
+This preserves route-order FP32 reduction without exporting routing data, but
+adds duplicate weight-bank memory and redundant expert compute. It is a
+correctness baseline, not sparse production performance. Grouped sparse dispatch
+and packing directly during initialization are subsequent optimization work.
+
 ## Current milestone 1
 
 `inferfabric-plan::physical` supplies versioned, backend-neutral inspection IR,
@@ -35,11 +80,11 @@ Ascend token adapter registers the current operator implementations without mode
 names or layer schedules. `compile-token` publishes `physical.json` alongside
 `execution.html`; the viewer embeds the same verified physical metadata.
 
-The existing 92B diagnostic path uses host vectors, internal device allocations,
-transfers and frequent synchronization. Consequently this first physical artifact
-is explicitly **inspection-only and non-executable**. One physical step represents
+The resident 92B path uses device values, internal device allocations and frequent
+synchronization. The physical artifact remains **inspection-only and non-executable**
+until the native executor consumes frozen physical invocations directly. One physical step represents
 a backend call with opaque internals, not a claim that each logical op is one
-NPU kernel. Boundary annotations identify host/device transfers, synchronization,
+NPU kernel. Boundary annotations identify classified external transfers, synchronization,
 allocation and persistent-state handling. They do not pretend to be a complete
 internal launch DAG. The native runtime continues consuming `execution.bin`.
 
@@ -51,8 +96,8 @@ Actual decisions now recorded:
   schedules are stored once; the rank selector does not imply measured rank times.
 - Data dependencies, serial-order dependencies, stream zero and collective
   group/signature/sequence. Current lowering preserves all-rank collective order.
-- Known host output payload shapes/dtypes, inclusive last-use positions, retained
-  outputs and partial peak host payload. Opaque handles, container overhead,
+- Known device output payload shapes/dtypes, inclusive last-use positions, retained
+  outputs and zero intermediate host payload. Opaque handles, container overhead,
   device workspace, persistent allocations and HBM totals remain unresolved.
 - No planned aliasing/reuse, no stream overlap and no qualified capture regions.
 - Unknown costs explicitly represented as unknown, never zero latency.
@@ -191,8 +236,9 @@ view paginates to 24 calls, preserving large-model usability.
 1. **Physical IR and explanation:** conservative native lowering, generic contracts,
    verifier, explicit unknowns and viewer. Local deterministic and negative tests;
    validate physical metadata belongs to the displayed logical graph.
-2. **Device-buffer contract, then execution:** generic checked views/binding first;
-   separately migrate kernels and serial execution, preserving full 92B output.
+2. **Device-buffer contract and resident execution:** checked views/binding and
+   device-only serial execution implemented; qualify full 92B output and transfer
+   bounds. Frozen prepared-invocation execution remains a separate follow-up.
 3. **Activation/workspace reuse:** fixed arenas, reuse proofs and dedicated-versus-
    pooled state/output equivalence, including asynchronous negative tests.
 4. **Hardware cost database:** explicit probes, provenance and held-out prediction

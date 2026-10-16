@@ -25,18 +25,16 @@ V token(int id, int pos) {
     if (n.op == "embedding") {
       auto &embedding = w(weight() + ".weight");
       auto width = n.integer("width");
-      std::vector<uint16_t> b(width);
-      checked(aclrtMemcpy(b.data(), width * 2,
-                          static_cast<uint16_t *>(embedding.data) +
-                              size_t(id) * width,
-                          width * 2, ACL_MEMCPY_DEVICE_TO_HOST),
-              "embedding row");
-      result = unpacked(b);
+      result =
+          cast(resident::from_device(static_cast<uint16_t *>(embedding.data) +
+                                         size_t(id) * width,
+                                     width, ACL_BF16),
+               ACL_FLOAT);
     } else if (n.op == "repeat") {
-      V v;
-      for (uint32_t j = 0; j < n.integer("count"); ++j)
-        v.insert(v.end(), tensor(0).begin(), tensor(0).end());
-      result = std::move(v);
+      V v = tensor(0);
+      for (uint32_t j = 1; j < n.integer("count"); ++j)
+        v = resident::concat(v, tensor(0));
+      result = v;
     } else if (n.op == "mhc_pre" || n.op == "mhc_merge")
       result = pre(tensor(0), weight(), n.op == "mhc_merge", n.name);
     else if (n.op == "mhc_input")
@@ -60,15 +58,11 @@ V token(int id, int pos) {
       auto start = n.integer("start"), width = n.integer("width");
       if (size_t(start) + width > tensor(0).size())
         throw std::runtime_error("slice bounds");
-      result = V(tensor(0).begin() + start, tensor(0).begin() + start + width);
+      result = resident::slice(tensor(0), start, width);
     } else if (n.op == "rope") {
-      V v = tensor(0);
-      rope(v, pos);
-      result = std::move(v);
+      result = rope(tensor(0), pos);
     } else if (n.op == "concat") {
-      V v = tensor(0);
-      v.insert(v.end(), tensor(1).begin(), tensor(1).end());
-      result = std::move(v);
+      result = resident::concat(tensor(0), tensor(1));
     } else if (n.op == "mla_query")
       result = absorb_query(tensor(0), weight(), pos);
     else if (n.op == "mla_value")
@@ -86,37 +80,42 @@ V token(int id, int pos) {
       result = route(tensor(0), weight(), n.name);
     else if (n.op == "expert_linear") {
       const auto &r = std::get<Routes>(input(1));
+      auto indices = local_route_ids(r);
+      auto &b = bank(weight());
       ExpertRows out;
-      out.rows.resize(r.ids.size());
+      out.rows.reserve(r.ids.size());
       for (size_t j = 0; j < r.ids.size(); ++j)
-        if (r.ids[j] / 32 == rank)
-          out.rows[j] = linear(expert_name(weight(), r.ids[j]), tensor(0));
+        out.rows.push_back(
+            selected_linear(tensor(0), resident::slice(indices, j, 1), b));
       result = std::move(out);
     } else if (n.op == "expert_swiglu_down") {
       const auto &r = std::get<Routes>(input(2));
-      const auto &gate = std::get<ExpertRows>(input(0));
-      const auto &up = std::get<ExpertRows>(input(1));
+      auto indices = local_route_ids(r);
+      auto &b = bank(weight());
+      const auto &gate = std::get<ExpertRows>(input(0)),
+                 &up = std::get<ExpertRows>(input(1));
       ExpertRows out;
-      out.rows.resize(r.ids.size());
+      out.rows.reserve(r.ids.size());
       for (size_t j = 0; j < r.ids.size(); ++j)
-        if (r.ids[j] / 32 == rank)
-          out.rows[j] = expert_down(gate.rows.at(j), up.rows.at(j),
-                                    expert_name(weight(), r.ids[j]));
+        out.rows.push_back(
+            selected_linear(resident::concat(gate.rows.at(j), up.rows.at(j)),
+                            resident::slice(indices, j, 1), b, true));
       result = std::move(out);
     } else if (n.op == "expert_reduce") {
       const auto &r = std::get<Routes>(input(1));
       const auto &rows = std::get<ExpertRows>(input(0));
-      V out(n.width, 0);
+      auto owners = select(route_owner_table, r.ids, 256, 1);
+      auto scores = binary(r.scores, owners, '*');
+      V out(n.width);
+      checked(aclrtMemset(out.data(), out.bytes(), 0, out.bytes()),
+              "resident reduction zero");
       for (size_t j = 0; j < r.ids.size(); ++j)
-        if (r.ids[j] / 32 == rank)
-          for (size_t k = 0; k < out.size(); ++k)
-            out[k] += r.scores[j] * rows.rows.at(j).at(k);
-      result = std::move(out);
+        out = binary(
+            out, binary(rows.rows.at(j), resident::slice(scores, j, 1), '*'),
+            '+');
+      result = out;
     } else if (n.op == "add") {
-      V out = tensor(0);
-      for (size_t j = 0; j < out.size(); ++j)
-        out[j] = roundbf(out[j] + tensor(1).at(j));
-      result = std::move(out);
+      result = rounded(binary(tensor(0), tensor(1), '+'));
     } else
       throw std::runtime_error("unregistered token kernel " + n.op);
     if (result.index() != n.kind)
@@ -124,9 +123,6 @@ V token(int id, int pos) {
     if (auto v = std::get_if<V>(&result)) {
       if (v->size() != n.width)
         throw std::runtime_error("kernel result shape " + n.name);
-      for (float x : *v)
-        if (!std::isfinite(x))
-          throw std::runtime_error("nonfinite node " + n.name);
       trace(n.name, *v);
     }
     values[i] = std::make_unique<Value>(std::move(result));

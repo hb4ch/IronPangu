@@ -46,7 +46,7 @@ fn deterministic_baseline_preserves_logical_program_and_explicit_unknowns() {
     assert!(!s.memory_complete);
     assert!(!s.cost_complete);
     assert_eq!(s.estimated_serial_ns, None);
-    assert!(s.known_host_payload_peak_bytes >= 606208);
+    assert_eq!(s.known_host_payload_peak_bytes, 0);
     assert_eq!(
         s.steps[6]
             .operation
@@ -88,7 +88,7 @@ fn reject_corrupted_schedule_memory_collectives_and_choices() {
             }
             7 => p.schedules[0].steps[0].selected = 9,
             8 => p.schedules[0].memory_complete = true,
-            9 => p.schedules[0].known_host_payload_peak_bytes = 0,
+            9 => p.schedules[0].known_host_payload_peak_bytes = 1,
             _ => p.schedules[0].steps[0].operation.candidates[0].eligible = false,
         };
         assert!(physical::verify(&p).is_err(), "mutation {case}");
@@ -117,4 +117,37 @@ fn cost_guided_choice_is_legal_conservative_and_provenanced() {
     assert_eq!(physical::choose(&[a.clone(), b]).unwrap().0, 0);
     a.cost.evidence = None;
     assert!(physical::choose(&[a]).is_err());
+}
+
+#[test]
+fn host_fallback_never_enters_cost_search() {
+    use physical::{Boundary, BoundaryKind, Location};
+    let plan = lower(&fixture(), &[0, 1, 2, 3, 4, 5, 6, 7]).unwrap();
+    let device = plan.schedules[0].steps[0].operation.candidates[0].clone();
+    for location in [Location::Host, Location::Opaque] {
+        let mut host = device.clone();
+        host.id = "cheaper-host".into();
+        host.location = location;
+        host.cost = Cost {
+            source: CostSource::Measured,
+            estimate_ns: Some(0),
+            upper_ns: Some(0),
+            evidence: Some("synthetic".into()),
+        };
+        assert!(physical::choose(&[device.clone(), host.clone()]).is_err());
+        host.eligible = false;
+        host.rejection = Some("host".into());
+        assert!(physical::choose(&[device.clone(), host]).is_err());
+    }
+    for kind in [BoundaryKind::HostToDevice, BoundaryKind::DeviceToHost] {
+        let mut hidden = device.clone();
+        hidden.boundaries.push(Boundary {
+            kind,
+            detail: "hidden activation transfer".into(),
+        });
+        assert!(physical::choose(&[hidden]).is_err());
+    }
+    let mut host_value = plan.clone();
+    host_value.schedules[0].values[0].location = Location::Host;
+    assert!(physical::verify(&host_value).is_err());
 }
