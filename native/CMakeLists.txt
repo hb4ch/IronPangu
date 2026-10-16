@@ -122,7 +122,8 @@ target_include_directories(openpangu_decode PRIVATE "${OMNI_INFERENCE_ROOT}/op_a
 target_link_libraries(openpangu_decode PRIVATE "${OMNI_INFERENCE_ROOT}/op_api/lib/libcust_opapi.so")
 target_include_directories(openpangu_decode PRIVATE "${OMNI_TRAINING_ROOT}/op_api/include")
 target_compile_definitions(openpangu_decode PRIVATE OMNI_TRAINING_OPAPI_PATH="${OMNI_TRAINING_ROOT}/op_api/lib/libcust_opapi.so")
-target_link_libraries(openpangu_decode PRIVATE dl)
+find_library(MSPROFILER_LIBRARY msprofiler PATHS "${CANN_ROOT}/lib64" REQUIRED NO_DEFAULT_PATH)
+target_link_libraries(openpangu_decode PRIVATE dl "${MSPROFILER_LIBRARY}")
 
 endif()
 

@@ -2,6 +2,7 @@
 // No activation or routing value has a host representation.
 #include "ascend_token_contract.h"
 #include "compiled_kernel.h"
+#include "execution_capture.h"
 #include "initialization_acl.h"
 #include "openpangu_decoder_state.h"
 #include "openpangu_mhc.h"
@@ -119,7 +120,10 @@ struct Decoder {
   }
   void run(openpangu::Launcher f, uint64_t bytes, aclOpExecutor *e) {
     reserve_workspace(bytes);
-    checked(f(workspace, bytes, e, stream), "operator");
+    {
+      inferfabric::profiling::Scope timing("kernel_launch");
+      checked(f(workspace, bytes, e, stream), "operator");
+    }
     checked(aclrtSynchronizeStream(stream), "fence");
   }
   inferfabric::initialization::ResidentParameter &w(const std::string &n) {
@@ -203,9 +207,12 @@ struct Decoder {
     DeviceTensor a({int64_t(x.size())}, ACL_BF16, 2),
         b({int64_t(x.size() * 8)}, ACL_BF16, 2);
     to_device(a, x);
-    checked(HcclAllGather(a.data, b.data, x.size(), HCCL_DATA_TYPE_BFP16, comm,
-                          stream),
-            "all gather");
+    {
+      inferfabric::profiling::Scope timing("HcclAllGather");
+      checked(HcclAllGather(a.data, b.data, x.size(), HCCL_DATA_TYPE_BFP16,
+                            comm, stream),
+              "all gather");
+    }
     checked(aclrtSynchronizeStream(stream), "gather fence");
     return result(b);
   }
@@ -213,9 +220,12 @@ struct Decoder {
     DeviceTensor a({int64_t(x.size())}, ACL_FLOAT, 4),
         b({int64_t(x.size())}, ACL_FLOAT, 4);
     to_device(a, x, ACL_FLOAT);
-    checked(HcclAllReduce(a.data, b.data, x.size(), HCCL_DATA_TYPE_FP32,
-                          HCCL_REDUCE_SUM, comm, stream),
-            "all reduce");
+    {
+      inferfabric::profiling::Scope timing("HcclAllReduce");
+      checked(HcclAllReduce(a.data, b.data, x.size(), HCCL_DATA_TYPE_FP32,
+                            HCCL_REDUCE_SUM, comm, stream),
+              "all reduce");
+    }
     checked(aclrtSynchronizeStream(stream), "reduce fence");
     return result(b, ACL_FLOAT);
   }
@@ -730,6 +740,8 @@ int main(int argc, char **argv) {
     openpangu::checked(aclrtSetDevice(initialization[0].device), "bootstrap");
     HcclRootInfo info;
     openpangu::checked(HcclGetRootInfo(&info), "root");
+    inferfabric::profiling::Capture capture(
+        std::vector<uint32_t>(devices.begin(), devices.end()));
     std::vector<std::thread> threads;
     for (int rank = 0; rank < 8; ++rank)
       threads.emplace_back([&, rank] {
@@ -744,10 +756,25 @@ int main(int argc, char **argv) {
               logits = decoder.token(token, pos++);
             for (int i = 0; i < steps; ++i) {
               int next = decoder.emit(logits, i);
+              if (i > 0 && i <= 2 &&
+                  (i == 2 || next == int(execution.eos) || i + 1 == steps) &&
+                  !capture.directory.empty())
+                capture.rendezvous(false);
               if (next == int(execution.eos) || i + 1 == steps)
                 break;
-              logits = decoder.token(next, pos++);
+              if (i == 0 && !capture.directory.empty())
+                capture.rendezvous(true);
+              inferfabric::profiling::state.active =
+                  !capture.directory.empty() && i < 2;
+              {
+                inferfabric::profiling::Scope timing("decode_total");
+                logits = decoder.token(next, pos++);
+              }
+              inferfabric::profiling::state.active = false;
             }
+            if (!capture.directory.empty())
+              inferfabric::profiling::write(capture.directory + "/rank-" +
+                                            std::to_string(rank) + ".csv");
             if (const char *dir =
                     std::getenv("INFERFABRIC_TRANSFER_AUDIT_DIR")) {
               std::filesystem::create_directories(dir);
@@ -766,6 +793,7 @@ int main(int argc, char **argv) {
       });
     for (auto &t : threads)
       t.join();
+    capture.close();
     openpangu::checked(aclFinalize(), "finalize");
   } catch (const std::exception &e) {
     std::cerr << e.what() << std::endl;

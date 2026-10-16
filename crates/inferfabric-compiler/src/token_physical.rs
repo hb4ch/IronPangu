@@ -28,6 +28,8 @@ pub fn lower(graph: &Graph, devices: &[u32]) -> Result<Plan> {
     source.extend_from_slice(include_bytes!("token_physical.rs"));
     source.extend_from_slice(include_bytes!("../../../native/src/resident_tensor.h"));
     source.extend_from_slice(include_bytes!("../../../native/src/resident_transfer.h"));
+    source.extend_from_slice(include_bytes!("../../../native/src/execution_profile.h"));
+    source.extend_from_slice(include_bytes!("../../../native/src/execution_capture.h"));
     let revision = digest(&source);
     let mut values = vec![];
     let mut operations = vec![];

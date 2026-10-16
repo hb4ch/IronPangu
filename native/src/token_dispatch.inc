@@ -16,6 +16,7 @@ V token(int id, int pos) {
   auto remaining = program.uses;
   for (size_t i = 0; i < program.nodes.size(); ++i) {
     const auto &n = program.nodes[i];
+    inferfabric::profiling::Scope timing(n.op.c_str(), true);
     auto input = [&](size_t j) -> Value & {
       return *values.at(n.inputs.at(j));
     };

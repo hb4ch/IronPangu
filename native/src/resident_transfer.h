@@ -1,5 +1,6 @@
 #pragma once
 #define IF_RESIDENT_TRANSFER_GUARD_ACTIVE 1
+#include "execution_profile.h"
 #include <acl/acl.h>
 #include <array>
 #include <cstdint>
@@ -66,12 +67,16 @@ struct TransferScope {
 inline aclError copy_checked(void *dst, size_t capacity, const void *src,
                              size_t bytes, aclrtMemcpyKind kind) {
   transfers.check(bytes, kind);
+  profiling::Scope timing(kind == ACL_MEMCPY_DEVICE_TO_DEVICE ? "copy_d2d"
+                          : kind == ACL_MEMCPY_HOST_TO_DEVICE ? "copy_h2d"
+                                                              : "copy_d2h");
   return aclrtMemcpy(dst, capacity, src, bytes, kind);
 }
 inline aclError copy_async_checked(void *dst, size_t capacity, const void *src,
                                    size_t bytes, aclrtMemcpyKind kind,
                                    aclrtStream stream) {
   transfers.check(bytes, kind);
+  profiling::Scope timing("copy_async");
   return aclrtMemcpyAsync(dst, capacity, src, bytes, kind, stream);
 }
 // Helpers require an explicitly classified external input, never a Tensor.
