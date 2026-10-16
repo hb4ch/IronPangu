@@ -23,6 +23,8 @@ pub fn lower(graph: &Graph, devices: &[u32]) -> Result<Plan> {
     source.extend_from_slice(include_bytes!(
         "../../../native/include/ascend_token_contract.h"
     ));
+    source.extend_from_slice(include_bytes!("../../../native/CMakeLists.txt"));
+    source.extend_from_slice(include_bytes!("../../../native/src/openpangu_ops.h"));
     source.extend_from_slice(include_bytes!("token_physical.rs"));
     source.extend_from_slice(include_bytes!("../../../native/src/resident_tensor.h"));
     source.extend_from_slice(include_bytes!("../../../native/src/resident_transfer.h"));

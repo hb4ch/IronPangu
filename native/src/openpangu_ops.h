@@ -1,4 +1,7 @@
 #pragma once
+#if defined(IF_REQUIRE_DEVICE_RESIDENCY) && !defined(IF_RESIDENT_TRANSFER_GUARD_ACTIVE)
+#error "Device-resident target requires transfer guard before all operator headers"
+#endif
 // Native OpenPangu building blocks. Caller owns stream and fences before destruction.
 #include <acl/acl.h>
 #include <aclnnop/aclnn_matmul.h>

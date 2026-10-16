@@ -1,4 +1,5 @@
 #pragma once
+#define IF_RESIDENT_TRANSFER_GUARD_ACTIVE 1
 #include <acl/acl.h>
 #include <array>
 #include <cstdint>

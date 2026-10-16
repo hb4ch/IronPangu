@@ -42,6 +42,10 @@ for name, prompt, anchor in cases:
         result_bytes = boundaries['request_output']['d2h_bytes']
         if result_bytes != len(tokens) * (144 if rank == 0 else 64):
             raise RuntimeError('unexpected output transfer volume')
+        if (boundaries['control_input']['h2d_bytes'] == 0
+                or boundaries['parameter_preparation']['h2d_bytes'] == 0
+                or boundaries['parameter_preparation']['d2h_bytes'] == 0):
+            raise RuntimeError('missing transfer instrumentation')
         if boundaries['control_input']['d2h_bytes'] != 0:
             raise RuntimeError('control input readback')
     text = tokenizer.decode(tokens, skip_special_tokens=False)
