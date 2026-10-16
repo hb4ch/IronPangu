@@ -222,6 +222,12 @@
         min-width: 130px;
       }
     }
+    .scope-overview {background:white;border:1px solid #cbd5e1;padding:20px;margin:16px 0;border-radius:8px}
+    .collective {border-left:3px solid #7655a6;padding:8px;margin:8px 0;background:#f6f2ff}
+    .communication-row {background:#f6f2ff}
+    td code {white-space:normal;overflow-wrap:anywhere}
+    td {vertical-align:top}
+    .scope-overview code {overflow-wrap:anywhere}
   </style>
   <header>
     <div>
@@ -244,7 +250,7 @@
         placeholder="Search kernels, ops, weights or placement"
       /><select id="filter" aria-label="Filter instructions">
         <option value="all">All work</option>
-        <option value="comm">Collectives / EP</option>
+        <option value="comm">Communication primitives</option>
         <option value="cast">Casts</option>
         <option value="precision">Quantization / cache precision</option>
         <option value="copy">Copies / materialization</option>
@@ -317,15 +323,7 @@
       page = 0,
       flat = false,
       rank = 0;
-    const pageSize = 25;
-    const isComm = (i) =>
-      [
-        "gather",
-        "allreduce",
-        "expert_linear",
-        "expert_swiglu_down",
-        "expert_reduce", "route_quantize", "expert_act_quantize", "expert_zero", "expert_gmm", "expert_pack",
-      ].includes(i.op);
+    const isComm = (i) => recipes[ins.indexOf(i)].apis.some(api => /^Hccl/.test(api));
     const idsFor = (g) => {
       const set = new Set(g.logical);
       return ins
@@ -358,6 +356,7 @@
     }
     function go(g) {
       scope = g;
+      flat = g !== root;
       page = 0;
       $("#detail").innerHTML = "";
       render();
@@ -372,6 +371,36 @@
         s += ` · rank ${rank} owns experts ${rank * (data.parallel.expert_count / data.parallel.ep)}–${(rank + 1) * (data.parallel.expert_count / data.parallel.ep) - 1}`;
       if (s === "tp_local_heads") s += ` · rank ${rank}`;
       return s;
+    }
+    function shapes(id) {
+      const i=ins[id], fields=recipes[id].value_fields || [];
+      if(fields.length) return fields.map(f=>`<div><code>${esc(f.name)} [${f.shape.map(esc).join(" × ")}] ${esc(f.dtype)}</code></div>`).join("");
+      return i.kind===0 ? `<code>[${i.width}] ${esc(i.dtype)}</code>` : `<span class="muted">Structured state; field shapes not supplied</span>`;
+    }
+    function operands(id) {
+      const i=ins[id];
+      return `<b>Inputs</b>${i.inputs.length ? i.inputs.map(j=>`<div><button data-ins="${j}">#${j}</button> ${shapes(j)}</div>`).join("") : '<div>Parameters / control</div>'}<b>Output #${id}</b>${shapes(id)}`;
+    }
+    function bindings(id) {
+      return Object.entries(ins[id].attrs).map(([k,v])=>`<div><b>${esc(k)}</b>: <code>${esc(v)}</code></div>`).join("") || '<span class="muted">None</span>';
+    }
+    function kernelInventory(ids) {
+      const counts=new Map();
+      ids.forEach(id=>recipes[id].apis.forEach(api=>counts.set(api,(counts.get(api)||0)+1)));
+      return [...counts].map(([api,count])=>`<div><code>${esc(api)}</code> × ${count}</div>`).join("") || "No API calls";
+    }
+    function communication(ids) {
+      const calls=ids.filter(id=>isComm(ins[id]));
+      return calls.length ? calls.map(id=>`<div class="collective"><button data-ins="${id}">#${id}</button> <b>${recipes[id].apis.map(esc).join(" → ")}</b><br>${shapes(ins[id].inputs[0])} → ${shapes(id)}<small>${esc(recipes[id].communication)} · ${esc(placement(id))}</small></div>`).join("") : "No collective call in this scope";
+    }
+    function scopeOverview(ids) {
+      if(scope===root) return "";
+      const set=new Set(ids), incoming=new Set(), outgoing=new Set();
+      ids.forEach(id=>ins[id].inputs.forEach(j=>{if(!set.has(j))incoming.add(j);}));
+      ins.forEach((i,id)=>{if(!set.has(id))i.inputs.forEach(j=>{if(set.has(j))outgoing.add(j);});});
+      if(set.has(program.output))outgoing.add(program.output);
+      const boundary=values=>[...values].map(id=>`<div><button data-ins="${id}">#${id}</button>${shapes(id)}</div>`).join("") || "None";
+      return `<section class="scope-overview"><h2>${esc(scope.label)} · rank ${rank}</h2><p>${ids.length} physical instructions · TP ${data.parallel.tp} / EP ${data.parallel.ep}. EP method: ${esc(data.parallel.method)}.</p><div class="grid"><section><h3>Communication primitives</h3>${communication(ids)}<h3>Scope inputs</h3>${boundary(incoming)}<h3>Scope outputs</h3>${boundary(outgoing)}</section><section><h3>Complete selected kernel inventory</h3>${kernelInventory(ids)}<p class="muted">API-level choices from the plan. Vendor-internal tiling/kernel variants are not recorded.</p></section></div></section>`;
     }
     function memoryDetails(id) {
       const arena=data.arena?.ranks[rank];
@@ -408,28 +437,23 @@
         ? "Show modules"
         : "Show instructions in this scope";
       const rows = showInstructions ? ids : scope.children;
+      const pageSize=showInstructions?100:12;
       page = Math.min(page, Math.max(0, Math.ceil(rows.length / pageSize) - 1));
       let body = rows
         .slice(page * pageSize, (page + 1) * pageSize)
         .map((item) => {
           if (!showInstructions) {
-            const g = item,
-              all = idsFor(g),
-              cs = all.filter((j) => ins[j].op === "cast").length,
-              comm = all.filter((j) =>
-                ["allreduce", "gather"].includes(ins[j].op),
-              ).length,
-              ks = [...new Set(all.flatMap((j) => recipes[j].apis))];
-            return `<tr><td><button class="name" data-scope="${esc(g.id)}">▸ ${esc(g.label)}</button><small>${esc(g.module)}</small></td><td>${all.length} instructions</td><td>${badge(cs + " casts", "cast")} ${badge(comm + " collectives", "comm")}</td><td>${ks.slice(0, 4).map(esc).join("<br>")}<small>${ks.length > 4 ? "+" + (ks.length - 4) + " other APIs" : ""}</small></td></tr>`;
+            const g = item, all = idsFor(g);
+            return `<tr><td><button class="name" data-scope="${esc(g.id)}">▸ ${esc(g.label)}</button><small>${esc(g.module)} · ${all.length} instructions</small></td><td><details><summary>All selected APIs</summary>${kernelInventory(all)}</details></td><td>${communication(all)}</td><td><button data-scope="${esc(g.id)}">Open shapes, bindings and execution order</button></td></tr>`;
           }
           const id = item,
             i = ins[id],
             r = recipes[id];
-          return `<tr><td><button class="name" data-ins="${id}">#${id} ${esc(i.name)}</button><small>${esc(i.op)} · ${esc(r.granularity)}</small></td><td>${r.apis.map((x) => `<code>${esc(x)}</code>`).join("<br>") || esc(r.internal)}<small>${esc(r.internal)}</small></td><td>${badge(i.attrs.cache_dtype ? i.attrs.cache_dtype + " cache / f32 scales" : i.kind === 5 ? "int8 + f32 scale" : i.dtype, i.op === "cast" ? "cast" : "")}${i.kind === 0 ? `<small>[${i.width}] per rank</small>` : ""}<small>${esc(r.materialization)}</small></td><td>${badge(placement(id))}<small>${esc(r.communication)}</small></td></tr>`;
+          return `<tr class="${isComm(i)?'communication-row':''}"><td><button class="name" data-ins="${id}">#${id} ${esc(i.op)}</button><small>${esc(i.name)} · ${esc(r.granularity)}</small></td><td>${r.apis.map(x=>`<div><code>${esc(x)}</code></div>`).join("") || esc(r.internal)}<small>Selected: ${esc(i.kernel)}</small><small>${esc(r.internal)}</small></td><td>${operands(id)}<small>${esc(r.materialization)}</small></td><td>${badge(placement(id))}<p>${esc(r.communication)}</p><details><summary>Weight bindings / attributes</summary>${bindings(id)}</details></td></tr>`;
         })
         .join("");
       $("#content").innerHTML =
-        `<p class="muted">${showInstructions ? ids.length + " instructions in selected scope. Click a row for bindings and dependencies." : "Expand a module to inspect its execution. No full-model node dump."}</p><div class="table"><table><thead><tr>${(showInstructions ? ["Instruction", "Selected API / recipe", "Precision & storage", "Sharding & communication"] : ["Module", "Work", "Conversions / comm", "Kernel APIs"]).map((x) => "<th>" + x + "</th>").join("")}</tr></thead><tbody>${body || '<tr><td colspan="4">No matching work</td></tr>'}</tbody></table></div><div class="pager"><button id="prev" ${page === 0 ? "disabled" : ""}>Previous</button><span>${rows.length ? `${page * pageSize + 1}–${Math.min(rows.length, (page + 1) * pageSize)} of ${rows.length}` : "0"}</span><button id="next" ${(page + 1) * pageSize >= rows.length ? "disabled" : ""}>Next</button></div>`;
+        scopeOverview(idsFor(scope)) + `<p class="muted">${showInstructions ? ids.length + " instructions in selected scope. Click a row for bindings and dependencies." : "Expand a module to inspect its execution. No full-model node dump."}</p><div class="table"><table><thead><tr>${(showInstructions ? ["Execution order / operation", "Full selected kernel", "Input → output value shapes", "Sharding, communication & bindings"] : ["Layer / module", "Full kernel inventory", "Communication primitives & shapes", "Inspect execution"]).map((x) => "<th>" + x + "</th>").join("")}</tr></thead><tbody>${body || '<tr><td colspan="4">No matching work</td></tr>'}</tbody></table></div><div class="pager"><button id="prev" ${page === 0 ? "disabled" : ""}>Previous</button><span>${rows.length ? `${page * pageSize + 1}–${Math.min(rows.length, (page + 1) * pageSize)} of ${rows.length}` : "0"}</span><button id="next" ${(page + 1) * pageSize >= rows.length ? "disabled" : ""}>Next</button></div>`;
       $("#content")
         .querySelectorAll("[data-scope]")
         .forEach((b) => (b.onclick = () => go(groups.get(b.dataset.scope))));

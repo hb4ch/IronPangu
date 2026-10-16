@@ -113,3 +113,32 @@ limitations. No activation transfer or implicit offload is legal. The displayed
 host activation payload peak is therefore zero; this does not mean total host
 memory or total device memory is zero. Workspace, duplicated expert banks and
 persistent state still need a complete prepared memory plan.
+
+## Layer execution view
+
+Opening a layer/module now shows its complete selected API inventory, named
+communication primitives and payload shapes, and scope input/output value shapes.
+The execution table shows every input and output shape/dtype beside its selected
+kernel, placement, and communication contract. Weight bindings and attributes
+remain expandable within the row; dependencies and arena offsets remain available
+in instruction details. Nested scopes come from source metadata.
+
+The communication filter includes actual HCCL primitives, not local expert
+computation. Kernel lists are not truncated. Instruction tables show up to 100
+rows per page within a selected scope; the model overview stays hierarchical.
+Shapes describe recorded SSA values and structured fields. Missing structured
+field shapes and vendor-internal kernel variants are explicitly identified as
+unavailable; API choices are not presented as vendor tiling decisions.
+
+Regenerate an existing offline viewer with the current compiler template while
+preserving its complete embedded plan and bound-arena metadata:
+
+```sh
+python3 scripts/refresh-token-viewer.py old-execution.html new-execution.html
+node scripts/test-token-viewer.cjs new-execution.html
+```
+
+The same template is embedded in freshly compiled plans. The Node test executes
+the actual viewer JavaScript against the recorded plan and checks dense/expert
+layer navigation, full kernel inventory, collective filtering, shapes and rank
+selection. It is a rendering-logic check, not a browser screenshot test.
