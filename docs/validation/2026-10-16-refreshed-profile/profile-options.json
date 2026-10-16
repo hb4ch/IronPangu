@@ -1,0 +1,6 @@
+{
+  "vendor": true,
+  "hardware_metrics": false,
+  "hccl_expansion_mode_env": "HOST",
+  "hccl_deterministic_env": null
+}

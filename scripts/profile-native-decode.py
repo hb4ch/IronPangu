@@ -11,6 +11,11 @@ out=Path(a.output);out.mkdir(parents=True,exist_ok=False)
 sources=[Path(a.binary),Path(a.plan)/'execution.bin',Path(a.cases)]
 provenance={str(path):hashlib.sha256(path.read_bytes()).hexdigest() for path in sources}
 (out/'provenance.json').write_text(json.dumps(provenance,indent=2)+'\n')
+(out/'profile-options.json').write_text(json.dumps({
+ 'vendor':a.vendor, 'hardware_metrics':'INFERFABRIC_PROFILE_METRICS' in os.environ,
+ 'hccl_expansion_mode_env':os.environ.get('HCCL_OP_EXPANSION_MODE'),
+ 'hccl_deterministic_env':os.environ.get('HCCL_DETERMINISTIC'),
+},indent=2)+'\n')
 case=next(c for c in json.loads(Path(a.cases).read_text()) if c['case']==a.case)
 if len(case['output_ids'])<3:raise ValueError('capture needs at least three outputs')
 env=dict(os.environ,INFERFABRIC_PROFILE_DIR=str(out.resolve()),INFERFABRIC_TRANSFER_AUDIT_DIR=str((out/'transfers').resolve()))

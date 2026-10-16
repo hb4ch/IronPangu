@@ -30,9 +30,12 @@ public:
       if (aclprofInit(path.c_str(), path.size()))
         throw std::runtime_error("profiler init");
       auto ids = devices;
+      // Hardware counters can perturb short vector kernels. Keep timeline-only
+      // captures comparable with the reference; opt into counters explicitly.
+      const bool metrics = std::getenv("INFERFABRIC_PROFILE_METRICS") != nullptr;
       config_ = aclprofCreateConfig(
-          ids.data(), ids.size(), ACL_AICORE_PIPE_UTILIZATION, nullptr,
-          ACL_PROF_ACL_API | ACL_PROF_TASK_TIME | ACL_PROF_AICORE_METRICS |
+          ids.data(), ids.size(), metrics ? ACL_AICORE_PIPE_UTILIZATION : ACL_AICORE_NONE, nullptr,
+          ACL_PROF_ACL_API | ACL_PROF_TASK_TIME | (metrics ? ACL_PROF_AICORE_METRICS : 0) |
               ACL_PROF_RUNTIME_API | ACL_PROF_HCCL_TRACE | ACL_PROF_AICPU |
               ACL_PROF_GE_API_L0);
       if (!config_)
