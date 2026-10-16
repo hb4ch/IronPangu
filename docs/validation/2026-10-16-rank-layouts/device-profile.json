@@ -1,0 +1,2833 @@
+{
+  "format": "inferfabric.decode-profile.v1",
+  "profile_root": "layout-vendor/vendor/PROF_000001_20261016181953219_00161355ERHFOQRF",
+  "iterations": 2,
+  "host_runs": [
+    {
+      "path": "layout-vendor",
+      "iterations": 2,
+      "ranks": [
+        {
+          "rank": 0,
+          "entries": [
+            {
+              "kind": "api",
+              "name": "copy_async",
+              "calls_per_token": 6.0,
+              "ms_per_token": 0.0793755
+            },
+            {
+              "kind": "api",
+              "name": "decode_total",
+              "calls_per_token": 1.0,
+              "ms_per_token": 43.449629
+            }
+          ]
+        },
+        {
+          "rank": 1,
+          "entries": [
+            {
+              "kind": "api",
+              "name": "copy_async",
+              "calls_per_token": 6.0,
+              "ms_per_token": 0.102426
+            },
+            {
+              "kind": "api",
+              "name": "decode_total",
+              "calls_per_token": 1.0,
+              "ms_per_token": 44.001808
+            }
+          ]
+        },
+        {
+          "rank": 2,
+          "entries": [
+            {
+              "kind": "api",
+              "name": "copy_async",
+              "calls_per_token": 6.0,
+              "ms_per_token": 0.1062155
+            },
+            {
+              "kind": "api",
+              "name": "decode_total",
+              "calls_per_token": 1.0,
+              "ms_per_token": 33.0169235
+            }
+          ]
+        },
+        {
+          "rank": 3,
+          "entries": [
+            {
+              "kind": "api",
+              "name": "copy_async",
+              "calls_per_token": 6.0,
+              "ms_per_token": 0.0708605
+            },
+            {
+              "kind": "api",
+              "name": "decode_total",
+              "calls_per_token": 1.0,
+              "ms_per_token": 39.6188955
+            }
+          ]
+        },
+        {
+          "rank": 4,
+          "entries": [
+            {
+              "kind": "api",
+              "name": "copy_async",
+              "calls_per_token": 6.0,
+              "ms_per_token": 0.0840455
+            },
+            {
+              "kind": "api",
+              "name": "decode_total",
+              "calls_per_token": 1.0,
+              "ms_per_token": 40.0204435
+            }
+          ]
+        },
+        {
+          "rank": 5,
+          "entries": [
+            {
+              "kind": "api",
+              "name": "copy_async",
+              "calls_per_token": 6.0,
+              "ms_per_token": 0.234432
+            },
+            {
+              "kind": "api",
+              "name": "decode_total",
+              "calls_per_token": 1.0,
+              "ms_per_token": 39.3790695
+            }
+          ]
+        },
+        {
+          "rank": 6,
+          "entries": [
+            {
+              "kind": "api",
+              "name": "copy_async",
+              "calls_per_token": 6.0,
+              "ms_per_token": 0.1025255
+            },
+            {
+              "kind": "api",
+              "name": "decode_total",
+              "calls_per_token": 1.0,
+              "ms_per_token": 37.685457
+            }
+          ]
+        },
+        {
+          "rank": 7,
+          "entries": [
+            {
+              "kind": "api",
+              "name": "copy_async",
+              "calls_per_token": 6.0,
+              "ms_per_token": 0.0872655
+            },
+            {
+              "kind": "api",
+              "name": "decode_total",
+              "calls_per_token": 1.0,
+              "ms_per_token": 38.8888755
+            }
+          ]
+        }
+      ],
+      "rank_mean": [
+        {
+          "kind": "api",
+          "name": "decode_total",
+          "calls_per_token": 1.0,
+          "mean_rank_ms_per_token": 39.5076376875,
+          "min_rank_ms_per_token": 33.0169235,
+          "max_rank_ms_per_token": 44.001808
+        },
+        {
+          "kind": "api",
+          "name": "copy_async",
+          "calls_per_token": 6.0,
+          "mean_rank_ms_per_token": 0.10839325,
+          "min_rank_ms_per_token": 0.0708605,
+          "max_rank_ms_per_token": 0.234432
+        }
+      ]
+    }
+  ],
+  "vendor_host_timers": {
+    "path": "layout-vendor",
+    "iterations": 2,
+    "ranks": [
+      {
+        "rank": 0,
+        "entries": [
+          {
+            "kind": "api",
+            "name": "copy_async",
+            "calls_per_token": 6.0,
+            "ms_per_token": 0.0793755
+          },
+          {
+            "kind": "api",
+            "name": "decode_total",
+            "calls_per_token": 1.0,
+            "ms_per_token": 43.449629
+          }
+        ]
+      },
+      {
+        "rank": 1,
+        "entries": [
+          {
+            "kind": "api",
+            "name": "copy_async",
+            "calls_per_token": 6.0,
+            "ms_per_token": 0.102426
+          },
+          {
+            "kind": "api",
+            "name": "decode_total",
+            "calls_per_token": 1.0,
+            "ms_per_token": 44.001808
+          }
+        ]
+      },
+      {
+        "rank": 2,
+        "entries": [
+          {
+            "kind": "api",
+            "name": "copy_async",
+            "calls_per_token": 6.0,
+            "ms_per_token": 0.1062155
+          },
+          {
+            "kind": "api",
+            "name": "decode_total",
+            "calls_per_token": 1.0,
+            "ms_per_token": 33.0169235
+          }
+        ]
+      },
+      {
+        "rank": 3,
+        "entries": [
+          {
+            "kind": "api",
+            "name": "copy_async",
+            "calls_per_token": 6.0,
+            "ms_per_token": 0.0708605
+          },
+          {
+            "kind": "api",
+            "name": "decode_total",
+            "calls_per_token": 1.0,
+            "ms_per_token": 39.6188955
+          }
+        ]
+      },
+      {
+        "rank": 4,
+        "entries": [
+          {
+            "kind": "api",
+            "name": "copy_async",
+            "calls_per_token": 6.0,
+            "ms_per_token": 0.0840455
+          },
+          {
+            "kind": "api",
+            "name": "decode_total",
+            "calls_per_token": 1.0,
+            "ms_per_token": 40.0204435
+          }
+        ]
+      },
+      {
+        "rank": 5,
+        "entries": [
+          {
+            "kind": "api",
+            "name": "copy_async",
+            "calls_per_token": 6.0,
+            "ms_per_token": 0.234432
+          },
+          {
+            "kind": "api",
+            "name": "decode_total",
+            "calls_per_token": 1.0,
+            "ms_per_token": 39.3790695
+          }
+        ]
+      },
+      {
+        "rank": 6,
+        "entries": [
+          {
+            "kind": "api",
+            "name": "copy_async",
+            "calls_per_token": 6.0,
+            "ms_per_token": 0.1025255
+          },
+          {
+            "kind": "api",
+            "name": "decode_total",
+            "calls_per_token": 1.0,
+            "ms_per_token": 37.685457
+          }
+        ]
+      },
+      {
+        "rank": 7,
+        "entries": [
+          {
+            "kind": "api",
+            "name": "copy_async",
+            "calls_per_token": 6.0,
+            "ms_per_token": 0.0872655
+          },
+          {
+            "kind": "api",
+            "name": "decode_total",
+            "calls_per_token": 1.0,
+            "ms_per_token": 38.8888755
+          }
+        ]
+      }
+    ],
+    "rank_mean": [
+      {
+        "kind": "api",
+        "name": "decode_total",
+        "calls_per_token": 1.0,
+        "mean_rank_ms_per_token": 39.5076376875,
+        "min_rank_ms_per_token": 33.0169235,
+        "max_rank_ms_per_token": 44.001808
+      },
+      {
+        "kind": "api",
+        "name": "copy_async",
+        "calls_per_token": 6.0,
+        "mean_rank_ms_per_token": 0.10839325,
+        "min_rank_ms_per_token": 0.0708605,
+        "max_rank_ms_per_token": 0.234432
+      }
+    ]
+  },
+  "devices": [
+    {
+      "device": "device_0",
+      "window_ms": 150.03285775,
+      "compute_union_ms": 50.69945675,
+      "all_task_union_ms": 63.401147,
+      "no_recorded_task_ms": 86.63171075,
+      "task_types": [
+        {
+          "type": "NOTIFY_WAIT_SQE",
+          "count_per_token": 2086.0,
+          "summed_ms_per_token": 346.068626
+        },
+        {
+          "type": "AI_CORE",
+          "count_per_token": 3888.0,
+          "summed_ms_per_token": 25.349728375
+        },
+        {
+          "type": "MIX_AIC",
+          "count_per_token": 369.0,
+          "summed_ms_per_token": 8.374758375
+        },
+        {
+          "type": "SDMA_SQE",
+          "count_per_token": 4399.0,
+          "summed_ms_per_token": 3.120898875
+        },
+        {
+          "type": "MIX_AIV",
+          "count_per_token": 412.0,
+          "summed_ms_per_token": 2.037881375
+        },
+        {
+          "type": "WRITE_VALUE_SQE",
+          "count_per_token": 1064.0,
+          "summed_ms_per_token": 0.844246875
+        },
+        {
+          "type": "C_CORE_SQE",
+          "count_per_token": 1.0,
+          "summed_ms_per_token": 0.600912125
+        },
+        {
+          "type": "PCIE_DMA_SQE",
+          "count_per_token": 142.0,
+          "summed_ms_per_token": 0.4516185
+        },
+        {
+          "type": "NOTIFY_RECORD_SQE",
+          "count_per_token": 1022.0,
+          "summed_ms_per_token": 0.01509025
+        },
+        {
+          "type": "PLACE_HOLDER_SQE",
+          "count_per_token": 1.0,
+          "summed_ms_per_token": 2e-05
+        }
+      ],
+      "kernels": [
+        {
+          "type": "AiInfraManifoldConstrainedHyperConnectionPre_b47a89e885f94ce5a9668d271df2d4a3_1",
+          "count_per_token": 93.0,
+          "summed_ms_per_token": 2.8564865
+        },
+        {
+          "type": "AiInfraSparseFlashAttentionPioneer_d5278b9259418f886fa913564f167179_2114587",
+          "count_per_token": 46.0,
+          "summed_ms_per_token": 2.621142875
+        },
+        {
+          "type": "GroupedMatmul_7027ddb93c25b26c6a749b5e1bdcd245_34529280514",
+          "count_per_token": 132.0,
+          "summed_ms_per_token": 2.270895875
+        },
+        {
+          "type": "MatMulV2_ND_ND_FP16_FP16_false_true_all_98513",
+          "count_per_token": 178.0,
+          "summed_ms_per_token": 2.202495
+        },
+        {
+          "type": "RotaryPositionEmbedding_92ba353a5a8fff1d4725322f6d7a90d5_1041",
+          "count_per_token": 322.0,
+          "summed_ms_per_token": 1.72119675
+        },
+        {
+          "type": "QuantBatchMatmulV3_ND_ND_int8_int8_fp32_bf16_high_performance_25",
+          "count_per_token": 98.0,
+          "summed_ms_per_token": 1.395547625
+        },
+        {
+          "type": "MatMulV2_ND_ND_FP16_FP16_false_false_all_98305",
+          "count_per_token": 276.0,
+          "summed_ms_per_token": 1.115611375
+        },
+        {
+          "type": "MatMulV2_ND_ND_FP16_FP16_false_true_all_98433",
+          "count_per_token": 276.0,
+          "summed_ms_per_token": 1.024780875
+        },
+        {
+          "type": "ReduceSum_7a09f5b7af4126487a7f726a9aac7548_high_performance_82100900",
+          "count_per_token": 44.0,
+          "summed_ms_per_token": 0.9522085
+        },
+        {
+          "type": "DynamicQuant_bf16_c1_high_performance_10",
+          "count_per_token": 186.0,
+          "summed_ms_per_token": 0.719215375
+        },
+        {
+          "type": "Cast_b2717900ea7de2d41ea9c63d23aa269b_high_performance_210000000",
+          "count_per_token": 454.0,
+          "summed_ms_per_token": 0.71381275
+        },
+        {
+          "type": "AiInfraFusedCausalConv1d_35c4c74c1fae0fea32fe578f438ae985_2",
+          "count_per_token": 138.0,
+          "summed_ms_per_token": 0.701214625
+        },
+        {
+          "type": "RmsNorm_normal_all_bf16_high_performance_0",
+          "count_per_token": 194.0,
+          "summed_ms_per_token": 0.682042625
+        },
+        {
+          "type": "MatMulV2_ND_ND_FP32_FP32_false_false_all_65603",
+          "count_per_token": 44.0,
+          "summed_ms_per_token": 0.6014825
+        },
+        {
+          "type": "ManifoldConstrainedHyperConnectionSinkhornEnhance_7a5d5a273555874254c11acef95789fa_1",
+          "count_per_token": 92.0,
+          "summed_ms_per_token": 0.57405175
+        },
+        {
+          "type": "ScatterUpdate_e1b0109dfcfe48c3210f1a593265d1dc_high_precision_880013000",
+          "count_per_token": 46.0,
+          "summed_ms_per_token": 0.52285075
+        },
+        {
+          "type": "AiInfraManifoldConstrainedHyperConnectionPost_12198cd9f51675f0cd721b3c8d5940a5_0",
+          "count_per_token": 92.0,
+          "summed_ms_per_token": 0.50807925
+        },
+        {
+          "type": "GatherV3_9e31943a1a48bf81ddff1fc6379e0be3_optional_10330",
+          "count_per_token": 132.0,
+          "summed_ms_per_token": 0.5017905
+        },
+        {
+          "type": "Mul_ee98c6628030785f610b924ab1557b31_high_performance_212000002",
+          "count_per_token": 44.0,
+          "summed_ms_per_token": 0.49633975
+        },
+        {
+          "type": "MatMulV2_ND_ND_FP16_FP16_false_true_all_98371",
+          "count_per_token": 46.0,
+          "summed_ms_per_token": 0.49594025
+        },
+        {
+          "type": "Cast_9f288b80370c6545ffe8cef142d37f5c_high_performance_210000000",
+          "count_per_token": 366.0,
+          "summed_ms_per_token": 0.477451125
+        },
+        {
+          "type": "RmsNorm_normal_all_bf16_high_performance_2",
+          "count_per_token": 92.0,
+          "summed_ms_per_token": 0.369857375
+        },
+        {
+          "type": "GatherV3_7beee77dd8bc124a96bc6f1da51c82cc_optional_10330",
+          "count_per_token": 88.0,
+          "summed_ms_per_token": 0.328516
+        },
+        {
+          "type": "DequantSwigluQuant_bf16_high_performance_30012",
+          "count_per_token": 44.0,
+          "summed_ms_per_token": 0.23973475
+        },
+        {
+          "type": "TopKV2_5c671486fda0d949d7cba9a9754bc2dd_high_performance_2017612701781458944",
+          "count_per_token": 44.0,
+          "summed_ms_per_token": 0.214884375
+        },
+        {
+          "type": "MoeGatingTopK_81369a2fa0455f39b5d19d432d261f57_1",
+          "count_per_token": 44.0,
+          "summed_ms_per_token": 0.174193375
+        },
+        {
+          "type": "GatherV3_e9b6eba7780749dc7a31c6224838748d_optional_10330",
+          "count_per_token": 44.0,
+          "summed_ms_per_token": 0.16141275
+        },
+        {
+          "type": "SwiGlu_3_high_performance_27",
+          "count_per_token": 46.0,
+          "summed_ms_per_token": 0.157042375
+        },
+        {
+          "type": "Mul_ee98c6628030785f610b924ab1557b31_high_performance_210000000",
+          "count_per_token": 88.0,
+          "summed_ms_per_token": 0.129832
+        },
+        {
+          "type": "Add_ee98c6628030785f610b924ab1557b31_high_performance_210000000",
+          "count_per_token": 44.0,
+          "summed_ms_per_token": 0.10219225
+        },
+        {
+          "type": "MatMulV2_ND_ND_FP16_FP16_false_true_all_98499",
+          "count_per_token": 1.0,
+          "summed_ms_per_token": 0.091881875
+        },
+        {
+          "type": "LogSoftmaxV2",
+          "count_per_token": 1.0,
+          "summed_ms_per_token": 0.0739315
+        },
+        {
+          "type": "Cast_e87590d11ccda8b259ab6b1ea7212319_high_performance_210000000",
+          "count_per_token": 44.0,
+          "summed_ms_per_token": 0.056451125
+        },
+        {
+          "type": "ArgMaxV2",
+          "count_per_token": 1.0,
+          "summed_ms_per_token": 0.031600625
+        },
+        {
+          "type": "TopKV2",
+          "count_per_token": 2.0,
+          "summed_ms_per_token": 0.026630625
+        },
+        {
+          "type": "Cast",
+          "count_per_token": 3.0,
+          "summed_ms_per_token": 0.018370375
+        },
+        {
+          "type": "GatherElements",
+          "count_per_token": 1.0,
+          "summed_ms_per_token": 0.01010025
+        },
+        {
+          "type": "GatherV3_81f85b8118942f9275eea83b86babe7d_optional_10330",
+          "count_per_token": 1.0,
+          "summed_ms_per_token": 0.004620125
+        },
+        {
+          "type": "GatherV3",
+          "count_per_token": 1.0,
+          "summed_ms_per_token": 0.00384
+        }
+      ],
+      "collectives": [
+        {
+          "type": "hcom_allGather_",
+          "count_per_token": 100.0,
+          "inclusive_ms_per_token": 2.452988875
+        },
+        {
+          "type": "hcom_allReduce_",
+          "count_per_token": 44.0,
+          "inclusive_ms_per_token": 1.049410875
+        }
+      ],
+      "communication_tasks": [
+        {
+          "type": "Memcpy",
+          "count_per_token": 732.0,
+          "summed_ms_per_token": 0.680581,
+          "bytes_per_token": 2836560.0
+        },
+        {
+          "type": "Notify_Record",
+          "count_per_token": 2064.0,
+          "summed_ms_per_token": 0.859027125,
+          "bytes_per_token": 0.0
+        },
+        {
+          "type": "Notify_Wait",
+          "count_per_token": 2064.0,
+          "summed_ms_per_token": 95.592511875,
+          "bytes_per_token": 0.0
+        },
+        {
+          "type": "Reduce_Inline",
+          "count_per_token": 420.0,
+          "summed_ms_per_token": 0.36090725,
+          "bytes_per_token": 1352832.0
+        }
+      ]
+    },
+    {
+      "device": "device_1",
+      "window_ms": 149.99223675,
+      "compute_union_ms": 50.20036,
+      "all_task_union_ms": 62.10312075,
+      "no_recorded_task_ms": 87.889116,
+      "task_types": [
+        {
+          "type": "NOTIFY_WAIT_SQE",
+          "count_per_token": 2286.0,
+          "summed_ms_per_token": 338.28129975
+        },
+        {
+          "type": "AI_CORE",
+          "count_per_token": 3888.0,
+          "summed_ms_per_token": 25.10018
+        },
+        {
+          "type": "MIX_AIC",
+          "count_per_token": 369.0,
+          "summed_ms_per_token": 8.22404425
+        },
+        {
+          "type": "SDMA_SQE",
+          "count_per_token": 4399.0,
+          "summed_ms_per_token": 3.27738525
+        },
+        {
+          "type": "MIX_AIV",
+          "count_per_token": 412.0,
+          "summed_ms_per_token": 1.996100375
+        },
+        {
+          "type": "WRITE_VALUE_SQE",
+          "count_per_token": 1264.0,
+          "summed_ms_per_token": 1.04274
+        },
+        {
+          "type": "C_CORE_SQE",
+          "count_per_token": 1.0,
+          "summed_ms_per_token": 0.798145875
+        },
+        {
+          "type": "PCIE_DMA_SQE",
+          "count_per_token": 139.0,
+          "summed_ms_per_token": 0.44487925
+        },
+        {
+          "type": "NOTIFY_RECORD_SQE",
+          "count_per_token": 1022.0,
+          "summed_ms_per_token": 0.0143605
+        },
+        {
+          "type": "PLACE_HOLDER_SQE",
+          "count_per_token": 1.0,
+          "summed_ms_per_token": 1e-05
+        }
+      ],
+      "kernels": [
+        {
+          "type": "AiInfraManifoldConstrainedHyperConnectionPre_b47a89e885f94ce5a9668d271df2d4a3_1",
+          "count_per_token": 93.0,
+          "summed_ms_per_token": 2.919638125
+        },
+        {
+          "type": "AiInfraSparseFlashAttentionPioneer_d5278b9259418f886fa913564f167179_2114587",
+          "count_per_token": 46.0,
+          "summed_ms_per_token": 2.346097
+        },
+        {
+          "type": "GroupedMatmul_7027ddb93c25b26c6a749b5e1bdcd245_34529280514",
+          "count_per_token": 132.0,
+          "summed_ms_per_token": 2.275715625
+        },
+        {
+          "type": "MatMulV2_ND_ND_FP16_FP16_false_true_all_98513",
+          "count_per_token": 178.0,
+          "summed_ms_per_token": 2.18071275
+        },
+        {
+          "type": "RotaryPositionEmbedding_92ba353a5a8fff1d4725322f6d7a90d5_1041",
+          "count_per_token": 322.0,
+          "summed_ms_per_token": 1.733134
+        },
+        {
+          "type": "QuantBatchMatmulV3_ND_ND_int8_int8_fp32_bf16_high_performance_25",
+          "count_per_token": 98.0,
+          "summed_ms_per_token": 1.46612925
+        },
+        {
+          "type": "MatMulV2_ND_ND_FP16_FP16_false_false_all_98305",
+          "count_per_token": 276.0,
+          "summed_ms_per_token": 1.10131375
+        },
+        {
+          "type": "MatMulV2_ND_ND_FP16_FP16_false_true_all_98433",
+          "count_per_token": 276.0,
+          "summed_ms_per_token": 1.03710975
+        },
+        {
+          "type": "ReduceSum_7a09f5b7af4126487a7f726a9aac7548_high_performance_82100900",
+          "count_per_token": 44.0,
+          "summed_ms_per_token": 0.900457375
+        },
+        {
+          "type": "DynamicQuant_bf16_c1_high_performance_10",
+          "count_per_token": 186.0,
+          "summed_ms_per_token": 0.7188145
+        },
+        {
+          "type": "RmsNorm_normal_all_bf16_high_performance_0",
+          "count_per_token": 194.0,
+          "summed_ms_per_token": 0.711704125
+        },
+        {
+          "type": "AiInfraFusedCausalConv1d_35c4c74c1fae0fea32fe578f438ae985_2",
+          "count_per_token": 138.0,
+          "summed_ms_per_token": 0.7013235
+        },
+        {
+          "type": "Cast_b2717900ea7de2d41ea9c63d23aa269b_high_performance_210000000",
+          "count_per_token": 454.0,
+          "summed_ms_per_token": 0.684203875
+        },
+        {
+          "type": "MatMulV2_ND_ND_FP32_FP32_false_false_all_65603",
+          "count_per_token": 44.0,
+          "summed_ms_per_token": 0.599822125
+        },
+        {
+          "type": "ManifoldConstrainedHyperConnectionSinkhornEnhance_7a5d5a273555874254c11acef95789fa_1",
+          "count_per_token": 92.0,
+          "summed_ms_per_token": 0.5732915
+        },
+        {
+          "type": "AiInfraManifoldConstrainedHyperConnectionPost_12198cd9f51675f0cd721b3c8d5940a5_0",
+          "count_per_token": 92.0,
+          "summed_ms_per_token": 0.51453175
+        },
+        {
+          "type": "ScatterUpdate_e1b0109dfcfe48c3210f1a593265d1dc_high_precision_880013000",
+          "count_per_token": 46.0,
+          "summed_ms_per_token": 0.499149875
+        },
+        {
+          "type": "GatherV3_9e31943a1a48bf81ddff1fc6379e0be3_optional_10330",
+          "count_per_token": 132.0,
+          "summed_ms_per_token": 0.493538375
+        },
+        {
+          "type": "Mul_ee98c6628030785f610b924ab1557b31_high_performance_212000002",
+          "count_per_token": 44.0,
+          "summed_ms_per_token": 0.487169875
+        },
+        {
+          "type": "MatMulV2_ND_ND_FP16_FP16_false_true_all_98371",
+          "count_per_token": 46.0,
+          "summed_ms_per_token": 0.4793995
+        },
+        {
+          "type": "Cast_9f288b80370c6545ffe8cef142d37f5c_high_performance_210000000",
+          "count_per_token": 366.0,
+          "summed_ms_per_token": 0.4686675
+        },
+        {
+          "type": "RmsNorm_normal_all_bf16_high_performance_2",
+          "count_per_token": 92.0,
+          "summed_ms_per_token": 0.37370775
+        },
+        {
+          "type": "GatherV3_7beee77dd8bc124a96bc6f1da51c82cc_optional_10330",
+          "count_per_token": 88.0,
+          "summed_ms_per_token": 0.325537375
+        },
+        {
+          "type": "DequantSwigluQuant_bf16_high_performance_30012",
+          "count_per_token": 44.0,
+          "summed_ms_per_token": 0.242215125
+        },
+        {
+          "type": "TopKV2_5c671486fda0d949d7cba9a9754bc2dd_high_performance_2017612701781458944",
+          "count_per_token": 44.0,
+          "summed_ms_per_token": 0.213014
+        },
+        {
+          "type": "GatherV3_e9b6eba7780749dc7a31c6224838748d_optional_10330",
+          "count_per_token": 44.0,
+          "summed_ms_per_token": 0.179563875
+        },
+        {
+          "type": "MoeGatingTopK_81369a2fa0455f39b5d19d432d261f57_1",
+          "count_per_token": 44.0,
+          "summed_ms_per_token": 0.1767935
+        },
+        {
+          "type": "SwiGlu_3_high_performance_27",
+          "count_per_token": 46.0,
+          "summed_ms_per_token": 0.155713125
+        },
+        {
+          "type": "Mul_ee98c6628030785f610b924ab1557b31_high_performance_210000000",
+          "count_per_token": 88.0,
+          "summed_ms_per_token": 0.129912
+        },
+        {
+          "type": "MatMulV2_ND_ND_FP16_FP16_false_true_all_98499",
+          "count_per_token": 1.0,
+          "summed_ms_per_token": 0.097911875
+        },
+        {
+          "type": "Add_ee98c6628030785f610b924ab1557b31_high_performance_210000000",
+          "count_per_token": 44.0,
+          "summed_ms_per_token": 0.091691875
+        },
+        {
+          "type": "LogSoftmaxV2",
+          "count_per_token": 1.0,
+          "summed_ms_per_token": 0.0756415
+        },
+        {
+          "type": "Cast_e87590d11ccda8b259ab6b1ea7212319_high_performance_210000000",
+          "count_per_token": 44.0,
+          "summed_ms_per_token": 0.054971875
+        },
+        {
+          "type": "ArgMaxV2",
+          "count_per_token": 1.0,
+          "summed_ms_per_token": 0.0319305
+        },
+        {
+          "type": "TopKV2",
+          "count_per_token": 2.0,
+          "summed_ms_per_token": 0.028110625
+        },
+        {
+          "type": "Cast",
+          "count_per_token": 3.0,
+          "summed_ms_per_token": 0.013060375
+        },
+        {
+          "type": "GatherElements",
+          "count_per_token": 1.0,
+          "summed_ms_per_token": 0.010770125
+        },
+        {
+          "type": "GatherV3",
+          "count_per_token": 1.0,
+          "summed_ms_per_token": 0.00387025
+        },
+        {
+          "type": "GatherV3_81f85b8118942f9275eea83b86babe7d_optional_10330",
+          "count_per_token": 1.0,
+          "summed_ms_per_token": 0.003840125
+        }
+      ],
+      "collectives": [
+        {
+          "type": "hcom_allGather_",
+          "count_per_token": 100.0,
+          "inclusive_ms_per_token": 2.012720875
+        },
+        {
+          "type": "hcom_allReduce_",
+          "count_per_token": 44.0,
+          "inclusive_ms_per_token": 1.10811275
+        }
+      ],
+      "communication_tasks": [
+        {
+          "type": "Memcpy",
+          "count_per_token": 732.0,
+          "summed_ms_per_token": 0.845865875,
+          "bytes_per_token": 2836560.0
+        },
+        {
+          "type": "Notify_Record",
+          "count_per_token": 2264.0,
+          "summed_ms_per_token": 1.0568205,
+          "bytes_per_token": 0.0
+        },
+        {
+          "type": "Notify_Wait",
+          "count_per_token": 2264.0,
+          "summed_ms_per_token": 92.758105,
+          "bytes_per_token": 0.0
+        },
+        {
+          "type": "Reduce_Inline",
+          "count_per_token": 420.0,
+          "summed_ms_per_token": 0.3595485,
+          "bytes_per_token": 1352832.0
+        }
+      ]
+    },
+    {
+      "device": "device_2",
+      "window_ms": 150.0137975,
+      "compute_union_ms": 50.106108,
+      "all_task_union_ms": 84.2034625,
+      "no_recorded_task_ms": 65.810335,
+      "task_types": [
+        {
+          "type": "NOTIFY_WAIT_SQE",
+          "count_per_token": 2086.0,
+          "summed_ms_per_token": 471.658234125
+        },
+        {
+          "type": "AI_CORE",
+          "count_per_token": 3888.0,
+          "summed_ms_per_token": 25.053054
+        },
+        {
+          "type": "MIX_AIC",
+          "count_per_token": 369.0,
+          "summed_ms_per_token": 8.248894875
+        },
+        {
+          "type": "SDMA_SQE",
+          "count_per_token": 4399.0,
+          "summed_ms_per_token": 3.141589625
+        },
+        {
+          "type": "MIX_AIV",
+          "count_per_token": 412.0,
+          "summed_ms_per_token": 2.047540875
+        },
+        {
+          "type": "WRITE_VALUE_SQE",
+          "count_per_token": 1064.0,
+          "summed_ms_per_token": 0.84239775
+        },
+        {
+          "type": "C_CORE_SQE",
+          "count_per_token": 1.0,
+          "summed_ms_per_token": 0.58748175
+        },
+        {
+          "type": "PCIE_DMA_SQE",
+          "count_per_token": 139.0,
+          "summed_ms_per_token": 0.4424585
+        },
+        {
+          "type": "NOTIFY_RECORD_SQE",
+          "count_per_token": 1022.0,
+          "summed_ms_per_token": 0.014720125
+        },
+        {
+          "type": "PLACE_HOLDER_SQE",
+          "count_per_token": 1.0,
+          "summed_ms_per_token": 0.0
+        }
+      ],
+      "kernels": [
+        {
+          "type": "AiInfraManifoldConstrainedHyperConnectionPre_b47a89e885f94ce5a9668d271df2d4a3_1",
+          "count_per_token": 93.0,
+          "summed_ms_per_token": 2.933149875
+        },
+        {
+          "type": "AiInfraSparseFlashAttentionPioneer_d5278b9259418f886fa913564f167179_2114587",
+          "count_per_token": 46.0,
+          "summed_ms_per_token": 2.3671475
+        },
+        {
+          "type": "GroupedMatmul_7027ddb93c25b26c6a749b5e1bdcd245_34529280514",
+          "count_per_token": 132.0,
+          "summed_ms_per_token": 2.27139575
+        },
+        {
+          "type": "MatMulV2_ND_ND_FP16_FP16_false_true_all_98513",
+          "count_per_token": 178.0,
+          "summed_ms_per_token": 2.160583375
+        },
+        {
+          "type": "RotaryPositionEmbedding_92ba353a5a8fff1d4725322f6d7a90d5_1041",
+          "count_per_token": 322.0,
+          "summed_ms_per_token": 1.734935
+        },
+        {
+          "type": "QuantBatchMatmulV3_ND_ND_int8_int8_fp32_bf16_high_performance_25",
+          "count_per_token": 98.0,
+          "summed_ms_per_token": 1.466629125
+        },
+        {
+          "type": "MatMulV2_ND_ND_FP16_FP16_false_false_all_98305",
+          "count_per_token": 276.0,
+          "summed_ms_per_token": 1.062410375
+        },
+        {
+          "type": "MatMulV2_ND_ND_FP16_FP16_false_true_all_98433",
+          "count_per_token": 276.0,
+          "summed_ms_per_token": 1.02858025
+        },
+        {
+          "type": "ReduceSum_7a09f5b7af4126487a7f726a9aac7548_high_performance_82100900",
+          "count_per_token": 44.0,
+          "summed_ms_per_token": 0.956798625
+        },
+        {
+          "type": "DynamicQuant_bf16_c1_high_performance_10",
+          "count_per_token": 186.0,
+          "summed_ms_per_token": 0.71739475
+        },
+        {
+          "type": "RmsNorm_normal_all_bf16_high_performance_0",
+          "count_per_token": 194.0,
+          "summed_ms_per_token": 0.70917575
+        },
+        {
+          "type": "AiInfraFusedCausalConv1d_35c4c74c1fae0fea32fe578f438ae985_2",
+          "count_per_token": 138.0,
+          "summed_ms_per_token": 0.698343875
+        },
+        {
+          "type": "Cast_b2717900ea7de2d41ea9c63d23aa269b_high_performance_210000000",
+          "count_per_token": 454.0,
+          "summed_ms_per_token": 0.687463125
+        },
+        {
+          "type": "MatMulV2_ND_ND_FP32_FP32_false_false_all_65603",
+          "count_per_token": 44.0,
+          "summed_ms_per_token": 0.584672375
+        },
+        {
+          "type": "ManifoldConstrainedHyperConnectionSinkhornEnhance_7a5d5a273555874254c11acef95789fa_1",
+          "count_per_token": 92.0,
+          "summed_ms_per_token": 0.572980625
+        },
+        {
+          "type": "AiInfraManifoldConstrainedHyperConnectionPost_12198cd9f51675f0cd721b3c8d5940a5_0",
+          "count_per_token": 92.0,
+          "summed_ms_per_token": 0.510560125
+        },
+        {
+          "type": "ScatterUpdate_e1b0109dfcfe48c3210f1a593265d1dc_high_precision_880013000",
+          "count_per_token": 46.0,
+          "summed_ms_per_token": 0.50145025
+        },
+        {
+          "type": "GatherV3_9e31943a1a48bf81ddff1fc6379e0be3_optional_10330",
+          "count_per_token": 132.0,
+          "summed_ms_per_token": 0.500970625
+        },
+        {
+          "type": "MatMulV2_ND_ND_FP16_FP16_false_true_all_98371",
+          "count_per_token": 46.0,
+          "summed_ms_per_token": 0.481469375
+        },
+        {
+          "type": "Cast_9f288b80370c6545ffe8cef142d37f5c_high_performance_210000000",
+          "count_per_token": 366.0,
+          "summed_ms_per_token": 0.466200125
+        },
+        {
+          "type": "Mul_ee98c6628030785f610b924ab1557b31_high_performance_212000002",
+          "count_per_token": 44.0,
+          "summed_ms_per_token": 0.4573395
+        },
+        {
+          "type": "RmsNorm_normal_all_bf16_high_performance_2",
+          "count_per_token": 92.0,
+          "summed_ms_per_token": 0.373807375
+        },
+        {
+          "type": "GatherV3_7beee77dd8bc124a96bc6f1da51c82cc_optional_10330",
+          "count_per_token": 88.0,
+          "summed_ms_per_token": 0.3364765
+        },
+        {
+          "type": "DequantSwigluQuant_bf16_high_performance_30012",
+          "count_per_token": 44.0,
+          "summed_ms_per_token": 0.230395
+        },
+        {
+          "type": "TopKV2_5c671486fda0d949d7cba9a9754bc2dd_high_performance_2017612701781458944",
+          "count_per_token": 44.0,
+          "summed_ms_per_token": 0.215644125
+        },
+        {
+          "type": "MoeGatingTopK_81369a2fa0455f39b5d19d432d261f57_1",
+          "count_per_token": 44.0,
+          "summed_ms_per_token": 0.17693275
+        },
+        {
+          "type": "GatherV3_e9b6eba7780749dc7a31c6224838748d_optional_10330",
+          "count_per_token": 44.0,
+          "summed_ms_per_token": 0.1619635
+        },
+        {
+          "type": "SwiGlu_3_high_performance_27",
+          "count_per_token": 46.0,
+          "summed_ms_per_token": 0.155232875
+        },
+        {
+          "type": "Mul_ee98c6628030785f610b924ab1557b31_high_performance_210000000",
+          "count_per_token": 88.0,
+          "summed_ms_per_token": 0.128363
+        },
+        {
+          "type": "MatMulV2_ND_ND_FP16_FP16_false_true_all_98499",
+          "count_per_token": 1.0,
+          "summed_ms_per_token": 0.094261875
+        },
+        {
+          "type": "Add_ee98c6628030785f610b924ab1557b31_high_performance_210000000",
+          "count_per_token": 44.0,
+          "summed_ms_per_token": 0.092962375
+        },
+        {
+          "type": "LogSoftmaxV2",
+          "count_per_token": 1.0,
+          "summed_ms_per_token": 0.0723015
+        },
+        {
+          "type": "Cast_e87590d11ccda8b259ab6b1ea7212319_high_performance_210000000",
+          "count_per_token": 44.0,
+          "summed_ms_per_token": 0.055141
+        },
+        {
+          "type": "ArgMaxV2",
+          "count_per_token": 1.0,
+          "summed_ms_per_token": 0.030840625
+        },
+        {
+          "type": "TopKV2",
+          "count_per_token": 2.0,
+          "summed_ms_per_token": 0.0277105
+        },
+        {
+          "type": "Cast",
+          "count_per_token": 3.0,
+          "summed_ms_per_token": 0.01292025
+        },
+        {
+          "type": "GatherElements",
+          "count_per_token": 1.0,
+          "summed_ms_per_token": 0.01018025
+        },
+        {
+          "type": "GatherV3_81f85b8118942f9275eea83b86babe7d_optional_10330",
+          "count_per_token": 1.0,
+          "summed_ms_per_token": 0.004570125
+        },
+        {
+          "type": "GatherV3",
+          "count_per_token": 1.0,
+          "summed_ms_per_token": 0.0037
+        }
+      ],
+      "collectives": [
+        {
+          "type": "hcom_allGather_",
+          "count_per_token": 100.0,
+          "inclusive_ms_per_token": 13.127262125
+        },
+        {
+          "type": "hcom_allReduce_",
+          "count_per_token": 44.0,
+          "inclusive_ms_per_token": 1.09712225
+        }
+      ],
+      "communication_tasks": [
+        {
+          "type": "Memcpy",
+          "count_per_token": 732.0,
+          "summed_ms_per_token": 0.705063625,
+          "bytes_per_token": 2836560.0
+        },
+        {
+          "type": "Notify_Record",
+          "count_per_token": 2064.0,
+          "summed_ms_per_token": 0.856767875,
+          "bytes_per_token": 0.0
+        },
+        {
+          "type": "Notify_Wait",
+          "count_per_token": 2064.0,
+          "summed_ms_per_token": 137.54683875,
+          "bytes_per_token": 0.0
+        },
+        {
+          "type": "Reduce_Inline",
+          "count_per_token": 420.0,
+          "summed_ms_per_token": 0.3615875,
+          "bytes_per_token": 1352832.0
+        }
+      ]
+    },
+    {
+      "device": "device_3",
+      "window_ms": 150.0254975,
+      "compute_union_ms": 49.978373,
+      "all_task_union_ms": 70.9234765,
+      "no_recorded_task_ms": 79.102021,
+      "task_types": [
+        {
+          "type": "NOTIFY_WAIT_SQE",
+          "count_per_token": 2286.0,
+          "summed_ms_per_token": 391.560081875
+        },
+        {
+          "type": "AI_CORE",
+          "count_per_token": 3888.0,
+          "summed_ms_per_token": 24.9891865
+        },
+        {
+          "type": "MIX_AIC",
+          "count_per_token": 369.0,
+          "summed_ms_per_token": 8.134470125
+        },
+        {
+          "type": "SDMA_SQE",
+          "count_per_token": 4399.0,
+          "summed_ms_per_token": 3.298445875
+        },
+        {
+          "type": "MIX_AIV",
+          "count_per_token": 412.0,
+          "summed_ms_per_token": 1.96452025
+        },
+        {
+          "type": "WRITE_VALUE_SQE",
+          "count_per_token": 1264.0,
+          "summed_ms_per_token": 1.0274715
+        },
+        {
+          "type": "C_CORE_SQE",
+          "count_per_token": 1.0,
+          "summed_ms_per_token": 0.76015525
+        },
+        {
+          "type": "PCIE_DMA_SQE",
+          "count_per_token": 139.0,
+          "summed_ms_per_token": 0.449091125
+        },
+        {
+          "type": "NOTIFY_RECORD_SQE",
+          "count_per_token": 1022.0,
+          "summed_ms_per_token": 0.0147605
+        },
+        {
+          "type": "PLACE_HOLDER_SQE",
+          "count_per_token": 1.0,
+          "summed_ms_per_token": 2e-05
+        }
+      ],
+      "kernels": [
+        {
+          "type": "AiInfraManifoldConstrainedHyperConnectionPre_b47a89e885f94ce5a9668d271df2d4a3_1",
+          "count_per_token": 93.0,
+          "summed_ms_per_token": 2.924368625
+        },
+        {
+          "type": "AiInfraSparseFlashAttentionPioneer_d5278b9259418f886fa913564f167179_2114587",
+          "count_per_token": 46.0,
+          "summed_ms_per_token": 2.35112675
+        },
+        {
+          "type": "GroupedMatmul_7027ddb93c25b26c6a749b5e1bdcd245_34529280514",
+          "count_per_token": 132.0,
+          "summed_ms_per_token": 2.189232
+        },
+        {
+          "type": "MatMulV2_ND_ND_FP16_FP16_false_true_all_98513",
+          "count_per_token": 178.0,
+          "summed_ms_per_token": 2.17204325
+        },
+        {
+          "type": "RotaryPositionEmbedding_92ba353a5a8fff1d4725322f6d7a90d5_1041",
+          "count_per_token": 322.0,
+          "summed_ms_per_token": 1.7259435
+        },
+        {
+          "type": "QuantBatchMatmulV3_ND_ND_int8_int8_fp32_bf16_high_performance_25",
+          "count_per_token": 98.0,
+          "summed_ms_per_token": 1.45063975
+        },
+        {
+          "type": "MatMulV2_ND_ND_FP16_FP16_false_false_all_98305",
+          "count_per_token": 276.0,
+          "summed_ms_per_token": 1.08386325
+        },
+        {
+          "type": "MatMulV2_ND_ND_FP16_FP16_false_true_all_98433",
+          "count_per_token": 276.0,
+          "summed_ms_per_token": 1.03733075
+        },
+        {
+          "type": "ReduceSum_7a09f5b7af4126487a7f726a9aac7548_high_performance_82100900",
+          "count_per_token": 44.0,
+          "summed_ms_per_token": 0.87455775
+        },
+        {
+          "type": "DynamicQuant_bf16_c1_high_performance_10",
+          "count_per_token": 186.0,
+          "summed_ms_per_token": 0.7142025
+        },
+        {
+          "type": "RmsNorm_normal_all_bf16_high_performance_0",
+          "count_per_token": 194.0,
+          "summed_ms_per_token": 0.710053625
+        },
+        {
+          "type": "Cast_b2717900ea7de2d41ea9c63d23aa269b_high_performance_210000000",
+          "count_per_token": 454.0,
+          "summed_ms_per_token": 0.708914375
+        },
+        {
+          "type": "AiInfraFusedCausalConv1d_35c4c74c1fae0fea32fe578f438ae985_2",
+          "count_per_token": 138.0,
+          "summed_ms_per_token": 0.7028245
+        },
+        {
+          "type": "MatMulV2_ND_ND_FP32_FP32_false_false_all_65603",
+          "count_per_token": 44.0,
+          "summed_ms_per_token": 0.600572125
+        },
+        {
+          "type": "ManifoldConstrainedHyperConnectionSinkhornEnhance_7a5d5a273555874254c11acef95789fa_1",
+          "count_per_token": 92.0,
+          "summed_ms_per_token": 0.57293125
+        },
+        {
+          "type": "GatherV3_9e31943a1a48bf81ddff1fc6379e0be3_optional_10330",
+          "count_per_token": 132.0,
+          "summed_ms_per_token": 0.53292975
+        },
+        {
+          "type": "AiInfraManifoldConstrainedHyperConnectionPost_12198cd9f51675f0cd721b3c8d5940a5_0",
+          "count_per_token": 92.0,
+          "summed_ms_per_token": 0.51105025
+        },
+        {
+          "type": "ScatterUpdate_e1b0109dfcfe48c3210f1a593265d1dc_high_precision_880013000",
+          "count_per_token": 46.0,
+          "summed_ms_per_token": 0.50729025
+        },
+        {
+          "type": "Mul_ee98c6628030785f610b924ab1557b31_high_performance_212000002",
+          "count_per_token": 44.0,
+          "summed_ms_per_token": 0.4920895
+        },
+        {
+          "type": "MatMulV2_ND_ND_FP16_FP16_false_true_all_98371",
+          "count_per_token": 46.0,
+          "summed_ms_per_token": 0.475329125
+        },
+        {
+          "type": "Cast_9f288b80370c6545ffe8cef142d37f5c_high_performance_210000000",
+          "count_per_token": 366.0,
+          "summed_ms_per_token": 0.470878375
+        },
+        {
+          "type": "RmsNorm_normal_all_bf16_high_performance_2",
+          "count_per_token": 92.0,
+          "summed_ms_per_token": 0.373698
+        },
+        {
+          "type": "GatherV3_7beee77dd8bc124a96bc6f1da51c82cc_optional_10330",
+          "count_per_token": 88.0,
+          "summed_ms_per_token": 0.3218665
+        },
+        {
+          "type": "DequantSwigluQuant_bf16_high_performance_30012",
+          "count_per_token": 44.0,
+          "summed_ms_per_token": 0.240174625
+        },
+        {
+          "type": "TopKV2_5c671486fda0d949d7cba9a9754bc2dd_high_performance_2017612701781458944",
+          "count_per_token": 44.0,
+          "summed_ms_per_token": 0.2125555
+        },
+        {
+          "type": "MoeGatingTopK_81369a2fa0455f39b5d19d432d261f57_1",
+          "count_per_token": 44.0,
+          "summed_ms_per_token": 0.17531325
+        },
+        {
+          "type": "GatherV3_e9b6eba7780749dc7a31c6224838748d_optional_10330",
+          "count_per_token": 44.0,
+          "summed_ms_per_token": 0.166214
+        },
+        {
+          "type": "SwiGlu_3_high_performance_27",
+          "count_per_token": 46.0,
+          "summed_ms_per_token": 0.155502875
+        },
+        {
+          "type": "Mul_ee98c6628030785f610b924ab1557b31_high_performance_210000000",
+          "count_per_token": 88.0,
+          "summed_ms_per_token": 0.128042375
+        },
+        {
+          "type": "MatMulV2_ND_ND_FP16_FP16_false_true_all_98499",
+          "count_per_token": 1.0,
+          "summed_ms_per_token": 0.093892
+        },
+        {
+          "type": "Add_ee98c6628030785f610b924ab1557b31_high_performance_210000000",
+          "count_per_token": 44.0,
+          "summed_ms_per_token": 0.093122125
+        },
+        {
+          "type": "LogSoftmaxV2",
+          "count_per_token": 1.0,
+          "summed_ms_per_token": 0.0742115
+        },
+        {
+          "type": "Cast_e87590d11ccda8b259ab6b1ea7212319_high_performance_210000000",
+          "count_per_token": 44.0,
+          "summed_ms_per_token": 0.05603075
+        },
+        {
+          "type": "ArgMaxV2",
+          "count_per_token": 1.0,
+          "summed_ms_per_token": 0.032060625
+        },
+        {
+          "type": "TopKV2",
+          "count_per_token": 2.0,
+          "summed_ms_per_token": 0.0268405
+        },
+        {
+          "type": "Cast",
+          "count_per_token": 3.0,
+          "summed_ms_per_token": 0.01359025
+        },
+        {
+          "type": "GatherElements",
+          "count_per_token": 1.0,
+          "summed_ms_per_token": 0.01051025
+        },
+        {
+          "type": "GatherV3_81f85b8118942f9275eea83b86babe7d_optional_10330",
+          "count_per_token": 1.0,
+          "summed_ms_per_token": 0.00397
+        },
+        {
+          "type": "GatherV3",
+          "count_per_token": 1.0,
+          "summed_ms_per_token": 0.003420125
+        }
+      ],
+      "collectives": [
+        {
+          "type": "hcom_allGather_",
+          "count_per_token": 100.0,
+          "inclusive_ms_per_token": 6.509840125
+        },
+        {
+          "type": "hcom_allReduce_",
+          "count_per_token": 44.0,
+          "inclusive_ms_per_token": 1.155952875
+        }
+      ],
+      "communication_tasks": [
+        {
+          "type": "Memcpy",
+          "count_per_token": 732.0,
+          "summed_ms_per_token": 0.856137125,
+          "bytes_per_token": 2836560.0
+        },
+        {
+          "type": "Notify_Record",
+          "count_per_token": 2264.0,
+          "summed_ms_per_token": 1.041962,
+          "bytes_per_token": 0.0
+        },
+        {
+          "type": "Notify_Wait",
+          "count_per_token": 2264.0,
+          "summed_ms_per_token": 110.605388,
+          "bytes_per_token": 0.0
+        },
+        {
+          "type": "Reduce_Inline",
+          "count_per_token": 420.0,
+          "summed_ms_per_token": 0.358226375,
+          "bytes_per_token": 1352832.0
+        }
+      ]
+    },
+    {
+      "device": "device_4",
+      "window_ms": 150.01395725,
+      "compute_union_ms": 50.3741265,
+      "all_task_union_ms": 70.10758075,
+      "no_recorded_task_ms": 79.9063765,
+      "task_types": [
+        {
+          "type": "NOTIFY_WAIT_SQE",
+          "count_per_token": 2286.0,
+          "summed_ms_per_token": 385.006324
+        },
+        {
+          "type": "AI_CORE",
+          "count_per_token": 3888.0,
+          "summed_ms_per_token": 25.18706325
+        },
+        {
+          "type": "MIX_AIC",
+          "count_per_token": 369.0,
+          "summed_ms_per_token": 8.398088
+        },
+        {
+          "type": "SDMA_SQE",
+          "count_per_token": 4399.0,
+          "summed_ms_per_token": 3.204714
+        },
+        {
+          "type": "MIX_AIV",
+          "count_per_token": 412.0,
+          "summed_ms_per_token": 2.051993375
+        },
+        {
+          "type": "C_CORE_SQE",
+          "count_per_token": 1.0,
+          "summed_ms_per_token": 1.255265125
+        },
+        {
+          "type": "WRITE_VALUE_SQE",
+          "count_per_token": 1264.0,
+          "summed_ms_per_token": 1.033377375
+        },
+        {
+          "type": "PCIE_DMA_SQE",
+          "count_per_token": 139.0,
+          "summed_ms_per_token": 0.45061
+        },
+        {
+          "type": "NOTIFY_RECORD_SQE",
+          "count_per_token": 1022.0,
+          "summed_ms_per_token": 0.01487025
+        },
+        {
+          "type": "PLACE_HOLDER_SQE",
+          "count_per_token": 1.0,
+          "summed_ms_per_token": 0.0
+        }
+      ],
+      "kernels": [
+        {
+          "type": "AiInfraManifoldConstrainedHyperConnectionPre_b47a89e885f94ce5a9668d271df2d4a3_1",
+          "count_per_token": 93.0,
+          "summed_ms_per_token": 2.933608375
+        },
+        {
+          "type": "AiInfraSparseFlashAttentionPioneer_d5278b9259418f886fa913564f167179_2114587",
+          "count_per_token": 46.0,
+          "summed_ms_per_token": 2.510451
+        },
+        {
+          "type": "GroupedMatmul_7027ddb93c25b26c6a749b5e1bdcd245_34529280514",
+          "count_per_token": 132.0,
+          "summed_ms_per_token": 2.272455125
+        },
+        {
+          "type": "MatMulV2_ND_ND_FP16_FP16_false_true_all_98513",
+          "count_per_token": 178.0,
+          "summed_ms_per_token": 2.167283625
+        },
+        {
+          "type": "RotaryPositionEmbedding_92ba353a5a8fff1d4725322f6d7a90d5_1041",
+          "count_per_token": 322.0,
+          "summed_ms_per_token": 1.72529425
+        },
+        {
+          "type": "QuantBatchMatmulV3_ND_ND_int8_int8_fp32_bf16_high_performance_25",
+          "count_per_token": 98.0,
+          "summed_ms_per_token": 1.46548
+        },
+        {
+          "type": "MatMulV2_ND_ND_FP16_FP16_false_false_all_98305",
+          "count_per_token": 276.0,
+          "summed_ms_per_token": 1.060372125
+        },
+        {
+          "type": "MatMulV2_ND_ND_FP16_FP16_false_true_all_98433",
+          "count_per_token": 276.0,
+          "summed_ms_per_token": 1.033210125
+        },
+        {
+          "type": "ReduceSum_7a09f5b7af4126487a7f726a9aac7548_high_performance_82100900",
+          "count_per_token": 44.0,
+          "summed_ms_per_token": 0.956069375
+        },
+        {
+          "type": "DynamicQuant_bf16_c1_high_performance_10",
+          "count_per_token": 186.0,
+          "summed_ms_per_token": 0.715282375
+        },
+        {
+          "type": "RmsNorm_normal_all_bf16_high_performance_0",
+          "count_per_token": 194.0,
+          "summed_ms_per_token": 0.708414
+        },
+        {
+          "type": "AiInfraFusedCausalConv1d_35c4c74c1fae0fea32fe578f438ae985_2",
+          "count_per_token": 138.0,
+          "summed_ms_per_token": 0.70011325
+        },
+        {
+          "type": "Cast_b2717900ea7de2d41ea9c63d23aa269b_high_performance_210000000",
+          "count_per_token": 454.0,
+          "summed_ms_per_token": 0.68834225
+        },
+        {
+          "type": "MatMulV2_ND_ND_FP32_FP32_false_false_all_65603",
+          "count_per_token": 44.0,
+          "summed_ms_per_token": 0.583441375
+        },
+        {
+          "type": "ManifoldConstrainedHyperConnectionSinkhornEnhance_7a5d5a273555874254c11acef95789fa_1",
+          "count_per_token": 92.0,
+          "summed_ms_per_token": 0.5726825
+        },
+        {
+          "type": "AiInfraManifoldConstrainedHyperConnectionPost_12198cd9f51675f0cd721b3c8d5940a5_0",
+          "count_per_token": 92.0,
+          "summed_ms_per_token": 0.51117025
+        },
+        {
+          "type": "GatherV3_9e31943a1a48bf81ddff1fc6379e0be3_optional_10330",
+          "count_per_token": 132.0,
+          "summed_ms_per_token": 0.50015975
+        },
+        {
+          "type": "ScatterUpdate_e1b0109dfcfe48c3210f1a593265d1dc_high_precision_880013000",
+          "count_per_token": 46.0,
+          "summed_ms_per_token": 0.497549375
+        },
+        {
+          "type": "MatMulV2_ND_ND_FP16_FP16_false_true_all_98371",
+          "count_per_token": 46.0,
+          "summed_ms_per_token": 0.47919925
+        },
+        {
+          "type": "Cast_9f288b80370c6545ffe8cef142d37f5c_high_performance_210000000",
+          "count_per_token": 366.0,
+          "summed_ms_per_token": 0.470200375
+        },
+        {
+          "type": "Mul_ee98c6628030785f610b924ab1557b31_high_performance_212000002",
+          "count_per_token": 44.0,
+          "summed_ms_per_token": 0.454619
+        },
+        {
+          "type": "RmsNorm_normal_all_bf16_high_performance_2",
+          "count_per_token": 92.0,
+          "summed_ms_per_token": 0.372708375
+        },
+        {
+          "type": "GatherV3_7beee77dd8bc124a96bc6f1da51c82cc_optional_10330",
+          "count_per_token": 88.0,
+          "summed_ms_per_token": 0.337176125
+        },
+        {
+          "type": "DequantSwigluQuant_bf16_high_performance_30012",
+          "count_per_token": 44.0,
+          "summed_ms_per_token": 0.228794625
+        },
+        {
+          "type": "TopKV2_5c671486fda0d949d7cba9a9754bc2dd_high_performance_2017612701781458944",
+          "count_per_token": 44.0,
+          "summed_ms_per_token": 0.215145
+        },
+        {
+          "type": "MoeGatingTopK_81369a2fa0455f39b5d19d432d261f57_1",
+          "count_per_token": 44.0,
+          "summed_ms_per_token": 0.175494875
+        },
+        {
+          "type": "GatherV3_e9b6eba7780749dc7a31c6224838748d_optional_10330",
+          "count_per_token": 44.0,
+          "summed_ms_per_token": 0.161843
+        },
+        {
+          "type": "SwiGlu_3_high_performance_27",
+          "count_per_token": 46.0,
+          "summed_ms_per_token": 0.1563235
+        },
+        {
+          "type": "Mul_ee98c6628030785f610b924ab1557b31_high_performance_210000000",
+          "count_per_token": 88.0,
+          "summed_ms_per_token": 0.126602375
+        },
+        {
+          "type": "MatMulV2_ND_ND_FP16_FP16_false_true_all_98499",
+          "count_per_token": 1.0,
+          "summed_ms_per_token": 0.095971875
+        },
+        {
+          "type": "Add_ee98c6628030785f610b924ab1557b31_high_performance_210000000",
+          "count_per_token": 44.0,
+          "summed_ms_per_token": 0.0949515
+        },
+        {
+          "type": "LogSoftmaxV2",
+          "count_per_token": 1.0,
+          "summed_ms_per_token": 0.0729615
+        },
+        {
+          "type": "Cast_e87590d11ccda8b259ab6b1ea7212319_high_performance_210000000",
+          "count_per_token": 44.0,
+          "summed_ms_per_token": 0.054450875
+        },
+        {
+          "type": "ArgMaxV2",
+          "count_per_token": 1.0,
+          "summed_ms_per_token": 0.031350625
+        },
+        {
+          "type": "TopKV2",
+          "count_per_token": 2.0,
+          "summed_ms_per_token": 0.0275505
+        },
+        {
+          "type": "Cast",
+          "count_per_token": 3.0,
+          "summed_ms_per_token": 0.012380375
+        },
+        {
+          "type": "GatherElements",
+          "count_per_token": 1.0,
+          "summed_ms_per_token": 0.01009025
+        },
+        {
+          "type": "GatherV3_81f85b8118942f9275eea83b86babe7d_optional_10330",
+          "count_per_token": 1.0,
+          "summed_ms_per_token": 0.004030125
+        },
+        {
+          "type": "GatherV3",
+          "count_per_token": 1.0,
+          "summed_ms_per_token": 0.00384
+        }
+      ],
+      "collectives": [
+        {
+          "type": "hcom_allGather_",
+          "count_per_token": 100.0,
+          "inclusive_ms_per_token": 5.860706375
+        },
+        {
+          "type": "hcom_allReduce_",
+          "count_per_token": 44.0,
+          "inclusive_ms_per_token": 1.09745175
+        }
+      ],
+      "communication_tasks": [
+        {
+          "type": "Memcpy",
+          "count_per_token": 732.0,
+          "summed_ms_per_token": 0.769194375,
+          "bytes_per_token": 2836560.0
+        },
+        {
+          "type": "Notify_Record",
+          "count_per_token": 2264.0,
+          "summed_ms_per_token": 1.047907625,
+          "bytes_per_token": 0.0
+        },
+        {
+          "type": "Notify_Wait",
+          "count_per_token": 2264.0,
+          "summed_ms_per_token": 107.766645125,
+          "bytes_per_token": 0.0
+        },
+        {
+          "type": "Reduce_Inline",
+          "count_per_token": 420.0,
+          "summed_ms_per_token": 0.35881775,
+          "bytes_per_token": 1352832.0
+        }
+      ]
+    },
+    {
+      "device": "device_5",
+      "window_ms": 149.74154,
+      "compute_union_ms": 50.20906,
+      "all_task_union_ms": 71.35214,
+      "no_recorded_task_ms": 78.3894,
+      "task_types": [
+        {
+          "type": "NOTIFY_WAIT_SQE",
+          "count_per_token": 2086.0,
+          "summed_ms_per_token": 390.23818
+        },
+        {
+          "type": "AI_CORE",
+          "count_per_token": 3888.0,
+          "summed_ms_per_token": 25.10453
+        },
+        {
+          "type": "MIX_AIC",
+          "count_per_token": 369.0,
+          "summed_ms_per_token": 8.18423
+        },
+        {
+          "type": "SDMA_SQE",
+          "count_per_token": 4399.0,
+          "summed_ms_per_token": 3.14481
+        },
+        {
+          "type": "C_CORE_SQE",
+          "count_per_token": 1.0,
+          "summed_ms_per_token": 2.08873
+        },
+        {
+          "type": "MIX_AIV",
+          "count_per_token": 412.0,
+          "summed_ms_per_token": 1.97679
+        },
+        {
+          "type": "WRITE_VALUE_SQE",
+          "count_per_token": 1064.0,
+          "summed_ms_per_token": 0.84492
+        },
+        {
+          "type": "PCIE_DMA_SQE",
+          "count_per_token": 139.0,
+          "summed_ms_per_token": 0.44212
+        },
+        {
+          "type": "NOTIFY_RECORD_SQE",
+          "count_per_token": 1022.0,
+          "summed_ms_per_token": 0.01469
+        },
+        {
+          "type": "PLACE_HOLDER_SQE",
+          "count_per_token": 1.0,
+          "summed_ms_per_token": 1e-05
+        }
+      ],
+      "kernels": [
+        {
+          "type": "AiInfraManifoldConstrainedHyperConnectionPre_b47a89e885f94ce5a9668d271df2d4a3_1",
+          "count_per_token": 93.0,
+          "summed_ms_per_token": 2.9276
+        },
+        {
+          "type": "AiInfraSparseFlashAttentionPioneer_d5278b9259418f886fa913564f167179_2114587",
+          "count_per_token": 46.0,
+          "summed_ms_per_token": 2.35189
+        },
+        {
+          "type": "GroupedMatmul_7027ddb93c25b26c6a749b5e1bdcd245_34529280514",
+          "count_per_token": 132.0,
+          "summed_ms_per_token": 2.23962
+        },
+        {
+          "type": "MatMulV2_ND_ND_FP16_FP16_false_true_all_98513",
+          "count_per_token": 178.0,
+          "summed_ms_per_token": 2.18001
+        },
+        {
+          "type": "RotaryPositionEmbedding_92ba353a5a8fff1d4725322f6d7a90d5_1041",
+          "count_per_token": 322.0,
+          "summed_ms_per_token": 1.7358
+        },
+        {
+          "type": "QuantBatchMatmulV3_ND_ND_int8_int8_fp32_bf16_high_performance_25",
+          "count_per_token": 98.0,
+          "summed_ms_per_token": 1.45666
+        },
+        {
+          "type": "MatMulV2_ND_ND_FP16_FP16_false_false_all_98305",
+          "count_per_token": 276.0,
+          "summed_ms_per_token": 1.11366
+        },
+        {
+          "type": "MatMulV2_ND_ND_FP16_FP16_false_true_all_98433",
+          "count_per_token": 276.0,
+          "summed_ms_per_token": 1.03588
+        },
+        {
+          "type": "ReduceSum_7a09f5b7af4126487a7f726a9aac7548_high_performance_82100900",
+          "count_per_token": 44.0,
+          "summed_ms_per_token": 0.87745
+        },
+        {
+          "type": "DynamicQuant_bf16_c1_high_performance_10",
+          "count_per_token": 186.0,
+          "summed_ms_per_token": 0.71979
+        },
+        {
+          "type": "RmsNorm_normal_all_bf16_high_performance_0",
+          "count_per_token": 194.0,
+          "summed_ms_per_token": 0.69941
+        },
+        {
+          "type": "AiInfraFusedCausalConv1d_35c4c74c1fae0fea32fe578f438ae985_2",
+          "count_per_token": 138.0,
+          "summed_ms_per_token": 0.69788
+        },
+        {
+          "type": "Cast_b2717900ea7de2d41ea9c63d23aa269b_high_performance_210000000",
+          "count_per_token": 454.0,
+          "summed_ms_per_token": 0.68703
+        },
+        {
+          "type": "MatMulV2_ND_ND_FP32_FP32_false_false_all_65603",
+          "count_per_token": 44.0,
+          "summed_ms_per_token": 0.58527
+        },
+        {
+          "type": "ManifoldConstrainedHyperConnectionSinkhornEnhance_7a5d5a273555874254c11acef95789fa_1",
+          "count_per_token": 92.0,
+          "summed_ms_per_token": 0.57471
+        },
+        {
+          "type": "GatherV3_9e31943a1a48bf81ddff1fc6379e0be3_optional_10330",
+          "count_per_token": 132.0,
+          "summed_ms_per_token": 0.53587
+        },
+        {
+          "type": "Mul_ee98c6628030785f610b924ab1557b31_high_performance_212000002",
+          "count_per_token": 44.0,
+          "summed_ms_per_token": 0.51931
+        },
+        {
+          "type": "AiInfraManifoldConstrainedHyperConnectionPost_12198cd9f51675f0cd721b3c8d5940a5_0",
+          "count_per_token": 92.0,
+          "summed_ms_per_token": 0.51178
+        },
+        {
+          "type": "ScatterUpdate_e1b0109dfcfe48c3210f1a593265d1dc_high_precision_880013000",
+          "count_per_token": 46.0,
+          "summed_ms_per_token": 0.50647
+        },
+        {
+          "type": "MatMulV2_ND_ND_FP16_FP16_false_true_all_98371",
+          "count_per_token": 46.0,
+          "summed_ms_per_token": 0.48042
+        },
+        {
+          "type": "Cast_9f288b80370c6545ffe8cef142d37f5c_high_performance_210000000",
+          "count_per_token": 366.0,
+          "summed_ms_per_token": 0.46861
+        },
+        {
+          "type": "RmsNorm_normal_all_bf16_high_performance_2",
+          "count_per_token": 92.0,
+          "summed_ms_per_token": 0.37596
+        },
+        {
+          "type": "GatherV3_7beee77dd8bc124a96bc6f1da51c82cc_optional_10330",
+          "count_per_token": 88.0,
+          "summed_ms_per_token": 0.3253
+        },
+        {
+          "type": "DequantSwigluQuant_bf16_high_performance_30012",
+          "count_per_token": 44.0,
+          "summed_ms_per_token": 0.24495
+        },
+        {
+          "type": "TopKV2_5c671486fda0d949d7cba9a9754bc2dd_high_performance_2017612701781458944",
+          "count_per_token": 44.0,
+          "summed_ms_per_token": 0.21908
+        },
+        {
+          "type": "MoeGatingTopK_81369a2fa0455f39b5d19d432d261f57_1",
+          "count_per_token": 44.0,
+          "summed_ms_per_token": 0.17572
+        },
+        {
+          "type": "GatherV3_e9b6eba7780749dc7a31c6224838748d_optional_10330",
+          "count_per_token": 44.0,
+          "summed_ms_per_token": 0.16739
+        },
+        {
+          "type": "SwiGlu_3_high_performance_27",
+          "count_per_token": 46.0,
+          "summed_ms_per_token": 0.15581
+        },
+        {
+          "type": "Mul_ee98c6628030785f610b924ab1557b31_high_performance_210000000",
+          "count_per_token": 88.0,
+          "summed_ms_per_token": 0.12928
+        },
+        {
+          "type": "Add_ee98c6628030785f610b924ab1557b31_high_performance_210000000",
+          "count_per_token": 44.0,
+          "summed_ms_per_token": 0.09523
+        },
+        {
+          "type": "MatMulV2_ND_ND_FP16_FP16_false_true_all_98499",
+          "count_per_token": 1.0,
+          "summed_ms_per_token": 0.09157
+        },
+        {
+          "type": "LogSoftmaxV2",
+          "count_per_token": 1.0,
+          "summed_ms_per_token": 0.07368
+        },
+        {
+          "type": "Cast_e87590d11ccda8b259ab6b1ea7212319_high_performance_210000000",
+          "count_per_token": 44.0,
+          "summed_ms_per_token": 0.05461
+        },
+        {
+          "type": "ArgMaxV2",
+          "count_per_token": 1.0,
+          "summed_ms_per_token": 0.03109
+        },
+        {
+          "type": "TopKV2",
+          "count_per_token": 2.0,
+          "summed_ms_per_token": 0.02855
+        },
+        {
+          "type": "Cast",
+          "count_per_token": 3.0,
+          "summed_ms_per_token": 0.01266
+        },
+        {
+          "type": "GatherElements",
+          "count_per_token": 1.0,
+          "summed_ms_per_token": 0.01078
+        },
+        {
+          "type": "GatherV3",
+          "count_per_token": 1.0,
+          "summed_ms_per_token": 0.00397
+        },
+        {
+          "type": "GatherV3_81f85b8118942f9275eea83b86babe7d_optional_10330",
+          "count_per_token": 1.0,
+          "summed_ms_per_token": 0.00378
+        }
+      ],
+      "collectives": [
+        {
+          "type": "hcom_allGather_",
+          "count_per_token": 100.0,
+          "inclusive_ms_per_token": 6.43018
+        },
+        {
+          "type": "hcom_allReduce_",
+          "count_per_token": 44.0,
+          "inclusive_ms_per_token": 1.11245
+        }
+      ],
+      "communication_tasks": [
+        {
+          "type": "Memcpy",
+          "count_per_token": 732.0,
+          "summed_ms_per_token": 0.70658,
+          "bytes_per_token": 2836560.0
+        },
+        {
+          "type": "Notify_Record",
+          "count_per_token": 2064.0,
+          "summed_ms_per_token": 0.85928,
+          "bytes_per_token": 0.0
+        },
+        {
+          "type": "Notify_Wait",
+          "count_per_token": 2064.0,
+          "summed_ms_per_token": 109.18127,
+          "bytes_per_token": 0.0
+        },
+        {
+          "type": "Reduce_Inline",
+          "count_per_token": 420.0,
+          "summed_ms_per_token": 0.35996,
+          "bytes_per_token": 1352832.0
+        }
+      ]
+    },
+    {
+      "device": "device_6",
+      "window_ms": 149.974076,
+      "compute_union_ms": 50.094222,
+      "all_task_union_ms": 74.6745255,
+      "no_recorded_task_ms": 75.2995505,
+      "task_types": [
+        {
+          "type": "NOTIFY_WAIT_SQE",
+          "count_per_token": 2286.0,
+          "summed_ms_per_token": 414.232784
+        },
+        {
+          "type": "AI_CORE",
+          "count_per_token": 3888.0,
+          "summed_ms_per_token": 25.047111
+        },
+        {
+          "type": "MIX_AIC",
+          "count_per_token": 369.0,
+          "summed_ms_per_token": 8.262921
+        },
+        {
+          "type": "SDMA_SQE",
+          "count_per_token": 4399.0,
+          "summed_ms_per_token": 3.2092185
+        },
+        {
+          "type": "MIX_AIV",
+          "count_per_token": 412.0,
+          "summed_ms_per_token": 2.048190375
+        },
+        {
+          "type": "WRITE_VALUE_SQE",
+          "count_per_token": 1264.0,
+          "summed_ms_per_token": 1.0179095
+        },
+        {
+          "type": "C_CORE_SQE",
+          "count_per_token": 1.0,
+          "summed_ms_per_token": 0.61767475
+        },
+        {
+          "type": "PCIE_DMA_SQE",
+          "count_per_token": 139.0,
+          "summed_ms_per_token": 0.441668
+        },
+        {
+          "type": "NOTIFY_RECORD_SQE",
+          "count_per_token": 1022.0,
+          "summed_ms_per_token": 0.01428075
+        },
+        {
+          "type": "PLACE_HOLDER_SQE",
+          "count_per_token": 1.0,
+          "summed_ms_per_token": 2e-05
+        }
+      ],
+      "kernels": [
+        {
+          "type": "AiInfraManifoldConstrainedHyperConnectionPre_b47a89e885f94ce5a9668d271df2d4a3_1",
+          "count_per_token": 93.0,
+          "summed_ms_per_token": 2.94467825
+        },
+        {
+          "type": "AiInfraSparseFlashAttentionPioneer_d5278b9259418f886fa913564f167179_2114587",
+          "count_per_token": 46.0,
+          "summed_ms_per_token": 2.359865375
+        },
+        {
+          "type": "GroupedMatmul_7027ddb93c25b26c6a749b5e1bdcd245_34529280514",
+          "count_per_token": 132.0,
+          "summed_ms_per_token": 2.28770125
+        },
+        {
+          "type": "MatMulV2_ND_ND_FP16_FP16_false_true_all_98513",
+          "count_per_token": 178.0,
+          "summed_ms_per_token": 2.152717625
+        },
+        {
+          "type": "RotaryPositionEmbedding_92ba353a5a8fff1d4725322f6d7a90d5_1041",
+          "count_per_token": 322.0,
+          "summed_ms_per_token": 1.732058125
+        },
+        {
+          "type": "QuantBatchMatmulV3_ND_ND_int8_int8_fp32_bf16_high_performance_25",
+          "count_per_token": 98.0,
+          "summed_ms_per_token": 1.460408125
+        },
+        {
+          "type": "MatMulV2_ND_ND_FP16_FP16_false_false_all_98305",
+          "count_per_token": 276.0,
+          "summed_ms_per_token": 1.049533
+        },
+        {
+          "type": "MatMulV2_ND_ND_FP16_FP16_false_true_all_98433",
+          "count_per_token": 276.0,
+          "summed_ms_per_token": 1.030100875
+        },
+        {
+          "type": "ReduceSum_7a09f5b7af4126487a7f726a9aac7548_high_performance_82100900",
+          "count_per_token": 44.0,
+          "summed_ms_per_token": 0.96210775
+        },
+        {
+          "type": "RmsNorm_normal_all_bf16_high_performance_0",
+          "count_per_token": 194.0,
+          "summed_ms_per_token": 0.7136475
+        },
+        {
+          "type": "DynamicQuant_bf16_c1_high_performance_10",
+          "count_per_token": 186.0,
+          "summed_ms_per_token": 0.7135885
+        },
+        {
+          "type": "AiInfraFusedCausalConv1d_35c4c74c1fae0fea32fe578f438ae985_2",
+          "count_per_token": 138.0,
+          "summed_ms_per_token": 0.69971775
+        },
+        {
+          "type": "Cast_b2717900ea7de2d41ea9c63d23aa269b_high_performance_210000000",
+          "count_per_token": 454.0,
+          "summed_ms_per_token": 0.683196
+        },
+        {
+          "type": "MatMulV2_ND_ND_FP32_FP32_false_false_all_65603",
+          "count_per_token": 44.0,
+          "summed_ms_per_token": 0.5985835
+        },
+        {
+          "type": "ManifoldConstrainedHyperConnectionSinkhornEnhance_7a5d5a273555874254c11acef95789fa_1",
+          "count_per_token": 92.0,
+          "summed_ms_per_token": 0.572992125
+        },
+        {
+          "type": "AiInfraManifoldConstrainedHyperConnectionPost_12198cd9f51675f0cd721b3c8d5940a5_0",
+          "count_per_token": 92.0,
+          "summed_ms_per_token": 0.508350375
+        },
+        {
+          "type": "ScatterUpdate_e1b0109dfcfe48c3210f1a593265d1dc_high_precision_880013000",
+          "count_per_token": 46.0,
+          "summed_ms_per_token": 0.49917975
+        },
+        {
+          "type": "GatherV3_9e31943a1a48bf81ddff1fc6379e0be3_optional_10330",
+          "count_per_token": 132.0,
+          "summed_ms_per_token": 0.49854875
+        },
+        {
+          "type": "MatMulV2_ND_ND_FP16_FP16_false_true_all_98371",
+          "count_per_token": 46.0,
+          "summed_ms_per_token": 0.47980975
+        },
+        {
+          "type": "Cast_9f288b80370c6545ffe8cef142d37f5c_high_performance_210000000",
+          "count_per_token": 366.0,
+          "summed_ms_per_token": 0.46536075
+        },
+        {
+          "type": "Mul_ee98c6628030785f610b924ab1557b31_high_performance_212000002",
+          "count_per_token": 44.0,
+          "summed_ms_per_token": 0.453159
+        },
+        {
+          "type": "RmsNorm_normal_all_bf16_high_performance_2",
+          "count_per_token": 92.0,
+          "summed_ms_per_token": 0.373754625
+        },
+        {
+          "type": "GatherV3_7beee77dd8bc124a96bc6f1da51c82cc_optional_10330",
+          "count_per_token": 88.0,
+          "summed_ms_per_token": 0.335373875
+        },
+        {
+          "type": "DequantSwigluQuant_bf16_high_performance_30012",
+          "count_per_token": 44.0,
+          "summed_ms_per_token": 0.229558875
+        },
+        {
+          "type": "TopKV2_5c671486fda0d949d7cba9a9754bc2dd_high_performance_2017612701781458944",
+          "count_per_token": 44.0,
+          "summed_ms_per_token": 0.21467825
+        },
+        {
+          "type": "MoeGatingTopK_81369a2fa0455f39b5d19d432d261f57_1",
+          "count_per_token": 44.0,
+          "summed_ms_per_token": 0.17523725
+        },
+        {
+          "type": "GatherV3_e9b6eba7780749dc7a31c6224838748d_optional_10330",
+          "count_per_token": 44.0,
+          "summed_ms_per_token": 0.159786375
+        },
+        {
+          "type": "SwiGlu_3_high_performance_27",
+          "count_per_token": 46.0,
+          "summed_ms_per_token": 0.15421525
+        },
+        {
+          "type": "Mul_ee98c6628030785f610b924ab1557b31_high_performance_210000000",
+          "count_per_token": 88.0,
+          "summed_ms_per_token": 0.12826625
+        },
+        {
+          "type": "Add_ee98c6628030785f610b924ab1557b31_high_performance_210000000",
+          "count_per_token": 44.0,
+          "summed_ms_per_token": 0.0951335
+        },
+        {
+          "type": "MatMulV2_ND_ND_FP16_FP16_false_true_all_98499",
+          "count_per_token": 1.0,
+          "summed_ms_per_token": 0.092273625
+        },
+        {
+          "type": "LogSoftmaxV2",
+          "count_per_token": 1.0,
+          "summed_ms_per_token": 0.074653
+        },
+        {
+          "type": "Cast_e87590d11ccda8b259ab6b1ea7212319_high_performance_210000000",
+          "count_per_token": 44.0,
+          "summed_ms_per_token": 0.054642125
+        },
+        {
+          "type": "ArgMaxV2",
+          "count_per_token": 1.0,
+          "summed_ms_per_token": 0.03181125
+        },
+        {
+          "type": "TopKV2",
+          "count_per_token": 2.0,
+          "summed_ms_per_token": 0.026901
+        },
+        {
+          "type": "Cast",
+          "count_per_token": 3.0,
+          "summed_ms_per_token": 0.017200625
+        },
+        {
+          "type": "GatherElements",
+          "count_per_token": 1.0,
+          "summed_ms_per_token": 0.0103205
+        },
+        {
+          "type": "GatherV3",
+          "count_per_token": 1.0,
+          "summed_ms_per_token": 0.00406025
+        },
+        {
+          "type": "GatherV3_81f85b8118942f9275eea83b86babe7d_optional_10330",
+          "count_per_token": 1.0,
+          "summed_ms_per_token": 0.00394025
+        }
+      ],
+      "collectives": [
+        {
+          "type": "hcom_allGather_",
+          "count_per_token": 100.0,
+          "inclusive_ms_per_token": 8.401616125
+        },
+        {
+          "type": "hcom_allReduce_",
+          "count_per_token": 44.0,
+          "inclusive_ms_per_token": 1.07606275
+        }
+      ],
+      "communication_tasks": [
+        {
+          "type": "Memcpy",
+          "count_per_token": 732.0,
+          "summed_ms_per_token": 0.785570125,
+          "bytes_per_token": 2836560.0
+        },
+        {
+          "type": "Notify_Record",
+          "count_per_token": 2264.0,
+          "summed_ms_per_token": 1.031890125,
+          "bytes_per_token": 0.0
+        },
+        {
+          "type": "Notify_Wait",
+          "count_per_token": 2264.0,
+          "summed_ms_per_token": 118.202709125,
+          "bytes_per_token": 0.0
+        },
+        {
+          "type": "Reduce_Inline",
+          "count_per_token": 420.0,
+          "summed_ms_per_token": 0.357375,
+          "bytes_per_token": 1352832.0
+        }
+      ]
+    },
+    {
+      "device": "device_7",
+      "window_ms": 149.99964,
+      "compute_union_ms": 49.82472,
+      "all_task_union_ms": 72.41666,
+      "no_recorded_task_ms": 77.58298,
+      "task_types": [
+        {
+          "type": "NOTIFY_WAIT_SQE",
+          "count_per_token": 2086.0,
+          "summed_ms_per_token": 400.91712
+        },
+        {
+          "type": "AI_CORE",
+          "count_per_token": 3888.0,
+          "summed_ms_per_token": 24.91236
+        },
+        {
+          "type": "MIX_AIC",
+          "count_per_token": 369.0,
+          "summed_ms_per_token": 8.00897
+        },
+        {
+          "type": "SDMA_SQE",
+          "count_per_token": 4399.0,
+          "summed_ms_per_token": 3.1589
+        },
+        {
+          "type": "MIX_AIV",
+          "count_per_token": 412.0,
+          "summed_ms_per_token": 1.97395
+        },
+        {
+          "type": "WRITE_VALUE_SQE",
+          "count_per_token": 1064.0,
+          "summed_ms_per_token": 0.81721
+        },
+        {
+          "type": "C_CORE_SQE",
+          "count_per_token": 1.0,
+          "summed_ms_per_token": 0.75469
+        },
+        {
+          "type": "PCIE_DMA_SQE",
+          "count_per_token": 139.0,
+          "summed_ms_per_token": 0.44384
+        },
+        {
+          "type": "NOTIFY_RECORD_SQE",
+          "count_per_token": 1022.0,
+          "summed_ms_per_token": 0.01472
+        },
+        {
+          "type": "PLACE_HOLDER_SQE",
+          "count_per_token": 1.0,
+          "summed_ms_per_token": 1e-05
+        }
+      ],
+      "kernels": [
+        {
+          "type": "AiInfraManifoldConstrainedHyperConnectionPre_b47a89e885f94ce5a9668d271df2d4a3_1",
+          "count_per_token": 93.0,
+          "summed_ms_per_token": 2.93722
+        },
+        {
+          "type": "AiInfraSparseFlashAttentionPioneer_d5278b9259418f886fa913564f167179_2114587",
+          "count_per_token": 46.0,
+          "summed_ms_per_token": 2.36297
+        },
+        {
+          "type": "MatMulV2_ND_ND_FP16_FP16_false_true_all_98513",
+          "count_per_token": 178.0,
+          "summed_ms_per_token": 2.18037
+        },
+        {
+          "type": "GroupedMatmul_7027ddb93c25b26c6a749b5e1bdcd245_34529280514",
+          "count_per_token": 132.0,
+          "summed_ms_per_token": 2.05883
+        },
+        {
+          "type": "RotaryPositionEmbedding_92ba353a5a8fff1d4725322f6d7a90d5_1041",
+          "count_per_token": 322.0,
+          "summed_ms_per_token": 1.73223
+        },
+        {
+          "type": "QuantBatchMatmulV3_ND_ND_int8_int8_fp32_bf16_high_performance_25",
+          "count_per_token": 98.0,
+          "summed_ms_per_token": 1.44065
+        },
+        {
+          "type": "MatMulV2_ND_ND_FP16_FP16_false_false_all_98305",
+          "count_per_token": 276.0,
+          "summed_ms_per_token": 1.11184
+        },
+        {
+          "type": "MatMulV2_ND_ND_FP16_FP16_false_true_all_98433",
+          "count_per_token": 276.0,
+          "summed_ms_per_token": 1.03772
+        },
+        {
+          "type": "ReduceSum_7a09f5b7af4126487a7f726a9aac7548_high_performance_82100900",
+          "count_per_token": 44.0,
+          "summed_ms_per_token": 0.8781
+        },
+        {
+          "type": "DynamicQuant_bf16_c1_high_performance_10",
+          "count_per_token": 186.0,
+          "summed_ms_per_token": 0.71552
+        },
+        {
+          "type": "RmsNorm_normal_all_bf16_high_performance_0",
+          "count_per_token": 194.0,
+          "summed_ms_per_token": 0.69868
+        },
+        {
+          "type": "AiInfraFusedCausalConv1d_35c4c74c1fae0fea32fe578f438ae985_2",
+          "count_per_token": 138.0,
+          "summed_ms_per_token": 0.69626
+        },
+        {
+          "type": "Cast_b2717900ea7de2d41ea9c63d23aa269b_high_performance_210000000",
+          "count_per_token": 454.0,
+          "summed_ms_per_token": 0.68626
+        },
+        {
+          "type": "MatMulV2_ND_ND_FP32_FP32_false_false_all_65603",
+          "count_per_token": 44.0,
+          "summed_ms_per_token": 0.58045
+        },
+        {
+          "type": "ManifoldConstrainedHyperConnectionSinkhornEnhance_7a5d5a273555874254c11acef95789fa_1",
+          "count_per_token": 92.0,
+          "summed_ms_per_token": 0.57359
+        },
+        {
+          "type": "GatherV3_9e31943a1a48bf81ddff1fc6379e0be3_optional_10330",
+          "count_per_token": 132.0,
+          "summed_ms_per_token": 0.53238
+        },
+        {
+          "type": "Mul_ee98c6628030785f610b924ab1557b31_high_performance_212000002",
+          "count_per_token": 44.0,
+          "summed_ms_per_token": 0.51323
+        },
+        {
+          "type": "ScatterUpdate_e1b0109dfcfe48c3210f1a593265d1dc_high_precision_880013000",
+          "count_per_token": 46.0,
+          "summed_ms_per_token": 0.51307
+        },
+        {
+          "type": "AiInfraManifoldConstrainedHyperConnectionPost_12198cd9f51675f0cd721b3c8d5940a5_0",
+          "count_per_token": 92.0,
+          "summed_ms_per_token": 0.51198
+        },
+        {
+          "type": "MatMulV2_ND_ND_FP16_FP16_false_true_all_98371",
+          "count_per_token": 46.0,
+          "summed_ms_per_token": 0.48034
+        },
+        {
+          "type": "Cast_9f288b80370c6545ffe8cef142d37f5c_high_performance_210000000",
+          "count_per_token": 366.0,
+          "summed_ms_per_token": 0.46462
+        },
+        {
+          "type": "RmsNorm_normal_all_bf16_high_performance_2",
+          "count_per_token": 92.0,
+          "summed_ms_per_token": 0.37586
+        },
+        {
+          "type": "GatherV3_7beee77dd8bc124a96bc6f1da51c82cc_optional_10330",
+          "count_per_token": 88.0,
+          "summed_ms_per_token": 0.32171
+        },
+        {
+          "type": "DequantSwigluQuant_bf16_high_performance_30012",
+          "count_per_token": 44.0,
+          "summed_ms_per_token": 0.24594
+        },
+        {
+          "type": "TopKV2_5c671486fda0d949d7cba9a9754bc2dd_high_performance_2017612701781458944",
+          "count_per_token": 44.0,
+          "summed_ms_per_token": 0.22135
+        },
+        {
+          "type": "MoeGatingTopK_81369a2fa0455f39b5d19d432d261f57_1",
+          "count_per_token": 44.0,
+          "summed_ms_per_token": 0.17552
+        },
+        {
+          "type": "GatherV3_e9b6eba7780749dc7a31c6224838748d_optional_10330",
+          "count_per_token": 44.0,
+          "summed_ms_per_token": 0.16781
+        },
+        {
+          "type": "SwiGlu_3_high_performance_27",
+          "count_per_token": 46.0,
+          "summed_ms_per_token": 0.1556
+        },
+        {
+          "type": "Mul_ee98c6628030785f610b924ab1557b31_high_performance_210000000",
+          "count_per_token": 88.0,
+          "summed_ms_per_token": 0.13019
+        },
+        {
+          "type": "Add_ee98c6628030785f610b924ab1557b31_high_performance_210000000",
+          "count_per_token": 44.0,
+          "summed_ms_per_token": 0.09748
+        },
+        {
+          "type": "MatMulV2_ND_ND_FP16_FP16_false_true_all_98499",
+          "count_per_token": 1.0,
+          "summed_ms_per_token": 0.09333
+        },
+        {
+          "type": "LogSoftmaxV2",
+          "count_per_token": 1.0,
+          "summed_ms_per_token": 0.07387
+        },
+        {
+          "type": "Cast_e87590d11ccda8b259ab6b1ea7212319_high_performance_210000000",
+          "count_per_token": 44.0,
+          "summed_ms_per_token": 0.05459
+        },
+        {
+          "type": "ArgMaxV2",
+          "count_per_token": 1.0,
+          "summed_ms_per_token": 0.03171
+        },
+        {
+          "type": "TopKV2",
+          "count_per_token": 2.0,
+          "summed_ms_per_token": 0.02982
+        },
+        {
+          "type": "Cast",
+          "count_per_token": 3.0,
+          "summed_ms_per_token": 0.01234
+        },
+        {
+          "type": "GatherElements",
+          "count_per_token": 1.0,
+          "summed_ms_per_token": 0.01085
+        },
+        {
+          "type": "GatherV3",
+          "count_per_token": 1.0,
+          "summed_ms_per_token": 0.00405
+        },
+        {
+          "type": "GatherV3_81f85b8118942f9275eea83b86babe7d_optional_10330",
+          "count_per_token": 1.0,
+          "summed_ms_per_token": 0.00403
+        }
+      ],
+      "collectives": [
+        {
+          "type": "hcom_allGather_",
+          "count_per_token": 100.0,
+          "inclusive_ms_per_token": 7.23407
+        },
+        {
+          "type": "hcom_allReduce_",
+          "count_per_token": 44.0,
+          "inclusive_ms_per_token": 1.27226
+        }
+      ],
+      "communication_tasks": [
+        {
+          "type": "Memcpy",
+          "count_per_token": 732.0,
+          "summed_ms_per_token": 0.71971,
+          "bytes_per_token": 2836560.0
+        },
+        {
+          "type": "Notify_Record",
+          "count_per_token": 2064.0,
+          "summed_ms_per_token": 0.83163,
+          "bytes_per_token": 0.0
+        },
+        {
+          "type": "Notify_Wait",
+          "count_per_token": 2064.0,
+          "summed_ms_per_token": 114.05205,
+          "bytes_per_token": 0.0
+        },
+        {
+          "type": "Reduce_Inline",
+          "count_per_token": 420.0,
+          "summed_ms_per_token": 0.36006,
+          "bytes_per_token": 1352832.0
+        }
+      ]
+    }
+  ],
+  "host_counter_mhz": 100.0,
+  "vendor_host_api_rank_mean": [
+    {
+      "name": "aclmdlRIExecuteAsync",
+      "calls_per_rank_token": 1.0,
+      "inclusive_ms_per_rank_token": 39.375581875
+    },
+    {
+      "name": "aclrtSynchronizeStream",
+      "calls_per_rank_token": 1.0,
+      "inclusive_ms_per_rank_token": 32.478858125
+    },
+    {
+      "name": "hcom_allGather_",
+      "calls_per_rank_token": 1.0,
+      "inclusive_ms_per_rank_token": 2.645708125
+    },
+    {
+      "name": "aclrtMemcpyAsync",
+      "calls_per_rank_token": 13.375,
+      "inclusive_ms_per_rank_token": 0.186311875
+    },
+    {
+      "name": "aclrtRecordNotify",
+      "calls_per_rank_token": 19.0,
+      "inclusive_ms_per_rank_token": 0.165986875
+    },
+    {
+      "name": "aclrtWaitAndResetNotify",
+      "calls_per_rank_token": 19.0,
+      "inclusive_ms_per_rank_token": 0.15787562500000002
+    },
+    {
+      "name": "aclrtLaunchKernelWithHostArgs",
+      "calls_per_rank_token": 9.0,
+      "inclusive_ms_per_rank_token": 0.107825
+    },
+    {
+      "name": "aclnnTopk",
+      "calls_per_rank_token": 1.0,
+      "inclusive_ms_per_rank_token": 0.086216875
+    },
+    {
+      "name": "aclnnArgMax",
+      "calls_per_rank_token": 1.0,
+      "inclusive_ms_per_rank_token": 0.040005625
+    },
+    {
+      "name": "aclnnCast",
+      "calls_per_rank_token": 1.0,
+      "inclusive_ms_per_rank_token": 0.03516
+    },
+    {
+      "name": "aclrtReduceAsync",
+      "calls_per_rank_token": 2.0,
+      "inclusive_ms_per_rank_token": 0.028619375000000002
+    },
+    {
+      "name": "aclmdlRICaptureGetInfo",
+      "calls_per_rank_token": 142.0,
+      "inclusive_ms_per_rank_token": 0.022844375
+    },
+    {
+      "name": "aclnnLogSoftmax",
+      "calls_per_rank_token": 1.0,
+      "inclusive_ms_per_rank_token": 0.020933125
+    },
+    {
+      "name": "aclnnIndexSelect",
+      "calls_per_rank_token": 1.0,
+      "inclusive_ms_per_rank_token": 0.020933125
+    },
+    {
+      "name": "aclnnTopkGetWorkspaceSize",
+      "calls_per_rank_token": 1.0,
+      "inclusive_ms_per_rank_token": 0.009479375
+    },
+    {
+      "name": "aclrtGetCurrentContext",
+      "calls_per_rank_token": 1.0,
+      "inclusive_ms_per_rank_token": 0.005039375
+    },
+    {
+      "name": "aclnnIndexSelectGetWorkspaceSize",
+      "calls_per_rank_token": 1.0,
+      "inclusive_ms_per_rank_token": 0.004835
+    },
+    {
+      "name": "aclnnLogSoftmaxGetWorkspaceSize",
+      "calls_per_rank_token": 1.0,
+      "inclusive_ms_per_rank_token": 0.003315625
+    },
+    {
+      "name": "aclnnArgMaxGetWorkspaceSize",
+      "calls_per_rank_token": 1.0,
+      "inclusive_ms_per_rank_token": 0.0032075
+    },
+    {
+      "name": "aclrtGetResInCurrentThread",
+      "calls_per_rank_token": 8.0,
+      "inclusive_ms_per_rank_token": 0.002378125
+    },
+    {
+      "name": "aclrtGetStreamAttribute",
+      "calls_per_rank_token": 5.0,
+      "inclusive_ms_per_rank_token": 0.0023374999999999997
+    },
+    {
+      "name": "aclrtGetHardwareSyncAddr",
+      "calls_per_rank_token": 2.0,
+      "inclusive_ms_per_rank_token": 0.00202875
+    },
+    {
+      "name": "aclrtStreamGetId",
+      "calls_per_rank_token": 1.0,
+      "inclusive_ms_per_rank_token": 0.000865625
+    }
+  ],
+  "source_hashes": {
+    "layout-vendor/vendor/PROF_000001_20261016181953219_00161355ERHFOQRF/device_0/sqlite/ascend_task.db": "5397d4e9676efe1b7b866bc73cd36f93a69082f22fb0ac9224c67f87c67d7434",
+    "layout-vendor/vendor/PROF_000001_20261016181953219_00161355ERHFOQRF/device_0/sqlite/ai_core_op_summary.db": "f3e3d6f254d3bd910db5dfbff3169c2695c678fe3359cb2d8faead769f4ef98d",
+    "layout-vendor/vendor/PROF_000001_20261016181953219_00161355ERHFOQRF/device_0/sqlite/hccl_single_device.db": "0dde1e5188839fd5daa72fc59bfc69475244d961d4d2062f77e6cdcf841cdaa2",
+    "layout-vendor/vendor/PROF_000001_20261016181953219_00161355ERHFOQRF/device_1/sqlite/ascend_task.db": "eea9dbb4d12c013c4ca9b34a48fb1c26916eef93b9d07daddedeaf431bdae588",
+    "layout-vendor/vendor/PROF_000001_20261016181953219_00161355ERHFOQRF/device_1/sqlite/ai_core_op_summary.db": "6312041177a66c545f3a99e9b366781fe6eb3ca8c62c5dedb7ff4c7df47f2715",
+    "layout-vendor/vendor/PROF_000001_20261016181953219_00161355ERHFOQRF/device_1/sqlite/hccl_single_device.db": "73b21562cc68f3f76e3ef80a53ad60b2e61993123dadcad057713ee1211e0acf",
+    "layout-vendor/vendor/PROF_000001_20261016181953219_00161355ERHFOQRF/device_2/sqlite/ascend_task.db": "3b9580c630b460bb7f96726597753dd4751a7c3a2c28448034223738904ffde9",
+    "layout-vendor/vendor/PROF_000001_20261016181953219_00161355ERHFOQRF/device_2/sqlite/ai_core_op_summary.db": "8407a4de17f384a5acf9e7873ae90315d0b272826671f3b8b4ea545ed8dd4eaa",
+    "layout-vendor/vendor/PROF_000001_20261016181953219_00161355ERHFOQRF/device_2/sqlite/hccl_single_device.db": "38d91ad20c806a593af03846bc7db097083175ed4c7c3a459dcba47a3d9bf09e",
+    "layout-vendor/vendor/PROF_000001_20261016181953219_00161355ERHFOQRF/device_3/sqlite/ascend_task.db": "60fa18af448b1008a99e75afc642afece701ce3793d5a16e483ee736f697bb77",
+    "layout-vendor/vendor/PROF_000001_20261016181953219_00161355ERHFOQRF/device_3/sqlite/ai_core_op_summary.db": "2672b19773a0bffab22cece40033afcdac68483a6a2a30cf7ee5b9f432392b8a",
+    "layout-vendor/vendor/PROF_000001_20261016181953219_00161355ERHFOQRF/device_3/sqlite/hccl_single_device.db": "98af5e09044ca5ad11ad2d00cd20d1aa2032092be608ffc94853df910a2fd372",
+    "layout-vendor/vendor/PROF_000001_20261016181953219_00161355ERHFOQRF/device_4/sqlite/ascend_task.db": "47d2edd8fff49078adfaf0de20d32df2c8f1cfd00ed572eccfb76667ab0ecf6c",
+    "layout-vendor/vendor/PROF_000001_20261016181953219_00161355ERHFOQRF/device_4/sqlite/ai_core_op_summary.db": "745e00afd1ea1240cf4c9e64af069d69ce45188fc73207b57b94016f3831d638",
+    "layout-vendor/vendor/PROF_000001_20261016181953219_00161355ERHFOQRF/device_4/sqlite/hccl_single_device.db": "3b75f6088a621c09d1fbea198b13b01e0eaace92d8f61103a5e37a578cff723a",
+    "layout-vendor/vendor/PROF_000001_20261016181953219_00161355ERHFOQRF/device_5/sqlite/ascend_task.db": "2632280f9af0c7c72afca40a8134c1e08c62bfcd8c4ea42a313c859a0c2951b0",
+    "layout-vendor/vendor/PROF_000001_20261016181953219_00161355ERHFOQRF/device_5/sqlite/ai_core_op_summary.db": "07d67dc358e393ad42107508b609a369cbb64cce336864acd69c2e6063b6309b",
+    "layout-vendor/vendor/PROF_000001_20261016181953219_00161355ERHFOQRF/device_5/sqlite/hccl_single_device.db": "fdb9cd333918ffa130145f0d30fe5b74a5157e731800da1c8a481de09c02d48e",
+    "layout-vendor/vendor/PROF_000001_20261016181953219_00161355ERHFOQRF/device_6/sqlite/ascend_task.db": "8c4414a2bc8f9345d5b49d0012363024405bcb7aa12f032db1b6d1bec737f2f6",
+    "layout-vendor/vendor/PROF_000001_20261016181953219_00161355ERHFOQRF/device_6/sqlite/ai_core_op_summary.db": "fca2df6753b23282e7556c39eb2a3ca37365ef8858f0507da81ea8962b5d1603",
+    "layout-vendor/vendor/PROF_000001_20261016181953219_00161355ERHFOQRF/device_6/sqlite/hccl_single_device.db": "521da1e1487d37c23d3676839f4e7f4056a53b3c125cfe91c1958e6dfd60c853",
+    "layout-vendor/vendor/PROF_000001_20261016181953219_00161355ERHFOQRF/device_7/sqlite/ascend_task.db": "55c5574c2cd8a75d807914a11b21d62b68e7e2938dc4d19b49568c39b89365e1",
+    "layout-vendor/vendor/PROF_000001_20261016181953219_00161355ERHFOQRF/device_7/sqlite/ai_core_op_summary.db": "0ff341ea901c93a5ccd2c9cbca91a203a872ebbad40aa4a7f4ad3c88732df24a",
+    "layout-vendor/vendor/PROF_000001_20261016181953219_00161355ERHFOQRF/device_7/sqlite/hccl_single_device.db": "4c632753a7ace84f9cf4ad3421138a35c82cc75930db0284cd72de2b34d3cea7",
+    "layout-vendor/vendor/PROF_000001_20261016181953219_00161355ERHFOQRF/host/sqlite/api_event.db": "efc3fc9a0c9c4b6fd20a9caa3862f3022c44cf159892394685dbea7dbb63729b"
+  },
+  "caveats": [
+    "Host and device profiles are different runs; do not subtract their durations.",
+    "Node and API durations are inclusive alternative views, not additive.",
+    "Task sums overlap across streams; only union durations remove overlap.",
+    "No-recorded-task intervals are trace gaps, not a sampled hardware utilization counter.",
+    "Profiler overhead is measured by comparing host decode_total; use lightweight timings for prioritization."
+  ]
+}
