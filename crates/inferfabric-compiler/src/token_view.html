@@ -622,6 +622,7 @@
         types,
         node_metadata: metadata,
         physical,
+        device_buffer_contract: bufferSupport,
       } = JSON.parse(document.getElementById("plan-data").textContent);
       const $ = (s) => document.querySelector(s),
         esc = (v) =>
@@ -1369,7 +1370,23 @@
             .join("") +
           '<h3>Contract source fingerprint</h3><div class="path">' +
           esc(c.contract_revision) +
-          "</div>"
+          "</div>" +
+          bufferContractDetails()
+        );
+      }
+      function bufferContractDetails() {
+        return (
+          '<h3>Device-buffer contract available</h3><div class="path">' +
+          esc(bufferSupport.format) +
+          '</div><p class="subtle">Contract support only. This opaque backend call has no bound device-buffer invocation yet.</p><dl><dt>Kernel ABI</dt><dd>' +
+          esc(bufferSupport.kernel_abi) +
+          "</dd><dt>Types / layout</dt><dd>" +
+          esc(bufferSupport.dtypes.join(", ") + " / " + bufferSupport.layout) +
+          "</dd><dt>Aliasing policy</dt><dd>" +
+          esc(bufferSupport.alias_policy) +
+          "</dd><dt>Checked binding</dt><dd>" +
+          esc(bufferSupport.binding_checks.join(", ")) +
+          "</dd></dl>"
         );
       }
       function physicalView() {

@@ -8,6 +8,14 @@ It does not replace the executable CPU v1 schema or `IFTOKN01`. See
 the transition to executable device-buffer plans. The token viewer consumes this
 metadata directly and does not infer hardware costs or physical allocations.
 
+`inferfabric-plan::device_buffer::Invocation` (`inferfabric.device-buffer.v1`)
+describes allocation IDs, rank/device, dtype, shape/strides, views/access,
+workspace and pinned implementation identity without process pointers. Checked
+binding produces the existing `IFKernelTensorV1` POD layout. The initial ABI
+supports contiguous I8/BF16/F32 tensors and disjoint outputs/workspace; this
+contract is available for the future physical executor, not integrated into the
+current host-staged token runtime.
+
 Updated 2026-09-08. This catalog separates implemented formats from the proposed DSL v1 frontend and future native physical extensions. There is currently no single representation shared by every historical path. The field definitions in the linked Rust sources are authoritative; new physical-path JSON objects reject unknown fields.
 
 ## Pipeline and version ownership

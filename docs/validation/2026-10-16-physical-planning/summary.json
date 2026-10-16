@@ -1,0 +1,23 @@
+{
+  "format": "inferfabric.physical.v1",
+  "executable": false,
+  "ranks": 8,
+  "shared_schedule_templates": 1,
+  "steps_per_rank": 2109,
+  "collectives_per_rank": 321,
+  "known_host_payload_peak_bytes": 681984,
+  "memory_complete": false,
+  "cost_complete": false,
+  "estimated_serial_ns": null,
+  "arena_reuse": false,
+  "logical_digest": "c17a6108b76baf637ab405dfa3e19ff60b3783839533eb77a55fa7237aa6d0a3",
+  "physical_json_sha256": "9d893036c96cfdba61b7f5122324249180f808a0fa0ee4e3aafb6cbee4c07f61",
+  "device_contract_tests": "host-only mock bindings; no NPU launches",
+  "browser": {
+    "scopes": 460,
+    "pages": 462,
+    "max_visible_cards": 24,
+    "errors": 0,
+    "http_requests": 0
+  }
+}

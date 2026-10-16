@@ -142,10 +142,10 @@ including ranks with no local expert work. Add communication overlap only after
 independent device-buffer execution and event semantics are qualified. Graph
 capture requires stable addresses and qualified mutable-input/state contracts.
 
-## Device-buffer contract (milestone 2 scope)
+## Device-buffer contract (milestone 2 contract implemented)
 
-Provide process-independent allocation/view IDs, byte ranges, dtype, dimensions,
-strides, access, placement and explicit alias permissions. A checked binding step
+The implemented `inferfabric-plan::device_buffer` module provides process-independent allocation/view IDs, byte ranges, dtype, dimensions,
+strides, access, placement and an explicit disjoint-output alias policy. A checked binding step
 resolves these IDs into the existing POD kernel ABI without taking ownership.
 Views must pass overflow, range, alignment, rank/device, access and alias checks.
 Preparation may create metadata, but enqueue must not allocate, compile, transfer
@@ -153,7 +153,23 @@ through hidden host staging, synchronize or change streams. Completion governs
 buffer/workspace/state lifetime, including enqueue errors.
 
 Keep the existing kernel ABI; do not introduce a model-specific loader or a second
-foreign-kernel protocol. Contract implementation and local binding tests do not
+foreign-kernel protocol. The current kernel ABI accepts I8/BF16/F32, rank 1–8, positive contiguous strides,
+and disjoint outputs/workspace. Strided and in-place variants are rejected rather
+than advertised ahead of native support. Read/read overlap is allowed. Device
+resource IDs resolve through borrowed caller-owned resident allocations; pointer
+provenance and asynchronous completion remain the backend caller's responsibility.
+Binding exports an exact view span to the existing POD ABI, not the entire arena
+capacity, so disjoint subviews can safely share an allocation.
+
+`Invocation::verify_prepared` checks the selected binary identity, numerical
+contract and actual workspace requirements before enqueue; exceeding bounds fails
+instead of allocating more memory. The binder independently checks actual address
+ranges to catch different allocation IDs bound to overlapping storage. Serialized
+contracts contain no pointers. No native loader or kernel implementation changed.
+The viewer exposes these support limits as metadata, without claiming that opaque
+backend calls have already been lowered to bound device-buffer invocations.
+
+Contract implementation and local binding tests do not
 claim that the complete native decoder already uses device buffers. Replacing
 host-staged kernels and building the executable physical runner follows separately.
 

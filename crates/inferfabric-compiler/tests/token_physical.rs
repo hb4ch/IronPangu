@@ -1,6 +1,34 @@
 use inferfabric_authoring::execution::Graph;
 use inferfabric_compiler::{token_physical::lower, token_view};
 use inferfabric_plan::physical::{self, Cost, CostSource};
+use sha2::{Digest, Sha256};
+
+#[test]
+fn physical_inspection_preserves_qualified_92b_program() {
+    let graph: Graph = serde_json::from_str(include_str!(
+        "../../../docs/validation/2026-10-16-reusable-dsl/execution.json"
+    ))
+    .unwrap();
+    let hash: String = Sha256::digest(graph.encode().unwrap())
+        .iter()
+        .map(|b| format!("{b:02x}"))
+        .collect();
+    assert_eq!(
+        hash,
+        "46fa67de15080a6ccf370ea852f2d7a6744b532603bdf73ded7f59c34a082513"
+    );
+    let physical = lower(&graph, &[0, 1, 2, 3, 4, 5, 6, 7]).unwrap();
+    physical::verify(&physical).unwrap();
+    assert_eq!(physical.schedules[0].steps.len(), 2109);
+    assert_eq!(
+        physical.schedules[0]
+            .steps
+            .iter()
+            .filter(|s| s.operation.collective.is_some())
+            .count(),
+        321
+    );
+}
 fn fixture() -> Graph {
     serde_json::from_str(include_str!("fixtures/viewer-scopes.json")).unwrap()
 }

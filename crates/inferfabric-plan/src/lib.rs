@@ -1,5 +1,6 @@
 //! Physical planning and source-independent CPU execution. No device dependency.
 mod binary;
+pub mod device_buffer;
 mod execute;
 pub mod ir;
 pub mod physical;

@@ -70,7 +70,8 @@ pub fn render_with_physical(
     // JSON lives in a script data block. Escape HTML delimiters even for imported
     // graphs whose names/source frames did not originate in the DSL lexer.
     let data = serde_json::to_string(
-        &serde_json::json!({"graph":graph,"types":types,"node_metadata":node_metadata,"physical":physical}),
+        &serde_json::json!({"graph":graph,"types":types,"node_metadata":node_metadata,"physical":physical,
+            "device_buffer_contract":inferfabric_plan::device_buffer::support()}),
     )
     .map_err(|e| invalid(e.to_string()))?
     .replace('&', "\\u0026")
