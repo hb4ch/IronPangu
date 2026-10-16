@@ -109,3 +109,11 @@ numerical contracts are recorded in generated physical metadata.
 29.95 ms/token by expressing replicated shared experts and local query heads in
 the DSL. The expanded inspectable plan removes 178 gathers per token; all six
 full-model graph runs pass. The matched OmniInfer reference remains 18.12 ms/token.
+
+Subsequent [batched MLA heads](validation/2026-10-16-batched-heads/README.md),
+[fused FP32 expert reduction](validation/2026-10-16-fused-finalize/README.md),
+and [prepared immutable weight layouts](validation/2026-10-16-weight-views/README.md)
+reduce measured latency to 26.41 ms/token. Immutable layout packing adds 69 MiB
+per rank and eliminates repeated weight materialization during replay. All
+milestones retain complete-output and device-residency qualification; parity
+with the optimized reference remains unfinished.

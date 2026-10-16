@@ -6,6 +6,7 @@
 #include "initialization_acl.h"
 #include "openpangu_decoder_state.h"
 #include "openpangu_mhc.h"
+#include "prepared_weight_views.h"
 #include "resident_tensor.h"
 #include "resident_transfer.h"
 #include <aclnn_ai_infra_fused_causal_conv1d.h>
@@ -84,6 +85,7 @@ struct View {
 struct Decoder {
   // Declared first: outlives all values, descriptors and state.
   prepared::Context execution;
+  resident::PreparedWeightViews weight_views;
   std::vector<std::unique_ptr<inferfabric::PreparedKernel>> pending_kernels;
   aclmdlRI decode_graph = nullptr;
   V graph_output;
@@ -439,9 +441,8 @@ struct Decoder {
         cast(resident::slice(q, local_heads ? 0 : rank * 1152, 1152), ACL_BF16);
     auto *input = execution.strided_descriptor(local.data(), 1152, {6, 1, 128},
                                                {192, 128, 1}, ACL_BF16);
-    auto *bank =
-        execution.strided_descriptor(weight.data, 6 * 256 * 512, {6, 128, 512},
-                                     {256 * 512, 512, 1}, ACL_BF16);
+    auto *bank = weight_views.get(weight.data, 6 * 256 * 512, {6, 128, 512},
+                                  {256 * 512, 512, 1}, ACL_BF16);
     auto projected = batched_matrix(input, bank, 6, 512);
     std::vector<V> rotary;
     for (int head = 0; head < 6; ++head)
@@ -469,7 +470,7 @@ struct Decoder {
     auto &weight = w(weight_name + ".weight");
     auto value = cast(values, ACL_BF16);
     View input(value.data(), {6, 1, 512}, ACL_BF16);
-    auto *bank = execution.strided_descriptor(
+    auto *bank = weight_views.get(
         static_cast<uint16_t *>(weight.data) + 128 * 512, (6 * 256 - 128) * 512,
         {6, 512, 128}, {256 * 512, 1, 512}, ACL_BF16);
     return batched_matrix(input.t, bank, 6, 128);

@@ -1,3 +1,4 @@
+#include "../src/prepared_weight_views.h"
 #include "../src/resident_tensor.h"
 #include <iostream>
 #include <sstream>
@@ -9,6 +10,46 @@ int main() {
     {
       prepared::Context context;
       openpangu::DeviceTensor results({128, 4}, ACL_BF16, 2);
+      resident::PreparedWeightViews weight_views;
+      openpangu::DeviceTensor source_weight({2, 3, 4}, ACL_FLOAT, 4);
+      std::vector<float> source_values(24);
+      for (int i = 0; i < 24; ++i)
+        source_values[i] = float(i);
+      resident::control_upload(source_weight, source_values);
+      auto *packed = weight_views.get(source_weight.data, 24, {2, 4, 2},
+                                      {12, 1, 4}, ACL_FLOAT);
+      if (packed != weight_views.get(source_weight.data, 24, {2, 4, 2},
+                                     {12, 1, 4}, ACL_FLOAT))
+        throw std::runtime_error("immutable layout cache missed");
+      // Validate materialization through a device operation, including a gap
+      // between batches and a transposed inner dimension.
+      openpangu::DeviceTensor packed_result({2, 4, 2}, ACL_FLOAT, 4);
+      uint64_t packed_bytes = 0;
+      aclOpExecutor *packed_executor = nullptr;
+      prepared::check(
+          aclnnCastGetWorkspaceSize(packed, ACL_FLOAT, packed_result.tensor,
+                                    &packed_bytes, &packed_executor),
+          "packed copy prepare");
+      prepared::check(aclnnCast(context.workspace(packed_bytes), packed_bytes,
+                                packed_executor, context.stream),
+                      "packed copy");
+      auto *packed_host = context.output_host(packed_result.bytes);
+      {
+        resident::TransferScope output(resident::TransferRole::RequestOutput);
+        prepared::check(
+            aclrtMemcpyAsync(packed_host, packed_result.bytes,
+                             packed_result.data, packed_result.bytes,
+                             ACL_MEMCPY_DEVICE_TO_HOST, context.stream),
+            "packed view output");
+      }
+      context.complete();
+      for (int b = 0; b < 2; ++b)
+        for (int col = 0; col < 4; ++col)
+          for (int row = 0; row < 2; ++row)
+            if (static_cast<float *>(packed_host)[b * 8 + col * 2 + row] !=
+                b * 12 + row * 4 + col)
+              throw std::runtime_error(
+                  "immutable strided materialization mismatch");
       auto *strided = context.strided_descriptor(results.data, 512, {2, 3, 4},
                                                  {256, 8, 1}, ACL_BF16);
       if (strided != context.strided_descriptor(results.data, 512, {2, 3, 4},

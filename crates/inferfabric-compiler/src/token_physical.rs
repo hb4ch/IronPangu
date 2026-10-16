@@ -35,6 +35,7 @@ pub fn lower(graph: &Graph, devices: &[u32]) -> Result<Plan> {
     source.extend_from_slice(include_bytes!("../../../native/src/execution_profile.h"));
     source.extend_from_slice(include_bytes!("../../../native/src/execution_capture.h"));
     source.extend_from_slice(include_bytes!("../../../native/src/prepared_execution.h"));
+    source.extend_from_slice(include_bytes!("../../../native/src/prepared_weight_views.h"));
     let revision = digest(&source);
     let mut values: Vec<Value> = vec![];
     let mut operations = vec![];
@@ -114,8 +115,8 @@ pub fn lower(graph: &Graph, devices: &[u32]) -> Result<Plan> {
             boundaries.push(Boundary {kind: BoundaryKind::InternalLaunches, detail: match n.op.as_str() {
                 "mhc_pre" | "mhc_merge" => "mHC inference-only output flag permits the vendor small-token tiling; no training auxiliary values are consumed",
                 "expert_reduce" => "Fused FP32 MoeFinalizeRoutingV2 weighted reduction over owner-ordered expert rows with device identity indices; distinct reduction numerical contract",
-                "mla_query" => "One batched BF16 head matmul with bounded strided parameter/input views; batched FP32 rotary followed by BF16 rounding",
-                "mla_value" => "One batched BF16 head matmul with bounded strided parameter views; vendor workspace/layout materialization remains internal",
+                "mla_query" => "One batched BF16 head matmul; immutable strided weight view packed once on device before capture (786432 bytes per rank per distinct view); bounded input view and batched FP32 rotary followed by BF16 rounding",
+                "mla_value" => "One batched BF16 head matmul; immutable transposed weight view packed once on device before capture (786432 bytes per rank per distinct view); no per-token weight repacking or parameter host transfer",
                 _ => "Fused rotary operation in FP32 followed by BF16 rounding; shared position-derived controls remain device-resident",
             }.into()});
         }
