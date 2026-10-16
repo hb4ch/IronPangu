@@ -193,11 +193,18 @@ impl Node {
                 Tensor(a + b)
             }
             "mla_query" => {
-                self.schema(
-                    inputs,
-                    &[Tensor(9216)],
-                    &["weight", "theta", "heads", "nope", "rope", "latent"],
-                )?;
+                let mut attrs = vec!["weight", "theta", "heads", "nope", "rope", "latent"];
+                let width = if let Some(layout) = self.attrs.get("input_layout") {
+                    attrs.push("input_layout");
+                    match layout.as_str() {
+                        "rank_local" => 1152,
+                        "replicated" => 9216,
+                        _ => return fail(self, "unsupported query input layout"),
+                    }
+                } else {
+                    9216
+                };
+                self.schema(inputs, &[Tensor(width)], &attrs)?;
                 for (k, v) in [
                     ("theta", 6400000),
                     ("heads", 48),

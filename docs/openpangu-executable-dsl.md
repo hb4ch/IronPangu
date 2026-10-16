@@ -1,14 +1,19 @@
 # OpenPangu 92B executable DSL
 
 The model is defined in [`examples/openpangu/92b-tp8-ep8.inferfabric`](../examples/openpangu/92b-tp8-ep8.inferfabric).
-It defines the complete 46-layer model in 107 lines using five reusable DSL
-modules: `TPLinear`, `DenseFFN`, `RoutedMoE`, `MLAAttention`, and `DecoderBlock`.
+It defines the complete 46-layer model using six reusable DSL
+modules: `TPLinear`, `PlacedLinear`, `DenseFFN`, `RoutedMoE`, `MLAAttention`, and `DecoderBlock`.
 A compile-time fold instantiates the blocks, choosing dense/MoE branches and
 attention windows. Scoped weights resolve checkpoint bindings without repeated
 full paths. See [module syntax and expansion rules](dsl-modules.md).
 
-The compiler expands this source into the same 2,109 primitive operations as the
-qualified flat graph. There is no contract selector that invokes a C++ model
+The compiler expands this source into 1,931 primitive operations. The initial
+module migration preserved all 2,109 operations of the qualified flat graph;
+the current placement removes 178 gathers per token. Shared experts are replicated
+as in the matched OmniInfer configuration, while MLA query projection emits only
+the rank's six heads. `mla_query(input_layout="rank_local")` consumes that local
+projection; the original replicated layout remains validated and supported.
+These choices are explicit in the expanded graph and viewer. There is no contract selector that invokes a C++ model
 forward function. C++ supplies registered operator implementations; the DSL
 supplies operation order, edges, parameters, collectives, routing, residual
 connections, state instances and output. Expanded SSA is generated output.
@@ -100,8 +105,9 @@ The graph declares a **512-token context**, one sequence, one token per invocati
 At this bound all causal keys fit both the SWA window (512) and sparse candidate
 budget (2048); no learned-indexer selection is needed. It does not claim general
 long-context sparse attention. The diagnostic runner uses greedy decoding.
-Continuous batching, Rust serving integration for this program format, full-model
-ACL graph capture, long-context indexing and production performance remain
+Full-model ACL graph capture/replay is implemented and qualified with device-resident
+activations. Continuous batching, Rust serving integration for this program format,
+long-context indexing and production performance remain
 separate milestones. Existing kernel plugin ABI support remains available.
 
 ## Qualification
@@ -109,6 +115,6 @@ separate milestones. Existing kernel plugin ABI support remains available.
 Explore the [hierarchical plan viewer](validation/2026-10-16-reusable-dsl/execution.html)
 or see [generation and navigation instructions](plan-viewer.md).
 
-[Reusable-module NPU qualification](validation/2026-10-16-reusable-dsl/README.md): the 107-line source expands to the same 2,109 operations; all eight initialization programs and the complete three-prompt results are byte-identical to the flat-DSL baseline. The report includes expanded JSON with source mappings and a Graphviz diagram.
+[Initial reusable-module NPU qualification](validation/2026-10-16-reusable-dsl/README.md): the original 107-line source expanded to the same 2,109 operations; all eight initialization programs and the complete three-prompt results were byte-identical to the flat-DSL baseline. The report includes expanded JSON with source mappings and a Graphviz diagram.
 
 [Full NPU evidence and plan-control experiment](validation/2026-10-15-dsl-execution/README.md): all 33 tokens across three prompts match the pinned offline reference. Recorded results, including logits/top-five values, are identical to the preceding native decoder.

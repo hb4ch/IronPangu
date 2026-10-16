@@ -104,3 +104,8 @@ reduce the qualified graph baseline to 32.39 ms/token. Fused FP32 rotary, one-pa
 packing and vector weighted reduction avoid thousands of small tasks, while the
 mHC inference-output contract enables vendor small-token tiling. These kernel
 numerical contracts are recorded in generated physical metadata.
+
+[Rank placement](validation/2026-10-16-rank-layouts/README.md) reduces latency to
+29.95 ms/token by expressing replicated shared experts and local query heads in
+the DSL. The expanded inspectable plan removes 178 gathers per token; all six
+full-model graph runs pass. The matched OmniInfer reference remains 18.12 ms/token.

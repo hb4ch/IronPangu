@@ -9,7 +9,7 @@ fn full_decoder_is_explicit_and_round_trips_through_compiled_authoring() {
     let ModelDefinition::Execution { graph, parallel } = &model else {
         panic!("expected executable graph")
     };
-    assert_eq!(graph.nodes.len(), 2109);
+    assert_eq!(graph.nodes.len(), 1931);
     assert_eq!(graph.nodes.iter().filter(|n| n.op == "router").count(), 44);
     assert_eq!(
         graph
@@ -72,24 +72,63 @@ fn changing_dsl_changes_program_not_a_model_selector() {
 }
 
 #[test]
-fn reusable_model_expands_to_the_qualified_primitive_graph() {
+fn reusable_model_preserves_layers_with_explicit_communication_layouts() {
     let ModelDefinition::Execution { graph, .. } = definition(SOURCE).unwrap() else {
         panic!()
     };
+    let types = graph.validate().unwrap();
     let baseline: authoring::execution::Graph = serde_json::from_str(include_str!(
         "../../../docs/validation/2026-10-15-dsl-execution/execution.json"
     ))
     .unwrap();
-    assert_eq!(graph.output, baseline.output);
     assert_eq!(graph.max_context, baseline.max_context);
     assert_eq!(graph.eos, baseline.eos);
-    assert_eq!(graph.nodes.len(), baseline.nodes.len());
-    for (actual, expected) in graph.nodes.iter().zip(&baseline.nodes) {
-        assert_eq!(actual.op, expected.op, "{}", actual.name);
-        assert_eq!(actual.inputs, expected.inputs, "{}", actual.name);
-        assert_eq!(actual.attrs, expected.attrs, "{}", actual.name);
-        let source = actual.source.as_ref().unwrap();
+    assert_eq!(baseline.nodes.len() - graph.nodes.len(), 178);
+    for op in [
+        "linear",
+        "mhc_pre",
+        "mhc_post",
+        "mome",
+        "router",
+        "expert_linear",
+        "expert_swiglu_down",
+        "latent_attention",
+    ] {
+        assert_eq!(
+            graph.nodes.iter().filter(|n| n.op == op).count(),
+            baseline.nodes.iter().filter(|n| n.op == op).count()
+        );
+    }
+    assert_eq!(graph.nodes.iter().filter(|n| n.op == "gather").count(), 99);
+    let mut shared = 0;
+    for node in &graph.nodes {
+        let source = node.source.as_ref().unwrap();
         assert!(source.start < source.end && source.end <= SOURCE.len());
+        if node.op == "mla_query" {
+            assert_eq!(node.attrs["input_layout"], "rank_local");
+            assert_eq!(
+                types[node.inputs[0]],
+                authoring::execution::Type::Tensor(1152)
+            );
+            assert_eq!(graph.nodes[node.inputs[0]].attrs["placement"], "tp_rows");
+        }
+        if node.op == "linear" && node.attrs["weight"].contains("shared_experts") {
+            shared += 1;
+            assert_eq!(node.attrs["placement"], "replicated");
+        }
+    }
+    assert_eq!(shared, 132);
+    for source in [
+        SOURCE.replace(
+            "input_layout = \"rank_local\"",
+            "input_layout = \"replicated\"",
+        ),
+        SOURCE.replace(
+            "input_layout = \"rank_local\"",
+            "input_layout = \"unknown\"",
+        ),
+    ] {
+        assert!(definition(&source).is_err());
     }
     assert!(SOURCE.lines().count() < 150);
 }

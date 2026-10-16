@@ -85,8 +85,18 @@ inline void validate_kernels(const Plan &p) {
     } else if (n.op == "concat")
       check({{0, tensor(0)}, {0, tensor(1)}}, {}, {0, tensor(0) + tensor(1)});
     else if (n.op == "mla_query") {
-      check({{0, 9216}}, {"weight", "theta", "heads", "nope", "rope", "latent"},
-            {0, 3456});
+      std::vector<std::string> attrs{"weight", "theta", "heads",
+                                     "nope",   "rope",  "latent"};
+      uint32_t width = 9216;
+      if (n.attrs.count("input_layout")) {
+        attrs.push_back("input_layout");
+        auto layout = n.text("input_layout");
+        if (layout == "rank_local")
+          width = 1152;
+        else if (layout != "replicated")
+          error();
+      }
+      check({{0, width}}, attrs, {0, 3456});
       eq("theta", "6400000");
       eq("heads", "48");
       eq("nope", "128");

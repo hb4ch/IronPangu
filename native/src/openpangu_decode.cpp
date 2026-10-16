@@ -429,11 +429,12 @@ struct Decoder {
     run(aclnnRotaryPositionEmbedding, bytes, e);
     return rounded(result(out, ACL_FLOAT));
   }
-  V absorb_query(const V &q, const std::string &weight_name, int pos) {
+  V absorb_query(const V &q, const std::string &weight_name, int pos,
+                 bool local_heads) {
     auto &weight = w(weight_name + ".weight");
     std::vector<V> queries;
     for (int head = 0; head < 6; ++head) {
-      size_t offset = (rank * 6 + head) * 192;
+      size_t offset = ((local_heads ? 0 : rank * 6) + head) * 192;
       auto no = resident::slice(q, offset, 128),
            rot = rope(resident::slice(q, offset + 128, 64), pos);
       auto query =

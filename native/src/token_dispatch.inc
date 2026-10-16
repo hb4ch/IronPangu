@@ -69,7 +69,9 @@ V execute_token() {
     } else if (n.op == "concat") {
       result = resident::concat(tensor(0), tensor(1));
     } else if (n.op == "mla_query")
-      result = absorb_query(tensor(0), weight(), pos);
+      result = absorb_query(tensor(0), weight(), pos,
+                            n.attrs.count("input_layout") &&
+                                n.text("input_layout") == "rank_local");
     else if (n.op == "mla_value")
       result = expand_value(tensor(0), weight());
     else if (n.op == "sink_normalize")

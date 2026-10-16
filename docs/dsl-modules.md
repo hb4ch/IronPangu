@@ -71,7 +71,7 @@ at execution time; `execution.bin` still contains only primitive instructions.
 Compiled-language authors can supply the same graph IR; source metadata is
 optional and does not affect code generation.
 
-The 92B migration is checked against the saved qualified expanded graph:
+The initial 92B migration was checked against the saved qualified expanded graph:
 operation order, input IDs, output, numerical attributes and concrete bindings
 must match exactly. Hygienic node names and source metadata may differ. Weight
 initialization binaries must remain byte-identical, followed by full NPU output
@@ -80,3 +80,10 @@ comparison. This is stronger than checking only graph size or a few operators.
 The migration passed the [full 92B NPU qualification](validation/2026-10-16-reusable-dsl/README.md),
 with all 33 output tokens matching and complete recorded results byte-identical
 to the flat-DSL baseline. The report includes the expanded JSON and Graphviz graph.
+
+Subsequent placement optimization uses `PlacedLinear` to choose replicated shared
+experts and rank-local MLA query projection. The current graph has 1,931 nodes;
+its changed weight placement is independently qualified against the reference,
+then graph replay is compared exactly with the new eager results. The historical
+migration fixture remains intact; placement changes do not claim byte-identical
+initialization or logits against that fixture.

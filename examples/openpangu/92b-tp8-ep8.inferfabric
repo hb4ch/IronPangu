@@ -8,11 +8,17 @@ module TPLinear(x, w, width) {
     yield output;
 }
 
-module DenseFFN(x, w, intermediate) {
-    let gate = TPLinear(x, w.gate_proj, intermediate);
-    let up = TPLinear(x, w.up_proj, intermediate);
+module PlacedLinear(x, w, width, parallel) {
+    let output = choose(parallel, TPLinear(x, w, width),
+                 linear(x, weight = w, width = width, placement = "replicated"));
+    yield output;
+}
+
+module DenseFFN(x, w, intermediate, parallel) {
+    let gate = PlacedLinear(x, w.gate_proj, intermediate, parallel);
+    let up = PlacedLinear(x, w.up_proj, intermediate, parallel);
     let activated = swiglu(gate, up);
-    let output = TPLinear(activated, w.down_proj, 2560);
+    let output = PlacedLinear(activated, w.down_proj, 2560, parallel);
     yield output;
 }
 
@@ -25,7 +31,7 @@ module RoutedMoE(x, w) {
     let down = expert_swiglu_down(gate, up, routes, weight = expert.down_proj, width = 2560);
     let local = expert_reduce(down, routes);
     let routed = allreduce(local);
-    let shared = DenseFFN(x, w.shared_experts, 1024);
+    let shared = DenseFFN(x, w.shared_experts, 1024, false);
     let output = add(routed, shared);
     yield output;
 }
@@ -34,7 +40,7 @@ module MLAAttention(x, w, window) {
     let qa = linear(x, weight = w.q_a_proj, width = 1024, placement = "replicated");
     let qc = mome(qa, weight = w.qa_conv, taps = 3);
     let qn = norm(qc, weight = w.q_a_layernorm, eps = 1e-5);
-    let q = TPLinear(qn, w.q_b_proj, 9216);
+    let q = linear(qn, weight = w.q_b_proj, width = 1152, placement = "tp_rows");
 
     let kv = linear(x, weight = w.kv_a_proj_with_mqa, width = 576, placement = "replicated");
     let latent = slice(kv, start = 0, width = 512);
@@ -48,7 +54,7 @@ module MLAAttention(x, w, window) {
                                count = 128, latent = 512, rope = 64, eps = 1e-5);
     let cache = cache_append(key, sinks);
     let query = mla_query(q, weight = w.kv_b_proj, theta = 6400000,
-                          heads = 48, nope = 128, rope = 64, latent = 512);
+                          heads = 48, nope = 128, rope = 64, latent = 512, input_layout = "rank_local");
     let attended = latent_attention(query, cache, scale_dim = 192,
                                     window = window, selection = "all_causal_within_window");
     let value = mla_value(attended, weight = w.kv_b_proj, heads = 48, latent = 512, value = 128);
@@ -69,7 +75,7 @@ module DecoderBlock(x, w, index, window) {
     let ffn_hc = mhc_pre(residual, weight = w.mlp_mhc_module, streams = 4, sinkhorn = 20, eps = 1e-6);
     let ffn_input = mhc_input(ffn_hc);
     let ffn_norm = norm(ffn_input, weight = w.pre_mlp_layernorm, eps = 1e-5);
-    let ffn = choose(lt(index, 2), DenseFFN(ffn_norm, w.mlp, 9216), RoutedMoE(ffn_norm, w.mlp));
+    let ffn = choose(lt(index, 2), DenseFFN(ffn_norm, w.mlp, 9216, true), RoutedMoE(ffn_norm, w.mlp));
     let ffn_post = norm(ffn, weight = w.post_mlp_layernorm, eps = 1e-5);
     let post = mhc_post(ffn_hc, ffn_post);
     let output = optional_norm(post, weight = w.block_post_layernorm, eps = 1e-5);
