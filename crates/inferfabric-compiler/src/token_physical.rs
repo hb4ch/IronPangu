@@ -108,6 +108,10 @@ pub fn lower(graph: &Graph, devices: &[u32]) -> Result<Plan> {
             kind: BoundaryKind::DynamicAllocation,
             detail: "Per-rank reusable device pool grows on a new size/liveness requirement during preparation; warmed decode reuses buffers and workspace. Runtime audit records allocations and reuses. Static arena offsets and full workspace bounds remain unresolved".into(),
         }];
+        if n.op == "linear" && n.attrs.get("placement").is_some_and(|p| p == "tp_columns") {
+            boundaries.push(Boundary { kind: BoundaryKind::InternalLaunches,
+                detail: "Input-column TP slice loaded by generic strided initialization; local dynamic quantization and BF16 partial output. Cross-rank FP32 sum is a separate explicit allreduce node; no implicit gather".into() });
+        }
         if matches!(
             n.op.as_str(),
             "mhc_pre" | "mhc_merge" | "expert_reduce" | "rope" | "mla_query" | "mla_value"
@@ -171,6 +175,7 @@ pub fn lower(graph: &Graph, devices: &[u32]) -> Result<Plan> {
             candidates: vec![Candidate {
                 id: format!("ascend.token.device_resident.{}.v1", n.op),
                 contract_revision: revision.clone(), numerical_contract: match n.op.as_str() {
+                    "linear" if n.attrs.get("placement").is_some_and(|p| p == "tp_columns") => "ascend_token_v1/linear/local_columns_bf16_partial_v1".into(),
                     "expert_linear" | "expert_swiglu_down" => format!("ascend_token_v1/{}/sparse_gmm_bf16_scales_v1", n.op),
                     "expert_reduce" => "ascend_token_v1/expert_reduce/fused_finalize_fp32_v1".into(),
                     "mhc_pre" | "mhc_merge" => format!("ascend_token_v1/{}/inference_outputs_v1", n.op),

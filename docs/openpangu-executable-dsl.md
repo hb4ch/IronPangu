@@ -7,12 +7,16 @@ A compile-time fold instantiates the blocks, choosing dense/MoE branches and
 attention windows. Scoped weights resolve checkpoint bindings without repeated
 full paths. See [module syntax and expansion rules](dsl-modules.md).
 
-The compiler expands this source into 1,931 primitive operations. The initial
+The compiler expands this source into 1,881 primitive operations. The initial
 module migration preserved all 2,109 operations of the qualified flat graph;
-the current placement removes 178 gathers per token. Shared experts are replicated
+the current placement leaves one gather and 92 explicit all-reduces per token. Shared experts are replicated
 as in the matched OmniInfer configuration, while MLA query projection emits only
 the rank's six heads. `mla_query(input_layout="rank_local")` consumes that local
 projection; the original replicated layout remains validated and supported.
+Attention output MoME channels remain local, and output/down projections use
+`tp_columns` plus explicit reductions. The generic initialization executor packs
+strided checkpoint columns; no model-specific loader or runtime weight-name rule
+selects the placement.
 These choices are explicit in the expanded graph and viewer. There is no contract selector that invokes a C++ model
 forward function. C++ supplies registered operator implementations; the DSL
 supplies operation order, edges, parameters, collectives, routing, residual
@@ -45,7 +49,7 @@ unpaired mHC/cache handles and unsupported backend specializations.
 builds their parameter requirements. It reads the safetensors inventory directly;
 it does **not** run the old OpenPangu layer binder or infer TP placement from
 names such as `q_b_proj`. Projection `placement` explicitly selects replicated
-weights or contiguous output-row TP slices. MLA absorption/expansion contracts
+weights, contiguous output-row TP slices or strided input-column TP slices. MLA absorption/expansion contracts
 specify head sharding. Expert projections bind only the owning rank's experts.
 Only referenced tensors are loaded; unused indexer/MTP tensors are omitted.
 Shapes, dtype, conversions and source ranges are validated before publication.

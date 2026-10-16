@@ -273,6 +273,7 @@ pub fn initialization_plan(
             offset: slice.offset,
             bytes: slice.bytes,
             source_dtype,
+            source_rows: None,
         });
     }
     let result = InitializationPlan {

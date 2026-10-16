@@ -9,7 +9,7 @@ fn full_decoder_is_explicit_and_round_trips_through_compiled_authoring() {
     let ModelDefinition::Execution { graph, parallel } = &model else {
         panic!("expected executable graph")
     };
-    assert_eq!(graph.nodes.len(), 1931);
+    assert_eq!(graph.nodes.len(), 1881);
     assert_eq!(graph.nodes.iter().filter(|n| n.op == "router").count(), 44);
     assert_eq!(
         graph
@@ -83,7 +83,7 @@ fn reusable_model_preserves_layers_with_explicit_communication_layouts() {
     .unwrap();
     assert_eq!(graph.max_context, baseline.max_context);
     assert_eq!(graph.eos, baseline.eos);
-    assert_eq!(baseline.nodes.len() - graph.nodes.len(), 178);
+    assert_eq!(baseline.nodes.len() - graph.nodes.len(), 228);
     for op in [
         "linear",
         "mhc_pre",
@@ -99,7 +99,27 @@ fn reusable_model_preserves_layers_with_explicit_communication_layouts() {
             baseline.nodes.iter().filter(|n| n.op == op).count()
         );
     }
-    assert_eq!(graph.nodes.iter().filter(|n| n.op == "gather").count(), 99);
+    assert_eq!(graph.nodes.iter().filter(|n| n.op == "gather").count(), 1);
+    assert_eq!(
+        graph.nodes.iter().filter(|n| n.op == "allreduce").count(),
+        92
+    );
+    assert_eq!(
+        graph
+            .nodes
+            .iter()
+            .filter(|n| n.attrs.get("placement").is_some_and(|p| p == "tp_columns"))
+            .count(),
+        48
+    );
+    assert_eq!(
+        graph
+            .nodes
+            .iter()
+            .filter(|n| n.attrs.get("placement").is_some_and(|p| p == "tp_channels"))
+            .count(),
+        46
+    );
     let mut shared = 0;
     for node in &graph.nodes {
         let source = node.source.as_ref().unwrap();

@@ -146,7 +146,9 @@ impl Node {
             "linear" => {
                 let w = tensor(0)?;
                 self.schema(inputs, &[Tensor(w)], &["weight", "width", "placement"])?;
-                if !["tp_rows", "replicated"].contains(&self.attrs["placement"].as_str()) {
+                if !["tp_rows", "tp_columns", "replicated"]
+                    .contains(&self.attrs["placement"].as_str())
+                {
                     return fail(self, "unknown linear placement");
                 }
                 Tensor(width()?)
@@ -163,7 +165,14 @@ impl Node {
             }
             "mome" => {
                 let w = tensor(0)?;
-                self.schema(inputs, &[Tensor(w)], &["weight", "taps"])?;
+                let mut attrs = vec!["weight", "taps"];
+                if let Some(placement) = self.attrs.get("placement") {
+                    attrs.push("placement");
+                    if !["replicated", "tp_channels"].contains(&placement.as_str()) {
+                        return fail(self, "unsupported convolution placement");
+                    }
+                }
+                self.schema(inputs, &[Tensor(w)], &attrs)?;
                 if self.integer("taps")? != 3 {
                     return fail(self, "unsupported convolution taps");
                 }

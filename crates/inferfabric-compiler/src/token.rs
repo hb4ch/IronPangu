@@ -2,7 +2,9 @@
 //! No layer traversal, model-name dispatch, or checkpoint-name placement rules.
 use crate::openpangu::{Inventory, TensorDescriptor};
 use inferfabric_authoring::execution::{Graph, Type};
-use inferfabric_ir::initialization::{DType, InitializationPlan, Instruction, Parameter};
+use inferfabric_ir::initialization::{
+    DType, InitializationPlan, Instruction, Parameter, SourceRows,
+};
 use inferfabric_model::{OpenPanguParallel, Result, invalid};
 use std::collections::BTreeMap;
 #[derive(Clone, Debug, PartialEq)]
@@ -10,6 +12,7 @@ struct Request {
     shape: Vec<u64>,
     dtype: DType,
     shard_rows: bool,
+    shard_columns: bool,
 }
 struct Bindings<'a> {
     inventory: &'a Inventory,
@@ -27,7 +30,11 @@ impl Bindings<'_> {
             shape,
             dtype,
             shard_rows,
+            shard_columns: false,
         };
+        self.request(name, r)
+    }
+    fn request(&mut self, name: String, r: Request) -> Result<()> {
         if let Some(old) = self.requests.insert(name.clone(), r.clone())
             && old != r
         {
@@ -42,17 +49,24 @@ impl Bindings<'_> {
         output: u64,
         sharded: bool,
         quant_only: bool,
+        columns: bool,
     ) -> Result<()> {
         let dtype = match self.tensor(&format!("{name}.weight"))?.dtype.as_str() {
             "I8" => DType::I8,
             "BF16" if !quant_only => DType::Bf16,
             _ => return Err(invalid(format!("unsupported projection dtype {name}"))),
         };
-        self.add(
+        if columns && sharded {
+            return Err(invalid("projection cannot shard both axes"));
+        }
+        self.request(
             format!("{name}.weight"),
-            vec![output, input],
-            dtype,
-            sharded,
+            Request {
+                shape: vec![output, input],
+                dtype,
+                shard_rows: sharded,
+                shard_columns: columns,
+            },
         )?;
         if dtype == DType::I8 {
             self.add(
@@ -106,6 +120,7 @@ pub fn initialization_plans(
                     n.integer("width")? as u64,
                     n.attrs["placement"] == "tp_rows",
                     false,
+                    n.attrs["placement"] == "tp_columns",
                 )?,
                 "norm" | "optional_norm" => {
                     let key = format!("{name}.weight");
@@ -117,7 +132,7 @@ pub fn initialization_plans(
                     format!("{name}.weight"),
                     vec![width, 1, 3],
                     DType::Bf16,
-                    false,
+                    n.attrs.get("placement").is_some_and(|p| p == "tp_channels"),
                 )?,
                 "mhc_pre" | "mhc_merge" => {
                     let merge = n.op == "mhc_merge";
@@ -188,6 +203,7 @@ pub fn initialization_plans(
                             n.integer("width")? as u64,
                             false,
                             true,
+                            false,
                         )?;
                     }
                 }
@@ -221,6 +237,9 @@ pub fn initialization_plans(
             if r.shard_rows {
                 expected[0] *= topology.tp as u64;
             }
+            if r.shard_columns {
+                expected[1] *= topology.tp as u64;
+            }
             if t.shape != expected {
                 return Err(invalid(format!(
                     "graph binding {name}: expected {expected:?}, got {:?}",
@@ -237,11 +256,21 @@ pub fn initialization_plans(
                     source_bytes
                         .checked_mul(rank as u64)
                         .ok_or_else(|| invalid("slice overflow"))?
+                } else if r.shard_columns {
+                    r.shape[1]
+                        .checked_mul(source_dtype.bytes())
+                        .and_then(|n| n.checked_mul(rank as u64))
+                        .ok_or_else(|| invalid("column slice overflow"))?
                 } else {
                     0
                 })
                 .ok_or_else(|| invalid("slice offset overflow"))?;
-            let expected_bytes = source_bytes * if r.shard_rows { topology.tp as u64 } else { 1 };
+            let expected_bytes = source_bytes
+                * if r.shard_rows || r.shard_columns {
+                    topology.tp as u64
+                } else {
+                    1
+                };
             if expected_bytes != t.bytes {
                 return Err(invalid("checkpoint byte extent mismatch"));
             }
@@ -258,6 +287,14 @@ pub fn initialization_plans(
                 offset: source_offset,
                 bytes: source_bytes,
                 source_dtype,
+                source_rows: if r.shard_columns {
+                    Some(SourceRows {
+                        row_bytes: r.shape[1] * source_dtype.bytes(),
+                        stride_bytes: expected[1] * source_dtype.bytes(),
+                    })
+                } else {
+                    None
+                },
             });
         }
         plan.validate()?;

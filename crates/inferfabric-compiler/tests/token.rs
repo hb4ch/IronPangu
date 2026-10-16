@@ -82,6 +82,44 @@ fn graph_drives_binding_sharding_and_scale_cast_without_model_names() {
     }
 }
 #[test]
+fn column_placement_packs_source_rows_and_replicates_scales() {
+    let (mut graph, parallel, mut inventory) = fixture();
+    graph.nodes[1]
+        .attrs
+        .insert("placement".into(), "tp_columns".into());
+    let w = inventory.tensors.get_mut("projection.weight").unwrap();
+    w.shape = vec![18944, 20480];
+    w.bytes = 18944 * 20480;
+    let scale = inventory
+        .tensors
+        .get_mut("projection.weight_scale")
+        .unwrap();
+    scale.shape = vec![18944, 1];
+    scale.bytes = 18944 * 2;
+    let plans = initialization_plans(&graph, &parallel, &inventory).unwrap();
+    for (rank, plan) in plans.iter().enumerate() {
+        assert_eq!(plan.parameters[1].shape, vec![18944, 2560]);
+        let Instruction::LoadSlice {
+            offset,
+            bytes,
+            source_rows,
+            ..
+        } = &plan.instructions[1];
+        assert_eq!(*offset, 4096 + rank as u64 * 2560);
+        assert_eq!(*bytes, 18944 * 2560);
+        assert_eq!(source_rows.as_ref().unwrap().row_bytes, 2560);
+        assert_eq!(source_rows.as_ref().unwrap().stride_bytes, 20480);
+        let Instruction::LoadSlice {
+            offset,
+            source_rows,
+            ..
+        } = &plan.instructions[2];
+        assert_eq!(*offset, 4096);
+        assert!(source_rows.is_none());
+        assert_eq!(plan.parameters[2].shape, vec![18944, 1]);
+    }
+}
+#[test]
 fn invalid_placement_missing_scale_and_shape_fail_before_execution() {
     for mutation in 0..4 {
         let (mut graph, parallel, mut inventory) = fixture();

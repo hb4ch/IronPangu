@@ -30,13 +30,18 @@ pub fn encode(plan: &InitializationPlan) -> Result<Vec<u8>> {
                 offset,
                 bytes,
                 source_dtype,
+                source_rows,
             } => {
-                out.extend(1u32.to_le_bytes());
+                out.extend(if source_rows.is_some() { 2u32 } else { 1u32 }.to_le_bytes());
                 out.extend(destination.to_le_bytes());
                 string(&mut out, shard);
                 out.extend(offset.to_le_bytes());
                 out.extend(bytes.to_le_bytes());
                 out.extend((*source_dtype as u32).to_le_bytes());
+                if let Some(rows) = source_rows {
+                    out.extend(rows.row_bytes.to_le_bytes());
+                    out.extend(rows.stride_bytes.to_le_bytes());
+                }
             }
         }
     }

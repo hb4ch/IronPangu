@@ -1,0 +1,1066 @@
+{
+  "scope": "Strided-load excerpt from rank-0.init.json; not a complete executable initialization plan",
+  "rank": 0,
+  "device": 0,
+  "checkpoint_metadata_sha256": "e6ab8e354f31f844671a0d6013d686e86b4ebc2ba8f3e893d509c2c170d015d8",
+  "parameters": [
+    {
+      "id": 8,
+      "name": "model.layers.0.mlp.down_proj.weight",
+      "dtype": "I8",
+      "shape": [
+        2560,
+        1152
+      ]
+    },
+    {
+      "id": 26,
+      "name": "model.layers.0.self_attn.o_proj.weight",
+      "dtype": "I8",
+      "shape": [
+        2560,
+        768
+      ]
+    },
+    {
+      "id": 40,
+      "name": "model.layers.1.mlp.down_proj.weight",
+      "dtype": "I8",
+      "shape": [
+        2560,
+        1152
+      ]
+    },
+    {
+      "id": 58,
+      "name": "model.layers.1.self_attn.o_proj.weight",
+      "dtype": "I8",
+      "shape": [
+        2560,
+        768
+      ]
+    },
+    {
+      "id": 281,
+      "name": "model.layers.10.self_attn.o_proj.weight",
+      "dtype": "I8",
+      "shape": [
+        2560,
+        768
+      ]
+    },
+    {
+      "id": 504,
+      "name": "model.layers.11.self_attn.o_proj.weight",
+      "dtype": "I8",
+      "shape": [
+        2560,
+        768
+      ]
+    },
+    {
+      "id": 727,
+      "name": "model.layers.12.self_attn.o_proj.weight",
+      "dtype": "I8",
+      "shape": [
+        2560,
+        768
+      ]
+    },
+    {
+      "id": 950,
+      "name": "model.layers.13.self_attn.o_proj.weight",
+      "dtype": "I8",
+      "shape": [
+        2560,
+        768
+      ]
+    },
+    {
+      "id": 1174,
+      "name": "model.layers.14.self_attn.o_proj.weight",
+      "dtype": "I8",
+      "shape": [
+        2560,
+        768
+      ]
+    },
+    {
+      "id": 1397,
+      "name": "model.layers.15.self_attn.o_proj.weight",
+      "dtype": "I8",
+      "shape": [
+        2560,
+        768
+      ]
+    },
+    {
+      "id": 1620,
+      "name": "model.layers.16.self_attn.o_proj.weight",
+      "dtype": "I8",
+      "shape": [
+        2560,
+        768
+      ]
+    },
+    {
+      "id": 1843,
+      "name": "model.layers.17.self_attn.o_proj.weight",
+      "dtype": "I8",
+      "shape": [
+        2560,
+        768
+      ]
+    },
+    {
+      "id": 2066,
+      "name": "model.layers.18.self_attn.o_proj.weight",
+      "dtype": "I8",
+      "shape": [
+        2560,
+        768
+      ]
+    },
+    {
+      "id": 2290,
+      "name": "model.layers.19.self_attn.o_proj.weight",
+      "dtype": "I8",
+      "shape": [
+        2560,
+        768
+      ]
+    },
+    {
+      "id": 2513,
+      "name": "model.layers.2.self_attn.o_proj.weight",
+      "dtype": "I8",
+      "shape": [
+        2560,
+        768
+      ]
+    },
+    {
+      "id": 2736,
+      "name": "model.layers.20.self_attn.o_proj.weight",
+      "dtype": "I8",
+      "shape": [
+        2560,
+        768
+      ]
+    },
+    {
+      "id": 2959,
+      "name": "model.layers.21.self_attn.o_proj.weight",
+      "dtype": "I8",
+      "shape": [
+        2560,
+        768
+      ]
+    },
+    {
+      "id": 3182,
+      "name": "model.layers.22.self_attn.o_proj.weight",
+      "dtype": "I8",
+      "shape": [
+        2560,
+        768
+      ]
+    },
+    {
+      "id": 3405,
+      "name": "model.layers.23.self_attn.o_proj.weight",
+      "dtype": "I8",
+      "shape": [
+        2560,
+        768
+      ]
+    },
+    {
+      "id": 3629,
+      "name": "model.layers.24.self_attn.o_proj.weight",
+      "dtype": "I8",
+      "shape": [
+        2560,
+        768
+      ]
+    },
+    {
+      "id": 3852,
+      "name": "model.layers.25.self_attn.o_proj.weight",
+      "dtype": "I8",
+      "shape": [
+        2560,
+        768
+      ]
+    },
+    {
+      "id": 4075,
+      "name": "model.layers.26.self_attn.o_proj.weight",
+      "dtype": "I8",
+      "shape": [
+        2560,
+        768
+      ]
+    },
+    {
+      "id": 4298,
+      "name": "model.layers.27.self_attn.o_proj.weight",
+      "dtype": "I8",
+      "shape": [
+        2560,
+        768
+      ]
+    },
+    {
+      "id": 4521,
+      "name": "model.layers.28.self_attn.o_proj.weight",
+      "dtype": "I8",
+      "shape": [
+        2560,
+        768
+      ]
+    },
+    {
+      "id": 4745,
+      "name": "model.layers.29.self_attn.o_proj.weight",
+      "dtype": "I8",
+      "shape": [
+        2560,
+        768
+      ]
+    },
+    {
+      "id": 4968,
+      "name": "model.layers.3.self_attn.o_proj.weight",
+      "dtype": "I8",
+      "shape": [
+        2560,
+        768
+      ]
+    },
+    {
+      "id": 5191,
+      "name": "model.layers.30.self_attn.o_proj.weight",
+      "dtype": "I8",
+      "shape": [
+        2560,
+        768
+      ]
+    },
+    {
+      "id": 5414,
+      "name": "model.layers.31.self_attn.o_proj.weight",
+      "dtype": "I8",
+      "shape": [
+        2560,
+        768
+      ]
+    },
+    {
+      "id": 5637,
+      "name": "model.layers.32.self_attn.o_proj.weight",
+      "dtype": "I8",
+      "shape": [
+        2560,
+        768
+      ]
+    },
+    {
+      "id": 5860,
+      "name": "model.layers.33.self_attn.o_proj.weight",
+      "dtype": "I8",
+      "shape": [
+        2560,
+        768
+      ]
+    },
+    {
+      "id": 6084,
+      "name": "model.layers.34.self_attn.o_proj.weight",
+      "dtype": "I8",
+      "shape": [
+        2560,
+        768
+      ]
+    },
+    {
+      "id": 6307,
+      "name": "model.layers.35.self_attn.o_proj.weight",
+      "dtype": "I8",
+      "shape": [
+        2560,
+        768
+      ]
+    },
+    {
+      "id": 6530,
+      "name": "model.layers.36.self_attn.o_proj.weight",
+      "dtype": "I8",
+      "shape": [
+        2560,
+        768
+      ]
+    },
+    {
+      "id": 6753,
+      "name": "model.layers.37.self_attn.o_proj.weight",
+      "dtype": "I8",
+      "shape": [
+        2560,
+        768
+      ]
+    },
+    {
+      "id": 6976,
+      "name": "model.layers.38.self_attn.o_proj.weight",
+      "dtype": "I8",
+      "shape": [
+        2560,
+        768
+      ]
+    },
+    {
+      "id": 7200,
+      "name": "model.layers.39.self_attn.o_proj.weight",
+      "dtype": "I8",
+      "shape": [
+        2560,
+        768
+      ]
+    },
+    {
+      "id": 7424,
+      "name": "model.layers.4.self_attn.o_proj.weight",
+      "dtype": "I8",
+      "shape": [
+        2560,
+        768
+      ]
+    },
+    {
+      "id": 7647,
+      "name": "model.layers.40.self_attn.o_proj.weight",
+      "dtype": "I8",
+      "shape": [
+        2560,
+        768
+      ]
+    },
+    {
+      "id": 7870,
+      "name": "model.layers.41.self_attn.o_proj.weight",
+      "dtype": "I8",
+      "shape": [
+        2560,
+        768
+      ]
+    },
+    {
+      "id": 8093,
+      "name": "model.layers.42.self_attn.o_proj.weight",
+      "dtype": "I8",
+      "shape": [
+        2560,
+        768
+      ]
+    },
+    {
+      "id": 8316,
+      "name": "model.layers.43.self_attn.o_proj.weight",
+      "dtype": "I8",
+      "shape": [
+        2560,
+        768
+      ]
+    },
+    {
+      "id": 8539,
+      "name": "model.layers.44.self_attn.o_proj.weight",
+      "dtype": "I8",
+      "shape": [
+        2560,
+        768
+      ]
+    },
+    {
+      "id": 8762,
+      "name": "model.layers.45.self_attn.o_proj.weight",
+      "dtype": "I8",
+      "shape": [
+        2560,
+        768
+      ]
+    },
+    {
+      "id": 8985,
+      "name": "model.layers.5.self_attn.o_proj.weight",
+      "dtype": "I8",
+      "shape": [
+        2560,
+        768
+      ]
+    },
+    {
+      "id": 9208,
+      "name": "model.layers.6.self_attn.o_proj.weight",
+      "dtype": "I8",
+      "shape": [
+        2560,
+        768
+      ]
+    },
+    {
+      "id": 9431,
+      "name": "model.layers.7.self_attn.o_proj.weight",
+      "dtype": "I8",
+      "shape": [
+        2560,
+        768
+      ]
+    },
+    {
+      "id": 9654,
+      "name": "model.layers.8.self_attn.o_proj.weight",
+      "dtype": "I8",
+      "shape": [
+        2560,
+        768
+      ]
+    },
+    {
+      "id": 9878,
+      "name": "model.layers.9.self_attn.o_proj.weight",
+      "dtype": "I8",
+      "shape": [
+        2560,
+        768
+      ]
+    }
+  ],
+  "instructions": [
+    {
+      "LoadSlice": {
+        "destination": 8,
+        "shard": "model-00001.safetensors",
+        "offset": 3177543568,
+        "bytes": 2949120,
+        "source_dtype": "I8",
+        "source_rows": {
+          "row_bytes": 1152,
+          "stride_bytes": 9216
+        }
+      }
+    },
+    {
+      "LoadSlice": {
+        "destination": 26,
+        "shard": "model-00001.safetensors",
+        "offset": 3248322448,
+        "bytes": 1966080,
+        "source_dtype": "I8",
+        "source_rows": {
+          "row_bytes": 768,
+          "stride_bytes": 6144
+        }
+      }
+    },
+    {
+      "LoadSlice": {
+        "destination": 40,
+        "shard": "model-00001.safetensors",
+        "offset": 3273488272,
+        "bytes": 2949120,
+        "source_dtype": "I8",
+        "source_rows": {
+          "row_bytes": 1152,
+          "stride_bytes": 9216
+        }
+      }
+    },
+    {
+      "LoadSlice": {
+        "destination": 58,
+        "shard": "model-00001.safetensors",
+        "offset": 3344267152,
+        "bytes": 1966080,
+        "source_dtype": "I8",
+        "source_rows": {
+          "row_bytes": 768,
+          "stride_bytes": 6144
+        }
+      }
+    },
+    {
+      "LoadSlice": {
+        "destination": 281,
+        "shard": "model-00010.safetensors",
+        "offset": 1769062260,
+        "bytes": 1966080,
+        "source_dtype": "I8",
+        "source_rows": {
+          "row_bytes": 768,
+          "stride_bytes": 6144
+        }
+      }
+    },
+    {
+      "LoadSlice": {
+        "destination": 504,
+        "shard": "model-00011.safetensors",
+        "offset": 1997108868,
+        "bytes": 1966080,
+        "source_dtype": "I8",
+        "source_rows": {
+          "row_bytes": 768,
+          "stride_bytes": 6144
+        }
+      }
+    },
+    {
+      "LoadSlice": {
+        "destination": 727,
+        "shard": "model-00012.safetensors",
+        "offset": 2001552452,
+        "bytes": 1966080,
+        "source_dtype": "I8",
+        "source_rows": {
+          "row_bytes": 768,
+          "stride_bytes": 6144
+        }
+      }
+    },
+    {
+      "LoadSlice": {
+        "destination": 950,
+        "shard": "model-00013.safetensors",
+        "offset": 1997108820,
+        "bytes": 1966080,
+        "source_dtype": "I8",
+        "source_rows": {
+          "row_bytes": 768,
+          "stride_bytes": 6144
+        }
+      }
+    },
+    {
+      "LoadSlice": {
+        "destination": 1174,
+        "shard": "model-00014.safetensors",
+        "offset": 1997108780,
+        "bytes": 1966080,
+        "source_dtype": "I8",
+        "source_rows": {
+          "row_bytes": 768,
+          "stride_bytes": 6144
+        }
+      }
+    },
+    {
+      "LoadSlice": {
+        "destination": 1397,
+        "shard": "model-00015.safetensors",
+        "offset": 2001572964,
+        "bytes": 1966080,
+        "source_dtype": "I8",
+        "source_rows": {
+          "row_bytes": 768,
+          "stride_bytes": 6144
+        }
+      }
+    },
+    {
+      "LoadSlice": {
+        "destination": 1620,
+        "shard": "model-00016.safetensors",
+        "offset": 1997108684,
+        "bytes": 1966080,
+        "source_dtype": "I8",
+        "source_rows": {
+          "row_bytes": 768,
+          "stride_bytes": 6144
+        }
+      }
+    },
+    {
+      "LoadSlice": {
+        "destination": 1843,
+        "shard": "model-00017.safetensors",
+        "offset": 1997136316,
+        "bytes": 1966080,
+        "source_dtype": "I8",
+        "source_rows": {
+          "row_bytes": 768,
+          "stride_bytes": 6144
+        }
+      }
+    },
+    {
+      "LoadSlice": {
+        "destination": 2066,
+        "shard": "model-00018.safetensors",
+        "offset": 2001622884,
+        "bytes": 1966080,
+        "source_dtype": "I8",
+        "source_rows": {
+          "row_bytes": 768,
+          "stride_bytes": 6144
+        }
+      }
+    },
+    {
+      "LoadSlice": {
+        "destination": 2290,
+        "shard": "model-00019.safetensors",
+        "offset": 1997176140,
+        "bytes": 1966080,
+        "source_dtype": "I8",
+        "source_rows": {
+          "row_bytes": 768,
+          "stride_bytes": 6144
+        }
+      }
+    },
+    {
+      "LoadSlice": {
+        "destination": 2513,
+        "shard": "model-00001.safetensors",
+        "offset": 3566040976,
+        "bytes": 1966080,
+        "source_dtype": "I8",
+        "source_rows": {
+          "row_bytes": 768,
+          "stride_bytes": 6144
+        }
+      }
+    },
+    {
+      "LoadSlice": {
+        "destination": 2736,
+        "shard": "model-00020.safetensors",
+        "offset": 1997196692,
+        "bytes": 1966080,
+        "source_dtype": "I8",
+        "source_rows": {
+          "row_bytes": 768,
+          "stride_bytes": 6144
+        }
+      }
+    },
+    {
+      "LoadSlice": {
+        "destination": 2959,
+        "shard": "model-00021.safetensors",
+        "offset": 2001622756,
+        "bytes": 1966080,
+        "source_dtype": "I8",
+        "source_rows": {
+          "row_bytes": 768,
+          "stride_bytes": 6144
+        }
+      }
+    },
+    {
+      "LoadSlice": {
+        "destination": 3182,
+        "shard": "model-00022.safetensors",
+        "offset": 1997176004,
+        "bytes": 1966080,
+        "source_dtype": "I8",
+        "source_rows": {
+          "row_bytes": 768,
+          "stride_bytes": 6144
+        }
+      }
+    },
+    {
+      "LoadSlice": {
+        "destination": 3405,
+        "shard": "model-00023.safetensors",
+        "offset": 1997175956,
+        "bytes": 1966080,
+        "source_dtype": "I8",
+        "source_rows": {
+          "row_bytes": 768,
+          "stride_bytes": 6144
+        }
+      }
+    },
+    {
+      "LoadSlice": {
+        "destination": 3629,
+        "shard": "model-00024.safetensors",
+        "offset": 2001622620,
+        "bytes": 1966080,
+        "source_dtype": "I8",
+        "source_rows": {
+          "row_bytes": 768,
+          "stride_bytes": 6144
+        }
+      }
+    },
+    {
+      "LoadSlice": {
+        "destination": 3852,
+        "shard": "model-00025.safetensors",
+        "offset": 1997196460,
+        "bytes": 1966080,
+        "source_dtype": "I8",
+        "source_rows": {
+          "row_bytes": 768,
+          "stride_bytes": 6144
+        }
+      }
+    },
+    {
+      "LoadSlice": {
+        "destination": 4075,
+        "shard": "model-00026.safetensors",
+        "offset": 1997175796,
+        "bytes": 1966080,
+        "source_dtype": "I8",
+        "source_rows": {
+          "row_bytes": 768,
+          "stride_bytes": 6144
+        }
+      }
+    },
+    {
+      "LoadSlice": {
+        "destination": 4298,
+        "shard": "model-00027.safetensors",
+        "offset": 2001622444,
+        "bytes": 1966080,
+        "source_dtype": "I8",
+        "source_rows": {
+          "row_bytes": 768,
+          "stride_bytes": 6144
+        }
+      }
+    },
+    {
+      "LoadSlice": {
+        "destination": 4521,
+        "shard": "model-00028.safetensors",
+        "offset": 1997175676,
+        "bytes": 1966080,
+        "source_dtype": "I8",
+        "source_rows": {
+          "row_bytes": 768,
+          "stride_bytes": 6144
+        }
+      }
+    },
+    {
+      "LoadSlice": {
+        "destination": 4745,
+        "shard": "model-00029.safetensors",
+        "offset": 1997175620,
+        "bytes": 1966080,
+        "source_dtype": "I8",
+        "source_rows": {
+          "row_bytes": 768,
+          "stride_bytes": 6144
+        }
+      }
+    },
+    {
+      "LoadSlice": {
+        "destination": 4968,
+        "shard": "model-00002.safetensors",
+        "offset": 2001620436,
+        "bytes": 1966080,
+        "source_dtype": "I8",
+        "source_rows": {
+          "row_bytes": 768,
+          "stride_bytes": 6144
+        }
+      }
+    },
+    {
+      "LoadSlice": {
+        "destination": 5191,
+        "shard": "model-00030.safetensors",
+        "offset": 2001642860,
+        "bytes": 1966080,
+        "source_dtype": "I8",
+        "source_rows": {
+          "row_bytes": 768,
+          "stride_bytes": 6144
+        }
+      }
+    },
+    {
+      "LoadSlice": {
+        "destination": 5414,
+        "shard": "model-00031.safetensors",
+        "offset": 1997175516,
+        "bytes": 1966080,
+        "source_dtype": "I8",
+        "source_rows": {
+          "row_bytes": 768,
+          "stride_bytes": 6144
+        }
+      }
+    },
+    {
+      "LoadSlice": {
+        "destination": 5637,
+        "shard": "model-00032.safetensors",
+        "offset": 1997175484,
+        "bytes": 1966080,
+        "source_dtype": "I8",
+        "source_rows": {
+          "row_bytes": 768,
+          "stride_bytes": 6144
+        }
+      }
+    },
+    {
+      "LoadSlice": {
+        "destination": 5860,
+        "shard": "model-00033.safetensors",
+        "offset": 2001622148,
+        "bytes": 1966080,
+        "source_dtype": "I8",
+        "source_rows": {
+          "row_bytes": 768,
+          "stride_bytes": 6144
+        }
+      }
+    },
+    {
+      "LoadSlice": {
+        "destination": 6084,
+        "shard": "model-00034.safetensors",
+        "offset": 1997175396,
+        "bytes": 1966080,
+        "source_dtype": "I8",
+        "source_rows": {
+          "row_bytes": 768,
+          "stride_bytes": 6144
+        }
+      }
+    },
+    {
+      "LoadSlice": {
+        "destination": 6307,
+        "shard": "model-00035.safetensors",
+        "offset": 1997195956,
+        "bytes": 1966080,
+        "source_dtype": "I8",
+        "source_rows": {
+          "row_bytes": 768,
+          "stride_bytes": 6144
+        }
+      }
+    },
+    {
+      "LoadSlice": {
+        "destination": 6530,
+        "shard": "model-00036.safetensors",
+        "offset": 2001622012,
+        "bytes": 1966080,
+        "source_dtype": "I8",
+        "source_rows": {
+          "row_bytes": 768,
+          "stride_bytes": 6144
+        }
+      }
+    },
+    {
+      "LoadSlice": {
+        "destination": 6753,
+        "shard": "model-00037.safetensors",
+        "offset": 1997175260,
+        "bytes": 1966080,
+        "source_dtype": "I8",
+        "source_rows": {
+          "row_bytes": 768,
+          "stride_bytes": 6144
+        }
+      }
+    },
+    {
+      "LoadSlice": {
+        "destination": 6976,
+        "shard": "model-00038.safetensors",
+        "offset": 1997175220,
+        "bytes": 1966080,
+        "source_dtype": "I8",
+        "source_rows": {
+          "row_bytes": 768,
+          "stride_bytes": 6144
+        }
+      }
+    },
+    {
+      "LoadSlice": {
+        "destination": 7200,
+        "shard": "model-00039.safetensors",
+        "offset": 2001621900,
+        "bytes": 1966080,
+        "source_dtype": "I8",
+        "source_rows": {
+          "row_bytes": 768,
+          "stride_bytes": 6144
+        }
+      }
+    },
+    {
+      "LoadSlice": {
+        "destination": 7424,
+        "shard": "model-00003.safetensors",
+        "offset": 1997173684,
+        "bytes": 1966080,
+        "source_dtype": "I8",
+        "source_rows": {
+          "row_bytes": 768,
+          "stride_bytes": 6144
+        }
+      }
+    },
+    {
+      "LoadSlice": {
+        "destination": 7647,
+        "shard": "model-00040.safetensors",
+        "offset": 2003890692,
+        "bytes": 1966080,
+        "source_dtype": "I8",
+        "source_rows": {
+          "row_bytes": 768,
+          "stride_bytes": 6144
+        }
+      }
+    },
+    {
+      "LoadSlice": {
+        "destination": 7870,
+        "shard": "model-00042.safetensors",
+        "offset": 1997109228,
+        "bytes": 1966080,
+        "source_dtype": "I8",
+        "source_rows": {
+          "row_bytes": 768,
+          "stride_bytes": 6144
+        }
+      }
+    },
+    {
+      "LoadSlice": {
+        "destination": 8093,
+        "shard": "model-00043.safetensors",
+        "offset": 2001552772,
+        "bytes": 1966080,
+        "source_dtype": "I8",
+        "source_rows": {
+          "row_bytes": 768,
+          "stride_bytes": 6144
+        }
+      }
+    },
+    {
+      "LoadSlice": {
+        "destination": 8316,
+        "shard": "model-00044.safetensors",
+        "offset": 1997109044,
+        "bytes": 1966080,
+        "source_dtype": "I8",
+        "source_rows": {
+          "row_bytes": 768,
+          "stride_bytes": 6144
+        }
+      }
+    },
+    {
+      "LoadSlice": {
+        "destination": 8539,
+        "shard": "model-00045.safetensors",
+        "offset": 1997108956,
+        "bytes": 1966080,
+        "source_dtype": "I8",
+        "source_rows": {
+          "row_bytes": 768,
+          "stride_bytes": 6144
+        }
+      }
+    },
+    {
+      "LoadSlice": {
+        "destination": 8762,
+        "shard": "model-00046.safetensors",
+        "offset": 2001552516,
+        "bytes": 1966080,
+        "source_dtype": "I8",
+        "source_rows": {
+          "row_bytes": 768,
+          "stride_bytes": 6144
+        }
+      }
+    },
+    {
+      "LoadSlice": {
+        "destination": 8985,
+        "shard": "model-00004.safetensors",
+        "offset": 1997194268,
+        "bytes": 1966080,
+        "source_dtype": "I8",
+        "source_rows": {
+          "row_bytes": 768,
+          "stride_bytes": 6144
+        }
+      }
+    },
+    {
+      "LoadSlice": {
+        "destination": 9208,
+        "shard": "model-00006.safetensors",
+        "offset": 1993701244,
+        "bytes": 1966080,
+        "source_dtype": "I8",
+        "source_rows": {
+          "row_bytes": 768,
+          "stride_bytes": 6144
+        }
+      }
+    },
+    {
+      "LoadSlice": {
+        "destination": 9431,
+        "shard": "model-00007.safetensors",
+        "offset": 1997107676,
+        "bytes": 1966080,
+        "source_dtype": "I8",
+        "source_rows": {
+          "row_bytes": 768,
+          "stride_bytes": 6144
+        }
+      }
+    },
+    {
+      "LoadSlice": {
+        "destination": 9654,
+        "shard": "model-00008.safetensors",
+        "offset": 1997107588,
+        "bytes": 1966080,
+        "source_dtype": "I8",
+        "source_rows": {
+          "row_bytes": 768,
+          "stride_bytes": 6144
+        }
+      }
+    },
+    {
+      "LoadSlice": {
+        "destination": 9878,
+        "shard": "model-00009.safetensors",
+        "offset": 2001551124,
+        "bytes": 1966080,
+        "source_dtype": "I8",
+        "source_rows": {
+          "row_bytes": 768,
+          "stride_bytes": 6144
+        }
+      }
+    }
+  ]
+}

@@ -94,7 +94,8 @@ Plan Plan::read(const std::string &path) {
   if (u32(input) != count)
     fail("initialization instruction count");
   for (uint32_t i = 0; i < count; ++i) {
-    if (u32(input) != 1)
+    auto opcode = u32(input);
+    if (opcode != 1 && opcode != 2)
       fail("unsupported initialization opcode");
     LoadSlice op;
     op.destination = u32(input);
@@ -102,12 +103,33 @@ Plan Plan::read(const std::string &path) {
     op.offset = number(input, 8);
     op.bytes = number(input, 8);
     op.source_dtype = static_cast<DType>(u32(input));
+    if (opcode == 2) {
+      op.row_bytes = number(input, 8);
+      op.stride_bytes = number(input, 8);
+      if (!op.row_bytes)
+        fail("zero initialization row size");
+    }
     p.instructions.push_back(std::move(op));
   }
   if (input.peek() != EOF)
     fail("trailing initialization data");
   p.validate();
   return p;
+}
+uint64_t LoadSlice::source_span() const {
+  if (!row_bytes) {
+    if (stride_bytes)
+      fail("initialization stride without rows");
+    return bytes;
+  }
+  auto width = element_bytes(source_dtype);
+  if (!bytes || bytes % row_bytes || row_bytes % width ||
+      stride_bytes < row_bytes || stride_bytes % width)
+    fail("initialization source rows");
+  auto count = bytes / row_bytes - 1;
+  if (count > UINT64_MAX / stride_bytes)
+    fail("initialization row span overflow");
+  return add(count * stride_bytes, row_bytes);
 }
 void Plan::validate() const {
   if (parameters.empty() || parameters.size() > 100000 ||
@@ -140,7 +162,7 @@ void Plan::validate() const {
       fail("unsupported initialization conversion");
     auto elements = p.bytes() / element_bytes(p.dtype);
     if (elements > UINT64_MAX / width || elements * width != op.bytes ||
-        add(op.offset, op.bytes) > INT64_MAX)
+        add(op.offset, op.source_span()) > INT64_MAX)
       fail("initialization source range");
   }
 }
@@ -184,7 +206,7 @@ ParameterStore Executor::execute(const Plan &plan, const std::string &directory,
   for (const auto &op : plan.instructions) {
     auto file = std::filesystem::canonical(root / op.shard);
     if (file.parent_path() != root || !std::filesystem::is_regular_file(file) ||
-        std::filesystem::file_size(file) < add(op.offset, op.bytes))
+        std::filesystem::file_size(file) < add(op.offset, op.source_span()))
       fail("initialization shard range/path mismatch");
     paths.push_back(std::move(file));
   }
@@ -205,8 +227,24 @@ ParameterStore Executor::execute(const Plan &plan, const std::string &directory,
     uint64_t done = 0, output_offset = 0;
     while (done < op.bytes) {
       size_t count = std::min<uint64_t>(staging.size(), op.bytes - done);
-      if (!file.read(staging.data(), count))
-        fail("short initialization read");
+      if (!op.row_bytes) {
+        if (!file.read(staging.data(), count))
+          fail("short initialization read");
+      } else {
+        // Pack selected columns into bounded staging, then upload one chunk.
+        // Never allocate or upload the unsharded source matrix.
+        size_t filled = 0;
+        while (filled < count) {
+          auto packed_offset = done + filled;
+          auto row = packed_offset / op.row_bytes;
+          auto column = packed_offset % op.row_bytes;
+          auto take = std::min<uint64_t>(count - filled, op.row_bytes - column);
+          if (!file.seekg(op.offset + row * op.stride_bytes + column) ||
+              !file.read(staging.data() + filled, take))
+            fail("short strided initialization read");
+          filled += take;
+        }
+      }
       const void *data = staging.data();
       size_t output = count;
       if (op.source_dtype != p.dtype) {

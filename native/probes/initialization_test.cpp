@@ -82,6 +82,36 @@ int main(int argc, char **argv) {
       rejects([&] { store.at(2); });
     }
     require(memory->allocations.empty());
+    // Two selected columns from each four-column BF16 row, packed through a
+    // staging boundary that cuts across rows, with conversion during upload.
+    {
+      std::ofstream f(root / "strided", std::ios::binary);
+      uint16_t rows[] = {0,      0x3f80, 0x4000, 0,      0,      0x4040,
+                         0x4080, 0,      0,      0x40a0, 0x40c0, 0};
+      f.write(reinterpret_cast<char *>(rows), sizeof(rows));
+      f.close();
+      Plan packed{0,
+                  0,
+                  std::string(64, 'a'),
+                  {{0, "columns", DType::F32, {3, 2}}},
+                  {{0, "strided", 2, 12, DType::Bf16, 4, 8}}};
+      Options streaming;
+      streaming.staging_bytes = 8;
+      streaming.verify_upload = true;
+      auto store = Executor::execute(packed, root.string(), memory, streaming);
+      float expected[] = {1, 2, 3, 4, 5, 6};
+      require(std::memcmp(store.at(0).data, expected, sizeof(expected)) == 0);
+      require(store.source_bytes == 12 && store.resident_bytes == 24);
+      auto invalid = packed;
+      invalid.instructions[0].stride_bytes = 2;
+      rejects([&] { invalid.validate(); });
+      invalid = packed;
+      invalid.instructions[0].offset = 8;
+      rejects([&] {
+        Executor::execute(invalid, root.string(), memory, streaming);
+      });
+    }
+    require(memory->allocations.empty());
     memory->uploads = 0;
     memory->fail_upload = 3;
     rejects([&] { Executor::execute(p, root.string(), memory, options); });

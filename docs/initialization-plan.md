@@ -1,6 +1,6 @@
 # Parameter initialization plans
 
-The executable 92B DSL now derives tensor requirements, TP row slices and EP ownership directly from graph operators via `inferfabric-compiler::token`. The older OpenPangu placement adapter remains available for audits, but the DSL execution path bypasses its model-name rules. Both emit the permanent initialization IR described here. See [the executable DSL](openpangu-executable-dsl.md).
+The executable 92B DSL derives tensor requirements, TP row/column slices and EP ownership directly from graph operators via `inferfabric-compiler::token`. The older OpenPangu placement adapter remains available for audits, but the DSL execution path bypasses its model-name rules. Both emit the permanent initialization IR described here. See [the executable DSL](openpangu-executable-dsl.md).
 
 The shared initialization subsystem is model independent. Model binding/lowering produces `inferfabric_ir::initialization::InitializationPlan`; the compiler encodes it as `IFINIT01`. The native executor knows parameter IDs, storage slices, dtypes and device memory operations, not model names or TP/EP semantics.
 
@@ -8,7 +8,23 @@ The shared initialization subsystem is model independent. Model binding/lowering
 
 A plan declares rank/device metadata, a checkpoint metadata fingerprint (provenance only), dense artifact-local parameter IDs, debug/binding names, shapes and destination dtypes. Its ordered initialization program contains `LoadSlice` instructions. Each instruction allocates one declared parameter and streams a contiguous file range into it. Equal dtypes copy bytes; BF16 to FP32 is the only supported conversion. Conversion and upload are fused to avoid allocating a second full tensor. Every parameter must have exactly one producer. Unsupported operations and conversions fail closed.
 
-This is an executable initialization IR, not the model execution DAG. Version 1 deliberately has no general transpose, packing, gamma folding or compute-kernel instruction. Such preparation remains explicit model executor work until represented by validated new IR operations; a transform string cannot silently request unimplemented behavior.
+An optional `source_rows` specifies `row_bytes` and `stride_bytes` for strided
+source reads. `bytes` remains the selected packed byte count; the source span is
+`(bytes / row_bytes - 1) * stride_bytes + row_bytes`. Validation checks alignment,
+divisibility, non-overlap, overflow and the complete file span before allocation.
+Rows are packed into bounded staging chunks and uploaded contiguously, without
+loading or allocating the unsharded matrix. This is a generic storage operation;
+the executor does not interpret tensor names, ranks or model architecture.
+
+`linear(placement="tp_columns")` lowers to these strided reads, with replicated
+per-output scales. `mome(placement="tp_channels")` uses contiguous row slicing
+for its independent channels. The DSL explicitly supplies the following reduction.
+
+This is an executable initialization IR, not the model execution DAG. Beyond
+explicit strided source-row packing, it has no general transpose, gamma folding
+or compute-kernel instruction. Such preparation remains explicit runtime work
+until represented by validated IR operations; a transform string cannot silently
+request unimplemented behavior.
 
 ## Wire format
 
@@ -18,6 +34,8 @@ All integers are little endian. Strings are a u32 byte length followed by UTF-8 
 - u32 parameter count. For each: u32 ID, name string, u32 dtype, u32 dimension count, u64 dimensions.
 - u32 instruction count. For each: u32 opcode, u32 destination ID, shard string, u64 absolute file offset, u64 source bytes, u32 source dtype.
 - Dtypes: I8=1, BF16=2, F32=3. Opcode 1 is `LoadSlice`.
+- Opcode 2 has the same fields followed by u64 row bytes and u64 source stride.
+  Opcode-1 artifacts remain byte-identical; older readers reject opcode 2.
 
 Counts are bounded at 100,000, dimensions at eight. IDs are dense and positional; instruction order may differ from ID order. Validation rejects unknown opcodes/dtypes, duplicate names/producers, missing parameters, malformed paths, invalid shape/range arithmetic and trailing bytes. `IFLOAD01` is an obsolete development format and is rejected, not guessed or silently converted.
 

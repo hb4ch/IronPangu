@@ -23,6 +23,8 @@ struct LoadSlice {
   std::string shard;
   uint64_t offset, bytes;
   DType source_dtype;
+  uint64_t row_bytes = 0, stride_bytes = 0;
+  uint64_t source_span() const;
 };
 struct Plan {
   uint32_t rank, device;

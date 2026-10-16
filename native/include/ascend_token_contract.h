@@ -65,6 +65,7 @@ inline void validate_kernels(const Plan &p) {
     } else if (n.op == "linear") {
       check({{0, tensor(0)}}, {"weight", "width", "placement"}, {0, w()});
       if (n.text("placement") != "tp_rows" &&
+          n.text("placement") != "tp_columns" &&
           n.text("placement") != "replicated")
         error();
     } else if (n.op == "gather")
@@ -72,7 +73,14 @@ inline void validate_kernels(const Plan &p) {
     else if (n.op == "allreduce")
       check({{0, tensor(0)}}, {}, {0, tensor(0)});
     else if (n.op == "mome") {
-      check({{0, tensor(0)}}, {"weight", "taps"}, {0, tensor(0)});
+      std::vector<std::string> attrs{"weight", "taps"};
+      if (n.attrs.count("placement")) {
+        attrs.push_back("placement");
+        if (n.text("placement") != "tp_channels" &&
+            n.text("placement") != "replicated")
+          error();
+      }
+      check({{0, tensor(0)}}, attrs, {0, tensor(0)});
       eq("taps", "3");
     } else if (n.op == "slice") {
       auto a = tensor(0);

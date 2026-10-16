@@ -41,6 +41,11 @@ impl Parameter {
     }
 }
 #[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct SourceRows {
+    pub row_bytes: u64,
+    pub stride_bytes: u64,
+}
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum Instruction {
     /// Allocate destination and stream a contiguous file slice into it. Conversion is
     /// fused with upload so a cast never requires a second full resident allocation.
@@ -50,6 +55,9 @@ pub enum Instruction {
         offset: u64,
         bytes: u64,
         source_dtype: DType,
+        /// Optional strided source rows packed contiguously during streaming load.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        source_rows: Option<SourceRows>,
     },
 }
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -101,6 +109,7 @@ impl InitializationPlan {
                     offset,
                     bytes,
                     source_dtype,
+                    source_rows,
                 } => {
                     let p = self
                         .parameters
@@ -123,9 +132,26 @@ impl InitializationPlan {
                         return Err(invalid("unsupported initialization conversion"));
                     }
                     let elements = p.bytes()? / p.dtype.bytes();
+                    let span = if let Some(rows) = source_rows {
+                        if rows.row_bytes == 0
+                            || *bytes == 0
+                            || bytes % rows.row_bytes != 0
+                            || rows.row_bytes % source_dtype.bytes() != 0
+                            || rows.stride_bytes < rows.row_bytes
+                            || rows.stride_bytes % source_dtype.bytes() != 0
+                        {
+                            return Err(invalid("initialization source rows"));
+                        }
+                        (bytes / rows.row_bytes - 1)
+                            .checked_mul(rows.stride_bytes)
+                            .and_then(|x| x.checked_add(rows.row_bytes))
+                            .ok_or_else(|| invalid("initialization row span overflow"))?
+                    } else {
+                        *bytes
+                    };
                     if elements.checked_mul(source_dtype.bytes()) != Some(*bytes)
                         || offset
-                            .checked_add(*bytes)
+                            .checked_add(span)
                             .is_none_or(|end| end > i64::MAX as u64)
                     {
                         return Err(invalid("initialization source range"));
@@ -156,12 +182,32 @@ mod tests {
                 offset: 8,
                 bytes: 12,
                 source_dtype: DType::Bf16,
+                source_rows: None,
             }],
         }
     }
     #[test]
     fn generic_rank_and_streaming_cast() {
         plan().validate().unwrap();
+    }
+    #[test]
+    fn strided_source_bounds_and_alignment() {
+        let mut p = plan();
+        let Instruction::LoadSlice { source_rows, .. } = &mut p.instructions[0];
+        *source_rows = Some(SourceRows {
+            row_bytes: 6,
+            stride_bytes: 16,
+        });
+        p.validate().unwrap();
+        for (row_bytes, stride_bytes) in [(0, 16), (5, 16), (6, 4), (6, 15), (6, u64::MAX - 1)] {
+            let mut bad = p.clone();
+            let Instruction::LoadSlice { source_rows, .. } = &mut bad.instructions[0];
+            *source_rows = Some(SourceRows {
+                row_bytes,
+                stride_bytes,
+            });
+            assert!(bad.validate().is_err());
+        }
     }
     #[test]
     fn rejects_invalid_contracts() {

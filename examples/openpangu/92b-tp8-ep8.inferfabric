@@ -9,7 +9,7 @@ module TPLinear(x, w, width) {
 }
 
 module PlacedLinear(x, w, width, parallel) {
-    let output = choose(parallel, TPLinear(x, w, width),
+    let output = choose(parallel, linear(x, weight = w, width = div(width, 8), placement = "tp_rows"),
                  linear(x, weight = w, width = width, placement = "replicated"));
     yield output;
 }
@@ -18,7 +18,9 @@ module DenseFFN(x, w, intermediate, parallel) {
     let gate = PlacedLinear(x, w.gate_proj, intermediate, parallel);
     let up = PlacedLinear(x, w.up_proj, intermediate, parallel);
     let activated = swiglu(gate, up);
-    let output = PlacedLinear(activated, w.down_proj, 2560, parallel);
+    let output = choose(parallel,
+        allreduce(linear(activated, weight = w.down_proj, width = 2560, placement = "tp_columns")),
+        linear(activated, weight = w.down_proj, width = 2560, placement = "replicated"));
     yield output;
 }
 
@@ -58,9 +60,9 @@ module MLAAttention(x, w, window) {
     let attended = latent_attention(query, cache, scale_dim = 192,
                                     window = window, selection = "all_causal_within_window");
     let value = mla_value(attended, weight = w.kv_b_proj, heads = 48, latent = 512, value = 128);
-    let gathered = gather(value);
-    let oc = mome(gathered, weight = w.o_conv, taps = 3);
-    let output = TPLinear(oc, w.o_proj, 2560);
+    let oc = mome(value, weight = w.o_conv, taps = 3, placement = "tp_channels");
+    let partial = linear(oc, weight = w.o_proj, width = 2560, placement = "tp_columns");
+    let output = allreduce(partial);
     yield output;
 }
 
