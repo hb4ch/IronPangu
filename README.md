@@ -9,6 +9,7 @@
 </p>
 
 <p align="center">
+  <a href="#latest-progress">Latest progress</a> ·
   <a href="#the-big-picture">Vision</a> ·
   <a href="#current-capabilities">Capabilities</a> ·
   <a href="#build-and-run">Build &amp; run</a> ·
@@ -16,6 +17,34 @@
   <a href="#roadmap-to-production">Roadmap</a> ·
   <a href="#repository-and-verification">Documentation</a>
 </p>
+
+---
+
+## Latest progress
+
+### 2026-10-16 · Milestone: reusable DSL → complete 92B NPU inference
+
+**OpenPangu V2 92B is now fully defined in a compact DSL and verified end to end on eight Ascend NPUs (TP8/EP8).**
+
+| Delivered | Result |
+|---|---|
+| **Reusable model authoring** | Five file-local modules, compile-time folds and conditions, and scoped weight bindings reduce the model from **2,221 to 107 lines**. |
+| **Inspectable execution plan** | The compiler expands all **46 layers into 2,109 primitive operations**, with source mappings and module instance paths in JSON, plus a Graphviz export. |
+| **Permanent initialization plans** | Graph-derived per-rank weight loading and sharding; all eight initialization binaries remain byte-identical to the qualified flat-DSL baseline. |
+| **Full NPU verification** | **33/33 generated tokens** across three complete generations match the pinned reference. Complete recorded results, including selected logits and top-five values, match the flat-DSL run byte for byte. |
+
+**Scope:** this 92B qualification covers single-sequence, greedy generation with a 512-token context. The output is an executable plan bundle for existing native kernels. Automatic fusion, physical memory/scheduling optimization, generated kernel backends and production Rust serving integration for this program format remain ahead.
+
+[Read the 107-line model](examples/openpangu/92b-tp8-ep8.inferfabric) · [Module syntax](docs/dsl-modules.md) · [Compiler outputs](docs/openpangu-executable-dsl.md) · [NPU evidence & expanded plan](docs/validation/2026-10-16-reusable-dsl/README.md)
+
+<details>
+<summary>Milestone commits</summary>
+
+- [`6142968`](https://github.com/hb4ch/IronPangu/commit/6142968) — reusable modules, compile-time folds and scoped weight bindings.
+- [`7ed86e9`](https://github.com/hb4ch/IronPangu/commit/7ed86e9) — compact 92B model and exact expanded-graph regression tests.
+- [`b9b8d3d`](https://github.com/hb4ch/IronPangu/commit/b9b8d3d) — full NPU qualification, artifact hashes and inspectable plan evidence.
+
+</details>
 
 ---
 
@@ -27,7 +56,7 @@ An inference compiler and runtime for Huawei Ascend, built in Rust with a C ABI 
 
 > **Project status · Active development**
 >
-> The current native Qwen path is implemented. DSL v1, general native bundles and automatic backend code generation remain roadmap work. Recorded hardware results describe their tested revisions and environments; they are not a production-readiness claim.
+> The native Qwen serving path and the DSL-defined 92B diagnostic path are implemented. The supported DSL subset produces checked executable plans; general optimized native bundles and automatic backend code generation remain roadmap work. Recorded hardware results describe their tested revisions and environments; they are not a production-readiness claim.
 
 | Model explicitly | Compile deliberately | Execute natively |
 |---|---|---|
@@ -48,7 +77,7 @@ Historical records under `docs/validation*` retain their original names and outp
 
 ![Target architecture: compile an explicit model into a native bundle, then schedule requests and execute on Ascend.](docs/assets/inferfabric-vision.svg)
 
-*Target architecture.* The current Qwen runtime already serves through the Rust frontend and ACL Graph replay. General DSL v1 compilation and native bundles are planned.
+*Target architecture.* The current Qwen runtime already serves through the Rust frontend and ACL Graph replay. The 92B DSL now compiles into an executable operation program and per-rank initialization plans. General optimized native bundles remain planned.
 
 ## Why build this?
 
@@ -386,7 +415,7 @@ Run local checks with `cargo fmt --all --check`, `cargo test --workspace`, and `
 
 Further reading: [sampling](docs/npu-sampling.md), [context and HBM profiling](docs/npu-memory-profile.md), [continuous batching](docs/npu-continuous-batching.md), [tensor parallelism](docs/npu-tensor-parallel.md), [activation memory](docs/npu-activation-memory.md), and the [target architecture](docs/design.md). The README describes current implementation scope; older design and bring-up notes also contain historical milestones and future targets.
 
-Proposed DSL v1: [language design](docs/dsl-language-design.md) and [implementation plan](docs/dsl-implementation-plan.md). The legacy parser is removed; the implemented subset and compiled-code route are documented in [model authoring](docs/model-authoring.md). Broader module syntax and backend adapters remain planned.
+Proposed DSL v1: [language design](docs/dsl-language-design.md) and [implementation plan](docs/dsl-implementation-plan.md). The legacy parser is removed; the implemented subset and compiled-code route are documented in [model authoring](docs/model-authoring.md). File-local reusable modules, compile-time folds and scoped weights are implemented for the token graph target; cross-file imports and generated backend adapters remain planned.
 
 
 ## Physical plan / execute workflow
