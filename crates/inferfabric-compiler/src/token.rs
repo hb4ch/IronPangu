@@ -104,7 +104,7 @@ pub fn initialization_plans(
                 continue;
             };
             let width = n.inputs.first().map_or(0, |&j| match types[j] {
-                Type::Tensor(w) | Type::Experts(w) => w as u64,
+                Type::Tensor(w) | Type::Experts(w) | Type::Quantized(w) => w as u64,
                 _ => 0,
             });
             match n.op.as_str() {

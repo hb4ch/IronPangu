@@ -1,6 +1,6 @@
 // Included inside the backend kernel collection. The program, not this switch,
 // defines the architecture, residual wiring, layer count and weight bindings.
-using Value = std::variant<V, HC, Routes, ExpertRows, std::string>;
+using Value = std::variant<V, HC, Routes, ExpertRows, std::string, Quantized>;
 static std::string expert_name(std::string pattern, int expert) {
   auto at = pattern.find("{expert}");
   if (at == std::string::npos)
@@ -29,6 +29,8 @@ V execute_token() {
     Value result;
     if (n.op == "cast") {
       result = cast(tensor(0), n.dtype == "bf16" ? ACL_BF16 : ACL_FLOAT);
+    } else if (n.op == "quantize") {
+      result = quantize(tensor(0));
     } else if (n.op == "copy") {
       V copy(tensor(0).size(), tensor(0).dtype());
       resident::copy(copy.data(), tensor(0).data(), copy.bytes());
@@ -65,6 +67,8 @@ V execute_token() {
     else if (n.op == "optional_norm")
       result = (program.physical ? n.kernel == "norm" : bindings.count(weight() + ".weight")) ? norm(tensor(0), weight())
                                                     : tensor(0);
+    else if (n.op == "linear" && program.physical && n.kernel=="int8")
+      result = quantized_linear(weight(),std::get<Quantized>(input(0)));
     else if (n.op == "linear")
       result = n.attrs.count("paired_weight")
                    ? linear_pair(weight(), n.text("paired_weight"), tensor(0))

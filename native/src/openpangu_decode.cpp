@@ -293,40 +293,38 @@ struct Decoder {
     run(aclnnMatmul, bytes, e);
     return result(out);
   }
+  struct Quantized { V values, scales; };
+  Quantized quantize(const V &x) {
+    if (x.dtype()!=ACL_BF16) throw std::runtime_error("quantize requires planned BF16 input");
+    View input(x.data(), {1,int64_t(x.size())}, ACL_BF16);
+    DeviceTensor quant({1,int64_t(x.size())}, ACL_INT8, 1), scale({1},ACL_FLOAT,4);
+    uint64_t bytes=0; aclOpExecutor *e=nullptr;
+    checked(prepared::query("aclnnDynamicQuant", false, aclnnDynamicQuantGetWorkspaceSize,
+                            input.t,nullptr,quant.tensor,scale.tensor,&bytes,&e),"quant prepare");
+    run(aclnnDynamicQuant,bytes,e);
+    return {result(quant,ACL_INT8),result(scale,ACL_FLOAT)};
+  }
+  V quantized_linear(const std::string &name, const Quantized &x) {
+    auto &a=w(name+".weight"), &s=w(name+".weight_scale");
+    int n=a.descriptor.shape[0],k=a.descriptor.shape[1];
+    if (x.values.dtype()!=ACL_INT8 || x.values.size()!=size_t(k) || x.scales.dtype()!=ACL_FLOAT || x.scales.size()!=1)
+      throw std::runtime_error("quantized linear input contract");
+    View quant(x.values.data(),{1,k},ACL_INT8), scale(x.scales.data(),{1},ACL_FLOAT);
+    View weight(a.data,{n,k},ACL_INT8), scales(s.data,{n},ACL_FLOAT);
+    DeviceTensor out({1,n},ACL_BF16,2); uint64_t bytes=0; aclOpExecutor *e=nullptr;
+    checked(prepared::query("aclnnQuantMatmulV5",false,aclnnQuantMatmulV5GetWorkspaceSize,
+                            quant.t,weight.t,scale.t,scales.t,nullptr,nullptr,nullptr,nullptr,
+                            nullptr,false,true,0,out.tensor,&bytes,&e),"int8 matmul prepare");
+    run(aclnnQuantMatmulV5,bytes,e); return result(out);
+  }
   V linear(const std::string &name, const V &x, const std::string &implementation = "") {
-    auto &a = w(name + ".weight");
-    int n = a.descriptor.shape[0], k = a.descriptor.shape[1];
-    if (int(x.size()) != k)
-      throw std::runtime_error("linear shape " + name);
-    V result;
-    if (implementation == "bf16" || (implementation.empty() && a.dtype == inferfabric::initialization::DType::Bf16))
-      result = matrix(x, a.data, n, k);
-    else {
-      auto &s = w(name + ".weight_scale");
-      auto value = cast(x, ACL_BF16);
-      View input(value.data(), {1, k}, ACL_BF16);
-      DeviceTensor quant({1, k}, ACL_INT8, 1), scale({1}, ACL_FLOAT, 4),
-          out({1, n}, ACL_BF16, 2);
-      View weight(a.data, {n, k}, ACL_INT8), scales(s.data, {n}, ACL_FLOAT);
-      uint64_t bytes = 0;
-      aclOpExecutor *e = nullptr;
-      checked(prepared::query("aclnnDynamicQuant", false,
-                              aclnnDynamicQuantGetWorkspaceSize, input.t,
-                              nullptr, quant.tensor, scale.tensor, &bytes, &e),
-              "quant prepare");
-      run(aclnnDynamicQuant, bytes, e);
-      checked(prepared::query("aclnnQuantMatmulV5", false,
-                              aclnnQuantMatmulV5GetWorkspaceSize, quant.tensor,
-                              weight.t, scale.tensor, scales.t, nullptr,
-                              nullptr, nullptr, nullptr, nullptr, false, true,
-                              0, out.tensor, &bytes, &e),
-              "int8 matmul prepare");
-      run(aclnnQuantMatmulV5, bytes, e);
-      result = this->result(out);
-    }
-    auto output = result;
-    trace(name, output);
-    return output;
+    auto &a=w(name+".weight");
+    int n=a.descriptor.shape[0],k=a.descriptor.shape[1];
+    if (x.size()!=size_t(k)) throw std::runtime_error("linear shape "+name);
+    if (implementation=="bf16" || (implementation.empty() && a.dtype==inferfabric::initialization::DType::Bf16))
+      return matrix(x,a.data,n,k);
+    if (program.physical) throw std::runtime_error("physical INT8 projection requires explicit quantize");
+    return quantized_linear(name,quantize(cast(x,ACL_BF16)));
   }
   V linear_pair(const std::string &first, const std::string &second, const V &x) {
     auto &a = w(first + ".weight"), &b = w(second + ".weight");

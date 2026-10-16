@@ -63,6 +63,9 @@ inline void validate_kernels(const Plan &p) {
       check({{0, tensor(0)}}, {"dtype"}, {0, tensor(0)});
       if (n.text("dtype") != n.dtype || n.kernel != "aclnnCast" ||
           p.nodes[n.inputs[0]].dtype == n.dtype) error();
+    } else if (p.physical && n.op == "quantize") {
+      check({{0,tensor(0)}},{"dtype","scheme","scale_dtype"},{5,tensor(0)});
+      eq("dtype","int8"); eq("scheme","per_token_symmetric"); eq("scale_dtype","f32");
     } else if (n.op == "embedding") {
       check({}, {"weight", "width", "vocab"}, {0, 2560});
       eq("width", "2560");
@@ -90,8 +93,12 @@ inline void validate_kernels(const Plan &p) {
         auto first = w(), second = n.integer("paired_width");
         if (!second || second > 200000 - first || n.text("placement") != "replicated") error();
         check({{0, tensor(0)}}, {"weight", "width", "placement", "paired_weight", "paired_width"}, {0, first + second});
-      } else
-        check({{0, tensor(0)}}, {"weight", "width", "placement"}, {0, w()});
+      } else {
+        if (p.physical && n.kernel=="int8") {
+          if(in.size()!=1 || in[0].first!=5) error();
+          check({{5,in[0].second}}, {"weight", "width", "placement"}, {0,w()});
+        } else check({{0, tensor(0)}}, {"weight", "width", "placement"}, {0, w()});
+      }
       if (n.text("placement") != "tp_rows" &&
           n.text("placement") != "tp_columns" &&
           n.text("placement") != "replicated")
@@ -161,10 +168,15 @@ inline void validate_kernels(const Plan &p) {
       eq("latent", "512");
       eq("rope", "64");
       eq("eps", "1e-5");
-    } else if (n.op == "cache_append")
-      check({{0, 576}, {0, 73728}}, {}, {4, 0});
+    } else if (n.op == "cache_append") {
+      std::vector<std::string> attrs;
+      if (n.attrs.count("cache_dtype")) { attrs.push_back("cache_dtype");eq("cache_dtype","bf16"); }
+      check({{0, 576}, {0, 73728}}, attrs, {4, 0});
+    }
     else if (n.op == "cache_norm_rope_append") {
-      check({{0, 512}, {0, 64}, {0, 73728}}, {"weight", "eps", "theta"}, {4, 0});
+      std::vector<std::string> attrs{"weight", "eps", "theta"};
+      if (n.attrs.count("cache_dtype")) { attrs.push_back("cache_dtype");eq("cache_dtype","bf16"); }
+      check({{0, 512}, {0, 64}, {0, 73728}}, attrs, {4, 0});
       eq("eps", "1e-5");
       eq("theta", "6400000");
     } else if (n.op == "latent_attention") {

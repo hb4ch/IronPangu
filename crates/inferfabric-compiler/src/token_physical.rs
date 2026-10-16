@@ -72,6 +72,7 @@ pub fn lower(graph: &Graph, devices: &[u32]) -> Result<Plan> {
                 "opaque_owner_local_expert_rows",
                 Location::Device,
             ),
+            Type::Quantized(_) => (None,vec![],None,"int8_payload_with_f32_per_token_scale",Location::Device),
             Type::HyperConnection => (
                 None,
                 vec![],

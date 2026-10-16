@@ -58,6 +58,7 @@ pub fn render_with_program(
             Type::HyperConnection => serde_json::json!({"kind":"hyperconnection"}),
             Type::Routes => serde_json::json!({"kind":"routes"}),
             Type::Cache => serde_json::json!({"kind":"cache"}),
+            Type::Quantized(w) => serde_json::json!({"kind":"quantized", "width":w,"dtype":"int8","scale_dtype":"f32"}),
         })
         .collect();
     // Binding roles belong to the validated operator schema, not to the browser.

@@ -40,6 +40,7 @@ pub struct Graph {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Type {
     Tensor(usize),
+    Quantized(usize),
     HyperConnection,
     Routes,
     Experts(usize),
@@ -49,6 +50,17 @@ fn fail<T>(n: &Node, message: &str) -> Result<T> {
     Err(invalid(format!("{} ({}): {message}", n.name, n.op)))
 }
 impl Node {
+    fn cache_attributes(&self, mut attrs: Vec<&'static str>) -> Result<Vec<&'static str>> {
+        if let Some(dtype)=self.attrs.get("cache_dtype") {
+            attrs.push("cache_dtype");
+            if !["bf16","int8","int4"].contains(&dtype.as_str()) {return fail(self,"unsupported cache dtype");}
+            if dtype!="bf16" {
+                attrs.extend(["cache_scale_dtype","cache_quantization"]);
+                if self.attrs.get("cache_scale_dtype").map(String::as_str)!=Some("f32") || self.attrs.get("cache_quantization").map(String::as_str)!=Some("per_token_head_symmetric") {return fail(self,"quantized cache requires FP32 per-token/head symmetric scales");}
+            }
+        }
+        Ok(attrs)
+    }
     pub fn integer(&self, key: &str) -> Result<usize> {
         self.attrs
             .get(key)
@@ -97,6 +109,18 @@ impl Node {
             Ok(w)
         };
         Ok(match self.op.as_str() {
+            "cast" => {
+                let w = tensor(0)?;
+                self.schema(inputs, &[Tensor(w)], &["dtype"])?;
+                if !["bf16", "f32"].contains(&self.attrs["dtype"].as_str()) { return fail(self,"cast requires bf16 or f32; use quantize for integer storage"); }
+                Tensor(w)
+            }
+            "quantize" => {
+                let w = tensor(0)?;
+                self.schema(inputs, &[Tensor(w)], &["dtype", "scheme", "scale_dtype"])?;
+                if self.attrs["dtype"] != "int8" || self.attrs["scheme"] != "per_token_symmetric" || self.attrs["scale_dtype"] != "f32" { return fail(self,"unsupported runtime quantization contract"); }
+                Quantized(w)
+            }
             "embedding" => {
                 self.schema(inputs, &[], &["weight", "width", "vocab"])?;
                 if self.integer("vocab")? != 151552 || width()? != 2560 {
@@ -144,10 +168,11 @@ impl Node {
                 Tensor(w)
             }
             "linear" => {
-                let w = tensor(0)?;
+                let w = match inputs.first() { Some(Quantized(w))=>*w, _=>tensor(0)? };
                 let mut attrs = vec!["weight", "width", "placement"];
                 let mut output = width()?;
                 if self.attrs.contains_key("paired_weight") {
+                    if matches!(inputs.first(),Some(Quantized(_))) { return fail(self,"paired BF16 projection cannot consume quantized input"); }
                     attrs.extend(["paired_weight", "paired_width"]);
                     let paired = self.integer("paired_width")?;
                     if paired == 0 || paired > 200000 - output || self.attrs.get("placement").map(String::as_str) != Some("replicated") {
@@ -155,7 +180,8 @@ impl Node {
                     }
                     output += paired;
                 }
-                self.schema(inputs, &[Tensor(w)], &attrs)?;
+                let expected = if matches!(inputs.first(),Some(Quantized(_))) { Quantized(w) } else { Tensor(w) };
+                self.schema(inputs, &[expected], &attrs)?;
                 if !["tp_rows", "tp_columns", "replicated"]
                     .contains(&self.attrs["placement"].as_str())
                 {
@@ -260,14 +286,14 @@ impl Node {
                 Tensor(73728)
             }
             "cache_append" => {
-                self.schema(inputs, &[Tensor(576), Tensor(73728)], &[])?;
+                self.schema(inputs, &[Tensor(576), Tensor(73728)], &self.cache_attributes(vec![])?)?;
                 Cache
             }
             "cache_norm_rope_append" => {
                 self.schema(
                     inputs,
                     &[Tensor(512), Tensor(64), Tensor(73728)],
-                    &["weight", "eps", "theta"],
+                    &self.cache_attributes(vec!["weight", "eps", "theta"] )?,
                 )?;
                 if self.attrs["eps"] != "1e-5" || self.integer("theta")? != 6400000 {
                     return fail(
@@ -482,6 +508,7 @@ impl Graph {
                 Type::Routes => (2, 0),
                 Type::Experts(w) => (3, w),
                 Type::Cache => (4, 0),
+                Type::Quantized(_) => return Err(invalid("quantized values require physical program encoding")),
             };
             u32_(&mut b, tag);
             u32_(&mut b, width);

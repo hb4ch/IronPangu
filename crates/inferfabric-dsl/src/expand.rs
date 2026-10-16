@@ -5,6 +5,8 @@ use inferfabric_model::{Result, invalid};
 use std::collections::{BTreeMap, BTreeSet};
 const PRIMITIVES: &[&str] = &[
     "embedding",
+    "cast",
+    "quantize",
     "repeat",
     "mhc_pre",
     "mhc_merge",

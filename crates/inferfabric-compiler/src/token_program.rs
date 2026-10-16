@@ -116,13 +116,14 @@ pub fn lower(graph: &Graph, inventory: Option<&Inventory>) -> Result<Program> {
     let mut outputs = vec![];
     let mut casts = BTreeMap::new();
     for (logical, n) in graph.nodes.iter().enumerate() {
+        if n.attrs.get("cache_dtype").is_some_and(|v|v!="bf16") { return Err(invalid(format!("{}: requested {} cache has no qualified Ascend attention/cache kernel; refusing BF16 substitution",n.name,n.attrs["cache_dtype"]))); }
         let mut inputs: Vec<usize> = n.inputs.iter().map(|&i| outputs[i]).collect();
         for (slot, input) in inputs.iter_mut().enumerate() {
             if p.instructions[*input].kind != 0 {
                 continue;
             }
             let wanted = match n.op.as_str() {
-                "slice" | "repeat" | "concat" => None,
+                "slice" | "repeat" | "concat" | "cast" => None,
                 "optional_norm"
                     if inventory.is_some_and(|v| {
                         !v.tensors
@@ -184,6 +185,7 @@ pub fn lower(graph: &Graph, inventory: Option<&Inventory>) -> Result<Program> {
             Type::Routes => (2, 0),
             Type::Experts(w) => (3, w),
             Type::Cache => (4, 0),
+            Type::Quantized(w) => (5,w),
         };
         let dtype = if kind != 0 {
             "opaque".into()
@@ -203,9 +205,11 @@ pub fn lower(graph: &Graph, inventory: Option<&Inventory>) -> Result<Program> {
                 }
                 "allreduce" => n.attrs.get("dtype").cloned().unwrap_or("f32".into()),
                 "expert_reduce" | "add" => "f32".into(),
+                "cast" => n.attrs["dtype"].clone(),
                 _ => "bf16".into(),
             }
         };
+        if n.op=="cast" && p.instructions[inputs[0]].dtype==dtype { outputs.push(inputs[0]); continue; }
         let kernel = if n.op == "linear" {
             if n.attrs.contains_key("paired_weight") {
                 "paired_bf16"
@@ -232,9 +236,15 @@ pub fn lower(graph: &Graph, inventory: Option<&Inventory>) -> Result<Program> {
                 Some(_) => "norm",
                 None => "unbound",
             }
-        } else {
+        } else if n.op=="cast" { "aclnnCast" } else {
             n.op.as_str()
         };
+        if n.op=="linear" && p.instructions[inputs[0]].kind==5 && !matches!(kernel,"int8"|"unbound") {return Err(invalid("quantized input requires INT8 projection weights"));}
+        if n.op=="linear" && kernel=="int8" && p.instructions[inputs[0]].kind==0 {
+            let id=p.instructions.len();let width=p.instructions[inputs[0]].width;
+            p.instructions.push(Instruction {logical_node:logical,name:format!("__quant_{id}"),op:"quantize".into(),inputs:vec![inputs[0]],attrs:BTreeMap::from([("dtype".into(),"int8".into()),("scheme".into(),"per_token_symmetric".into()),("scale_dtype".into(),"f32".into())]),kind:5,width,dtype:"opaque".into(),kernel:"quantize".into(),reason:"Explicit activation quantization for selected INT8 projection".into()});
+            inputs[0]=id;
+        }
         let id = p.instructions.len();
         p.instructions.push(Instruction { logical_node: logical, name: n.name.clone(),
             op: match n.op.as_str() { "add" => "add_f32".into(), "mome" => "mome_inplace".into(), _=>n.op.clone() }, inputs,
@@ -269,7 +279,7 @@ impl Program {
         }
         let mut names = std::collections::BTreeSet::new();
         for (id, i) in self.instructions.iter().enumerate() {
-            if i.kind > 4
+            if i.kind > 5
                 || i.width > 200000
                 || i.inputs.len() > 8
                 || i.attrs.len() > 16
@@ -351,6 +361,7 @@ pub fn recipes(p: &Program, graph: &Graph) -> Vec<serde_json::Value> {
         let n = &graph.nodes[i.logical_node];
         let (apis, internal, materialization): (&[&str], &str, &str) = match i.op.as_str() {
             "cast" => (&["aclnnCast"], "", "new device output; shared by identical consumers"),
+            "quantize" => (&["aclnnDynamicQuant"], "BF16 → signed INT8; per-token symmetric FP32 scale", "explicit INT8 payload + FP32 scale"),
             "copy" => (&["aclrtMemcpyAsync"], "private writable input; source preserved", "new device output"),
             "mome_inplace" => (&["aclnnAiInfraFusedCausalConv1d"], "mutates exclusively owned input; copy decision is an explicit preceding instruction", "output aliases input; persistent recurrent state"),
             "add_f32" => (&["aclnnAdd"], "FP32 arithmetic; BF16 rounding is a separate instruction", "new device output"),
@@ -358,7 +369,7 @@ pub fn recipes(p: &Program, graph: &Graph) -> Vec<serde_json::Value> {
             "linear" => match i.kernel.as_str() {
                 "bf16" => (&["aclnnMatmul"], "BF16 input/output", "new device output"),
                 "paired_bf16" => (&["aclnnMatmul"], "BF16 paired rows; two parameter D2D copies once before capture", "persistent packed weights + new output"),
-                "int8" => (&["aclnnDynamicQuant", "aclnnQuantMatmulV5"], "BF16 → INT8 quantization with FP32 scale; BF16 result", "quantized input + scale + output"),
+                "int8" => (&["aclnnQuantMatmulV5"], "consumes explicit INT8 payload and FP32 scale; BF16 result", "new BF16 output"),
                 _ => (&[], "checkpoint inventory required to select BF16 or INT8", "unresolved"),
             },
             "allreduce" => (&["HcclAllReduce"], "sum; dtype is explicit; runtime chooses HCCL transport algorithm", "new device output"),

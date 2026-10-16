@@ -50,6 +50,29 @@ separate FP32 rotary contract. The separate operations remain supported.
 
 ## Compilation and initialization
 
+### Explicit precision contracts
+
+Floating-point storage can be authored as `cast(x, dtype=f32)` or
+`cast(x, dtype=bf16)`. Integer conversion requires a quantization contract:
+
+```inferfabric
+let q = quantize(x, dtype=int8, scheme=per_token_symmetric, scale_dtype=f32);
+let y = linear(q, weight=w.proj, width=2560, placement=replicated);
+```
+
+This produces a structured INT8 payload and FP32 scale, not an ordinary tensor
+with discarded scale metadata. The selected projection must accept that format.
+Checkpoint-bound INT8 projections also lower to this explicit instruction when
+the author supplies a floating-point input. BF16 projections reject quantized
+inputs; the executor cannot insert a hidden quantization operation.
+
+Cache operations accept `cache_dtype=bf16` (the default), `int8`, or `int4`.
+Integer cache declarations also require `cache_scale_dtype=f32` and
+`cache_quantization=per_token_head_symmetric`. These declarations preserve the
+requested numerical contract in the logical plan. The current Ascend backend
+rejects INT8/INT4 cache compilation because no matching attention/cache kernel
+has been qualified; it never substitutes BF16 silently.
+
 Both the DSL and compiled Rust `ModelDefinition::Execution` produce the same
 validated `execution::Graph`. No compiled author gets to bypass validation.
 The compiler rejects unknown operators/attributes, shape/type mismatches,
