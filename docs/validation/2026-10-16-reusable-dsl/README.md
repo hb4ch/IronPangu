@@ -12,6 +12,11 @@ Implementation milestones: `6142968` (language and expansion) and `7ed86e9`
 
 ## Authoring and expanded plan
 
+**[Open the hierarchical plan inspector](execution.html)** to explore the model,
+layers and nested modules without rendering all operations at once. See
+[viewer instructions and validation](../../plan-viewer.md). The viewer was
+generated from the saved qualified graph; the NPU program is unchanged.
+
 The [model source](../../../examples/openpangu/92b-tp8-ep8.inferfabric) uses five
 file-local modules, a 46-iteration compile-time fold, static branch selection,
 and scoped checkpoint bindings. Modules expand before graph validation and

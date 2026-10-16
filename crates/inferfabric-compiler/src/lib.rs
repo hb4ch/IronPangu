@@ -1,6 +1,7 @@
 //! Startup compiler and checksummed binary container. No vendor toolchain invocation here.
 pub mod initialization;
 pub mod token;
+pub mod token_view;
 use inferfabric_ir::*;
 use inferfabric_model::{Layer, Result, Role, Spec, invalid};
 use sha2::{Digest, Sha256};

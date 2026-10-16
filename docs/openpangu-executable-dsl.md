@@ -51,6 +51,7 @@ The result contains:
 |---|---|
 | `execution.json` | Complete dataflow with instance paths, input IDs, attributes, source spans and module call stacks |
 | `execution.dot` | Graphviz graph of every operation and dependency |
+| `execution.html` | Offline hierarchical viewer: model overview, expandable layers/modules, validated types, bindings and dependency navigation |
 | `execution.bin` | Versioned `IFTOKN01` program consumed by the native executor |
 | `rank-N.init.json` | Readable permanent initialization IR |
 | `rank-N.bin` | Executable `IFINIT01` initialization program |
@@ -103,6 +104,9 @@ ACL graph capture, long-context indexing and production performance remain
 separate milestones. Existing kernel plugin ABI support remains available.
 
 ## Qualification
+
+Explore the [hierarchical plan viewer](validation/2026-10-16-reusable-dsl/execution.html)
+or see [generation and navigation instructions](plan-viewer.md).
 
 [Reusable-module NPU qualification](validation/2026-10-16-reusable-dsl/README.md): the 107-line source expands to the same 2,109 operations; all eight initialization programs and the complete three-prompt results are byte-identical to the flat-DSL baseline. The report includes expanded JSON with source mappings and a Graphviz diagram.
 

@@ -129,6 +129,10 @@ fn bundle_publication_is_complete_and_refuses_overwrite() {
         std::fs::read(output.join("execution.bin")).unwrap(),
         graph.encode().unwrap()
     );
+    assert_eq!(
+        std::fs::read_to_string(output.join("execution.html")).unwrap(),
+        inferfabric_compiler::token_view::render(&graph).unwrap()
+    );
     for rank in 0..8 {
         assert!(output.join(format!("rank-{rank}.bin")).is_file());
     }

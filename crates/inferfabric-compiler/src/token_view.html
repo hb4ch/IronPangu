@@ -1,0 +1,1308 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>InferFabric · Plan inspector</title>
+    <style>
+      :root {
+        font-family:
+          Inter,
+          Segoe UI,
+          system-ui,
+          sans-serif;
+        color: #223047;
+        background: #f3f5f9;
+        font-size: 13px;
+        --blue: #3367dc;
+        --border: #dee5ee;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+      }
+      button,
+      input {
+        font: inherit;
+      }
+      button {
+        cursor: pointer;
+      }
+      button:focus-visible,
+      input:focus-visible {
+        outline: 3px solid #85b5ff;
+        outline-offset: 2px;
+      }
+      header {
+        height: 70px;
+        background: #101d32;
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 24px;
+      }
+      .brand {
+        font-size: 19px;
+        font-weight: 700;
+        letter-spacing: -0.5px;
+      }
+      .brand span {
+        color: #80b7ff;
+      }
+      .tag {
+        font-size: 11px;
+        letter-spacing: 1.5px;
+        color: #93a9c7;
+        margin-top: 4px;
+      }
+      .status {
+        border: 1px solid #3e5472;
+        border-radius: 20px;
+        padding: 7px 12px;
+        color: #c5d5ed;
+      }
+      .shell {
+        height: calc(100vh - 70px);
+        display: grid;
+        grid-template-columns: 230px minmax(400px, 1fr) 330px;
+      }
+      nav {
+        background: #17263e;
+        color: #cbd7e9;
+        padding: 20px 12px;
+        overflow: auto;
+      }
+      nav h3 {
+        font-size: 10px;
+        letter-spacing: 1.7px;
+        margin: 0 10px 14px;
+        color: #91a6c2;
+      }
+      #search {
+        width: 100%;
+        border: 1px solid #40536d;
+        background: #233651;
+        color: white;
+        padding: 10px;
+        border-radius: 7px;
+        margin-bottom: 12px;
+      }
+      nav button {
+        width: 100%;
+        text-align: left;
+        background: transparent;
+        border: 0;
+        color: inherit;
+        padding: 9px 10px;
+        border-radius: 6px;
+        display: block;
+      }
+      nav button:hover,
+      nav button.active {
+        background: #2c4468;
+        color: white;
+      }
+      nav small {
+        float: right;
+        color: #a7bbd6;
+      }
+      nav .nav-model {
+        font-weight: 700;
+        margin-bottom: 12px;
+      }
+      nav .search-result {
+        font-size: 11px;
+        overflow-wrap: anywhere;
+        border-bottom: 1px solid #30425b;
+      }
+      main {
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+      }
+      .toolbar {
+        min-height: 59px;
+        border-bottom: 1px solid var(--border);
+        background: white;
+        padding: 10px 20px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+      }
+      #crumbs {
+        display: flex;
+        gap: 5px;
+        flex-wrap: wrap;
+        align-items: center;
+      }
+      #crumbs button {
+        border: 0;
+        background: none;
+        color: #476b9e;
+        padding: 4px;
+        font-size: 12px;
+      }
+      #crumbs button:last-child {
+        color: #15233b;
+        font-weight: 700;
+      }
+      .tools {
+        white-space: nowrap;
+        display: flex;
+        gap: 5px;
+      }
+      .tools button {
+        background: white;
+        border: 1px solid var(--border);
+        border-radius: 5px;
+        padding: 5px 9px;
+        color: #41546d;
+      }
+      #workspace {
+        overflow: auto;
+        flex: 1;
+        padding: 26px;
+      }
+      .eyebrow {
+        color: #74839b;
+        letter-spacing: 1.6px;
+        font-size: 10px;
+        font-weight: 700;
+        text-transform: uppercase;
+      }
+      h1 {
+        font-size: 26px;
+        letter-spacing: -0.7px;
+        margin: 7px 0 8px;
+      }
+      h2 {
+        font-size: 17px;
+        margin: 0 0 8px;
+      }
+      p {
+        line-height: 1.6;
+        color: #65748b;
+      }
+      .metrics {
+        display: flex;
+        gap: 30px;
+        margin: 20px 0 24px;
+      }
+      .metric strong {
+        display: block;
+        font-size: 24px;
+        letter-spacing: -0.6px;
+        color: #253b5c;
+      }
+      .metric span {
+        font-size: 11px;
+        color: #73829a;
+      }
+      .stage-row {
+        display: grid;
+        grid-template-columns: 1fr 24px 1.3fr 24px 1fr;
+        align-items: center;
+        margin-bottom: 28px;
+      }
+      .stage {
+        border: 1px solid var(--border);
+        background: white;
+        padding: 16px;
+        border-radius: 10px;
+        min-height: 96px;
+        box-shadow: 0 2px 3px #1b325505;
+        text-align: left;
+        color: inherit;
+      }
+      .stage b {
+        display: block;
+        font-size: 14px;
+        margin: 7px 0;
+      }
+      .stage small {
+        color: #78869c;
+      }
+      .arrow {
+        text-align: center;
+        color: #8c9cb2;
+      }
+      .section-title {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 12px;
+      }
+      .section-title span {
+        font-size: 11px;
+        color: #78879b;
+      }
+      .layer-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(136px, 1fr));
+        gap: 10px;
+      }
+      .layer-card {
+        background: white;
+        border: 1px solid var(--border);
+        border-radius: 9px;
+        text-align: left;
+        padding: 13px;
+        color: inherit;
+        border-top: 3px solid #6186de;
+      }
+      .layer-card:hover {
+        border-color: #346de2;
+        box-shadow: 0 3px 12px #244a8a12;
+        transform: translateY(-1px);
+      }
+      .layer-card b {
+        display: block;
+        font-size: 13px;
+        margin-bottom: 6px;
+      }
+      .layer-card small {
+        color: #7b889c;
+        font-size: 10px;
+      }
+      .pill {
+        display: inline-block;
+        padding: 3px 7px;
+        border-radius: 4px;
+        background: #edf2fc;
+        color: #4771bc;
+        font-size: 10px;
+      }
+      .pill.moe {
+        background: #f0edfa;
+        color: #7c61ad;
+      }
+      .note {
+        font-size: 11px;
+        border-left: 3px solid #b9c9e3;
+        padding: 9px 12px;
+        margin-top: 22px;
+        color: #6e7e95;
+        background: #eaf0f8;
+      }
+      .scope-head {
+        margin-bottom: 20px;
+      }
+      .legend {
+        display: flex;
+        gap: 18px;
+        font-size: 11px;
+        color: #7a879b;
+        margin: 12px 0;
+      }
+      .legend i {
+        display: inline-block;
+        width: 9px;
+        height: 9px;
+        border-radius: 2px;
+        margin-right: 5px;
+        background: #5486df;
+      }
+      .legend i.module {
+        background: #9576ca;
+      }
+      .legend i.state {
+        background: #39a29c;
+      }
+      #graph-viewport {
+        overflow: auto;
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        background-color: #fbfcfe;
+        background-image: radial-gradient(#dbe2ed 0.7px, transparent 0.7px);
+        background-size: 16px 16px;
+        min-height: 440px;
+        max-height: calc(100vh - 330px);
+      }
+      #graph-size {
+        position: relative;
+        margin: 0 auto;
+      }
+      #graph {
+        position: relative;
+        transform-origin: top left;
+      }
+      #edges {
+        position: absolute;
+        inset: 0;
+        overflow: visible;
+        pointer-events: none;
+      }
+      .edge {
+        fill: none;
+        stroke: #becbdd;
+        stroke-width: 1.6;
+      }
+      .edge.highlight {
+        stroke: #3371df;
+        stroke-width: 2.5;
+      }
+      .node {
+        position: absolute;
+        width: 224px;
+        height: 84px;
+        background: white;
+        border: 1px solid #d4dfed;
+        border-left: 4px solid #5486df;
+        border-radius: 8px;
+        text-align: left;
+        padding: 10px 12px;
+        box-shadow: 0 3px 8px #20365609;
+        color: #253951;
+      }
+      .node.module {
+        border-left-color: #9576ca;
+        background: #fefcff;
+      }
+      .node.state {
+        border-left-color: #39a29c;
+      }
+      .node.selected {
+        outline: 2px solid #4080ee;
+        outline-offset: 2px;
+      }
+      .node .node-top {
+        font-size: 10px;
+        color: #8390a5;
+        display: flex;
+        justify-content: space-between;
+      }
+      .node b {
+        display: block;
+        font-size: 12px;
+        margin: 5px 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      .node .shape {
+        font-family: Consolas, monospace;
+        color: #6d7f99;
+        font-size: 11px;
+      }
+      .boundary {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        margin: 9px 0 13px;
+      }
+      .boundary-label {
+        color: #8491a5;
+        font-size: 10px;
+        text-transform: uppercase;
+        align-self: center;
+        margin-right: 4px;
+      }
+      .ref {
+        border: 1px solid #dbe3ef;
+        border-radius: 5px;
+        background: #f7f9fd;
+        color: #42618a;
+        padding: 5px 7px;
+        font-size: 11px;
+        text-align: left;
+        overflow-wrap: anywhere;
+      }
+      .ref:hover {
+        border-color: #80a7e7;
+      }
+      .empty {
+        font-size: 12px;
+        color: #8794a7;
+        padding: 12px;
+      }
+      aside {
+        background: white;
+        border-left: 1px solid var(--border);
+        overflow: auto;
+        padding: 23px 20px;
+      }
+      aside h2 {
+        font-size: 19px;
+        overflow-wrap: anywhere;
+        margin-top: 8px;
+      }
+      aside h3 {
+        font-size: 10px;
+        text-transform: uppercase;
+        letter-spacing: 1.4px;
+        color: #8995a8;
+        margin: 24px 0 10px;
+      }
+      aside .path {
+        font:
+          11px/1.6 Consolas,
+          monospace;
+        color: #6c7c93;
+        overflow-wrap: anywhere;
+      }
+      aside .ref {
+        display: block;
+        width: 100%;
+        margin: 5px 0;
+      }
+      aside .primary {
+        border: 0;
+        background: #356bd8;
+        color: white;
+        padding: 9px 12px;
+        border-radius: 6px;
+        width: 100%;
+        margin: 12px 0;
+      }
+      dl {
+        margin: 0;
+      }
+      dt {
+        font-size: 11px;
+        color: #8390a2;
+        margin-top: 10px;
+      }
+      dd {
+        margin: 3px 0;
+        color: #304561;
+        font:
+          12px/1.6 Consolas,
+          monospace;
+        overflow-wrap: anywhere;
+      }
+      .shape-box {
+        background: #f1f5fc;
+        border: 1px solid #dfe8f6;
+        border-radius: 7px;
+        padding: 12px;
+        font:
+          13px Consolas,
+          monospace;
+        color: #416696;
+      }
+      .weight {
+        background: #f6f3fb;
+        border-left: 3px solid #a48bc9;
+        padding: 10px;
+        margin: 7px 0;
+        font:
+          11px/1.7 Consolas,
+          monospace;
+        overflow-wrap: anywhere;
+        color: #725994;
+      }
+      .source-frame {
+        padding: 8px 0;
+        border-bottom: 1px solid #edf0f5;
+        font-size: 11px;
+        color: #6c7c93;
+      }
+      .source-frame b {
+        display: block;
+        color: #3c536e;
+        margin-bottom: 3px;
+      }
+      .subtle {
+        font-size: 11px;
+        color: #8a97a9;
+      }
+      #selection-status {
+        font-size: 11px;
+        color: #8091aa;
+      }
+      .footer-note {
+        font-size: 10px;
+        color: #9aabc0;
+        padding: 20px 10px;
+        line-height: 1.6;
+      }
+      @media (max-width: 1100px) {
+        .shell {
+          grid-template-columns: 190px minmax(320px, 1fr) 280px;
+        }
+        #workspace {
+          padding: 18px;
+        }
+        .metrics {
+          gap: 20px;
+        }
+      }
+      @media (max-width: 800px) {
+        .shell {
+          grid-template-columns: 155px minmax(320px, 1fr);
+          height: auto;
+          min-height: calc(100vh - 70px);
+        }
+        aside {
+          grid-column: 1/-1;
+          border-top: 1px solid var(--border);
+        }
+        nav {
+          max-height: calc(100vh - 70px);
+        }
+        main {
+          min-height: 700px;
+        }
+        .status {
+          display: none;
+        }
+        .stage-row {
+          grid-template-columns: 1fr;
+        }
+        .arrow {
+          padding: 4px;
+        }
+        .metrics {
+          flex-wrap: wrap;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <div>
+        <div class="brand">
+          Infer<span>Fabric</span>
+          <span style="font-weight: 400; color: #b8c9df">/ Plan inspector</span>
+        </div>
+        <div class="tag">MODEL → MODULE → OPERATION</div>
+      </div>
+      <div class="status">Expanded execution DAG · offline artifact</div>
+    </header>
+    <div class="shell">
+      <nav>
+        <h3>MODEL EXPLORER</h3>
+        <input
+          id="search"
+          aria-label="Search operations or weight bindings"
+          placeholder="Search ops or weights…"
+        />
+        <div id="navigation"></div>
+        <div class="footer-note">
+          Only the current scope is rendered.<br />Click a module, then expand
+          it.<br />Esc: parent scope · /: search
+        </div>
+      </nav>
+      <main>
+        <div class="toolbar">
+          <div id="crumbs"></div>
+          <div class="tools">
+            <button id="up" title="Parent scope">↑ Up</button
+            ><button id="fit">Fit</button
+            ><button id="minus" aria-label="Zoom out">−</button
+            ><button id="plus" aria-label="Zoom in">+</button>
+          </div>
+        </div>
+        <div id="workspace"></div>
+      </main>
+      <aside id="inspector" aria-label="Selection details"></aside>
+    </div>
+    <script type="application/json" id="plan-data">
+      __PLAN_DATA__
+    </script>
+    <script>
+      "use strict";
+      const { graph: plan, types } = JSON.parse(
+        document.getElementById("plan-data").textContent,
+      );
+      const $ = (s) => document.querySelector(s),
+        esc = (v) =>
+          String(v).replace(
+            /[&<>"']/g,
+            (c) =>
+              ({
+                "&": "&amp;",
+                "<": "&lt;",
+                ">": "&gt;",
+                '"': "&quot;",
+                "'": "&#39;",
+              })[c],
+          );
+      const nodes = plan.nodes,
+        consumers = nodes.map(() => []);
+      nodes.forEach((n, i) => n.inputs.forEach((j) => consumers[j].push(i)));
+      const root = {
+        id: "root",
+        label: plan.name,
+        module: "Model",
+        children: [],
+        leaves: [],
+        parent: null,
+      };
+      const groups = new Map([["root", root]]),
+        leaves = [];
+      nodes.forEach((n, i) => {
+        let p = root;
+        p.leaves.push(i);
+        const frames = n.source?.frames || [];
+        frames.forEach((f, k) => {
+          if (f.module === "fold" && frames[k + 1]) return;
+          let g = groups.get(f.instance);
+          if (!g) {
+            const layer = f.instance.match(/\.i(\d+)\.block$/);
+            g = {
+              id: f.instance,
+              label: layer ? "Layer " + layer[1] : f.instance.split(".").pop(),
+              module: f.module,
+              children: [],
+              leaves: [],
+              parent: p,
+              frame: f,
+            };
+            groups.set(g.id, g);
+            p.children.push(g);
+          }
+          g.leaves.push(i);
+          p = g;
+        });
+        const leaf = {
+          id: "op:" + i,
+          label: n.name.split(".").pop(),
+          index: i,
+          parent: p,
+          leaves: [i],
+        };
+        p.children.push(leaf);
+        leaves.push(leaf);
+      });
+      const layerGroups = root.children.filter(
+        (x) => x.module === "DecoderBlock",
+      );
+      let scope = root,
+        selected = null,
+        zoom = 1,
+        layout = null;
+      function shape(i) {
+        const t = types[i];
+        return t.kind === "tensor"
+          ? "tensor [" + t.width.toLocaleString() + "]"
+          : t.kind === "experts"
+            ? "experts [selected, " + t.width.toLocaleString() + "]"
+            : t.kind + " handle";
+      }
+      function bounds(g) {
+        const set = new Set(g.leaves);
+        return {
+          inputs: [
+            ...new Set(
+              g.leaves.flatMap((i) =>
+                nodes[i].inputs.filter((j) => !set.has(j)),
+              ),
+            ),
+          ],
+          outputs: g.leaves.filter(
+            (i) => i === plan.output || consumers[i].some((j) => !set.has(j)),
+          ),
+        };
+      }
+      function ref(i) {
+        return (
+          '<button class="ref" data-op="' +
+          i +
+          '">#' +
+          i +
+          " " +
+          esc(nodes[i].name) +
+          '<br><span class="subtle">' +
+          esc(shape(i)) +
+          "</span></button>"
+        );
+      }
+      function bindRefs(container) {
+        container
+          .querySelectorAll("[data-op]")
+          .forEach((b) => (b.onclick = () => reveal(+b.dataset.op)));
+      }
+      function navigate(g) {
+        location.hash = encodeURIComponent(g.id);
+      }
+      function reveal(i) {
+        let id = leaves[i].parent.id;
+        if (id === "root") {
+          id =
+            i < (layerGroups[0]?.leaves[0] ?? nodes.length)
+              ? "shell:Input"
+              : "shell:Output";
+        }
+        location.hash = encodeURIComponent(id) + "&op=" + i;
+        if (scope.id === id) select(leaves[i]);
+      }
+      function crumbs() {
+        let list = [],
+          p = scope;
+        while (p) {
+          list.unshift(p);
+          p = p.parent;
+        }
+        $("#crumbs").innerHTML = list
+          .map(
+            (g, i) =>
+              (i ? '<span class="subtle">/</span>' : "") +
+              '<button data-scope="' +
+              esc(g.id) +
+              '">' +
+              esc(g.label) +
+              "</button>",
+          )
+          .join("");
+        $("#crumbs")
+          .querySelectorAll("button")
+          .forEach(
+            (b) => (b.onclick = () => navigate(groups.get(b.dataset.scope))),
+          );
+        $("#up").disabled = scope === root;
+      }
+      function moduleNav(g, depth) {
+        return g.children
+          .filter((c) => c.module)
+          .map(
+            (c) =>
+              '<button data-scope="' +
+              esc(c.id) +
+              '" style="padding-left:' +
+              (12 + depth * 12) +
+              'px;font-size:11px" class="' +
+              (scope === c ? "active" : "") +
+              '">↳ ' +
+              esc(c.label) +
+              " <small>" +
+              esc(c.module) +
+              "</small></button>" +
+              (scope === c || scope.id.startsWith(c.id + ".")
+                ? moduleNav(c, depth + 1)
+                : ""),
+          )
+          .join("");
+      }
+      function navigation() {
+        const q = $("#search").value.trim().toLowerCase();
+        const el = $("#navigation");
+        if (q) {
+          const hits = nodes
+            .map((n, i) => ({ n, i }))
+            .filter(({ n }) =>
+              (n.name + " " + n.op + " " + Object.values(n.attrs).join(" "))
+                .toLowerCase()
+                .includes(q),
+            );
+          el.innerHTML =
+            '<div class="subtle" style="padding:8px">' +
+            hits.length +
+            " matches · first 50</div>" +
+            hits
+              .slice(0, 50)
+              .map(
+                ({ n, i }) =>
+                  '<button class="search-result" data-op="' +
+                  i +
+                  '">#' +
+                  i +
+                  " " +
+                  esc(n.name) +
+                  "<br>" +
+                  esc(n.op) +
+                  "</button>",
+              )
+              .join("");
+          bindRefs(el);
+          return;
+        }
+        el.innerHTML =
+          '<button class="nav-model ' +
+          (scope === root ? "active" : "") +
+          '" data-scope="root">◈ Model overview</button><h3>DECODER LAYERS</h3>' +
+          layerGroups
+            .map(
+              (g) =>
+                '<button data-scope="' +
+                esc(g.id) +
+                '" class="' +
+                (scope.id.startsWith(g.id) ? "active" : "") +
+                '">' +
+                esc(g.label) +
+                " <small>" +
+                g.leaves.length +
+                " ops</small></button>" +
+                (scope.id.startsWith(g.id) ? moduleNav(g, 1) : ""),
+            )
+            .join("");
+        el.querySelectorAll("[data-scope]").forEach(
+          (b) => (b.onclick = () => navigate(groups.get(b.dataset.scope))),
+        );
+      }
+      function inspect(g) {
+        const panel = $("#inspector");
+        if (g.index !== undefined) {
+          const i = g.index,
+            n = nodes[i],
+            weights = Object.entries(n.attrs).filter(
+              ([k]) =>
+                k === "weight" || (k === "norm" && n.op === "sink_normalize"),
+            );
+          panel.innerHTML =
+            '<div class="eyebrow">Operation #' +
+            i +
+            "</div><h2>" +
+            esc(n.op) +
+            '</h2><div class="path">' +
+            esc(n.name) +
+            '</div><h3>Output · compiler-validated type</h3><div class="shape-box">' +
+            esc(shape(i)) +
+            '</div><p class="subtle">Logical per-invocation width. Dtype and physical buffer layout are not encoded in this graph.</p><h3>Weight bindings</h3>' +
+            (weights.length
+              ? weights
+                  .map(
+                    ([k, v]) =>
+                      '<div class="weight"><b>' +
+                      esc(k) +
+                      "</b><br>" +
+                      esc(v) +
+                      "</div>",
+                  )
+                  .join("")
+              : '<span class="subtle">No direct weight binding</span>') +
+            (weights.some(([, v]) => v.includes("{expert}"))
+              ? '<p class="subtle">{expert} resolves through rank ownership and selected expert routes.</p>'
+              : "") +
+            "<h3>Inputs · " +
+            n.inputs.length +
+            "</h3>" +
+            n.inputs.map(ref).join("") +
+            "<h3>Consumers · " +
+            consumers[i].length +
+            "</h3>" +
+            consumers[i].map(ref).join("") +
+            "<h3>Attributes</h3><dl>" +
+            Object.entries(n.attrs)
+              .map(([k, v]) => "<dt>" + esc(k) + "</dt><dd>" + esc(v) + "</dd>")
+              .join("") +
+            "</dl><h3>DSL provenance</h3>" +
+            (n.source
+              ? '<div class="path">UTF-8 bytes ' +
+                n.source.start +
+                "–" +
+                n.source.end +
+                "</div>" +
+                n.source.frames
+                  .map(
+                    (f) =>
+                      '<div class="source-frame"><b>' +
+                      esc(f.module) +
+                      "</b>" +
+                      esc(f.instance) +
+                      "<br>call bytes " +
+                      f.start +
+                      "–" +
+                      f.end +
+                      "</div>",
+                  )
+                  .join("")
+              : '<span class="subtle">No source metadata in this artifact</span>');
+        } else {
+          const b = bounds(g),
+            weighted = g.leaves.filter((i) => nodes[i].attrs.weight),
+            counts = {};
+          g.leaves.forEach(
+            (i) => (counts[nodes[i].op] = (counts[nodes[i].op] || 0) + 1),
+          );
+          panel.innerHTML =
+            '<div class="eyebrow">' +
+            esc(g.module) +
+            "</div><h2>" +
+            esc(g.label) +
+            '</h2><div class="path">' +
+            esc(g.id === "root" ? plan.name : g.id) +
+            "</div>" +
+            (g !== scope
+              ? '<button class="primary" id="expand-module">Expand module →</button>'
+              : "") +
+            '<h3>Scope summary</h3><div class="shape-box">' +
+            g.leaves.length +
+            " operations · " +
+            weighted.length +
+            ' weighted ops</div><p class="subtle">' +
+            g.children.filter((x) => x.module).length +
+            " nested modules. Dependencies are aggregated at this level; expand a module to inspect its internals.</p><h3>Boundary inputs · " +
+            b.inputs.length +
+            "</h3>" +
+            b.inputs.map(ref).join("") +
+            "<h3>Boundary outputs · " +
+            b.outputs.length +
+            "</h3>" +
+            b.outputs.map(ref).join("") +
+            "<h3>Operation inventory</h3><dl>" +
+            Object.entries(counts)
+              .sort((a, b) => b[1] - a[1])
+              .map(([k, v]) => "<dt>" + esc(k) + "</dt><dd>" + v + "</dd>")
+              .join("") +
+            "</dl>" +
+            (g === root
+              ? '<div class="note">This artifact describes logical execution. Physical memory placement, stream scheduling and kernel cost estimates are not present.</div>'
+              : "");
+          if ($("#expand-module"))
+            $("#expand-module").onclick = () => navigate(g);
+        }
+        bindRefs(panel);
+      }
+      function select(g) {
+        selected = g;
+        inspect(g);
+        document
+          .querySelectorAll(".node")
+          .forEach((el) =>
+            el.classList.toggle("selected", el.dataset.id === g.id),
+          );
+        document
+          .querySelectorAll(".edge")
+          .forEach((el) =>
+            el.classList.toggle(
+              "highlight",
+              el.dataset.from === g.id || el.dataset.to === g.id,
+            ),
+          );
+      }
+      function overview() {
+        const w = $("#workspace"),
+          firstLayer = layerGroups[0]?.leaves[0] ?? nodes.length,
+          lastLayer = layerGroups.at(-1)?.leaves.at(-1) ?? -1;
+        w.innerHTML =
+          '<div class="eyebrow">Compiled model / logical execution</div><h1>' +
+          esc(plan.name) +
+          '</h1><p>Explore the model structure. Open a layer, then expand attention, feed-forward and projection modules.</p><div class="metrics"><div class="metric"><strong>' +
+          nodes.length.toLocaleString() +
+          '</strong><span>primitive operations</span></div><div class="metric"><strong>' +
+          layerGroups.length +
+          '</strong><span>decoder layers</span></div><div class="metric"><strong>' +
+          plan.max_context +
+          '</strong><span>context bound</span></div><div class="metric"><strong>' +
+          [...groups.keys()]
+            .filter((id) => !id.startsWith("shell:"))
+            .length.toLocaleString() +
+          '</strong><span>model / module scopes</span></div></div><div class="stage-row"><button class="stage" id="entry"><div class="eyebrow">01 / Input</div><b>Embedding & streams</b><small>' +
+          firstLayer +
+          ' operations · inspect input</small></button><div class="arrow">→</div><div class="stage"><div class="eyebrow">02 / Decoder</div><b>' +
+          layerGroups.length +
+          ' repeated blocks</b><small>Attention · residuals · dense / routed FFN</small></div><div class="arrow">→</div><button class="stage" id="exit"><div class="eyebrow">03 / Output</div><b>Merge, norm & logits</b><small>' +
+          Math.max(0, nodes.length - lastLayer - 1) +
+          ' operations · inspect output</small></button></div><div class="section-title"><h2>Decoder stack</h2><span>Select a layer to inspect its DAG →</span></div><div class="layer-grid">' +
+          layerGroups
+            .map((g) => {
+              const moe = g.leaves.some((i) => nodes[i].op === "router"),
+                attn = g.leaves
+                  .map((i) => nodes[i])
+                  .find((n) => n.op === "latent_attention");
+              return (
+                '<button class="layer-card" data-layer="' +
+                esc(g.id) +
+                '"><b>' +
+                esc(g.label) +
+                '</b><span class="pill ' +
+                (moe ? "moe" : "") +
+                '">' +
+                (moe ? "Routed MoE" : "Dense FFN") +
+                "</span><br><small>" +
+                g.leaves.length +
+                " ops · window " +
+                esc(attn?.attrs.window ?? "—") +
+                "</small></button>"
+              );
+            })
+            .join("") +
+          '</div><div class="note">The overview collapses all primitive operations. Shapes come from the compiler type checker; weights and dependencies come directly from the expanded plan. No timing or physical-memory estimates are inferred.</div>';
+        w.querySelectorAll("[data-layer]").forEach(
+          (b) => (b.onclick = () => navigate(groups.get(b.dataset.layer))),
+        );
+        $("#entry").onclick = () =>
+          showShell(
+            "Input",
+            root.children.filter((g) => g.leaves.every((i) => i < firstLayer)),
+          );
+        $("#exit").onclick = () =>
+          showShell(
+            "Output",
+            root.children.filter((g) => g.leaves.every((i) => i > lastLayer)),
+          );
+        inspect(root);
+      }
+      function showShell(label, children) {
+        const id = "shell:" + label;
+        if (!groups.has(id))
+          groups.set(id, {
+            id,
+            label,
+            module: "Model stage",
+            children,
+            leaves: children.flatMap((g) => g.leaves),
+            parent: root,
+          });
+        navigate(groups.get(id));
+      }
+      function graphView() {
+        const children = scope.children;
+        const owner = new Map();
+        children.forEach((g) => g.leaves.forEach((i) => owner.set(i, g.id)));
+        const edgeMap = new Map();
+        children.forEach((g) =>
+          g.leaves.forEach((i) =>
+            nodes[i].inputs.forEach((j) => {
+              const from = owner.get(j);
+              if (from && from !== g.id) {
+                const key = from + ">" + g.id;
+                if (!edgeMap.has(key))
+                  edgeMap.set(key, { from, to: g.id, pairs: [] });
+                edgeMap.get(key).pairs.push([j, i]);
+              }
+            }),
+          ),
+        );
+        const edges = [...edgeMap.values()],
+          rank = new Map(children.map((g) => [g.id, 0]));
+        for (let k = 0; k < children.length; k++) {
+          let changed = false;
+          for (const e of edges) {
+            if (rank.get(e.to) <= rank.get(e.from)) {
+              rank.set(e.to, rank.get(e.from) + 1);
+              changed = true;
+            }
+          }
+          if (!changed) break;
+        }
+        const rows = new Map();
+        children.forEach((g) => {
+          const r = rank.get(g.id);
+          if (!rows.has(r)) rows.set(r, []);
+          rows.get(r).push(g);
+        });
+        const longEdges = edges.filter(
+          (e) => rank.get(e.to) - rank.get(e.from) > 1,
+        );
+        const columns = Math.max(1, ...[...rows.values()].map((r) => r.length)),
+          baseWidth = columns * 254 + 48,
+          width = baseWidth + longEdges.length * 12 + 16,
+          height = rows.size * 134 + 32;
+        const positions = new Map();
+        [...rows.entries()]
+          .sort((a, b) => a[0] - b[0])
+          .forEach(([, row], r) =>
+            row.forEach((g, c) =>
+              positions.set(g.id, {
+                x: (baseWidth - row.length * 254) / 2 + c * 254 + 15,
+                y: 24 + r * 134,
+              }),
+            ),
+          );
+        layout = { width, height };
+        const b = bounds(scope);
+        $("#workspace").innerHTML =
+          '<div class="scope-head"><div class="eyebrow">' +
+          esc(scope.module) +
+          " / " +
+          children.length +
+          " visible items</div><h1>" +
+          esc(scope.label) +
+          "</h1><p>" +
+          scope.leaves.length +
+          ' primitive operations in this scope. Select a card for details; double-click a module to expand.</p><div class="legend"><span><i></i>Operation</span><span><i class="module"></i>Collapsed module</span><span><i class="state"></i>State / routing</span></div></div><div class="boundary"><span class="boundary-label">Incoming</span>' +
+          b.inputs.map(ref).join("") +
+          '</div><div id="graph-viewport"><div id="graph-size"><div id="graph"><svg id="edges" width="' +
+          width +
+          '" height="' +
+          height +
+          '"><defs><marker id="arrowhead" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#9cb1ce"/></marker></defs>' +
+          edges
+            .map((e) => {
+              const a = positions.get(e.from),
+                b = positions.get(e.to),
+                x = a.x + 112,
+                y = a.y + 84,
+                xx = b.x + 112,
+                yy = b.y;
+              const track = longEdges.indexOf(e);
+              const lane = baseWidth + 12 * track;
+              const path =
+                track < 0
+                  ? "M" +
+                    x +
+                    " " +
+                    y +
+                    " C" +
+                    x +
+                    " " +
+                    (y + 25) +
+                    "," +
+                    xx +
+                    " " +
+                    (yy - 25) +
+                    "," +
+                    xx +
+                    " " +
+                    yy
+                  : "M" +
+                    x +
+                    " " +
+                    y +
+                    " V" +
+                    (y + 18) +
+                    " H" +
+                    lane +
+                    " V" +
+                    (yy - 18) +
+                    " H" +
+                    xx +
+                    " V" +
+                    yy;
+              return (
+                '<path class="edge" data-from="' +
+                esc(e.from) +
+                '" data-to="' +
+                esc(e.to) +
+                '" marker-end="url(#arrowhead)" d="' +
+                path +
+                '"><title>' +
+                e.pairs.length +
+                " underlying dependencies</title></path>"
+              );
+            })
+            .join("") +
+          "</svg>" +
+          children
+            .map((g) => {
+              const p = positions.get(g.id),
+                isModule = !!g.module,
+                n = nodes[g.index],
+                state =
+                  n &&
+                  [
+                    "mhc_pre",
+                    "mhc_post",
+                    "mhc_merge",
+                    "cache_append",
+                    "mome",
+                    "router",
+                  ].includes(n.op);
+              return (
+                '<button class="node ' +
+                (isModule ? "module" : state ? "state" : "") +
+                '" data-id="' +
+                esc(g.id) +
+                '" style="left:' +
+                p.x +
+                "px;top:" +
+                p.y +
+                'px"><span class="node-top"><span>' +
+                esc(isModule ? g.module : "#" + g.index + " · " + n.op) +
+                "</span><span>" +
+                (isModule ? "↗" : "") +
+                "</span></span><b>" +
+                esc(g.label) +
+                '</b><span class="shape">' +
+                esc(
+                  isModule
+                    ? g.leaves.length + " ops · expand module"
+                    : shape(g.index),
+                ) +
+                "</span></button>"
+              );
+            })
+            .join("") +
+          '</div></div></div><div class="boundary"><span class="boundary-label">Outgoing</span>' +
+          b.outputs.map(ref).join("") +
+          "</div>";
+        $("#graph").style.width = width + "px";
+        $("#graph").style.height = height + "px";
+        $("#workspace")
+          .querySelectorAll(".node")
+          .forEach((el) => {
+            const g = children.find((g) => g.id === el.dataset.id);
+            el.onclick = () => select(g);
+            el.ondblclick = () => g.module && navigate(g);
+          });
+        bindRefs($("#workspace"));
+        fit();
+        inspect(scope);
+      }
+      function scale() {
+        if (!$("#graph")) return;
+        $("#graph").style.transform = "scale(" + zoom + ")";
+        $("#graph-size").style.width = layout.width * zoom + "px";
+        $("#graph-size").style.height = layout.height * zoom + "px";
+      }
+      function fit() {
+        if (!$("#graph-viewport")) return;
+        zoom = Math.min(
+          1,
+          ($("#graph-viewport").clientWidth - 24) / layout.width,
+        );
+        scale();
+      }
+      function render() {
+        crumbs();
+        navigation();
+        selected = null;
+        scope === root ? overview() : graphView();
+        $("#workspace").scrollTop = 0;
+      }
+      function loadHash() {
+        const [id, op] = decodeURIComponent(location.hash.slice(1)).split(
+          "&op=",
+        );
+        if (id === "shell:Input" || id === "shell:Output") {
+          const first = layerGroups[0]?.leaves[0] ?? nodes.length,
+            last = layerGroups.at(-1)?.leaves.at(-1) ?? -1;
+          const input = id === "shell:Input",
+            children = root.children.filter((g) =>
+              g.leaves.every((i) => (input ? i < first : i > last)),
+            );
+          groups.set(id, {
+            id,
+            label: input ? "Input" : "Output",
+            module: "Model stage",
+            children,
+            leaves: children.flatMap((g) => g.leaves),
+            parent: root,
+          });
+        }
+        scope = groups.get(id) || root;
+        render();
+        if (op !== undefined && leaves[+op]) select(leaves[+op]);
+      }
+      $("#search").oninput = navigation;
+      $("#up").onclick = () => scope.parent && navigate(scope.parent);
+      $("#fit").onclick = fit;
+      $("#plus").onclick = () => {
+        zoom = Math.min(2, zoom * 1.2);
+        scale();
+      };
+      $("#minus").onclick = () => {
+        zoom = Math.max(0.25, zoom / 1.2);
+        scale();
+      };
+      window.onhashchange = loadHash;
+      document.addEventListener("keydown", (e) => {
+        if (e.target.tagName === "INPUT") return;
+        if (e.key === "Escape" && scope.parent) navigate(scope.parent);
+        if (e.key === "/") {
+          e.preventDefault();
+          $("#search").focus();
+        }
+      });
+      loadHash();
+      // Small read-only diagnostics surface for artifact/browser validation.
+      window.planInspector = {
+        get scope() {
+          return scope.id;
+        },
+        get visibleCount() {
+          return document.querySelectorAll(".node").length;
+        },
+        nodeCount: nodes.length,
+        shape,
+        groups,
+      };
+    </script>
+  </body>
+</html>

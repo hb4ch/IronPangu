@@ -37,6 +37,8 @@
 
 [Read the 107-line model](examples/openpangu/92b-tp8-ep8.inferfabric) · [Module syntax](docs/dsl-modules.md) · [Compiler outputs](docs/openpangu-executable-dsl.md) · [NPU evidence & expanded plan](docs/validation/2026-10-16-reusable-dsl/README.md)
 
+**Inspect visually:** the [hierarchical plan viewer](docs/plan-viewer.md) opens at the model overview. Expand layers and modules to inspect operations, validated shapes, weight bindings and dependencies. New token-plan bundles include an offline `execution.html`.
+
 <details>
 <summary>Milestone commits</summary>
 
