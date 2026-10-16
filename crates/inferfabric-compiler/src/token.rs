@@ -330,7 +330,8 @@ pub fn write_bundle(
     output: &std::path::Path,
 ) -> Result<()> {
     let plans = initialization_plans(graph, topology, inventory)?;
-    let binary = graph.encode()?;
+    let program = crate::token_program::lower(graph, Some(inventory))?;
+    let binary = program.encode()?;
     let physical = crate::token_physical::lower(graph, &topology.devices)?;
     if output.exists() {
         return Err(invalid(
@@ -368,6 +369,8 @@ pub fn write_bundle(
             )?;
         }
         crate::write_atomic(&staging.join("execution.bin"), &binary)?;
+        crate::write_atomic(&staging.join("device-program.json"),
+            &serde_json::to_vec_pretty(&program).map_err(|e| invalid(e.to_string()))?)?;
         crate::write_atomic(
             &staging.join("execution.json"),
             &serde_json::to_vec_pretty(graph).map_err(|e| invalid(e.to_string()))?,
@@ -375,13 +378,13 @@ pub fn write_bundle(
         crate::write_atomic(&staging.join("execution.dot"), graph.dot()?.as_bytes())?;
         crate::write_atomic(
             &staging.join("execution.html"),
-            crate::token_view::render_with_physical(graph, &physical)?.as_bytes(),
+            crate::token_view::render_with_program(graph, &physical, &program)?.as_bytes(),
         )?;
         crate::write_atomic(
             &staging.join("physical.json"),
             &serde_json::to_vec_pretty(&physical).map_err(|e| invalid(e.to_string()))?,
         )?;
-        crate::write_atomic(&staging.join("plan.json"), &serde_json::to_vec_pretty(&serde_json::json!({"format":"inferfabric.token-bundle.v1","executable":true,"topology":topology,"nodes":graph.nodes.len(),"checkpoint_metadata_sha256":inventory.metadata_sha256})).map_err(|e|invalid(e.to_string()))?)?;
+        crate::write_atomic(&staging.join("plan.json"), &serde_json::to_vec_pretty(&serde_json::json!({"format":"inferfabric.token-bundle.v1","executable":true,"topology":topology,"nodes":graph.nodes.len(),"execution_format":program.format,"instructions":program.instructions.len(),"execution_sha256":crate::token_physical::digest(&binary),"checkpoint_metadata_sha256":inventory.metadata_sha256})).map_err(|e|invalid(e.to_string()))?)?;
         std::fs::rename(&staging, output)?;
         Ok(())
     })();

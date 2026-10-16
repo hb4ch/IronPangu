@@ -19,10 +19,23 @@ V execute_token() {
     auto input = [&](size_t j) -> Value & {
       return *values.at(n.inputs.at(j));
     };
-    auto tensor = [&](size_t j) -> const V & { return std::get<V>(input(j)); };
+    auto tensor = [&](size_t j) -> const V & {
+      const auto &v = std::get<V>(input(j));
+      if (program.physical && v.dtype() != (program.nodes[n.inputs[j]].dtype == "bf16" ? ACL_BF16 : ACL_FLOAT))
+        throw std::runtime_error("physical input storage mismatch: " + n.name);
+      return v;
+    };
     auto weight = [&]() -> const std::string & { return n.text("weight"); };
     Value result;
-    if (n.op == "embedding") {
+    if (n.op == "cast") {
+      result = cast(tensor(0), n.dtype == "bf16" ? ACL_BF16 : ACL_FLOAT);
+    } else if (n.op == "copy") {
+      V copy(tensor(0).size(), tensor(0).dtype());
+      resident::copy(copy.data(), tensor(0).data(), copy.bytes());
+      result = std::move(copy);
+    } else if (n.op == "add_f32") {
+      result = binary(tensor(0), tensor(1), '+');
+    } else if (n.op == "embedding") {
       auto &embedding = w(weight() + ".weight");
       auto width = n.integer("width");
       DeviceTensor output({int64_t(width)}, ACL_BF16, 2);
@@ -50,18 +63,18 @@ V execute_token() {
     else if (n.op == "norm")
       result = norm(tensor(0), weight());
     else if (n.op == "optional_norm")
-      result = bindings.count(weight() + ".weight") ? norm(tensor(0), weight())
+      result = (program.physical ? n.kernel == "norm" : bindings.count(weight() + ".weight")) ? norm(tensor(0), weight())
                                                     : tensor(0);
     else if (n.op == "linear")
       result = n.attrs.count("paired_weight")
                    ? linear_pair(weight(), n.text("paired_weight"), tensor(0))
-                   : linear(weight(), tensor(0));
+                   : linear(weight(), tensor(0), program.physical ? n.kernel : "");
     else if (n.op == "gather")
       result = gather(tensor(0));
     else if (n.op == "allreduce")
       result = sum(tensor(0), n.attrs.count("dtype") && n.text("dtype") == "bf16");
-    else if (n.op == "mome")
-      result = mome(tensor(0), weight(), pos, n.name);
+    else if (n.op == "mome" || n.op == "mome_inplace")
+      result = mome(tensor(0), weight(), pos, n.name, n.op == "mome_inplace");
     else if (n.op == "slice") {
       auto start = n.integer("start"), width = n.integer("width");
       if (size_t(start) + width > tensor(0).size())
@@ -126,6 +139,8 @@ V execute_token() {
     if (result.index() != n.kind)
       throw std::runtime_error("kernel result type " + n.name);
     if (auto v = std::get_if<V>(&result)) {
+      if (program.physical && v->dtype() != (n.dtype == "bf16" ? ACL_BF16 : ACL_FLOAT))
+        throw std::runtime_error("physical output storage mismatch: " + n.name);
       if (v->size() != n.width)
         throw std::runtime_error("kernel result shape " + n.name);
       trace(n.name, *v);

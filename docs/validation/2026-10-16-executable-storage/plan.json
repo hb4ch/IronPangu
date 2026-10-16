@@ -1,0 +1,26 @@
+{
+  "checkpoint_metadata_sha256": "e6ab8e354f31f844671a0d6013d686e86b4ebc2ba8f3e893d509c2c170d015d8",
+  "executable": true,
+  "execution_format": "inferfabric.token-program.v2",
+  "execution_sha256": "4374815d822daef413a4ebf6d7846e998d9121cbfdd1cde6e69571e7b1b91118",
+  "format": "inferfabric.token-bundle.v1",
+  "instructions": 1929,
+  "nodes": 1701,
+  "topology": {
+    "devices": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7
+    ],
+    "ep": 8,
+    "max_model_len": 512,
+    "max_num_batched_tokens": 1,
+    "max_num_seqs": 1,
+    "tp": 8
+  }
+}

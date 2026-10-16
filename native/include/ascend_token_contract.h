@@ -3,6 +3,24 @@
 #include "token_execution_plan.h"
 #include <algorithm>
 namespace inferfabric::execution {
+inline bool exclusive_region(const Plan &p, uint32_t input, size_t owner) {
+  struct Region { uint32_t root, start, width; bool fresh; };
+  auto region = [&](uint32_t id) {
+    uint32_t width = p.nodes[id].width, start = 0;
+    while (p.nodes[id].op == "slice") {
+      start += p.nodes[id].integer("start"); id = p.nodes[id].inputs[0];
+    }
+    auto &op = p.nodes[id].op;
+    return Region{id, start, width, op == "linear" || op == "norm" || op == "mla_value" || op == "copy"};
+  };
+  auto a = region(input);
+  if (!a.fresh) return false;
+  auto overlap = [&](uint32_t id) { auto b=region(id); return b.root==a.root && b.start<a.start+a.width && a.start<b.start+b.width; };
+  if (overlap(p.output)) return false;
+  for (size_t j=0;j<p.nodes.size();++j) if (j != owner && p.nodes[j].op != "slice")
+    for (auto id : p.nodes[j].inputs) if (overlap(id)) return false;
+  return true;
+}
 // Specialization capabilities of the registered Ascend kernels. This validates
 // serialized IR independently of Rust before allocating model/device memory.
 inline void validate_kernels(const Plan &p) {
@@ -40,7 +58,12 @@ inline void validate_kernels(const Plan &p) {
         error();
       return width;
     };
-    if (n.op == "embedding") {
+    if (n.op == "cast") {
+      if (!p.physical) error();
+      check({{0, tensor(0)}}, {"dtype"}, {0, tensor(0)});
+      if (n.text("dtype") != n.dtype || n.kernel != "aclnnCast" ||
+          p.nodes[n.inputs[0]].dtype == n.dtype) error();
+    } else if (n.op == "embedding") {
       check({}, {"weight", "width", "vocab"}, {0, 2560});
       eq("width", "2560");
       eq("vocab", "151552");
@@ -83,7 +106,9 @@ inline void validate_kernels(const Plan &p) {
       }
       check({{0, tensor(0)}}, attrs, {0, tensor(0)});
     }
-    else if (n.op == "mome") {
+    else if (p.physical && n.op == "copy") {
+      check({{0, tensor(0)}}, {}, {0, tensor(0)});
+    } else if (n.op == "mome" || (p.physical && n.op == "mome_inplace")) {
       std::vector<std::string> attrs{"weight", "taps"};
       if (n.attrs.count("placement")) {
         attrs.push_back("placement");
@@ -93,6 +118,9 @@ inline void validate_kernels(const Plan &p) {
       }
       check({{0, tensor(0)}}, attrs, {0, tensor(0)});
       eq("taps", "3");
+      if (n.op == "mome_inplace") {
+        if (!exclusive_region(p, n.inputs[0], i)) error();
+      }
     } else if (n.op == "slice") {
       auto a = tensor(0);
       if (uint64_t(n.integer("start")) + w() > a)
@@ -176,10 +204,32 @@ inline void validate_kernels(const Plan &p) {
       eq("width", "2560");
     } else if (n.op == "expert_reduce")
       check({{3, 2560}, {2, 0}}, {}, {0, 2560});
-    else if (n.op == "add")
+    else if (n.op == "add" || (p.physical && n.op == "add_f32"))
       check({{0, tensor(0)}, {0, tensor(0)}}, {}, {0, tensor(0)});
     else
       error();
+    if (p.physical && n.op != "cast") {
+      std::string output_dtype = n.kind == 0 ? "bf16" : "opaque";
+      if (n.op == "add_f32" || n.op == "expert_reduce") output_dtype = "f32";
+      if (n.op == "allreduce") output_dtype = n.attrs.count("dtype") ? n.text("dtype") : "f32";
+      if (n.op == "slice" || n.op == "repeat" || n.op == "concat" || (n.op == "optional_norm" && n.kernel == "alias"))
+        output_dtype = p.nodes[n.inputs[0]].dtype;
+      if (n.dtype != output_dtype) error();
+      if (n.op == "concat" && p.nodes[n.inputs[0]].dtype != p.nodes[n.inputs[1]].dtype) error();
+      auto expected_kernel = n.op == "add_f32" ? "add" : n.op;
+      if (n.op != "linear" && n.op != "optional_norm" && n.kernel != expected_kernel) error();
+      if (n.op == "linear" && n.kernel != "bf16" && n.kernel != "int8" && n.kernel != "paired_bf16") error();
+      if (n.op == "optional_norm" && n.kernel != "norm" && n.kernel != "alias") error();
+      for (auto j : n.inputs) {
+        const auto &v = p.nodes[j];
+        if (v.kind != 0) continue;
+        std::string required = "bf16";
+        if (n.op == "slice" || n.op == "repeat" || n.op == "concat" || (n.op == "optional_norm" && n.kernel == "alias")) continue;
+        if (n.op == "router" || n.op == "rope" || n.op == "add_f32") required = "f32";
+        if (n.op == "allreduce") required = n.attrs.count("dtype") ? n.text("dtype") : "f32";
+        if (v.dtype != required) error();
+      }
+    }
     if (n.op == "expert_swiglu_down") {
       for (size_t j = 0; j + 1 < n.inputs.size(); ++j) {
         auto &g = p.nodes[n.inputs[j]];
@@ -246,6 +296,14 @@ inline void validate_bindings(const Plan &program,
     if (!n.attrs.count("weight"))
       continue;
     auto &name = n.text("weight");
+    if (program.physical && n.op == "linear") {
+      auto dtype = weights.at(name + ".weight")->dtype;
+      std::string expected = n.attrs.count("paired_weight") ? "paired_bf16" : dtype == DType::Bf16 ? "bf16" : "int8";
+      if (n.kernel != expected) throw std::runtime_error("planned projection kernel/checkpoint mismatch");
+    }
+    if (program.physical && n.op == "optional_norm" &&
+        (n.kernel == "norm") != bool(weights.count(name + ".weight")))
+      throw std::runtime_error("planned optional normalization/checkpoint mismatch");
     auto width = n.inputs.empty() ? 0 : program.nodes[n.inputs[0]].width;
     if (n.op == "embedding")
       require(name + ".weight", {151552, 2560}, DType::Bf16);
@@ -258,7 +316,7 @@ inline void validate_bindings(const Plan &program,
     else if (n.op == "norm" || n.op == "optional_norm" || n.op == "cache_norm_rope_append") {
       if (n.op != "optional_norm" || weights.count(name + ".weight"))
         require(name + ".weight", {width}, DType::Bf16);
-    } else if (n.op == "mome")
+    } else if (n.op == "mome" || n.op == "mome_inplace")
       require(name + ".weight", {width, 1, 3}, DType::Bf16);
     else if (n.op == "mhc_pre" || n.op == "mhc_merge") {
       bool merge = n.op == "mhc_merge";

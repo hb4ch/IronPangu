@@ -30,6 +30,7 @@ pub fn lower(graph: &Graph, devices: &[u32]) -> Result<Plan> {
         "../../../native/src/openpangu_decoder_state.h"
     ));
     source.extend_from_slice(include_bytes!("token_physical.rs"));
+    source.extend_from_slice(include_bytes!("token_program.rs"));
     source.extend_from_slice(include_bytes!("../../../native/src/resident_tensor.h"));
     source.extend_from_slice(include_bytes!("../../../native/src/resident_transfer.h"));
     source.extend_from_slice(include_bytes!("../../../native/src/execution_profile.h"));

@@ -11,6 +11,8 @@
 #include <vector>
 namespace inferfabric::execution {
 struct Node {
+  std::string dtype, kernel;
+  uint32_t logical_node = 0;
   uint32_t kind = 0, width = 0;
   std::string name, op;
   std::vector<uint32_t> inputs;
@@ -28,6 +30,7 @@ struct Node {
   }
 };
 struct Plan {
+  bool physical = false;
   uint32_t context = 0, eos = 0, output = 0;
   std::vector<Node> nodes;
   std::vector<uint32_t> uses;
@@ -53,9 +56,10 @@ struct Plan {
       return v;
     };
     char magic[8];
-    if (!s.read(magic, 8) || std::memcmp(magic, "IFTOKN01", 8))
+    if (!s.read(magic, 8) || (std::memcmp(magic, "IFTOKN01", 8) && std::memcmp(magic, "IFTOKN02", 8)))
       throw std::runtime_error("missing/unsupported execution plan");
     Plan p;
+    p.physical = !std::memcmp(magic, "IFTOKN02", 8);
     p.context = number();
     p.eos = number();
     p.output = number();
@@ -91,6 +95,12 @@ struct Plan {
         auto v = str();
         if (!n.attrs.emplace(k, v).second)
           throw std::runtime_error("duplicate attribute");
+      }
+      if (p.physical) {
+        n.dtype = str(); n.kernel = str(); n.logical_node = number();
+        if (n.logical_node >= count ||
+            (n.kind == 0 ? (n.dtype != "bf16" && n.dtype != "f32") : n.dtype != "opaque"))
+          throw std::runtime_error("physical storage contract");
       }
       p.nodes.push_back(std::move(n));
     }

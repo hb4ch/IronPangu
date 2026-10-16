@@ -2,6 +2,7 @@
 pub mod initialization;
 pub mod token;
 pub mod token_physical;
+pub mod token_program;
 pub mod token_view;
 use inferfabric_ir::*;
 use inferfabric_model::{Layer, Result, Role, Spec, invalid};

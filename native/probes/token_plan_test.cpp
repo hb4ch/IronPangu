@@ -27,6 +27,17 @@ int main(int argc, char **argv) {
     reject([](auto &x) { x.nodes[0].op = "unknown"; });
     reject([](auto &x) { x.nodes[0].width = 1; });
     reject([](auto &x) { x.nodes[0].attrs["ignored"] = "true"; });
+    if (p.physical) {
+      reject([](auto &x) { x.nodes[0].dtype = "f32"; });
+      reject([](auto &x) { x.nodes[0].kernel = "unbound"; });
+      reject([](auto &x) { for (auto &n : x.nodes) if (n.op == "cast") { n.kernel="copy"; break; } });
+      reject([](auto &x) { for (auto &n : x.nodes) if (n.op == "allreduce") { n.inputs[0]=0; break; } });
+      if (std::any_of(p.nodes.begin(),p.nodes.end(),[&](const auto &n){return n.op=="mome_inplace" && p.nodes[n.inputs[0]].op=="slice";})) {
+        reject([](auto &x) { for (auto &n : x.nodes) if (n.op=="mome_inplace" && x.nodes[n.inputs[0]].op=="slice") {
+          auto &view=x.nodes[n.inputs[0]]; view.attrs["start"]=std::to_string(view.integer("start")+1); break;
+        } });
+      }
+    }
     reject([](auto &x) {
       for (auto &n : x.nodes)
         if (n.op == "rope" || n.op == "cache_norm_rope_append") {

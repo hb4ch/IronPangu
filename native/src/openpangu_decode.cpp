@@ -293,13 +293,13 @@ struct Decoder {
     run(aclnnMatmul, bytes, e);
     return result(out);
   }
-  V linear(const std::string &name, const V &x, bool distributed = false) {
+  V linear(const std::string &name, const V &x, const std::string &implementation = "") {
     auto &a = w(name + ".weight");
     int n = a.descriptor.shape[0], k = a.descriptor.shape[1];
     if (int(x.size()) != k)
       throw std::runtime_error("linear shape " + name);
     V result;
-    if (a.dtype == inferfabric::initialization::DType::Bf16)
+    if (implementation == "bf16" || (implementation.empty() && a.dtype == inferfabric::initialization::DType::Bf16))
       result = matrix(x, a.data, n, k);
     else {
       auto &s = w(name + ".weight_scale");
@@ -324,7 +324,7 @@ struct Decoder {
       run(aclnnQuantMatmulV5, bytes, e);
       result = this->result(out);
     }
-    auto output = distributed ? gather(result) : result;
+    auto output = result;
     trace(name, output);
     return output;
   }
@@ -364,7 +364,7 @@ struct Decoder {
     return y;
   }
   V mome(V x, const std::string &name, int position,
-         const std::string &state_name) {
+         const std::string &state_name, bool inplace = false) {
     auto &ptr = mome_states[state_name];
     if (!ptr) {
       resident::TransferScope constants(resident::TransferRole::ControlInput);
@@ -377,21 +377,22 @@ struct Decoder {
       resident::parameter_upload(ptr->weight, weight);
     }
     auto &s = *ptr;
-    to_device(s.input, x);
+    if (!inplace) to_device(s.input, x);
+    View input_view(inplace ? x.data() : s.input.data, {1, int64_t(x.size())}, ACL_BF16);
     if (position != current_position)
       throw std::runtime_error("position input mismatch");
     uint64_t bytes = 0;
     aclOpExecutor *e = nullptr;
     checked(prepared::query("aclnnAiInfraFusedCausalConv1d", false,
                             aclnnAiInfraFusedCausalConv1dGetWorkspaceSize,
-                            s.input.tensor, s.weight.tensor, s.state.tensor,
+                            input_view.t, s.weight.tensor, s.state.tensor,
                             s.starts.tensor, s.slots.tensor, nullptr, nullptr,
                             nullptr, position_index->tensor, nullptr, nullptr,
                             nullptr, 0, -1, 0, 1, 1, 128, 1, true, s.out.tensor,
                             &bytes, &e),
             "MoME prepare");
     run(aclnnAiInfraFusedCausalConv1d, bytes, e);
-    return result(s.input);
+    return inplace ? x : result(s.input);
   }
   struct HC {
     MhcState *device = nullptr;

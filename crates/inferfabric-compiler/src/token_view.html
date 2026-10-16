@@ -1,1606 +1,487 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <title>InferFabric · Plan inspector</title>
-    <style>
-      :root {
-        font-family:
-          Inter,
-          Segoe UI,
-          system-ui,
-          sans-serif;
-        color: #223047;
-        background: #f3f5f9;
-        font-size: 13px;
-        --blue: #3367dc;
-        --border: #dee5ee;
+  <meta charset="utf-8" /><meta
+    name="viewport"
+    content="width=device-width,initial-scale=1"
+  /><title>InferFabric execution plan</title>
+  <style>
+    :root {
+      font:
+        14px system-ui,
+        sans-serif;
+      color: #182938;
+      background: #f5f7fa;
+    }
+    * {
+      box-sizing: border-box;
+    }
+    body {
+      margin: 0;
+    }
+    header {
+      background: #152c40;
+      color: white;
+      padding: 20px 28px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    h1 {
+      font-size: 21px;
+      margin: 0;
+    }
+    h2 {
+      font-size: 18px;
+    }
+    small,
+    .muted {
+      color: #647588;
+    }
+    header small {
+      color: #b6cedf;
+    }
+    button,
+    input,
+    select {
+      font: inherit;
+    }
+    button {
+      cursor: pointer;
+      border: 1px solid #c9d5df;
+      border-radius: 5px;
+      padding: 7px 11px;
+      background: white;
+      color: #164a70;
+    }
+    button:hover {
+      background: #e9f3fb;
+    }
+    button:focus-visible,
+    input:focus-visible,
+    select:focus-visible {
+      outline: 3px solid #3886c5;
+    }
+    main {
+      max-width: 1500px;
+      margin: auto;
+      padding: 22px;
+    }
+    .summary {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .summary > div {
+      background: white;
+      border: 1px solid #dce3e9;
+      border-radius: 7px;
+      padding: 12px 18px;
+      min-width: 155px;
+    }
+    .summary strong {
+      display: block;
+      font-size: 21px;
+      margin-bottom: 4px;
+    }
+    .notice {
+      background: #fff8e4;
+      border-left: 3px solid #c89730;
+      padding: 12px 16px;
+      margin: 16px 0;
+      line-height: 1.6;
+    }
+    .toolbar {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      flex-wrap: wrap;
+      margin: 18px 0;
+    }
+    input {
+      padding: 9px;
+      width: 310px;
+      border: 1px solid #ccd6de;
+      border-radius: 5px;
+    }
+    select {
+      padding: 7px;
+    }
+    #crumbs {
+      display: flex;
+      gap: 5px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    .table {
+      overflow: auto;
+      background: white;
+      border: 1px solid #dce3e9;
+      border-radius: 7px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+    }
+    td,
+    th {
+      padding: 12px 14px;
+      border-bottom: 1px solid #e7ecf1;
+      vertical-align: top;
+    }
+    th {
+      font-size: 12px;
+      color: #52687a;
+      background: #edf2f6;
+    }
+    td {
+      font-size: 13px;
+    }
+    td small {
+      display: block;
+      margin-top: 5px;
+      max-width: 430px;
+      line-height: 1.5;
+    }
+    .badge {
+      display: inline-block;
+      padding: 3px 6px;
+      border-radius: 4px;
+      background: #edf1f6;
+      font-size: 11px;
+      margin: 2px;
+    }
+    .cast {
+      background: #fff0d2;
+      color: #895b00;
+    }
+    .comm {
+      background: #e5edff;
+      color: #2147a0;
+    }
+    .alias {
+      background: #dbf2e6;
+      color: #226645;
+    }
+    .name {
+      border: 0;
+      background: none;
+      padding: 0;
+      text-align: left;
+      font-weight: 600;
+      overflow-wrap: anywhere;
+    }
+    #detail {
+      background: white;
+      border: 1px solid #b8c9d8;
+      border-radius: 8px;
+      margin-top: 20px;
+      padding: 22px;
+      line-height: 1.6;
+    }
+    #detail:empty {
+      display: none;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+    }
+    code {
+      font-size: 12px;
+      overflow-wrap: anywhere;
+    }
+    pre {
+      white-space: pre-wrap;
+      font-size: 12px;
+      background: #f4f7fa;
+      padding: 12px;
+      max-height: 240px;
+      overflow: auto;
+    }
+    .pager {
+      display: flex;
+      gap: 16px;
+      align-items: center;
+      margin: 15px 0;
+    }
+    a {
+      color: #216599;
+    }
+    @media (max-width: 800px) {
+      main {
+        padding: 12px;
       }
-      * {
-        box-sizing: border-box;
-      }
-      body {
-        margin: 0;
-      }
-      button,
-      input {
-        font: inherit;
-      }
-      button {
-        cursor: pointer;
-      }
-      button:focus-visible,
-      input:focus-visible {
-        outline: 3px solid #85b5ff;
-        outline-offset: 2px;
+      .grid {
+        grid-template-columns: 1fr;
       }
       header {
-        height: 70px;
-        background: #101d32;
-        color: white;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        padding: 0 24px;
-      }
-      .brand {
-        font-size: 19px;
-        font-weight: 700;
-        letter-spacing: -0.5px;
-      }
-      .brand span {
-        color: #80b7ff;
-      }
-      .tag {
-        font-size: 11px;
-        letter-spacing: 1.5px;
-        color: #93a9c7;
-        margin-top: 4px;
-      }
-      .status {
-        border: 1px solid #3e5472;
-        border-radius: 20px;
-        padding: 7px 12px;
-        color: #c5d5ed;
-      }
-      .shell {
-        height: calc(100vh - 70px);
-        display: grid;
-        grid-template-columns: 230px minmax(400px, 1fr) 330px;
-      }
-      nav {
-        background: #17263e;
-        color: #cbd7e9;
-        padding: 20px 12px;
-        overflow: auto;
-      }
-      nav h3 {
-        font-size: 10px;
-        letter-spacing: 1.7px;
-        margin: 0 10px 14px;
-        color: #91a6c2;
-      }
-      #search {
-        width: 100%;
-        border: 1px solid #40536d;
-        background: #233651;
-        color: white;
-        padding: 10px;
-        border-radius: 7px;
-        margin-bottom: 12px;
-      }
-      nav button {
-        width: 100%;
-        text-align: left;
-        background: transparent;
-        border: 0;
-        color: inherit;
-        padding: 9px 10px;
-        border-radius: 6px;
-        display: block;
-      }
-      nav button:hover,
-      nav button.active {
-        background: #2c4468;
-        color: white;
-      }
-      nav small {
-        float: right;
-        color: #a7bbd6;
-      }
-      nav .nav-model {
-        font-weight: 700;
-        margin-bottom: 12px;
-      }
-      nav .search-result {
-        font-size: 11px;
-        overflow-wrap: anywhere;
-        border-bottom: 1px solid #30425b;
-      }
-      main {
-        min-width: 0;
-        display: flex;
-        flex-direction: column;
-      }
-      .toolbar {
-        min-height: 59px;
-        border-bottom: 1px solid var(--border);
-        background: white;
-        padding: 10px 20px;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 10px;
-      }
-      #crumbs {
-        display: flex;
-        gap: 5px;
-        flex-wrap: wrap;
-        align-items: center;
-      }
-      #crumbs button {
-        border: 0;
-        background: none;
-        color: #476b9e;
-        padding: 4px;
-        font-size: 12px;
-      }
-      #crumbs button:last-child {
-        color: #15233b;
-        font-weight: 700;
-      }
-      .tools {
-        white-space: nowrap;
-        display: flex;
-        gap: 5px;
-      }
-      .tools button {
-        background: white;
-        border: 1px solid var(--border);
-        border-radius: 5px;
-        padding: 5px 9px;
-        color: #41546d;
-      }
-      #workspace {
-        overflow: auto;
-        flex: 1;
-        padding: 26px;
-      }
-      .eyebrow {
-        color: #74839b;
-        letter-spacing: 1.6px;
-        font-size: 10px;
-        font-weight: 700;
-        text-transform: uppercase;
-      }
-      h1 {
-        font-size: 26px;
-        letter-spacing: -0.7px;
-        margin: 7px 0 8px;
-      }
-      h2 {
-        font-size: 17px;
-        margin: 0 0 8px;
-      }
-      p {
-        line-height: 1.6;
-        color: #65748b;
-      }
-      .metrics {
-        display: flex;
-        gap: 30px;
-        margin: 20px 0 24px;
-      }
-      .metric strong {
-        display: block;
-        font-size: 24px;
-        letter-spacing: -0.6px;
-        color: #253b5c;
-      }
-      .metric span {
-        font-size: 11px;
-        color: #73829a;
-      }
-      .section-title {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 12px;
-      }
-      .section-title span {
-        font-size: 11px;
-        color: #78879b;
-      }
-      .scope-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(136px, 1fr));
-        gap: 10px;
-      }
-      .scope-card {
-        background: white;
-        border: 1px solid var(--border);
-        border-radius: 9px;
-        text-align: left;
-        padding: 13px;
-        color: inherit;
-        border-top: 3px solid #6186de;
-      }
-      .scope-card:hover {
-        border-color: #346de2;
-        box-shadow: 0 3px 12px #244a8a12;
-        transform: translateY(-1px);
-      }
-      .scope-card {
-        overflow-wrap: anywhere;
-      }
-      .page-controls {
-        align-items: center;
-        margin: 0 0 20px;
-        justify-content: space-between;
-      }
-      .scope-card b {
-        display: block;
-        font-size: 13px;
-        margin-bottom: 6px;
-      }
-      .scope-card small {
-        color: #7b889c;
-        font-size: 10px;
-      }
-      .pill {
-        display: inline-block;
-        padding: 3px 7px;
-        border-radius: 4px;
-        background: #edf2fc;
-        color: #4771bc;
-        font-size: 10px;
-      }
-      .note {
-        font-size: 11px;
-        border-left: 3px solid #b9c9e3;
-        padding: 9px 12px;
-        margin-top: 22px;
-        color: #6e7e95;
-        background: #eaf0f8;
-      }
-      .scope-head {
-        margin-bottom: 20px;
-      }
-      .legend {
-        display: flex;
-        gap: 18px;
-        font-size: 11px;
-        color: #7a879b;
-        margin: 12px 0;
-      }
-      .legend i {
-        display: inline-block;
-        width: 9px;
-        height: 9px;
-        border-radius: 2px;
-        margin-right: 5px;
-        background: #5486df;
-      }
-      .legend i.module {
-        background: #9576ca;
-      }
-      .legend i.state {
-        background: #39a29c;
-      }
-      #graph-viewport {
-        overflow: auto;
-        border: 1px solid var(--border);
-        border-radius: 10px;
-        background-color: #fbfcfe;
-        background-image: radial-gradient(#dbe2ed 0.7px, transparent 0.7px);
-        background-size: 16px 16px;
-        min-height: 440px;
-        max-height: calc(100vh - 330px);
-      }
-      #graph-size {
-        position: relative;
-        margin: 0 auto;
-      }
-      #graph {
-        position: relative;
-        transform-origin: top left;
-      }
-      #edges {
-        position: absolute;
-        inset: 0;
-        overflow: visible;
-        pointer-events: none;
-      }
-      .edge {
-        fill: none;
-        stroke: #becbdd;
-        stroke-width: 1.6;
-      }
-      .edge.highlight {
-        stroke: #3371df;
-        stroke-width: 2.5;
-      }
-      .node {
-        position: absolute;
-        width: 224px;
-        height: 84px;
-        background: white;
-        border: 1px solid #d4dfed;
-        border-left: 4px solid #5486df;
-        border-radius: 8px;
-        text-align: left;
-        padding: 10px 12px;
-        box-shadow: 0 3px 8px #20365609;
-        color: #253951;
-      }
-      .node.module {
-        border-left-color: #9576ca;
-        background: #fefcff;
-      }
-      .node.state {
-        border-left-color: #39a29c;
-      }
-      .node.selected {
-        outline: 2px solid #4080ee;
-        outline-offset: 2px;
-      }
-      .node .node-top {
-        font-size: 10px;
-        color: #8390a5;
-        display: flex;
-        justify-content: space-between;
-      }
-      .node b {
-        display: block;
-        font-size: 12px;
-        margin: 5px 0;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-      }
-      .node .shape {
-        font-family: Consolas, monospace;
-        color: #6d7f99;
-        font-size: 11px;
-      }
-      .boundary {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 6px;
-        margin: 9px 0 13px;
-      }
-      .boundary-label {
-        color: #8491a5;
-        font-size: 10px;
-        text-transform: uppercase;
-        align-self: center;
-        margin-right: 4px;
-      }
-      .ref {
-        border: 1px solid #dbe3ef;
-        border-radius: 5px;
-        background: #f7f9fd;
-        color: #42618a;
-        padding: 5px 7px;
-        font-size: 11px;
-        text-align: left;
-        overflow-wrap: anywhere;
-      }
-      .ref:hover {
-        border-color: #80a7e7;
-      }
-      .empty {
-        font-size: 12px;
-        color: #8794a7;
-        padding: 12px;
-      }
-      aside {
-        background: white;
-        border-left: 1px solid var(--border);
-        overflow: auto;
-        padding: 23px 20px;
-      }
-      aside h2 {
-        font-size: 19px;
-        overflow-wrap: anywhere;
-        margin-top: 8px;
-      }
-      aside h3 {
-        font-size: 10px;
-        text-transform: uppercase;
-        letter-spacing: 1.4px;
-        color: #8995a8;
-        margin: 24px 0 10px;
-      }
-      aside .path {
-        font:
-          11px/1.6 Consolas,
-          monospace;
-        color: #6c7c93;
-        overflow-wrap: anywhere;
-      }
-      aside .ref {
-        display: block;
-        width: 100%;
-        margin: 5px 0;
-      }
-      aside .primary {
-        border: 0;
-        background: #356bd8;
-        color: white;
-        padding: 9px 12px;
-        border-radius: 6px;
-        width: 100%;
-        margin: 12px 0;
-      }
-      dl {
-        margin: 0;
-      }
-      dt {
-        font-size: 11px;
-        color: #8390a2;
-        margin-top: 10px;
-      }
-      dd {
-        margin: 3px 0;
-        color: #304561;
-        font:
-          12px/1.6 Consolas,
-          monospace;
-        overflow-wrap: anywhere;
-      }
-      .shape-box {
-        background: #f1f5fc;
-        border: 1px solid #dfe8f6;
-        border-radius: 7px;
-        padding: 12px;
-        font:
-          13px Consolas,
-          monospace;
-        color: #416696;
-      }
-      .weight {
-        background: #f6f3fb;
-        border-left: 3px solid #a48bc9;
-        padding: 10px;
-        margin: 7px 0;
-        font:
-          11px/1.7 Consolas,
-          monospace;
-        overflow-wrap: anywhere;
-        color: #725994;
-      }
-      .source-frame {
-        padding: 8px 0;
-        border-bottom: 1px solid #edf0f5;
-        font-size: 11px;
-        color: #6c7c93;
-      }
-      .source-frame b {
-        display: block;
-        color: #3c536e;
-        margin-bottom: 3px;
-      }
-      .subtle {
-        font-size: 11px;
-        color: #8a97a9;
-      }
-      #selection-status {
-        font-size: 11px;
-        color: #8091aa;
-      }
-      .footer-note {
-        font-size: 10px;
-        color: #9aabc0;
-        padding: 20px 10px;
-        line-height: 1.6;
-      }
-      @media (max-width: 1100px) {
-        .shell {
-          grid-template-columns: 190px minmax(320px, 1fr) 280px;
-        }
-        #workspace {
-          padding: 18px;
-        }
-        .metrics {
-          gap: 20px;
-        }
-      }
-      @media (max-width: 800px) {
-        .shell {
-          grid-template-columns: 155px minmax(320px, 1fr);
-          height: auto;
-          min-height: calc(100vh - 70px);
-        }
-        aside {
-          grid-column: 1/-1;
-          border-top: 1px solid var(--border);
-        }
-        nav {
-          max-height: calc(100vh - 70px);
-        }
-        main {
-          min-height: 700px;
-        }
-        .status {
-          display: none;
-        }
-        .metrics {
-          flex-wrap: wrap;
-        }
-      }
-      .physical-controls {
-        display: flex;
-        gap: 16px;
-        margin: 16px 0;
-      }
-      .physical-controls select {
-        padding: 7px;
-        border: 1px solid #ccd7e6;
-        border-radius: 5px;
-        background: white;
-        color: #314864;
-      }
-      .physical-table {
-        overflow: auto;
-        border: 1px solid #dce4ef;
-        border-radius: 8px;
-        background: white;
-      }
-      .physical-table table {
-        width: 100%;
-        border-collapse: collapse;
-        font-size: 11px;
-      }
-      .physical-table th,
-      .physical-table td {
-        padding: 12px;
-        text-align: left;
-        border-bottom: 1px solid #edf0f5;
-        overflow-wrap: anywhere;
-        max-width: 260px;
-      }
-      .physical-table th {
-        background: #eaf0f9;
-      }
-      .physical-table tr:hover {
-        background: #f5f8fe;
-      }
-      .physical-table .ref {
-        font-size: 11px;
-      }
-    </style>
-  </head>
-  <body>
-    <header>
-      <div>
-        <div class="brand">
-          Infer<span>Fabric</span>
-          <span style="font-weight: 400; color: #b8c9df">/ Plan inspector</span>
-        </div>
-        <div class="tag">PLAN → SCOPE → OPERATION</div>
-      </div>
-      <div class="status">Expanded execution DAG · offline artifact</div>
-    </header>
-    <div class="shell">
-      <nav>
-        <h3>PLAN EXPLORER</h3>
-        <input
-          id="search"
-          aria-label="Search operations or weight bindings"
-          placeholder="Search ops or weights…"
-        />
-        <div id="navigation"></div>
-        <div class="footer-note">
-          Only the current scope is rendered.<br />Click a module, then expand
-          it.<br />Esc: parent scope · /: search
-        </div>
-      </nav>
-      <main>
-        <div class="toolbar">
-          <div id="crumbs"></div>
-          <div class="tools">
-            <button id="up" title="Parent scope">↑ Up</button
-            ><button id="physical-mode">Physical plan</button
-            ><button id="fit">Fit</button
-            ><button id="minus" aria-label="Zoom out">−</button
-            ><button id="plus" aria-label="Zoom in">+</button>
-          </div>
-        </div>
-        <div id="workspace"></div>
-      </main>
-      <aside id="inspector" aria-label="Selection details"></aside>
+        padding: 15px;
+      }
+      .summary > div {
+        min-width: 130px;
+      }
+    }
+  </style>
+  <header>
+    <div>
+      <h1>Execution plan</h1>
+      <small id="title"></small>
     </div>
-    <script type="application/json" id="plan-data">
-      __PLAN_DATA__
-    </script>
-    <script>
-      "use strict";
-      const {
-        graph: plan,
-        types,
-        node_metadata: metadata,
-        physical,
-        device_buffer_contract: bufferSupport,
-      } = JSON.parse(document.getElementById("plan-data").textContent);
-      const $ = (s) => document.querySelector(s),
-        esc = (v) =>
-          String(v).replace(
-            /[&<>"']/g,
-            (c) =>
-              ({
-                "&": "&amp;",
-                "<": "&lt;",
-                ">": "&gt;",
-                '"': "&quot;",
-                "'": "&#39;",
-              })[c],
-          );
-      const nodes = plan.nodes,
-        consumers = nodes.map(() => []);
-      nodes.forEach((n, i) => n.inputs.forEach((j) => consumers[j].push(i)));
-      const root = {
+    <label
+      >Rank
+      <select id="rank"></select
+    ></label>
+  </header>
+  <main>
+    <div class="summary" id="summary"></div>
+    <div class="notice" id="parallel"></div>
+    <div id="crumbs"></div>
+    <div class="toolbar">
+      <input
+        id="search"
+        aria-label="Search plan"
+        placeholder="Search kernels, ops, weights or placement"
+      /><select id="filter" aria-label="Filter instructions">
+        <option value="all">All work</option>
+        <option value="comm">Collectives / EP</option>
+        <option value="cast">Casts</option>
+        <option value="copy">Copies / materialization</option>
+        <option value="kernel">Compute kernels</option></select
+      ><button id="mode">Show instructions in this scope</button>
+    </div>
+    <div id="content"></div>
+    <div id="detail"></div>
+    <details>
+      <summary>Plan limits and numerical policy</summary>
+      <div id="limits"></div>
+    </details>
+  </main>
+  <script type="application/json" id="plan-data">
+    __PLAN_DATA__
+  </script>
+  <script>
+    "use strict";
+    const data = JSON.parse(document.querySelector("#plan-data").textContent),
+      { graph, physical, program, recipes } = data;
+    const $ = (s) => document.querySelector(s),
+      esc = (x) =>
+        String(x ?? "").replace(
+          /[&<>"']/g,
+          (c) =>
+            ({
+              "&": "&amp;",
+              "<": "&lt;",
+              ">": "&gt;",
+              '"': "&quot;",
+              "'": "&#39;",
+            })[c],
+        );
+    const ins = program.instructions,
+      nodes = graph.nodes,
+      root = {
         id: "root",
-        label: plan.name,
-        module: "Plan",
+        label: graph.name,
         children: [],
-        leaves: [],
+        logical: [],
         parent: null,
-      };
-      const groups = new Map([["root", root]]),
-        leaves = [];
-      nodes.forEach((n, i) => {
-        let p = root;
-        p.leaves.push(i);
-        const frames = n.source?.frames || [];
-        frames.forEach((f, k) => {
-          const id =
-            "scope:" +
-            JSON.stringify(
-              frames
-                .slice(0, k + 1)
-                .map((frame) => [frame.module, frame.instance]),
-            );
-          let g = groups.get(id);
-          if (!g) {
-            const prefix = p.frame?.instance + ".";
-            g = {
-              id,
-              label:
-                p.frame && f.instance.startsWith(prefix)
-                  ? f.instance.slice(prefix.length)
-                  : f.instance,
-              module: f.module,
-              children: [],
-              leaves: [],
-              parent: p,
-              frame: f,
-            };
-            groups.set(g.id, g);
-            p.children.push(g);
-          }
-          g.leaves.push(i);
-          p = g;
-        });
-        const leaf = {
-          id: "op:" + i,
-          label:
-            p.frame && n.name.startsWith(p.frame.instance + ".")
-              ? n.name.slice(p.frame.instance.length + 1)
-              : n.name,
-          index: i,
-          parent: p,
-          leaves: [i],
-        };
-        p.children.push(leaf);
-        leaves.push(leaf);
+      },
+      groups = new Map([["root", root]]);
+    nodes.forEach((n, id) => {
+      let p = root;
+      p.logical.push(id);
+      const frames = n.source?.frames || [];
+      frames.forEach((f, k) => {
+        const key = JSON.stringify(
+          frames.slice(0, k + 1).map((x) => [x.module, x.instance]),
+        );
+        let g = groups.get(key);
+        if (!g) {
+          g = {
+            id: key,
+            label: f.instance,
+            module: f.module,
+            children: [],
+            logical: [],
+            parent: p,
+          };
+          groups.set(key, g);
+          p.children.push(g);
+        }
+        g.logical.push(id);
+        p = g;
       });
-      const PAGE_SIZE = 24;
-      let pageIndex = 0,
-        rootDiagram = false;
-      let physicalMode = false,
-        rankIndex = 0,
-        physicalTab = "schedule";
-      let scope = root,
-        selected = null,
-        zoom = 1,
-        layout = null;
-      function shape(i) {
-        const t = types[i];
-        return t.kind === "tensor"
-          ? "tensor [" + t.width.toLocaleString() + "]"
-          : t.kind === "experts"
-            ? "experts [selected, " + t.width.toLocaleString() + "]"
-            : t.kind + " handle";
-      }
-      function bounds(g) {
-        const set = new Set(g.leaves);
-        return {
-          inputs: [
-            ...new Set(
-              g.leaves.flatMap((i) =>
-                nodes[i].inputs.filter((j) => !set.has(j)),
-              ),
-            ),
-          ],
-          outputs: g.leaves.filter(
-            (i) => i === plan.output || consumers[i].some((j) => !set.has(j)),
-          ),
-        };
-      }
-      function ref(i) {
-        return (
-          '<button class="ref" data-op="' +
-          i +
-          '">#' +
-          i +
-          " " +
-          esc(nodes[i].name) +
-          '<br><span class="subtle">' +
-          esc(shape(i)) +
-          "</span></button>"
-        );
-      }
-      function bindRefs(container) {
-        container
-          .querySelectorAll("[data-op]")
-          .forEach((b) => (b.onclick = () => reveal(+b.dataset.op)));
-      }
-      function navigate(g, page = 0, diagram = false) {
-        location.hash =
-          encodeURIComponent(g.id) +
-          "&page=" +
-          page +
-          (diagram ? "&view=graph" : "");
-      }
-      function reveal(i) {
-        const leaf = leaves[i],
-          parent = leaf.parent;
-        const page = Math.floor(parent.children.indexOf(leaf) / PAGE_SIZE);
-        location.hash =
-          encodeURIComponent(parent.id) +
-          "&page=" +
-          page +
-          "&op=" +
-          i +
-          "&view=graph";
-        if (
-          scope === parent &&
-          pageIndex === page &&
-          (parent !== root || rootDiagram)
-        )
-          select(leaf);
-      }
-      function isAncestor(g) {
-        for (let p = scope; p; p = p.parent) if (p === g) return true;
-        return false;
-      }
-      function pageChildren() {
-        return scope.children.slice(
-          pageIndex * PAGE_SIZE,
-          (pageIndex + 1) * PAGE_SIZE,
-        );
-      }
-      function pager() {
-        const pages = Math.ceil(scope.children.length / PAGE_SIZE);
-        return (
-          '<div class="tools page-controls"><button id="previous-page" ' +
-          (pageIndex === 0 ? "disabled" : "") +
-          '>← Previous</button><span class="subtle">Items ' +
-          (pageIndex * PAGE_SIZE + 1) +
-          "–" +
-          Math.min((pageIndex + 1) * PAGE_SIZE, scope.children.length) +
-          " / " +
-          scope.children.length +
-          '</span><button id="next-page" ' +
-          (pageIndex + 1 >= pages ? "disabled" : "") +
-          ">Next →</button></div>"
-        );
-      }
-      function bindPager() {
-        $("#previous-page").onclick = () =>
-          navigate(scope, pageIndex - 1, rootDiagram);
-        $("#next-page").onclick = () =>
-          navigate(scope, pageIndex + 1, rootDiagram);
-      }
-      function crumbs() {
-        let list = [],
-          p = scope;
-        while (p) {
-          list.unshift(p);
-          p = p.parent;
-        }
-        $("#crumbs").innerHTML = list
-          .map(
-            (g, i) =>
-              (i ? '<span class="subtle">/</span>' : "") +
-              '<button data-scope="' +
-              esc(g.id) +
-              '">' +
-              esc(g.label) +
-              "</button>",
-          )
-          .join("");
-        $("#crumbs")
-          .querySelectorAll("button")
-          .forEach(
-            (b) => (b.onclick = () => navigate(groups.get(b.dataset.scope))),
-          );
-        $("#up").disabled = scope === root;
-      }
-      function moduleNav(g, depth) {
-        return g.children
-          .filter((c) => c.module)
-          .map(
-            (c) =>
-              '<button data-scope="' +
-              esc(c.id) +
-              '" style="padding-left:' +
-              (12 + depth * 12) +
-              'px;font-size:11px" class="' +
-              (scope === c ? "active" : "") +
-              '">↳ ' +
-              esc(c.label) +
-              " <small>" +
-              esc(c.module) +
-              "</small></button>" +
-              (isAncestor(c) ? moduleNav(c, depth + 1) : ""),
-          )
-          .join("");
-      }
-      function navigation() {
-        const q = $("#search").value.trim().toLowerCase();
-        const el = $("#navigation");
-        if (q) {
-          const hits = nodes
-            .map((n, i) => ({ n, i }))
-            .filter(({ n }) =>
-              (n.name + " " + n.op + " " + Object.values(n.attrs).join(" "))
-                .toLowerCase()
-                .includes(q),
-            );
-          el.innerHTML =
-            '<div class="subtle" style="padding:8px">' +
-            hits.length +
-            " matches · first 50</div>" +
-            hits
-              .slice(0, 50)
-              .map(
-                ({ n, i }) =>
-                  '<button class="search-result" data-op="' +
-                  i +
-                  '">#' +
-                  i +
-                  " " +
-                  esc(n.name) +
-                  "<br>" +
-                  esc(n.op) +
-                  "</button>",
-              )
-              .join("");
-          bindRefs(el);
-          return;
-        }
-        el.innerHTML =
-          '<button class="nav-model ' +
-          (scope === root ? "active" : "") +
-          '" data-scope="root">◈ Plan overview</button><h3>SCOPE HIERARCHY</h3>' +
-          moduleNav(root, 0);
-        el.querySelectorAll("[data-scope]").forEach(
-          (b) => (b.onclick = () => navigate(groups.get(b.dataset.scope))),
-        );
-      }
-      function inspect(g) {
-        const panel = $("#inspector");
-        if (g.index !== undefined) {
-          const i = g.index,
-            n = nodes[i],
-            weights = metadata[i].bindings.map((b) => [b.attribute, b.value]);
-          panel.innerHTML =
-            '<div class="eyebrow">Operation #' +
-            i +
-            "</div><h2>" +
-            esc(n.op) +
-            '</h2><div class="path">' +
-            esc(n.name) +
-            '</div><h3>Output · compiler-validated type</h3><div class="shape-box">' +
-            esc(shape(i)) +
-            '</div><p class="subtle">Logical per-invocation width. Dtype and physical buffer layout are not encoded in this graph.</p><h3>Weight bindings</h3>' +
-            (weights.length
-              ? weights
-                  .map(
-                    ([k, v]) =>
-                      '<div class="weight"><b>' +
-                      esc(k) +
-                      "</b><br>" +
-                      esc(v) +
-                      "</div>",
-                  )
-                  .join("")
-              : '<span class="subtle">No direct weight binding</span>') +
-            (weights.some(([, v]) => v.includes("{expert}"))
-              ? '<p class="subtle">{expert} resolves through rank ownership and selected expert routes.</p>'
-              : "") +
-            "<h3>Inputs · " +
-            n.inputs.length +
-            "</h3>" +
-            n.inputs.map(ref).join("") +
-            "<h3>Consumers · " +
-            consumers[i].length +
-            "</h3>" +
-            consumers[i].map(ref).join("") +
-            "<h3>Attributes</h3><dl>" +
-            Object.entries(n.attrs)
-              .map(([k, v]) => "<dt>" + esc(k) + "</dt><dd>" + esc(v) + "</dd>")
-              .join("") +
-            "</dl><h3>DSL provenance</h3>" +
-            (n.source
-              ? '<div class="path">UTF-8 bytes ' +
-                n.source.start +
-                "–" +
-                n.source.end +
-                "</div>" +
-                n.source.frames
-                  .map(
-                    (f) =>
-                      '<div class="source-frame"><b>' +
-                      esc(f.module) +
-                      "</b>" +
-                      esc(f.instance) +
-                      "<br>call bytes " +
-                      f.start +
-                      "–" +
-                      f.end +
-                      "</div>",
-                  )
-                  .join("")
-              : '<span class="subtle">No source metadata in this artifact</span>');
-        } else {
-          const b = bounds(g),
-            weighted = g.leaves.filter((i) => metadata[i].bindings.length),
-            counts = {};
-          g.leaves.forEach(
-            (i) => (counts[nodes[i].op] = (counts[nodes[i].op] || 0) + 1),
-          );
-          panel.innerHTML =
-            '<div class="eyebrow">' +
-            esc(g.module) +
-            "</div><h2>" +
-            esc(g.label) +
-            '</h2><div class="path">' +
-            esc(g.frame?.instance ?? plan.name) +
-            "</div>" +
-            (g !== scope
-              ? '<button class="primary" id="expand-module">Expand module →</button>'
-              : "") +
-            '<h3>Scope summary</h3><div class="shape-box">' +
-            g.leaves.length +
-            " operations · " +
-            weighted.length +
-            ' weighted ops</div><p class="subtle">' +
-            g.children.filter((x) => x.module).length +
-            " nested modules. Dependencies are aggregated at this level; expand a module to inspect its internals.</p><h3>Boundary inputs · " +
-            b.inputs.length +
-            "</h3>" +
-            b.inputs.map(ref).join("") +
-            "<h3>Boundary outputs · " +
-            b.outputs.length +
-            "</h3>" +
-            b.outputs.map(ref).join("") +
-            "<h3>Operation inventory</h3><dl>" +
-            Object.entries(counts)
-              .sort((a, b) => b[1] - a[1])
-              .map(([k, v]) => "<dt>" + esc(k) + "</dt><dd>" + v + "</dd>")
-              .join("") +
-            "</dl>" +
-            (g === root
-              ? '<div class="note">This artifact describes logical execution. Physical memory placement, stream scheduling and kernel cost estimates are not present.</div>'
-              : "");
-          if ($("#expand-module"))
-            $("#expand-module").onclick = () => navigate(g);
-        }
-        if (g.index !== undefined)
-          panel.insertAdjacentHTML("beforeend", physicalDetails(g.index));
-        bindRefs(panel);
-      }
-      function select(g) {
-        selected = g;
-        inspect(g);
-        document
-          .querySelectorAll(".node")
-          .forEach((el) =>
-            el.classList.toggle("selected", el.dataset.id === g.id),
-          );
-        document
-          .querySelectorAll(".edge")
-          .forEach((el) =>
-            el.classList.toggle(
-              "highlight",
-              el.dataset.from === g.id || el.dataset.to === g.id,
-            ),
-          );
-      }
-      function overview() {
-        const children = pageChildren();
-        $("#workspace").innerHTML =
-          '<div class="eyebrow">Compiled plan / logical execution</div><h1>' +
-          esc(plan.name) +
-          '</h1><p>Explore the authored scope hierarchy. Names and module types below come directly from expansion metadata.</p><div class="metrics"><div class="metric"><strong>' +
-          nodes.length.toLocaleString() +
-          '</strong><span>primitive operations</span></div><div class="metric"><strong>' +
-          root.children.filter((g) => g.module).length +
-          '</strong><span>top-level scopes</span></div><div class="metric"><strong>' +
-          plan.max_context +
-          '</strong><span>context bound</span></div><div class="metric"><strong>' +
-          (groups.size - 1) +
-          '</strong><span>expansion scopes</span></div></div><div class="section-title"><h2>Plan contents</h2><button class="ref" id="root-diagram">View dependencies →</button></div>' +
-          pager() +
-          '<div class="scope-grid">' +
-          children
-            .map(
-              (g) =>
-                '<button class="scope-card" data-item="' +
-                esc(g.id) +
-                '"><b>' +
-                esc(g.label) +
-                '</b><span class="pill">' +
-                esc(g.module ?? nodes[g.index].op) +
-                "</span><br><small>" +
-                esc(
-                  g.module
-                    ? g.leaves.length +
-                        " ops · " +
-                        g.children.length +
-                        (g.children.length === 1 ? " child" : " children")
-                    : shape(g.index),
-                ) +
-                "</small></button>",
-            )
-            .join("") +
-          '</div><div class="note">All source frames are preserved. Operations without expansion metadata stay directly in their parent scope. Each page shows at most ' +
-          PAGE_SIZE +
-          " items; no model stages are inferred.</div>";
-        $("#workspace")
-          .querySelectorAll("[data-item]")
-          .forEach((el) => {
-            const g = children.find((g) => g.id === el.dataset.item);
-            el.onclick = () => (g.module ? navigate(g) : reveal(g.index));
-          });
-        $("#root-diagram").onclick = () => navigate(root, pageIndex, true);
-        bindPager();
-        inspect(root);
-      }
-      function graphView() {
-        const children = pageChildren();
-        const owner = new Map();
-        children.forEach((g) => g.leaves.forEach((i) => owner.set(i, g.id)));
-        const edgeMap = new Map();
-        children.forEach((g) =>
-          g.leaves.forEach((i) =>
-            nodes[i].inputs.forEach((j) => {
-              const from = owner.get(j);
-              if (from && from !== g.id) {
-                const key = from + ">" + g.id;
-                if (!edgeMap.has(key))
-                  edgeMap.set(key, { from, to: g.id, pairs: [] });
-                edgeMap.get(key).pairs.push([j, i]);
-              }
-            }),
-          ),
-        );
-        const edges = [...edgeMap.values()],
-          rank = new Map(children.map((g) => [g.id, 0]));
-        for (let k = 0; k < children.length; k++) {
-          let changed = false;
-          for (const e of edges) {
-            if (rank.get(e.to) <= rank.get(e.from)) {
-              rank.set(e.to, rank.get(e.from) + 1);
-              changed = true;
-            }
+    });
+    let scope = root,
+      page = 0,
+      flat = false,
+      rank = 0;
+    const pageSize = 25;
+    const isComm = (i) =>
+      [
+        "gather",
+        "allreduce",
+        "expert_linear",
+        "expert_swiglu_down",
+        "expert_reduce",
+      ].includes(i.op);
+    const idsFor = (g) => {
+      const set = new Set(g.logical);
+      return ins
+        .map((i, id) => id)
+        .filter((id) => set.has(ins[id].logical_node));
+    };
+    function matches(id) {
+      const i = ins[id],
+        r = recipes[id],
+        q = $("#search").value.toLowerCase(),
+        f = $("#filter").value;
+      return (
+        (!q ||
+          JSON.stringify([i, nodes[i.logical_node], r])
+            .toLowerCase()
+            .includes(q)) &&
+        (f === "all" ||
+          (f === "comm" && isComm(i)) ||
+          (f === "cast" && i.op === "cast") ||
+          (f === "copy" &&
+            (i.op === "copy" ||
+              /copy|packing|concat|materializ|packed input|staging/i.test(
+                r.materialization + " " + r.internal,
+              ))) ||
+          (f === "kernel" &&
+            r.apis.length > 0 &&
+            !["cast", "gather", "allreduce"].includes(i.op)))
+      );
+    }
+    function go(g) {
+      scope = g;
+      page = 0;
+      $("#detail").innerHTML = "";
+      render();
+    }
+    function badge(t, kind = "") {
+      return `<span class="badge ${kind}">${esc(t)}</span>`;
+    }
+    function placement(id) {
+      const r = recipes[id];
+      let s = r.placement;
+      if (s === "ep_owner_local")
+        s += ` · rank ${rank} owns experts ${rank * (data.parallel.expert_count / data.parallel.ep)}–${(rank + 1) * (data.parallel.expert_count / data.parallel.ep) - 1}`;
+      if (s === "tp_local_heads") s += ` · rank ${rank}`;
+      return s;
+    }
+    function inspect(id) {
+      const i = ins[id],
+        n = nodes[i.logical_node],
+        r = recipes[id];
+      $("#detail").innerHTML =
+        `<button id="close" style="float:right">Close</button><h2>#${id} ${esc(i.name)}</h2><div class="grid"><section><b>Selected implementation</b><p>${r.apis.length ? r.apis.map((x) => `<code>${esc(x)}</code>`).join(" → ") : esc(r.internal)}</p><p>${badge(r.granularity)} ${badge(i.dtype)} ${badge(placement(id))}</p><p>${esc(i.reason)}</p><b>Internal work / numerical contract</b><p>${esc(r.internal)}</p><b>Storage / aliasing</b><p>${esc(r.materialization)}</p><b>Communication</b><p>${esc(r.communication)}</p></section><section><b>Shape</b><p>${i.kind === 0 ? `[${i.width}] ${esc(i.dtype)} · ${i.width * (i.dtype === "bf16" ? 2 : 4)} payload bytes per rank` : "Opaque structured value; inner shapes belong to backend recipe"}</p><b>Dependencies</b><p>${i.inputs.length ? i.inputs.map((j) => `<button data-ins="${j}">#${j} ${esc(ins[j].name)} · ${esc(ins[j].dtype)}</button>`).join(" ") : "Control / parameters only"}</p><b>Weight bindings and attributes</b><pre>${esc(JSON.stringify(n.attrs, null, 2))}</pre><b>Scheduling / memory</b><p>Rank ${rank}, owning stream 0; SSA last-use release. Reusable runtime pool, no frozen arena. Vendor workspace and composite temporaries remain runtime prepared. Cost unknown; no measured candidate comparison.</p></section></div>`;
+      $("#close").onclick = () => ($("#detail").innerHTML = "");
+      $("#detail")
+        .querySelectorAll("[data-ins]")
+        .forEach((b) => (b.onclick = () => inspect(+b.dataset.ins)));
+      $("#detail").scrollIntoView({ block: "nearest" });
+    }
+    function render() {
+      const ids = idsFor(scope).filter(matches),
+        query = $("#search").value || $("#filter").value !== "all",
+        showInstructions = flat || query || !scope.children.length;
+      let chain = [];
+      for (let p = scope; p; p = p.parent) chain.unshift(p);
+      $("#crumbs").innerHTML = chain
+        .map((g, k) => `<button data-crumb="${k}">${esc(g.label)}</button>`)
+        .join(" / ");
+      $("#crumbs")
+        .querySelectorAll("button")
+        .forEach((b) => (b.onclick = () => go(chain[+b.dataset.crumb])));
+      $("#mode").textContent = flat
+        ? "Show modules"
+        : "Show instructions in this scope";
+      const rows = showInstructions ? ids : scope.children;
+      page = Math.min(page, Math.max(0, Math.ceil(rows.length / pageSize) - 1));
+      let body = rows
+        .slice(page * pageSize, (page + 1) * pageSize)
+        .map((item) => {
+          if (!showInstructions) {
+            const g = item,
+              all = idsFor(g),
+              cs = all.filter((j) => ins[j].op === "cast").length,
+              comm = all.filter((j) =>
+                ["allreduce", "gather"].includes(ins[j].op),
+              ).length,
+              ks = [...new Set(all.flatMap((j) => recipes[j].apis))];
+            return `<tr><td><button class="name" data-scope="${esc(g.id)}">▸ ${esc(g.label)}</button><small>${esc(g.module)}</small></td><td>${all.length} instructions</td><td>${badge(cs + " casts", "cast")} ${badge(comm + " collectives", "comm")}</td><td>${ks.slice(0, 4).map(esc).join("<br>")}<small>${ks.length > 4 ? "+" + (ks.length - 4) + " other APIs" : ""}</small></td></tr>`;
           }
-          if (!changed) break;
-        }
-        const rows = new Map();
-        children.forEach((g) => {
-          const r = rank.get(g.id);
-          if (!rows.has(r)) rows.set(r, []);
-          rows.get(r).push(g);
-        });
-        const longEdges = edges.filter(
-          (e) => rank.get(e.to) - rank.get(e.from) > 1,
-        );
-        const columns = Math.max(1, ...[...rows.values()].map((r) => r.length)),
-          baseWidth = columns * 254 + 48,
-          width = baseWidth + longEdges.length * 12 + 16,
-          height = rows.size * 134 + 32;
-        const positions = new Map();
-        [...rows.entries()]
-          .sort((a, b) => a[0] - b[0])
-          .forEach(([, row], r) =>
-            row.forEach((g, c) =>
-              positions.set(g.id, {
-                x: (baseWidth - row.length * 254) / 2 + c * 254 + 15,
-                y: 24 + r * 134,
-              }),
-            ),
-          );
-        layout = { width, height };
-        const b = bounds({ leaves: children.flatMap((g) => g.leaves) });
-        $("#workspace").innerHTML =
-          pager() +
-          '<div class="scope-head"><div class="eyebrow">' +
-          esc(scope.module) +
-          " / " +
-          children.length +
-          " visible items</div><h1>" +
-          esc(scope.label) +
-          "</h1><p>" +
-          scope.leaves.length +
-          ' primitive operations in this scope. Select a card for details; double-click a module to expand.</p><div class="legend"><span><i></i>Operation</span><span><i class="module"></i>Collapsed module</span><span><i class="state"></i>Typed handle</span></div></div><div class="boundary"><span class="boundary-label">Incoming</span>' +
-          b.inputs.map(ref).join("") +
-          '</div><div id="graph-viewport"><div id="graph-size"><div id="graph"><svg id="edges" width="' +
-          width +
-          '" height="' +
-          height +
-          '"><defs><marker id="arrowhead" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#9cb1ce"/></marker></defs>' +
-          edges
-            .map((e) => {
-              const a = positions.get(e.from),
-                b = positions.get(e.to),
-                x = a.x + 112,
-                y = a.y + 84,
-                xx = b.x + 112,
-                yy = b.y;
-              const track = longEdges.indexOf(e);
-              const lane = baseWidth + 12 * track;
-              const path =
-                track < 0
-                  ? "M" +
-                    x +
-                    " " +
-                    y +
-                    " C" +
-                    x +
-                    " " +
-                    (y + 25) +
-                    "," +
-                    xx +
-                    " " +
-                    (yy - 25) +
-                    "," +
-                    xx +
-                    " " +
-                    yy
-                  : "M" +
-                    x +
-                    " " +
-                    y +
-                    " V" +
-                    (y + 18) +
-                    " H" +
-                    lane +
-                    " V" +
-                    (yy - 18) +
-                    " H" +
-                    xx +
-                    " V" +
-                    yy;
-              return (
-                '<path class="edge" data-from="' +
-                esc(e.from) +
-                '" data-to="' +
-                esc(e.to) +
-                '" marker-end="url(#arrowhead)" d="' +
-                path +
-                '"><title>' +
-                e.pairs.length +
-                " underlying dependencies</title></path>"
-              );
-            })
-            .join("") +
-          "</svg>" +
-          children
-            .map((g) => {
-              const p = positions.get(g.id),
-                isModule = !!g.module,
-                n = nodes[g.index],
-                state =
-                  n && !["tensor", "experts"].includes(types[g.index].kind);
-              return (
-                '<button class="node ' +
-                (isModule ? "module" : state ? "state" : "") +
-                '" data-id="' +
-                esc(g.id) +
-                '" style="left:' +
-                p.x +
-                "px;top:" +
-                p.y +
-                'px"><span class="node-top"><span>' +
-                esc(isModule ? g.module : "#" + g.index + " · " + n.op) +
-                "</span><span>" +
-                (isModule ? "↗" : "") +
-                "</span></span><b>" +
-                esc(g.label) +
-                '</b><span class="shape">' +
-                esc(
-                  isModule
-                    ? g.leaves.length + " ops · expand module"
-                    : shape(g.index),
-                ) +
-                "</span></button>"
-              );
-            })
-            .join("") +
-          '</div></div></div><div class="boundary"><span class="boundary-label">Outgoing</span>' +
-          b.outputs.map(ref).join("") +
-          "</div>";
-        $("#graph").style.width = width + "px";
-        $("#graph").style.height = height + "px";
-        $("#workspace")
-          .querySelectorAll(".node")
-          .forEach((el) => {
-            const g = children.find((g) => g.id === el.dataset.id);
-            el.onclick = () => select(g);
-            el.ondblclick = () => g.module && navigate(g);
-          });
-        bindRefs($("#workspace"));
-        bindPager();
-        fit();
-        inspect(scope);
-      }
-      function scale() {
-        if (!$("#graph")) return;
-        $("#graph").style.transform = "scale(" + zoom + ")";
-        $("#graph-size").style.width = layout.width * zoom + "px";
-        $("#graph-size").style.height = layout.height * zoom + "px";
-      }
-      function fit() {
-        if (!$("#graph-viewport")) return;
-        zoom = Math.min(
-          1,
-          ($("#graph-viewport").clientWidth - 24) / layout.width,
-        );
-        scale();
-      }
-
-      function currentSchedule() {
-        return physical.schedules.find(
-          (s) => s.id === physical.ranks[rankIndex].schedule,
-        );
-      }
-      function physicalSteps() {
-        const ids = new Set(scope.leaves);
-        return currentSchedule().steps.filter((s) =>
-          s.operation.logical_nodes.some((i) => ids.has(i)),
-        );
-      }
-      function navigatePhysical(page) {
-        location.hash =
-          encodeURIComponent(scope.id) +
-          "&view=physical&page=" +
-          page +
-          "&rank=" +
-          rankIndex;
-      }
-      function bytes(v) {
-        return v === null || v === undefined
-          ? "Unresolved"
-          : v.toLocaleString() + " B";
-      }
-      function physicalDetails(i) {
-        const s = currentSchedule(),
-          step = s.steps.find((x) => x.operation.logical_nodes.includes(i));
-        if (!step) return "";
-        const c = step.operation.candidates[step.selected],
-          v = s.values[step.id];
-        return (
-          "<h3>Physical decision · rank " +
-          physical.ranks[rankIndex].rank +
-          '</h3><div class="note">Inspection plan · not consumed by the native executor</div><dl><dt>Selected implementation</dt><dd>' +
-          esc(c.id) +
-          "</dd><dt>Why selected</dt><dd>" +
-          esc(step.selection_reason) +
-          "</dd><dt>Cost source / predicted duration</dt><dd>" +
-          esc(c.cost.source) +
-          " / " +
-          (c.cost.estimate_ns === null
-            ? "Unknown"
-            : c.cost.estimate_ns + " ns") +
-          "</dd><dt>Evidence</dt><dd>" +
-          esc(c.cost.evidence ?? "No hardware measurements") +
-          "</dd><dt>Stream / serial position</dt><dd>" +
-          step.stream +
-          " / " +
-          step.id +
-          "</dd><dt>Data / serial / reuse dependencies</dt><dd>" +
-          esc(
-            JSON.stringify([
-              step.data_dependencies,
-              step.order_dependencies,
-              step.reuse_dependencies,
-            ]),
-          ) +
-          "</dd><dt>Output location / layout</dt><dd>" +
-          esc(v.location + " / " + v.layout) +
-          "</dd><dt>Payload / inclusive lifetime</dt><dd>" +
-          bytes(v.payload_bytes) +
-          " / [" +
-          v.lifetime.join(", ") +
-          "]</dd><dt>Arena offset / workspace bound</dt><dd>" +
-          bytes(v.arena_offset) +
-          " / " +
-          bytes(c.workspace_bound_bytes) +
-          "</dd><dt>Capture qualified</dt><dd>" +
-          c.capture_qualified +
-          "</dd></dl>" +
-          (step.operation.collective
-            ? '<h3>Collective</h3><div class="path">' +
-              esc(JSON.stringify(step.operation.collective)) +
-              "</div>"
-            : "") +
-          "<h3>Backend boundaries (opaque call)</h3>" +
-          c.boundaries
-            .map(
-              (b) =>
-                '<div class="source-frame"><b>' +
-                esc(b.kind) +
-                "</b>" +
-                esc(b.detail) +
-                "</div>",
-            )
-            .join("") +
-          "<h3>Considered candidates</h3>" +
-          step.operation.candidates
-            .map(
-              (k, j) =>
-                '<div class="source-frame"><b>' +
-                esc(k.id) +
-                (j === step.selected ? " · selected" : "") +
-                "</b>" +
-                esc(k.rejection ?? "Eligible") +
-                "<br>" +
-                esc(k.cost.source) +
-                "</div>",
-            )
-            .join("") +
-          "<h3>Unresolved requirements</h3>" +
-          c.unresolved
-            .map((x) => '<p class="subtle">' + esc(x) + "</p>")
-            .join("") +
-          '<h3>Contract source fingerprint</h3><div class="path">' +
-          esc(c.contract_revision) +
-          "</div>" +
-          bufferContractDetails()
-        );
-      }
-      function bufferContractDetails() {
-        return (
-          '<h3>Device-buffer contract available</h3><div class="path">' +
-          esc(bufferSupport.format) +
-          '</div><p class="subtle">Contract support only. This opaque backend call has no bound device-buffer invocation yet.</p><dl><dt>Kernel ABI</dt><dd>' +
-          esc(bufferSupport.kernel_abi) +
-          "</dd><dt>Types / layout</dt><dd>" +
-          esc(bufferSupport.dtypes.join(", ") + " / " + bufferSupport.layout) +
-          "</dd><dt>Aliasing policy</dt><dd>" +
-          esc(bufferSupport.alias_policy) +
-          "</dd><dt>Checked binding</dt><dd>" +
-          esc(bufferSupport.binding_checks.join(", ")) +
-          "</dd></dl>"
-        );
-      }
-      function physicalView() {
-        const schedule = currentSchedule(),
-          steps = physicalSteps(),
-          shown = steps.slice(
-            pageIndex * PAGE_SIZE,
-            (pageIndex + 1) * PAGE_SIZE,
-          );
-        $("#workspace").innerHTML =
-          '<div class="eyebrow">Physical planning / inspection only</div><h1>' +
-          esc(scope.label) +
-          '</h1><p>Conservative serial order. Backend calls have opaque internals; these rows are not individual device launches. No timestamps are fabricated.</p><div class="physical-controls"><label>Rank <select id="physical-rank">' +
-          physical.ranks
-            .map(
-              (r, i) =>
-                '<option value="' +
-                i +
-                '" ' +
-                (rankIndex === i ? "selected" : "") +
-                ">Rank " +
-                r.rank +
-                " · device " +
-                r.device +
-                "</option>",
-            )
-            .join("") +
-          '</select></label><select id="physical-tab" aria-label="Physical view"><option value="schedule">Schedule & kernel selection</option><option value="memory">Activation storage</option></select></div><div class="metrics"><div class="metric"><strong>' +
-          steps.length +
-          '</strong><span>calls in scope</span></div><div class="metric"><strong>' +
-          bytes(schedule.known_host_payload_peak_bytes) +
-          '</strong><span>rank-wide known host peak (partial)</span></div><div class="metric"><strong>' +
-          (schedule.estimated_serial_ns === null
-            ? "Unknown"
-            : schedule.estimated_serial_ns + " ns") +
-          '</strong><span>rank-wide estimated serial time</span></div></div><div class="note">' +
-          esc(schedule.activation_policy) +
-          '. Device HBM total: unresolved. Stream overlap: disabled. All ranks reference the same schedule template with explicit device bindings.</div><div class="tools page-controls" style="margin-top:20px"><button id="physical-prev" ' +
-          (pageIndex === 0 ? "disabled" : "") +
-          '>← Previous</button><span class="subtle">Calls ' +
-          (pageIndex * PAGE_SIZE + 1) +
-          "–" +
-          Math.min((pageIndex + 1) * PAGE_SIZE, steps.length) +
-          " / " +
-          steps.length +
-          '</span><button id="physical-next" ' +
-          ((pageIndex + 1) * PAGE_SIZE >= steps.length ? "disabled" : "") +
-          '>Next →</button></div><div class="physical-table"><table><thead><tr><th>Order / source</th>' +
-          (physicalTab === "memory"
-            ? "<th>Output payload</th><th>Location / lifetime</th><th>Allocation</th>"
-            : "<th>Selected implementation</th><th>Lane / dependencies</th><th>Cost</th>") +
-          "</tr></thead><tbody>" +
-          shown
-            .map((step) => {
-              const c = step.operation.candidates[step.selected],
-                v = schedule.values[step.id];
-              return (
-                '<tr><td><button class="ref" data-physical-step="' +
-                step.id +
-                '">#' +
-                step.id +
-                " " +
-                esc(step.operation.name) +
-                "</button></td>" +
-                (physicalTab === "memory"
-                  ? "<td>" +
-                    bytes(v.payload_bytes) +
-                    "<br>" +
-                    esc(v.dtype ?? "Opaque") +
-                    "</td><td>" +
-                    esc(v.location) +
-                    "<br>[" +
-                    v.lifetime.join(", ") +
-                    "]</td><td>No planned reuse<br>Offset: " +
-                    bytes(v.arena_offset) +
-                    "</td>"
-                  : "<td>" +
-                    esc(c.id) +
-                    "</td><td>stream " +
-                    step.stream +
-                    "<br>data " +
-                    esc(step.data_dependencies.join(", ") || "—") +
-                    "<br>order " +
-                    esc(step.order_dependencies.join(", ") || "—") +
-                    "</td><td>" +
-                    esc(c.cost.source) +
-                    "<br>" +
-                    (c.cost.estimate_ns === null
-                      ? "Unmeasured"
-                      : c.cost.estimate_ns + " ns") +
-                    "</td>") +
-                "</tr>"
-              );
-            })
-            .join("") +
-          '</tbody></table></div><div class="note">' +
-          physical.limitations.map(esc).join("<br>") +
-          "</div>";
-        $("#physical-tab").value = physicalTab;
-        $("#physical-tab").onchange = (e) => {
-          physicalTab = e.target.value;
-          physicalView();
-        };
-        $("#physical-rank").onchange = (e) => {
-          rankIndex = +e.target.value;
-          navigatePhysical(pageIndex);
-        };
-        $("#physical-prev").onclick = () => navigatePhysical(pageIndex - 1);
-        $("#physical-next").onclick = () => navigatePhysical(pageIndex + 1);
-        $("#workspace")
-          .querySelectorAll("[data-physical-step]")
-          .forEach(
-            (b) =>
-              (b.onclick = () => {
-                const step = schedule.steps[+b.dataset.physicalStep];
-                select(leaves[step.operation.logical_nodes[0]]);
-              }),
-          );
-        inspect(scope);
-      }
-      function render() {
-        crumbs();
-        navigation();
-        selected = null;
-        physicalMode
-          ? physicalView()
-          : scope === root && !rootDiagram
-            ? overview()
-            : graphView();
-        $("#physical-mode").textContent = physicalMode
-          ? "Logical graph"
-          : "Physical plan";
-        $("#workspace").scrollTop = 0;
-      }
-      function loadHash() {
-        const [encoded, ...rest] = location.hash.slice(1).split("&");
-        let id;
-        try {
-          id = decodeURIComponent(encoded);
-        } catch {
-          id = "root";
-        }
-        const params = new URLSearchParams(rest.join("&"));
-        scope = groups.get(id) || root;
-        physicalMode = params.get("view") === "physical";
-        rankIndex = Math.min(
-          physical.ranks.length - 1,
-          Math.max(0, Math.floor(Number(params.get("rank")) || 0)),
-        );
-        pageIndex = Math.min(
-          Math.max(0, Number(params.get("page")) || 0),
-          Math.max(
-            0,
-            Math.ceil(
-              (physicalMode ? physicalSteps().length : scope.children.length) /
-                PAGE_SIZE,
-            ) - 1,
-          ),
-        );
-        pageIndex = Math.floor(pageIndex);
-        rootDiagram = params.get("view") === "graph";
+          const id = item,
+            i = ins[id],
+            r = recipes[id];
+          return `<tr><td><button class="name" data-ins="${id}">#${id} ${esc(i.name)}</button><small>${esc(i.op)} · ${esc(r.granularity)}</small></td><td>${r.apis.map((x) => `<code>${esc(x)}</code>`).join("<br>") || esc(r.internal)}<small>${esc(r.internal)}</small></td><td>${badge(i.dtype, i.op === "cast" ? "cast" : "")}${i.kind === 0 ? `<small>[${i.width}] per rank</small>` : ""}<small>${esc(r.materialization)}</small></td><td>${badge(placement(id))}<small>${esc(r.communication)}</small></td></tr>`;
+        })
+        .join("");
+      $("#content").innerHTML =
+        `<p class="muted">${showInstructions ? ids.length + " instructions in selected scope. Click a row for bindings and dependencies." : "Expand a module to inspect its execution. No full-model node dump."}</p><div class="table"><table><thead><tr>${(showInstructions ? ["Instruction", "Selected API / recipe", "Precision & storage", "Sharding & communication"] : ["Module", "Work", "Conversions / comm", "Kernel APIs"]).map((x) => "<th>" + x + "</th>").join("")}</tr></thead><tbody>${body || '<tr><td colspan="4">No matching work</td></tr>'}</tbody></table></div><div class="pager"><button id="prev" ${page === 0 ? "disabled" : ""}>Previous</button><span>${rows.length ? `${page * pageSize + 1}–${Math.min(rows.length, (page + 1) * pageSize)} of ${rows.length}` : "0"}</span><button id="next" ${(page + 1) * pageSize >= rows.length ? "disabled" : ""}>Next</button></div>`;
+      $("#content")
+        .querySelectorAll("[data-scope]")
+        .forEach((b) => (b.onclick = () => go(groups.get(b.dataset.scope))));
+      $("#content")
+        .querySelectorAll("[data-ins]")
+        .forEach((b) => (b.onclick = () => inspect(+b.dataset.ins)));
+      $("#prev").onclick = () => {
+        page--;
         render();
-        const op = params.get("op");
-        if (op !== null && leaves[+op] && pageChildren().includes(leaves[+op]))
-          select(leaves[+op]);
-      }
-      $("#physical-mode").onclick = () =>
-        physicalMode ? navigate(scope) : navigatePhysical(0);
-      $("#search").oninput = navigation;
-      $("#up").onclick = () => scope.parent && navigate(scope.parent);
-      $("#fit").onclick = fit;
-      $("#plus").onclick = () => {
-        zoom = Math.min(2, zoom * 1.2);
-        scale();
       };
-      $("#minus").onclick = () => {
-        zoom = Math.max(0.25, zoom / 1.2);
-        scale();
+      $("#next").onclick = () => {
+        page++;
+        render();
       };
-      window.onhashchange = loadHash;
-      document.addEventListener("keydown", (e) => {
-        if (e.target.tagName === "INPUT") return;
-        if (e.key === "Escape" && scope.parent) navigate(scope.parent);
-        if (e.key === "/") {
-          e.preventDefault();
-          $("#search").focus();
-        }
-      });
-      loadHash();
-      // Small read-only diagnostics surface for artifact/browser validation.
-      window.planInspector = {
-        get scope() {
-          return scope.id;
-        },
-        get visibleCount() {
-          return document.querySelectorAll(".node").length;
-        },
-        get pageIndex() {
-          return pageIndex;
-        },
-        get visibleItems() {
-          return pageChildren();
-        },
-        pageSize: PAGE_SIZE,
-        get physicalMode() {
-          return physicalMode;
-        },
-        get rankIndex() {
-          return rankIndex;
-        },
-        nodeCount: nodes.length,
-        shape,
-        groups,
-      };
-    </script>
-  </body>
+    }
+    $("#title").textContent = graph.name + " · " + program.format;
+    $("#rank").innerHTML = physical.ranks
+      .map(
+        (r, i) =>
+          `<option value="${i}">${r.rank} · device ${r.device}</option>`,
+      )
+      .join("");
+    $("#rank").onchange = (e) => {
+      rank = +e.target.value;
+      $("#detail").innerHTML = "";
+      render();
+    };
+    const casts = ins.filter((i) => i.op === "cast").length,
+      comm = ins.filter((i) => ["allreduce", "gather"].includes(i.op)).length;
+    $("#summary").innerHTML = [
+      [ins.length, "Executable instructions"],
+      [casts, "Explicit boundary casts"],
+      [comm, "Model collectives"],
+      [program.conversions_shared, "Conversions shared"],
+      [program.copies_eliminated, "Copies eliminated"],
+    ]
+      .map(([v, t]) => `<div><strong>${v}</strong>${t}</div>`)
+      .join("");
+    $("#parallel").innerHTML =
+      `<b>Ascend token backend · TP ${data.parallel.tp} / EP ${data.parallel.ep}</b><br>EP method: ${esc(data.parallel.method)}. ${data.parallel.unsupported.map(esc).join(" and ")} are <b>not selected or implemented by this backend</b>. ${esc(data.parallel.transport)}. Activations stay on device.<br><small>Per-rank weights use the DSL placement: tp_rows, tp_columns, tp_channels, replicated or expert ownership. Model collectives exclude the request-output token-consensus AllGather.</small>`;
+    $("#limits").innerHTML =
+      program.limitations.map((s) => "<p>" + esc(s) + "</p>").join("") +
+      "<p>Only inter-operation casts are executable rows. Casts and copies inside composite recipes are listed in their details, not counted as separately planned instructions. No fabricated kernel costs, timings or memory bounds.</p>";
+    $("#mode").onclick = () => {
+      flat = !flat;
+      page = 0;
+      render();
+    };
+    $("#search").oninput = $("#filter").onchange = () => {
+      page = 0;
+      render();
+    };
+    render();
+    window.planInspector = {
+      data,
+      groups,
+      go,
+      inspect,
+      get scope() {
+        return scope;
+      },
+    };
+  </script>
 </html>

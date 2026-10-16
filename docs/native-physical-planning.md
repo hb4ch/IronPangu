@@ -266,3 +266,75 @@ device-routed expert dispatch and MLA fusion, with numerical and residency gates
 Its [evidence](validation/2026-10-16-92b-profile/README.md) distinguishes lightweight
 wall timings from intrusive CANN device tracing. These measurements guide upcoming
 physical planning work; they do not certify an optimized prepared executor.
+
+## Executable storage lowering and inspection — 2026-10-16
+
+`execution.bin` now uses `IFTOKN02`. The compiler produces a separate
+`device-program.json` with executable instruction IDs, original logical-node
+IDs, selected implementation IDs, storage dtypes, dependencies and reasons.
+`execution.json` retains the authored logical graph. Initialization remains
+checkpoint-driven and unchanged. The browser consumes these artifacts; it does
+not reconstruct architecture or infer sharding from model names.
+
+The executor consumes explicit cast/copy instructions. Projection selection is
+bound to checkpoint dtype before serialization; unbound choices cannot be
+encoded. Native validation independently checks input/output storage, selected
+kernel identity and checkpoint compatibility before device allocation. Runtime
+input/output guards catch implementation drift. Unsupported types fail closed.
+
+Conversion CSE shares casts only for the same immutable SSA producer and target
+dtype. It never cancels FP32 → BF16 → FP32 across an authored rounding boundary.
+Residual addition lowers to FP32 inputs, FP32 add and an explicit BF16 round.
+The existing vendor numerical contract is preserved.
+
+For in-place convolution, planning proves exclusivity of a fresh allocation or
+a bounded slice of one. All readers of the same allocation are checked for byte
+range overlap; nested slices contribute offsets. Disjoint sibling views may
+remain live. Output escapes, overlapping consumers and opaque/persistent roots
+prevent mutation. A failed proof emits a private device copy; a successful proof
+passes the owned region directly. Native validation repeats the ownership proof.
+This is a real execution decision, not a viewer annotation. Device-pool leases
+retain backing allocations and reuse is ordered on the owning stream.
+
+The viewer starts with module summaries and expands to at most 25 instruction
+rows per page. Kernel APIs, precision/storage, materialization, rank placement
+and collectives are columns, with filters for casts, communication and copies.
+Selection details include dependency navigation and checkpoint bindings. TP/EP
+sizes and expert counts come from backend/graph metadata. The current EP method
+is replicated routing plus owner-local computation and explicit AllReduce;
+All-to-all and AGRS are explicitly unsupported. HCCL transport remains a runtime
+binding. A vendor API is identified as an API, not falsely counted as one device
+kernel launch.
+
+### Remaining work to reach the complete physical DAG
+
+This revision makes operation-boundary storage executable. It does **not** yet
+make all vendor recipes primitive instructions. The following are mandatory
+completion stages, not capabilities claimed by the new viewer:
+
+1. Expand composite recipes into typed device values and invocations: query
+   projection/rotary/packing, routing/quantization, grouped expert execution,
+   mHC mixing and persistent cache writes. Separate preparation-only parameter
+   transforms from per-token work. Every temporary must have a shape, storage
+   dtype, strides, alias region, mutability and lifetime; unknown vendor
+   workspace must remain explicitly unresolved.
+2. Move all remaining casts/materializations into that IR. Kernel contracts
+   distinguish storage precision, computation/accumulation precision and final
+   rounding. Kernel fusion must preserve this numerical contract. The executor
+   must reject undeclared conversions and copies, including recipe-internal
+   ones; current guards cover the inter-operation boundary only.
+3. Allocate activation/workspace arenas from that complete DAG. Reuse needs
+   non-overlapping lifetimes and stream/event ordering; aliases share an
+   allocation, persistent state never shares transient storage. Export capacity,
+   offsets, live ranges and reuse dependencies for each rank. The current pool
+   is runtime prepared and is not a frozen arena.
+4. Select among qualified kernels/layouts and EP methods using compatible
+   measured cost samples keyed by hardware/runtime/kernel revisions, shapes,
+   dtypes and topology. Unknown cost cannot win as zero. Collectives carry group,
+   sequence, dtype, volume and ordering; compare AllReduce, All-to-all and AGRS
+   only after their implementations and correctness gates exist. Activation
+   host fallback remains inadmissible before cost evaluation.
+5. Bind the complete physical program and vendor identities to the executable
+   bundle. Replay must issue only declared work; reject mismatched identities,
+   stale plans and undeclared transfers. Verify full-model outputs, graph replay,
+   residency and execution traces against the plan before calling it complete.

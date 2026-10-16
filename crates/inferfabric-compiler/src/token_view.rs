@@ -11,6 +11,18 @@ pub fn render_with_physical(
     graph: &Graph,
     physical: &inferfabric_plan::physical::Plan,
 ) -> Result<String> {
+    let program = crate::token_program::lower(graph, None)?;
+    render_with_program(graph, physical, &program)
+}
+pub fn render_with_program(
+    graph: &Graph,
+    physical: &inferfabric_plan::physical::Plan,
+    program: &crate::token_program::Program,
+) -> Result<String> {
+    program.validate()?;
+    if program.instructions.iter().any(|i| i.logical_node >= graph.nodes.len()) {
+        return Err(invalid("physical program source mapping"));
+    }
     inferfabric_plan::physical::verify(physical)?;
     let graph_digest = crate::token_physical::digest(
         &serde_json::to_vec(graph).map_err(|e| invalid(e.to_string()))?,
@@ -72,6 +84,15 @@ pub fn render_with_physical(
     // graphs whose names/source frames did not originate in the DSL lexer.
     let data = serde_json::to_string(
         &serde_json::json!({"graph":graph,"types":types,"node_metadata":node_metadata,"physical":physical,
+            "program":program, "recipes":crate::token_program::recipes(program, graph),
+            "parallel": {
+                "tp":physical.ranks.len(),
+                "ep":if graph.nodes.iter().any(|n| n.op == "expert_linear") { physical.ranks.len() } else { 1 },
+                "expert_count":graph.nodes.iter().find(|n| n.op == "router").and_then(|n| n.attrs.get("experts")).and_then(|s|s.parse::<usize>().ok()),
+                "method":"Replicated token/routing → owner-local experts → explicit AllReduce of partial outputs",
+                "unsupported":["All-to-all", "AllGather/ReduceScatter (AGRS)"],
+                "transport":"HCCL transport is runtime-configured, not chosen by this planner"
+            },
             "device_buffer_contract":inferfabric_plan::device_buffer::support()}),
     )
     .map_err(|e| invalid(e.to_string()))?
