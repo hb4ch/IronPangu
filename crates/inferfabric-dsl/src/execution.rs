@@ -9,6 +9,8 @@ use inferfabric_authoring::{
 use inferfabric_model::{OpenPanguParallel, Result, invalid};
 use std::collections::BTreeMap;
 pub fn elaborate(ast: &Document) -> Result<ModelDefinition> {
+    let (expanded, origins) = crate::expand::expand(ast)?;
+    let ast = &expanded;
     let mut p = Fields::new(&ast.plan)?;
     p.text("target")?;
     let parallel = OpenPanguParallel {
@@ -67,6 +69,7 @@ pub fn elaborate(ast: &Document) -> Result<ModelDefinition> {
                     return Err(invalid("duplicate value name"));
                 }
                 graph.nodes.push(Node {
+                    source: origins.get(name).cloned(),
                     name: name.clone(),
                     op: op.clone(),
                     inputs,

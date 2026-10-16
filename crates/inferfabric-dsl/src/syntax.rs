@@ -7,6 +7,14 @@ pub enum Expr {
     Number(String),
     List(Vec<Expr>),
     Call(String, Vec<(Option<String>, Expr)>),
+    Fold {
+        index: String,
+        start: Box<Expr>,
+        end: Box<Expr>,
+        carry: String,
+        initial: Box<Expr>,
+        body: Vec<SpannedMember>,
+    },
 }
 #[derive(Debug, Clone, PartialEq)]
 pub enum Member {
@@ -25,7 +33,14 @@ pub struct SpannedMember {
     pub member: Member,
 }
 #[derive(Debug, Clone, PartialEq)]
+pub struct Module {
+    pub name: String,
+    pub parameters: Vec<String>,
+    pub body: Vec<SpannedMember>,
+}
+#[derive(Debug, Clone, PartialEq)]
 pub struct Document {
+    pub modules: Vec<Module>,
     pub name: String,
     pub model: Vec<SpannedMember>,
     pub plan_name: String,
@@ -153,6 +168,32 @@ impl Parser {
         if depth > 64 {
             return Err(self.error("expression nesting limit"));
         }
+        if self.peek() == "fold" {
+            self.take()?;
+            let index = self.name()?;
+            self.expect("in")?;
+            self.expect("range")?;
+            self.expect("(")?;
+            let start = Box::new(self.expr(depth + 1)?);
+            self.expect(",")?;
+            let end = Box::new(self.expr(depth + 1)?);
+            self.expect(")")?;
+            self.expect("carry")?;
+            self.expect("(")?;
+            let carry = self.name()?;
+            self.expect("=")?;
+            let initial = Box::new(self.expr(depth + 1)?);
+            self.expect(")")?;
+            let body = self.members(true, depth + 1)?;
+            return Ok(Expr::Fold {
+                index,
+                start,
+                end,
+                carry,
+                initial,
+                body,
+            });
+        }
         if self.peek() == "[" {
             self.take()?;
             let mut values = vec![];
@@ -204,13 +245,13 @@ impl Parser {
         self.expect(")")?;
         Ok(Expr::Call(value, args))
     }
-    fn shape(&mut self) -> Result<Vec<usize>> {
+    fn shape(&mut self, depth: usize) -> Result<Vec<usize>> {
         self.expect(":")?;
         self.expect("tensor")?;
         self.expect("<")?;
         self.expect("f32")?;
         self.expect(">")?;
-        let Expr::List(values) = self.expr(0)? else {
+        let Expr::List(values) = self.expr(depth + 1)? else {
             return Err(self.error("expected shape list"));
         };
         values
@@ -221,7 +262,10 @@ impl Parser {
             })
             .collect()
     }
-    fn members(&mut self, graph_allowed: bool) -> Result<Vec<SpannedMember>> {
+    fn members(&mut self, graph_allowed: bool, depth: usize) -> Result<Vec<SpannedMember>> {
+        if depth > 64 {
+            return Err(self.error("declaration nesting limit"));
+        }
         self.expect("{")?;
         let mut members = vec![];
         while self.peek() != "}" {
@@ -234,13 +278,13 @@ impl Parser {
             let member = match key.as_str() {
                 "input" if graph_allowed => {
                     let n = self.name()?;
-                    Member::Input(n, self.shape()?)
+                    Member::Input(n, self.shape(depth + 1)?)
                 }
                 "const" | "state" if graph_allowed => {
                     let n = self.name()?;
-                    let shape = self.shape()?;
+                    let shape = self.shape(depth + 1)?;
                     self.expect("=")?;
-                    let Expr::List(values) = self.expr(0)? else {
+                    let Expr::List(values) = self.expr(depth + 1)? else {
                         return Err(self.error("expected initializer list"));
                     };
                     let values = values
@@ -261,7 +305,7 @@ impl Parser {
                 "let" if graph_allowed => {
                     let n = self.name()?;
                     self.expect("=")?;
-                    Member::Let(n, self.expr(0)?)
+                    Member::Let(n, self.expr(depth + 1)?)
                 }
                 "yield" if graph_allowed => Member::Yield(self.name()?),
                 "update" if graph_allowed => {
@@ -271,7 +315,7 @@ impl Parser {
                 }
                 _ => {
                     self.expect("=")?;
-                    Member::Field(key, self.expr(0)?)
+                    Member::Field(key, self.expr(depth + 1)?)
                 }
             };
             self.expect(";")?;
@@ -299,22 +343,45 @@ pub fn parse(source: &str) -> Result<Document> {
     p.expect("inferfabric")?;
     p.expect("1")?;
     p.expect(";")?;
+    let mut modules = vec![];
+    while p.peek() == "module" {
+        p.take()?;
+        let name = p.name()?;
+        p.expect("(")?;
+        let mut parameters = vec![];
+        while p.peek() != ")" {
+            parameters.push(p.name()?);
+            if p.peek() != "," {
+                break;
+            }
+            p.take()?;
+        }
+        p.expect(")")?;
+        let body = p.members(true, 0)?;
+        modules.push(Module {
+            name,
+            parameters,
+            body,
+        });
+        if modules.len() > 256 {
+            return Err(p.error("module count limit"));
+        }
+    }
     p.expect("model")?;
     let name = p.name()?;
-    let model = p.members(true)?;
+    let model = p.members(true, 0)?;
     p.expect("plan")?;
     let plan_name = p.name()?;
     p.expect("for")?;
     if p.name()? != name {
         return Err(p.error("plan references a different model"));
     }
-    let plan = p.members(false)?;
+    let plan = p.members(false, 0)?;
     if !p.peek().is_empty() {
-        return Err(
-            p.error("unexpected declaration; imports/modules are not supported by this v1 subset")
-        );
+        return Err(p.error("unexpected declaration; imports are not supported by this v1 subset"));
     }
     Ok(Document {
+        modules,
         name,
         model,
         plan_name,

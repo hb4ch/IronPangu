@@ -5,7 +5,24 @@ use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, BTreeSet};
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(deny_unknown_fields)]
+pub struct ExpansionFrame {
+    pub module: String,
+    pub instance: String,
+    pub start: usize,
+    pub end: usize,
+}
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(deny_unknown_fields)]
+pub struct SourceOrigin {
+    pub start: usize,
+    pub end: usize,
+    pub frames: Vec<ExpansionFrame>,
+}
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(deny_unknown_fields)]
 pub struct Node {
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub source: Option<SourceOrigin>,
     pub name: String,
     pub op: String,
     pub inputs: Vec<usize>,
