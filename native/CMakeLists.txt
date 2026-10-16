@@ -151,3 +151,13 @@ target_link_libraries(prepared_execution_probe PRIVATE "${ACL_LIBRARY}" "${OPAPI
 target_compile_options(prepared_execution_probe PRIVATE -Wall -Wextra -Werror
   -include "${CMAKE_CURRENT_SOURCE_DIR}/src/resident_transfer.h")
 target_compile_definitions(prepared_execution_probe PRIVATE IF_REQUIRE_DEVICE_RESIDENCY=1)
+set(IF_CACHE_KERNEL_LIBRARY "${CMAKE_CURRENT_SOURCE_DIR}/../cache-build/lib/libinferfabric_cache.a" CACHE FILEPATH "Ascend C packed-cache library")
+if(EXISTS "${IF_CACHE_KERNEL_LIBRARY}")
+  add_executable(cache_quantization_probe probes/cache_quantization_probe.cpp)
+  target_include_directories(cache_quantization_probe PRIVATE include "${ACL_INCLUDE}")
+  target_link_libraries(cache_quantization_probe PRIVATE "${IF_CACHE_KERNEL_LIBRARY}" "${CANN_ROOT}/lib64/libunified_dlog.so" "${CANN_ROOT}/lib64/libc_sec.so" "${CANN_ROOT}/lib64/libascendalog.so" "${CANN_ROOT}/lib64/libmmpa.so" "${CANN_ROOT}/lib64/libascend_dump.so" "${CANN_ROOT}/lib64/libprofapi.so" "${CANN_ROOT}/lib64/libruntime.so" "${ACL_LIBRARY}" "${OPAPI_LIBRARY}" "${NNOPBASE_LIBRARY}" dl)
+  if(TARGET openpangu_decode)
+    target_link_libraries(openpangu_decode PRIVATE "${IF_CACHE_KERNEL_LIBRARY}" "${CANN_ROOT}/lib64/libunified_dlog.so" "${CANN_ROOT}/lib64/libc_sec.so" "${CANN_ROOT}/lib64/libascendalog.so" "${CANN_ROOT}/lib64/libmmpa.so" "${CANN_ROOT}/lib64/libascend_dump.so" "${CANN_ROOT}/lib64/libprofapi.so" "${CANN_ROOT}/lib64/libruntime.so")
+    target_compile_definitions(openpangu_decode PRIVATE IF_CACHE_KERNELS=1)
+  endif()
+endif()
