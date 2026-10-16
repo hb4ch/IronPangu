@@ -20,6 +20,24 @@ fn physical_inspection_preserves_qualified_92b_program() {
     let physical = lower(&graph, &[0, 1, 2, 3, 4, 5, 6, 7]).unwrap();
     physical::verify(&physical).unwrap();
     assert_eq!(physical.schedules[0].steps.len(), 2109);
+    for (node, value) in graph.nodes.iter().zip(&physical.schedules[0].values) {
+        if let Some(dtype) = &value.dtype {
+            let expected = if matches!(node.op.as_str(), "expert_reduce" | "allreduce") {
+                "f32"
+            } else {
+                "bf16"
+            };
+            assert_eq!(dtype, expected, "{}", node.name);
+            assert_eq!(
+                value.payload_bytes,
+                Some(value.shape[0] * if expected == "bf16" { 2 } else { 4 })
+            );
+            if node.op == "slice" {
+                assert!(value.layout.contains("shared_lease_view"));
+            }
+        }
+    }
+
     assert_eq!(
         physical.schedules[0]
             .steps

@@ -78,3 +78,17 @@ must show zero device allocation after prefill. Capture, statically bounded aren
 collective reduction and sparse expert dispatch remain separate milestones.
 
 [Measured NPU qualification and TPOT](validation/2026-10-16-prepared-execution/README.md)
+
+## Full graph and shared views (2026-10-16)
+
+The subsequent graph milestone adds owning-stream capture/replay with stable
+control buffers. The device-view milestone retains BF16 operator output storage,
+shares pool leases across returned values and contiguous slices, and uses those
+operands directly in matmul/normalization/collectives. FP32 math boundaries remain
+explicit. A view keeps its allocation alive until the final alias is released;
+recycling remains ordered on the owning stream. No activation crosses the host.
+The generated physical metadata exposes precision and view layout, but does not
+claim a frozen arena or exact total HBM.
+
+[Full graph evidence](validation/2026-10-16-native-graph/README.md) ·
+[Shared device views: 63.67 ms/token](validation/2026-10-16-device-views/README.md)

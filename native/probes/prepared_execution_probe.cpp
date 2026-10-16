@@ -64,6 +64,52 @@ int main() {
           if (static_cast<uint16_t *>(host)[i * 4 + j] != uint16_t(bits >> 16))
             throw std::runtime_error("asynchronous lifetime/reuse mismatch");
       }
+      // Aliases and nested views retain the whole pool lease after their
+      // producer descriptor is destroyed; a same-sized allocation cannot steal
+      // it.
+      resident::Tensor alias;
+      void *original = nullptr;
+      {
+        openpangu::DeviceTensor source({8}, ACL_FLOAT, 4);
+        original = source.data;
+        resident::control_upload(source,
+                                 std::vector<float>{0, 1, 2, 3, 4, 5, 6, 7});
+        alias =
+            resident::Tensor::alias(source, ACL_FLOAT).view(2, 5).view(1, 2);
+      }
+      {
+        openpangu::DeviceTensor competing({8}, ACL_FLOAT, 4);
+        if (competing.data == original)
+          throw std::runtime_error("live view allocation reused");
+        resident::control_upload(competing, std::vector<float>(8, -1));
+        rejected = false;
+        try {
+          alias.view(1, 2);
+        } catch (const std::runtime_error &) {
+          rejected = true;
+        }
+        if (!rejected)
+          throw std::runtime_error("view overflow accepted");
+        auto *output = context.output_host(alias.bytes());
+        {
+          resident::TransferScope permission(
+              resident::TransferRole::RequestOutput);
+          prepared::check(aclrtMemcpyAsync(output, alias.bytes(), alias.data(),
+                                           alias.bytes(),
+                                           ACL_MEMCPY_DEVICE_TO_HOST,
+                                           context.stream),
+                          "view output");
+        }
+        context.complete();
+        if (static_cast<float *>(output)[0] != 3 ||
+            static_cast<float *>(output)[1] != 4)
+          throw std::runtime_error("view offset/lifetime mismatch");
+      }
+      alias = {};
+      void *recycled = context.acquire(32);
+      if (recycled != original)
+        throw std::runtime_error("last view did not release allocation");
+      context.release(recycled);
       // Same pinned slots may be rewritten only AFTER the output boundary.
       openpangu::DeviceTensor again({4}, ACL_FLOAT, 4);
       resident::control_upload(again, std::vector<float>(4, 7));

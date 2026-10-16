@@ -28,6 +28,9 @@ inline size_t element_bytes(aclDataType t) {
 }
 class Tensor {
   std::shared_ptr<openpangu::DeviceTensor> storage_;
+  std::shared_ptr<void> lease_;
+  void *alias_data_ = nullptr;
+  aclTensor *alias_tensor_ = nullptr;
   size_t count_ = 0;
   aclDataType dtype_ = ACL_FLOAT;
 
@@ -40,15 +43,44 @@ public:
     storage_ = std::make_shared<openpangu::DeviceTensor>(
         std::vector<int64_t>{int64_t(count)}, dtype, element_bytes(dtype));
   }
+  static Tensor alias(const openpangu::DeviceTensor &source,
+                      aclDataType dtype) {
+    if (!source.owner || source.owner != prepared::active ||
+        source.type != dtype)
+      throw std::runtime_error("resident alias ownership/dtype");
+    Tensor out;
+    out.count_ = source.bytes / element_bytes(dtype);
+    out.dtype_ = dtype;
+    out.lease_ = source.allocation;
+    out.alias_data_ = source.data;
+    out.alias_tensor_ =
+        source.owner->descriptor(source.data, {int64_t(out.count_)}, dtype);
+    return out;
+  }
+  Tensor view(size_t start, size_t count) const {
+    if (!prepared::active || !count || start > count_ || count > count_ - start)
+      throw std::runtime_error("resident view bounds/context");
+    Tensor out = *this;
+    out.count_ = count;
+    out.alias_data_ =
+        static_cast<char *>(data()) + start * element_bytes(dtype_);
+    out.alias_tensor_ =
+        prepared::active->descriptor(out.alias_data_, {int64_t(count)}, dtype_);
+    return out;
+  }
   size_t size() const { return count_; }
   size_t bytes() const { return count_ * element_bytes(dtype_); }
   aclDataType dtype() const { return dtype_; }
   void *data() const {
+    if (alias_data_)
+      return alias_data_;
     if (!storage_)
       throw std::runtime_error("empty resident value");
     return storage_->data;
   }
   aclTensor *tensor() const {
+    if (alias_tensor_)
+      return alias_tensor_;
     if (!storage_)
       throw std::runtime_error("empty resident value");
     return storage_->tensor;
@@ -73,6 +105,8 @@ inline Tensor from_device(const void *src, size_t count, aclDataType dtype) {
 inline Tensor slice(const Tensor &x, size_t start, size_t count) {
   if (start > x.size() || count > x.size() - start)
     throw std::runtime_error("resident slice bounds");
+  if (prepared::active)
+    return x.view(start, count);
   return from_device(static_cast<const char *>(x.data()) +
                          start * element_bytes(x.dtype()),
                      count, x.dtype());

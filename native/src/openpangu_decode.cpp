@@ -183,11 +183,9 @@ struct Decoder {
     run(aclnnCast, bytes, e);
     return out;
   }
-  V rounded(const V &x) { return cast(cast(x, ACL_BF16), ACL_FLOAT); }
+  V rounded(const V &x) { return cast(x, ACL_BF16); }
   V result(const DeviceTensor &x, aclDataType dtype = ACL_BF16) {
-    return cast(resident::from_device(
-                    x.data, x.bytes / resident::element_bytes(dtype), dtype),
-                ACL_FLOAT);
+    return V::alias(x, dtype);
   }
   void to_device(DeviceTensor &dst, const V &src,
                  aclDataType dtype = ACL_BF16) {
@@ -196,7 +194,8 @@ struct Decoder {
       throw std::runtime_error("resident copy shape");
     resident::copy(dst.data, value.data(), dst.bytes);
   }
-  V binary(const V &a, const V &b, char kind) {
+  V binary(const V &lhs, const V &rhs, char kind) {
+    auto a = cast(lhs, ACL_FLOAT), b = cast(rhs, ACL_FLOAT);
     if (a.dtype() != ACL_FLOAT || b.dtype() != ACL_FLOAT ||
         (a.size() != b.size() && b.size() != 1))
       throw std::runtime_error("resident binary contract");
@@ -220,24 +219,22 @@ struct Decoder {
     return out;
   }
   V gather(const V &x) {
-    DeviceTensor a({int64_t(x.size())}, ACL_BF16, 2),
-        b({int64_t(x.size() * 8)}, ACL_BF16, 2);
-    to_device(a, x);
+    auto a = cast(x, ACL_BF16);
+    DeviceTensor b({int64_t(x.size() * 8)}, ACL_BF16, 2);
     {
       inferfabric::profiling::Scope timing("HcclAllGather");
-      checked(HcclAllGather(a.data, b.data, x.size(), HCCL_DATA_TYPE_BFP16,
+      checked(HcclAllGather(a.data(), b.data, x.size(), HCCL_DATA_TYPE_BFP16,
                             comm, stream),
               "all gather");
     }
     return result(b);
   }
   V sum(const V &x) {
-    DeviceTensor a({int64_t(x.size())}, ACL_FLOAT, 4),
-        b({int64_t(x.size())}, ACL_FLOAT, 4);
-    to_device(a, x, ACL_FLOAT);
+    auto a = cast(x, ACL_FLOAT);
+    DeviceTensor b({int64_t(x.size())}, ACL_FLOAT, 4);
     {
       inferfabric::profiling::Scope timing("HcclAllReduce");
-      checked(HcclAllReduce(a.data, b.data, x.size(), HCCL_DATA_TYPE_FP32,
+      checked(HcclAllReduce(a.data(), b.data, x.size(), HCCL_DATA_TYPE_FP32,
                             HCCL_REDUCE_SUM, comm, stream),
               "all reduce");
     }
@@ -246,14 +243,14 @@ struct Decoder {
   V matrix(const V &x, void *weight, int rows, int cols,
            bool transposed = true) {
     int output = transposed ? rows : cols;
-    DeviceTensor input({1, int64_t(x.size())}, ACL_BF16, 2),
-        out({1, output}, ACL_BF16, 2);
-    to_device(input, x);
+    auto value = cast(x, ACL_BF16);
+    View input(value.data(), {1, int64_t(x.size())}, ACL_BF16);
+    DeviceTensor out({1, output}, ACL_BF16, 2);
     View view(weight, {rows, cols}, ACL_BF16, transposed);
     uint64_t bytes = 0;
     aclOpExecutor *e = nullptr;
     checked(prepared::query("aclnnMatmul", true, aclnnMatmulGetWorkspaceSize,
-                            input.tensor, view.t, out.tensor, 0, &bytes, &e),
+                            input.t, view.t, out.tensor, 0, &bytes, &e),
             "BF16 matmul prepare");
     run(aclnnMatmul, bytes, e);
     return result(out);
@@ -268,14 +265,15 @@ struct Decoder {
       result = matrix(x, a.data, n, k);
     else {
       auto &s = w(name + ".weight_scale");
-      DeviceTensor input({1, k}, ACL_BF16, 2), quant({1, k}, ACL_INT8, 1),
-          scale({1}, ACL_FLOAT, 4), out({1, n}, ACL_BF16, 2);
-      to_device(input, x);
+      auto value = cast(x, ACL_BF16);
+      View input(value.data(), {1, k}, ACL_BF16);
+      DeviceTensor quant({1, k}, ACL_INT8, 1), scale({1}, ACL_FLOAT, 4),
+          out({1, n}, ACL_BF16, 2);
       View weight(a.data, {n, k}, ACL_INT8), scales(s.data, {n}, ACL_FLOAT);
       uint64_t bytes = 0;
       aclOpExecutor *e = nullptr;
       checked(prepared::query("aclnnDynamicQuant", false,
-                              aclnnDynamicQuantGetWorkspaceSize, input.tensor,
+                              aclnnDynamicQuantGetWorkspaceSize, input.t,
                               nullptr, quant.tensor, scale.tensor, &bytes, &e),
               "quant prepare");
       run(aclnnDynamicQuant, bytes, e);
@@ -297,15 +295,16 @@ struct Decoder {
     auto &gamma = w(name + ".weight");
     if (gamma.bytes != x.size() * 2)
       throw std::runtime_error("norm shape");
-    DeviceTensor input({1, int64_t(x.size())}, ACL_BF16, 2),
-        out({1, int64_t(x.size())}, ACL_BF16, 2), rstd({1, 1}, ACL_FLOAT, 4);
-    to_device(input, x);
+    auto value = cast(x, ACL_BF16);
+    View input(value.data(), {1, int64_t(x.size())}, ACL_BF16);
+    DeviceTensor out({1, int64_t(x.size())}, ACL_BF16, 2),
+        rstd({1, 1}, ACL_FLOAT, 4);
     View weight(gamma.data, {int64_t(x.size())}, ACL_BF16);
     uint64_t bytes = 0;
     aclOpExecutor *e = nullptr;
     checked(prepared::query("aclnnRmsNorm", false, aclnnRmsNormGetWorkspaceSize,
-                            input.tensor, weight.t, 1e-5, out.tensor,
-                            rstd.tensor, &bytes, &e),
+                            input.t, weight.t, 1e-5, out.tensor, rstd.tensor,
+                            &bytes, &e),
             "RMSNorm prepare");
     run(aclnnRmsNorm, bytes, e);
     auto y = result(out);
@@ -371,9 +370,9 @@ struct Decoder {
     aclOpExecutor *e = nullptr;
     checked(prepared::query("mHC.pre", false, api.pre_size, s.x.tensor,
                             s.phi.tensor, s.alpha.tensor, s.beta.tensor,
-                            nullptr, 1, 1e-6, 1e-6, s.input.tensor,
-                            s.post.tensor, s.res.tensor, s.rms.tensor,
-                            s.mix.tensor, s.pre_weights.tensor, &bytes, &e),
+                            nullptr, 1, 1e-6, 1e-6, s.input.tensor, s.post.tensor,
+                            s.res.tensor, s.rms.tensor, s.mix.tensor,
+                            s.pre_weights.tensor, &bytes, &e),
             "mHC pre prepare");
     run(api.pre, bytes, e);
     if (!merge) {
@@ -403,7 +402,8 @@ struct Decoder {
     run(api.post, bytes, e);
     return result(s.out);
   }
-  V rope(const V &v, int pos) {
+  V rope(const V &input, int pos) {
+    auto v = cast(input, ACL_FLOAT);
     if (v.size() != 64)
       throw std::runtime_error("rotary width");
     if (pos != current_position)
@@ -453,15 +453,11 @@ struct Decoder {
     auto &sr = w(weight_name + ".param_sink_k_pe");
     V values;
     for (int i = 0; i < 128; ++i) {
-      auto row =
-          cast(resident::from_device(static_cast<uint16_t *>(sk.data) + i * 512,
-                                     512, ACL_BF16),
-               ACL_FLOAT);
+      auto row = resident::from_device(
+          static_cast<uint16_t *>(sk.data) + i * 512, 512, ACL_BF16);
       row = norm(row, norm_name);
-      auto rot =
-          cast(resident::from_device(static_cast<uint16_t *>(sr.data) + i * 64,
-                                     64, ACL_BF16),
-               ACL_FLOAT);
+      auto rot = resident::from_device(
+          static_cast<uint16_t *>(sr.data) + i * 64, 64, ACL_BF16);
       row = resident::concat(row, rot);
       values = i ? resident::concat(values, row) : row;
     }
@@ -634,10 +630,10 @@ struct Decoder {
                     bool fused = false) {
     auto weight = select(bank.weights, index, 32, size_t(bank.n) * bank.k);
     auto scales = select(bank.scales, index, 32, bank.n);
-    DeviceTensor input({1, int64_t(x.size())}, ACL_BF16, 2),
-        quant({1, bank.k}, ACL_INT8, 1), scale({1}, ACL_FLOAT, 4),
+    auto value = cast(x, ACL_BF16);
+    View input(value.data(), {1, int64_t(x.size())}, ACL_BF16);
+    DeviceTensor quant({1, bank.k}, ACL_INT8, 1), scale({1}, ACL_FLOAT, 4),
         out({1, bank.n}, ACL_BF16, 2);
-    to_device(input, x);
     View wv(weight.data(), {bank.n, bank.k}, ACL_INT8),
         sv(scales.data(), {bank.n}, ACL_FLOAT);
     uint64_t bytes = 0;
@@ -645,15 +641,15 @@ struct Decoder {
     if (fused) {
       char mode[] = "dynamic";
       checked(prepared::query("aclnnDequantSwigluQuant", false,
-                              aclnnDequantSwigluQuantGetWorkspaceSize,
-                              input.tensor, nullptr, nullptr, nullptr, nullptr,
-                              nullptr, nullptr, true, mode, quant.tensor,
-                              scale.tensor, &bytes, &e),
+                              aclnnDequantSwigluQuantGetWorkspaceSize, input.t,
+                              nullptr, nullptr, nullptr, nullptr, nullptr,
+                              nullptr, true, mode, quant.tensor, scale.tensor,
+                              &bytes, &e),
               "resident expert activation prepare");
       run(aclnnDequantSwigluQuant, bytes, e);
     } else {
       checked(prepared::query("aclnnDynamicQuant", false,
-                              aclnnDynamicQuantGetWorkspaceSize, input.tensor,
+                              aclnnDynamicQuantGetWorkspaceSize, input.t,
                               nullptr, quant.tensor, scale.tensor, &bytes, &e),
               "resident expert quant prepare");
       run(aclnnDynamicQuant, bytes, e);
@@ -667,7 +663,8 @@ struct Decoder {
     run(aclnnQuantMatmulV5, bytes, e);
     return result(out);
   }
-  int emit(const V &logits, int step) {
+  int emit(const V &resident_logits, int step) {
+    auto logits = cast(resident_logits, ACL_FLOAT);
     V top(5), ids(5, ACL_INT64), probs(logits.size());
     uint64_t bytes = 0;
     aclOpExecutor *e = nullptr;
