@@ -110,6 +110,10 @@ pub fn lower(graph: &Graph, devices: &[u32]) -> Result<Plan> {
             kind: BoundaryKind::DynamicAllocation,
             detail: "Per-rank reusable device pool grows on a new size/liveness requirement during preparation; warmed decode reuses buffers and workspace. Runtime audit records allocations and reuses. Static arena offsets and full workspace bounds remain unresolved".into(),
         }];
+        if matches!(n.op.as_str(), "mhc_pre" | "mhc_merge" | "mhc_post" | "latent_attention" | "router" | "swiglu") {
+            boundaries.push(Boundary { kind: BoundaryKind::InternalLaunches,
+                detail: "Read-only device operands borrow shared allocation leases instead of copying into staging tensors. mHC retains the residual lease through post; writes and recycling remain ordered on the owning stream".into() });
+        }
         if n.op == "cache_norm_rope_append" {
             boundaries.push(Boundary { kind: BoundaryKind::InternalLaunches,
                 detail: "Fused KV RMS normalization, half-rotary and paged cache write; BF16 input, gamma and rotary coefficients, epsilon 1e-5. Position is a device control input. Combined latent/rotary cache remains device resident; no implicit readback or fallback. Numerical contract differs from separate FP32 rotary".into() });
@@ -125,7 +129,7 @@ pub fn lower(graph: &Graph, devices: &[u32]) -> Result<Plan> {
             boundaries.push(Boundary {kind: BoundaryKind::InternalLaunches, detail: match n.op.as_str() {
                 "mhc_pre" | "mhc_merge" => "mHC inference-only output flag permits the vendor small-token tiling; no training auxiliary values are consumed",
                 "expert_reduce" => "Fused FP32 MoeFinalizeRoutingV2 weighted reduction uses original router scores and device inverse indices; drop-pad row mapping skips -1 foreign routes without a host count or score reorder",
-                "mla_query" => "One batched BF16 head matmul; immutable strided weight view packed once on device before capture (786432 bytes per rank per distinct view); bounded input view and batched FP32 rotary followed by BF16 rounding",
+                "mla_query" => "One batched BF16 head matmul; immutable strided weight view packed once on device before capture (786432 bytes per rank per distinct view); bounded input view, strided FP32 rotary extraction and one column-concatenation kernel; batched FP32 rotary followed by BF16 rounding",
                 "mla_value" => "One batched BF16 head matmul; immutable transposed weight view packed once on device before capture (786432 bytes per rank per distinct view); no per-token weight repacking or parameter host transfer",
                 _ => "Fused rotary operation in FP32 followed by BF16 rounding; shared position-derived controls remain device-resident",
             }.into()});

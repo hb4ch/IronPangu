@@ -13,6 +13,7 @@
 #include <aclnn_ai_infra_kv_rms_norm_rope_cache.h>
 #include <aclnn_ai_infra_sparse_flash_attention_pioneer.h>
 #include <aclnnop/aclnn_batch_matmul.h>
+#include <aclnnop/aclnn_cat.h>
 #include <aclnnop/aclnn_dequant_swiglu_quant.h>
 #include <aclnnop/aclnn_dynamic_quant.h>
 #include <aclnnop/aclnn_grouped_matmul_v5.h>
@@ -363,7 +364,7 @@ struct Decoder {
   }
   struct HC {
     MhcState *device = nullptr;
-    V input, post, res;
+    V input, residual;
   };
   HC pre(const V &x, const std::string &name, bool merge,
          const std::string &state_name) {
@@ -384,11 +385,12 @@ struct Decoder {
       resident::parameter_upload(ptr->beta, beta);
     }
     auto &s = *ptr;
-    to_device(s.x, x);
+    auto residual = cast(x, ACL_BF16);
+    View residual_view(residual.data(), {1, 4, 2560}, ACL_BF16);
     auto &api = training_api();
     uint64_t bytes = 0;
     aclOpExecutor *e = nullptr;
-    checked(prepared::query("mHC.pre", false, api.pre_size, s.x.tensor,
+    checked(prepared::query("mHC.pre", false, api.pre_size, residual_view.t,
                             s.phi.tensor, s.alpha.tensor, s.beta.tensor,
                             nullptr, 0, 1e-6, 1e-6, s.input.tensor,
                             s.post.tensor, s.res.tensor, s.rms.tensor,
@@ -404,6 +406,7 @@ struct Decoder {
     }
     HC h;
     h.device = &s;
+    h.residual = residual;
     h.input = result(s.input);
     return h;
   }
@@ -411,12 +414,14 @@ struct Decoder {
     if (!h.device)
       throw std::runtime_error("missing mHC pre state");
     auto &s = *h.device;
-    to_device(s.branch, branch);
+    auto value = cast(branch, ACL_BF16);
+    View residual(h.residual.data(), {1, 4, 2560}, ACL_BF16),
+        branch_view(value.data(), {1, 2560}, ACL_BF16);
     auto &api = training_api();
     uint64_t bytes = 0;
     aclOpExecutor *e = nullptr;
-    checked(prepared::query("mHC.post", false, api.post_size, s.x.tensor,
-                            s.sink.tensor, s.branch.tensor, s.post.tensor,
+    checked(prepared::query("mHC.post", false, api.post_size, residual.t,
+                            s.sink.tensor, branch_view.t, s.post.tensor,
                             s.out.tensor, &bytes, &e),
             "mHC post prepare");
     run(api.post, bytes, e);
@@ -452,17 +457,52 @@ struct Decoder {
     auto *bank = weight_views.get(weight.data, 6 * 256 * 512, {6, 128, 512},
                                   {256 * 512, 512, 1}, ACL_BF16);
     auto projected = batched_matrix(input, bank, 6, 512);
-    std::vector<V> rotary;
-    for (int head = 0; head < 6; ++head)
-      rotary.push_back(resident::slice(local, head * 192 + 128, 64));
-    auto rotated = rope(resident::concat(rotary), pos);
-    std::vector<V> parts;
-    for (int head = 0; head < 6; ++head) {
-      parts.push_back(resident::slice(projected, head * 512, 512));
-      parts.push_back(resident::slice(rotated, head * 64, 64));
-    }
-    return resident::concat(parts);
+    auto *rotary_view = execution.strided_descriptor(
+        static_cast<uint16_t *>(local.data()) + 128, 1024,
+        {6, 64}, {192, 1}, ACL_BF16);
+    DeviceTensor rotary({6, 64}, ACL_FLOAT, 4);
+    uint64_t bytes = 0;
+    aclOpExecutor *e = nullptr;
+    checked(prepared::query("query_rotary_extract", false,
+                            aclnnCastGetWorkspaceSize, rotary_view, ACL_FLOAT,
+                            rotary.tensor, &bytes, &e),
+            "query rotary extract prepare");
+    run(aclnnCast, bytes, e);
+    auto rotated = rope(result(rotary, ACL_FLOAT), pos);
+    return concat_columns(projected, rotated, 6);
   }
+  V concat_columns(const V &a, const V &b, int64_t rows) {
+    if (rows <= 0 || a.dtype() != b.dtype() || a.size() % rows || b.size() % rows)
+      throw std::runtime_error("column concatenation contract");
+    int64_t aw = a.size() / rows, bw = b.size() / rows;
+    DeviceTensor out({rows, aw + bw}, a.dtype(), resident::element_bytes(a.dtype()));
+    auto descriptor = [&](const V &value, int64_t width) {
+      int64_t shape[] = {rows, width}, strides[] = {width, 1};
+      return aclCreateTensor(shape, 2, value.dtype(), strides, 0, ACL_FORMAT_ND,
+                             shape, 2, value.data());
+    };
+    aclTensor *parts[] = {descriptor(a, aw), descriptor(b, bw)};
+    if (!parts[0] || !parts[1]) {
+      for (auto *part : parts) if (part) aclDestroyTensor(part);
+      throw std::runtime_error("column concatenation descriptors");
+    }
+    struct List {
+      aclTensorList *value;
+      ~List() { if (value) aclDestroyTensorList(value); }
+    } list{aclCreateTensorList(parts, 2)};
+    if (!list.value) {
+      for (auto *part : parts) aclDestroyTensor(part);
+      throw std::runtime_error("column concatenation tensor list");
+    }
+    uint64_t bytes = 0;
+    aclOpExecutor *e = nullptr;
+    checked(prepared::query("aclnnCat", false, aclnnCatGetWorkspaceSize,
+                            list.value, 1, out.tensor, &bytes, &e),
+            "column concatenation prepare");
+    run(aclnnCat, bytes, e);
+    return result(out, a.dtype());
+  }
+
   V batched_matrix(aclTensor *input, aclTensor *weight, int heads, int width) {
     DeviceTensor out({heads, 1, width}, ACL_BF16, 2);
     uint64_t bytes = 0;
@@ -564,14 +604,15 @@ struct Decoder {
   }
   V attend(const V &queries, const std::string &state_name) {
     auto &state = *attention_states.at(state_name);
-    to_device(state.query, queries);
+    auto query = cast(queries, ACL_BF16);
+    View query_view(query.data(), {1, 6, 576}, ACL_BF16);
     uint64_t bytes = 0;
     aclOpExecutor *e = nullptr;
     char layout[] = "TND", cache_layout[] = "PA_BSND";
     checked(prepared::query(
                 "aclnnAiInfraSparseFlashAttentionPioneer", false,
                 aclnnAiInfraSparseFlashAttentionPioneerGetWorkspaceSize,
-                state.query.tensor, state.key.tensor, state.value.tensor,
+                query_view.t, state.key.tensor, state.value.tensor,
                 causal_indices->tensor, state.table.tensor, state.qlen.tensor,
                 sequence_length->tensor, nullptr, nullptr, state.sink.tensor,
                 state.sinkvalue.tensor, 1 / std::sqrt(192.0), 1, layout,
@@ -584,17 +625,16 @@ struct Decoder {
   V activate(const V &gate, const V &up) {
     int width = gate.size();
     V joined = resident::concat(gate, up);
-    DeviceTensor input({1, 2 * width}, ACL_BF16, 2),
-        output({1, width}, ACL_BF16, 2);
-    to_device(input, joined);
-    auto descriptor = [](DeviceTensor &tensor, int64_t columns,
+    auto input = cast(joined, ACL_BF16);
+    DeviceTensor output({1, width}, ACL_BF16, 2);
+    auto descriptor = [](void *data, int64_t columns,
                          uint32_t access) {
       IFKernelTensorV1 result{};
       result.struct_bytes = sizeof(result);
       result.dtype = 2;
       result.rank = 2;
       result.access = access;
-      result.data = tensor.data;
+      result.data = data;
       result.allocation_bytes = uint64_t(columns) * 2;
       result.shape[0] = 1;
       result.shape[1] = columns;
@@ -604,7 +644,7 @@ struct Decoder {
     };
     auto invocation =
         std::make_unique<inferfabric::PreparedKernel>(swiglu.prepare(
-            {descriptor(input, 2 * width, 1)}, {descriptor(output, width, 2)}));
+            {descriptor(input.data(), 2 * width, 1)}, {descriptor(output.data, width, 2)}));
     auto *workspace = execution.workspace(invocation->workspace_bytes());
     // Retain foreign invocation metadata until the explicit output boundary.
     pending_kernels.push_back(std::move(invocation));
@@ -633,8 +673,16 @@ struct Decoder {
       resident::parameter_upload(ptr->bias,
                                  cpu(p + ".e_score_correction_bias"));
     }
-    to_device(ptr->input, x, ACL_FLOAT);
-    ptr->launch();
+    auto value = cast(x, ACL_FLOAT);
+    View input(value.data(), {1, 2560}, ACL_FLOAT);
+    uint64_t bytes = 0;
+    aclOpExecutor *e = nullptr;
+    checked(prepared::query("router_projection", false,
+                            aclnnMatmulGetWorkspaceSize, input.t,
+                            ptr->weight.tensor, ptr->logits.tensor, 0, &bytes, &e),
+            "router projection prepare");
+    run(aclnnMatmul, bytes, e);
+    ptr->select();
     return {result(ptr->ids, ACL_INT32), result(ptr->scores, ACL_FLOAT)};
   }
   struct ExpertBank {
