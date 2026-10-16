@@ -12,6 +12,7 @@
 #include <aclnn_ai_infra_sparse_flash_attention_pioneer.h>
 #include <aclnnop/aclnn_dequant_swiglu_quant.h>
 #include <aclnnop/aclnn_dynamic_quant.h>
+#include <aclnnop/aclnn_index_copy.h>
 #include <aclnnop/aclnn_quant_matmul_v5.h>
 #include <aclnnop/aclnn_rms_norm.h>
 #include <array>
@@ -79,6 +80,11 @@ struct Decoder {
   // Declared first: outlives all values, descriptors and state.
   prepared::Context execution;
   std::vector<std::unique_ptr<inferfabric::PreparedKernel>> pending_kernels;
+  aclmdlRI decode_graph = nullptr;
+  V graph_output;
+  std::vector<std::unique_ptr<inferfabric::PreparedKernel>> graph_kernels;
+  std::unique_ptr<DeviceTensor> token_index, position_index, sequence_length,
+      causal_indices, rotary_cos, rotary_sin;
   int rank;
   int current_position = -1;
   std::map<std::string, std::unique_ptr<openpangu::Router>> routers;
@@ -105,11 +111,24 @@ struct Decoder {
     for (const auto &parameter : p.parameters)
       bindings.emplace(parameter.name, parameter.id);
     stream = this->execution.stream;
+    token_index =
+        std::make_unique<DeviceTensor>(std::vector<int64_t>{1}, ACL_INT32, 4);
+    position_index =
+        std::make_unique<DeviceTensor>(std::vector<int64_t>{1}, ACL_INT32, 4);
+    sequence_length =
+        std::make_unique<DeviceTensor>(std::vector<int64_t>{1}, ACL_INT32, 4);
+    causal_indices = std::make_unique<DeviceTensor>(
+        std::vector<int64_t>{1, 1, int64_t(program.context)}, ACL_INT32, 4);
+    rotary_cos =
+        std::make_unique<DeviceTensor>(std::vector<int64_t>{32}, ACL_FLOAT, 4);
+    rotary_sin =
+        std::make_unique<DeviceTensor>(std::vector<int64_t>{32}, ACL_FLOAT, 4);
     checked(HcclCommInitRootInfo(8, &info, rank, &comm), "HCCL");
   }
   ~Decoder() {
     if (stream)
       aclrtSynchronizeStream(stream);
+    execution.release_graphs();
     if (comm)
       HcclCommDestroy(comm);
   }
@@ -308,14 +327,15 @@ struct Decoder {
     }
     auto &s = *ptr;
     to_device(s.input, x);
-    resident::control_upload(s.computed, std::vector<int32_t>{position});
+    if (position != current_position)
+      throw std::runtime_error("position input mismatch");
     uint64_t bytes = 0;
     aclOpExecutor *e = nullptr;
     checked(prepared::query("aclnnAiInfraFusedCausalConv1d", false,
                             aclnnAiInfraFusedCausalConv1dGetWorkspaceSize,
                             s.input.tensor, s.weight.tensor, s.state.tensor,
                             s.starts.tensor, s.slots.tensor, nullptr, nullptr,
-                            nullptr, s.computed.tensor, nullptr, nullptr,
+                            nullptr, position_index->tensor, nullptr, nullptr,
                             nullptr, 0, -1, 0, 1, 1, 128, 1, true, s.out.tensor,
                             &bytes, &e),
             "MoME prepare");
@@ -386,18 +406,10 @@ struct Decoder {
   V rope(const V &v, int pos) {
     if (v.size() != 64)
       throw std::runtime_error("rotary width");
-    Host c(32), sn(32);
-    for (int i = 0; i < 32; ++i) {
-      float angle = float(pos) / std::pow(6400000.f, float(2 * i) / 64);
-      c[i] = roundbf(std::cos(angle));
-      sn[i] = roundbf(std::sin(angle));
-    }
-    // Position-dependent constants are control inputs, never activation
-    // readback.
-    DeviceTensor dc({32}, ACL_FLOAT, 4), ds({32}, ACL_FLOAT, 4);
-    resident::control_upload(dc, c);
-    resident::control_upload(ds, sn);
-    auto cv = result(dc, ACL_FLOAT), sv = result(ds, ACL_FLOAT);
+    if (pos != current_position)
+      throw std::runtime_error("rotary position mismatch");
+    auto cv = result(*rotary_cos, ACL_FLOAT),
+         sv = result(*rotary_sin, ACL_FLOAT);
     auto a = resident::slice(v, 0, 32), b = resident::slice(v, 32, 32);
     return rounded(
         resident::concat(binary(binary(a, cv, '*'), binary(b, sv, '*'), '-'),
@@ -466,14 +478,20 @@ struct Decoder {
     }
     auto &state = *ptr;
     auto key = cast(latent, ACL_BF16);
-    resident::copy(static_cast<uint16_t *>(state.key.data) + size_t(pos) * 576,
-                   key.data(), 1152);
-    std::vector<int32_t> indices(512, -1);
-    for (int i = 0; i <= pos; ++i)
-      indices[i] = i;
-    resident::control_upload(state.indices, indices);
-    resident::control_upload(state.klen, std::vector<int32_t>{pos + 1});
+    if (pos != current_position)
+      throw std::runtime_error("cache position mismatch");
+    View cache(state.key.data, {int64_t(program.context), 576}, ACL_BF16);
+    View source(key.data(), {1, 576}, ACL_BF16);
+    uint64_t bytes = 0;
+    aclOpExecutor *executor = nullptr;
+    checked(prepared::query("aclnnInplaceIndexCopy", false,
+                            aclnnInplaceIndexCopyGetWorkspaceSize, cache.t, 0,
+                            position_index->tensor, source.t, &bytes,
+                            &executor),
+            "cache device index prepare");
+    run(aclnnInplaceIndexCopy, bytes, executor);
   }
+
   V attend(const V &queries, const std::string &state_name) {
     auto &state = *attention_states.at(state_name);
     to_device(state.query, queries);
@@ -484,8 +502,8 @@ struct Decoder {
                 "aclnnAiInfraSparseFlashAttentionPioneer", false,
                 aclnnAiInfraSparseFlashAttentionPioneerGetWorkspaceSize,
                 state.query.tensor, state.key.tensor, state.value.tensor,
-                state.indices.tensor, state.table.tensor, state.qlen.tensor,
-                state.klen.tensor, nullptr, nullptr, state.sink.tensor,
+                causal_indices->tensor, state.table.tensor, state.qlen.tensor,
+                sequence_length->tensor, nullptr, nullptr, state.sink.tensor,
                 state.sinkvalue.tensor, 1 / std::sqrt(192.0), 1, layout,
                 cache_layout, 3, INT64_MAX, INT64_MAX, 2, false,
                 state.out.tensor, nullptr, nullptr, &bytes, &e),
@@ -717,6 +735,45 @@ struct Decoder {
     }
     return next;
   }
+  void set_token_inputs(int id, int pos) {
+    if (pos < 0 || pos >= int(program.context) || id < 0 || id >= 151552)
+      throw std::runtime_error("token/context bound");
+    current_position = pos;
+    resident::control_upload(*token_index, std::vector<int32_t>{id});
+    resident::control_upload(*position_index, std::vector<int32_t>{pos});
+    resident::control_upload(*sequence_length, std::vector<int32_t>{pos + 1});
+    std::vector<int32_t> indices(program.context, -1);
+    for (int i = 0; i <= pos; ++i)
+      indices[i] = i;
+    resident::control_upload(*causal_indices, indices);
+    Host c(32), sn(32);
+    for (int i = 0; i < 32; ++i) {
+      float angle = float(pos) / std::pow(6400000.f, float(2 * i) / 64);
+      c[i] = roundbf(std::cos(angle));
+      sn[i] = roundbf(std::sin(angle));
+    }
+    resident::control_upload(*rotary_cos, c);
+    resident::control_upload(*rotary_sin, sn);
+  }
+  V token(int id, int pos, bool decode = false) {
+    set_token_inputs(id, pos);
+    execution.begin_step(pos);
+    V output;
+    if (decode && std::getenv("INFERFABRIC_DECODE_GRAPH")) {
+      if (!decode_graph) {
+        decode_graph = execution.capture("token_decode", [&] {
+          pending_kernels.clear();
+          graph_output = execute_token();
+        });
+        graph_kernels = std::move(pending_kernels);
+      }
+      execution.replay(decode_graph);
+      output = graph_output;
+    } else
+      output = execute_token();
+    execution.end_step();
+    return output;
+  }
   // Runtime dispatch is defined separately from kernel implementations.
 #include "token_dispatch.inc"
 };
@@ -768,8 +825,11 @@ int main(int argc, char **argv) {
             pangu::Decoder decoder(plan, argv[2], info, execution);
             pangu::V logits;
             int pos = 0;
-            for (int token : prompt)
-              logits = decoder.token(token, pos++);
+            for (int token : prompt) {
+              const bool prepare_decode =
+                  pos > 0 && pos + 1 == int(prompt.size());
+              logits = decoder.token(token, pos++, prepare_decode);
+            }
             for (int i = 0; i < steps; ++i) {
               int next = decoder.emit(logits, i);
               if (i > 0 && i <= 2 &&
@@ -784,7 +844,7 @@ int main(int argc, char **argv) {
                   !capture.directory.empty() && i < 2;
               {
                 inferfabric::profiling::Scope timing("decode_total");
-                logits = decoder.token(next, pos++);
+                logits = decoder.token(next, pos++, true);
               }
               inferfabric::profiling::state.active = false;
             }

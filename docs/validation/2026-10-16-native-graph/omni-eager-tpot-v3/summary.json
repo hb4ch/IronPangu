@@ -1,0 +1,17 @@
+{
+  "parallelism": {
+    "tp": 8,
+    "ep": 8
+  },
+  "batch": 1,
+  "context": 512,
+  "max_batched_tokens": 512,
+  "eager": true,
+  "devices": "0,1,2,3,4,5,6,7",
+  "mean_ms": 147.74693888333334,
+  "intervals": 60,
+  "method": "host perf_counter_ns at each offline engine.step output; exclude first token",
+  "prefix_caching": false,
+  "logprobs": 5,
+  "max_output_tokens": 32
+}

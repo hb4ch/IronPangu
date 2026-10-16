@@ -45,6 +45,13 @@ class Context {
   std::map<std::string, aclTensor *> descriptors_;
   std::map<std::string, Invocation> invocations_;
   std::map<std::string, Counts> counts_;
+  struct Graph {
+    aclmdlRI handle;
+    std::string name;
+    uint64_t replays = 0;
+  };
+  std::vector<Graph> graphs_;
+  bool capturing_ = false;
   std::vector<std::pair<void *, size_t>> uploads_;
   size_t upload_index_ = 0;
   void *workspace_ = nullptr;
@@ -77,6 +84,7 @@ public:
   ~Context() {
     // A stream-local teardown boundary, never aclrtSynchronizeDevice.
     aclrtSynchronizeStream(stream);
+    release_graphs();
     active = nullptr;
     for (auto &[key, invocation] : invocations_)
       aclDestroyAclOpExecutor(invocation.executor);
@@ -108,6 +116,8 @@ public:
       ++reuse_;
       return block->data;
     }
+    if (capturing_)
+      throw std::runtime_error("capture requires prepared device buffers");
     void *pointer = nullptr;
     check(aclrtMalloc(&pointer, bytes, ACL_MEM_MALLOC_HUGE_FIRST),
           "prepared allocation");
@@ -213,6 +223,48 @@ public:
     ++boundaries_;
     upload_index_ = 0;
   }
+  template <class F> aclmdlRI capture(const char *name, F enqueue) {
+    require_stream(stream);
+    if (capturing_)
+      throw std::runtime_error("nested stream capture");
+    // Preparation only; no global device/rank barrier and no replay fence.
+    check(aclrtSynchronizeStream(stream), "capture input preparation");
+    check(aclmdlRICaptureBegin(stream, ACL_MODEL_RI_CAPTURE_MODE_GLOBAL),
+          "capture begin");
+    capturing_ = true;
+    try {
+      enqueue();
+    } catch (...) {
+      aclmdlRI failed = nullptr;
+      aclmdlRICaptureEnd(stream, &failed);
+      capturing_ = false;
+      if (failed)
+        aclmdlRIDestroy(failed);
+      throw;
+    }
+    aclmdlRI graph = nullptr;
+    auto status = aclmdlRICaptureEnd(stream, &graph);
+    capturing_ = false;
+    check(status, "capture end");
+    graphs_.push_back({graph, name, 0});
+    return graph;
+  }
+  void replay(aclmdlRI handle) {
+    require_stream(stream);
+    for (auto &graph : graphs_)
+      if (graph.handle == handle) {
+        check(aclmdlRIExecuteAsync(handle, stream), "graph replay");
+        ++graph.replays;
+        return;
+      }
+    throw std::runtime_error("graph belongs to a different execution context");
+  }
+  void release_graphs() {
+    // Caller completes the owning stream before resource teardown.
+    for (auto &graph : graphs_)
+      aclmdlRIDestroy(graph.handle);
+    graphs_.clear();
+  }
   void *output_host(size_t bytes) {
     // Only used at the serialized request-output boundary; previous output
     // copies have completed before the caller starts the next token.
@@ -289,6 +341,15 @@ public:
           << ",\"device_allocations\":" << step.allocations
           << ",\"buffer_reuses\":" << step.reuses
           << ",\"completion_boundaries\":" << step.boundaries << '}';
+    }
+    out << "],\"graphs\":[";
+    first = true;
+    for (const auto &graph : graphs_) {
+      if (!first)
+        out << ',';
+      first = false;
+      out << "{\"name\":\"" << graph.name << "\",\"replays\":" << graph.replays
+          << '}';
     }
     out << "]}\n";
   }

@@ -36,6 +36,7 @@ def main():
     parser.add_argument('--repeats', type=int, default=1)
     parser.add_argument('--timeout', type=float, default=900)
     parser.add_argument('--resident-audit', action='store_true', help='Require transfer and prepared-execution audits for every rank/run')
+    parser.add_argument('--decode-graph', action='store_true', help='Capture/replay the device-resident token program')
     args = parser.parse_args()
     if args.repeats < 1 or args.timeout <= 0:
         parser.error('positive repeats/timeout required')
@@ -51,6 +52,10 @@ def main():
             env = os.environ.copy()
             env.pop('INFERFABRIC_PROFILE_DIR', None)
             env.pop('INFERFABRIC_PROFILE_VENDOR', None)
+            if args.decode_graph:
+                env['INFERFABRIC_DECODE_GRAPH'] = '1'
+            else:
+                env.pop('INFERFABRIC_DECODE_GRAPH', None)
             if args.resident_audit:
                 env['INFERFABRIC_TRANSFER_AUDIT_DIR'] = str((out/name/'transfers').resolve())
                 env['INFERFABRIC_PREPARED_AUDIT_DIR'] = str((out/name/'prepared').resolve())
@@ -108,6 +113,8 @@ def main():
                         raise RuntimeError(f'{name}: decode allocated or fenced')
                     if prepared['output_boundaries'] != len(rows):
                         raise RuntimeError(f'{name}: output boundary count')
+                    if args.decode_graph and (len(prepared.get('graphs', [])) != 1 or prepared['graphs'][0]['replays'] < len(rows)-1):
+                        raise RuntimeError(f'{name}: graph replay was not used')
             elapsed = [(b-a)/1e6 for a,b in zip(receipts,receipts[1:])]
             if any(t <= 0 for t in elapsed):
                 raise RuntimeError('coalesced output records; cannot resolve token intervals')
@@ -124,10 +131,10 @@ def main():
                'execution_plan_sha256': hashlib.sha256((Path(args.plan)/'execution.bin').read_bytes()).hexdigest(),
                'clock': 'perf_counter_ns on the NPU host inside Docker; flushed stdout receipts',
                'method': 'exclude first output; includes native decode, selection, consensus and output delivery',
-               'batch_size': 1, 'repeats': args.repeats, 'runs': len(results), 'pooled_tpot': stats(intervals),
+               'batch_size': 1, 'decode_graph': args.decode_graph, 'repeats': args.repeats, 'runs': len(results), 'pooled_tpot': stats(intervals),
                'decode_tokens_per_second': 1000/statistics.mean(intervals),
                'notes': ['Fresh native process per case; loading/prefill excluded from TPOT.',
-                         'No warm persistent server, ACLgraph or concurrent batching; short-context baseline.',
+                         'Fresh process per request; graph mode is recorded separately; no concurrent batching; short-context baseline.',
                          'P95 uses nearest-rank empirical percentile; small sample, not a production SLO.']}
     (out/'summary.json').write_text(json.dumps(summary,indent=2)+'\n')
     print(json.dumps(summary),flush=True)

@@ -8,11 +8,8 @@ static std::string expert_name(std::string pattern, int expert) {
   pattern.replace(at, 8, std::to_string(expert));
   return pattern;
 }
-V token(int id, int pos) {
-  execution.begin_step(pos);
-  current_position = pos;
-  if (pos < 0 || pos >= int(program.context) || id < 0 || id >= 151552)
-    throw std::runtime_error("token/context bound");
+V execute_token() {
+  int pos = current_position;
   std::vector<std::unique_ptr<Value>> values(program.nodes.size());
   auto remaining = program.uses;
   for (size_t i = 0; i < program.nodes.size(); ++i) {
@@ -27,11 +24,20 @@ V token(int id, int pos) {
     if (n.op == "embedding") {
       auto &embedding = w(weight() + ".weight");
       auto width = n.integer("width");
-      result =
-          cast(resident::from_device(static_cast<uint16_t *>(embedding.data) +
-                                         size_t(id) * width,
-                                     width, ACL_BF16),
-               ACL_FLOAT);
+      DeviceTensor output({int64_t(width)}, ACL_BF16, 2);
+      View source(embedding.data,
+                  {int64_t(embedding.bytes / (2 * width)), int64_t(width)},
+                  ACL_BF16);
+      View destination(output.data, {1, int64_t(width)}, ACL_BF16);
+      uint64_t bytes = 0;
+      aclOpExecutor *executor = nullptr;
+      checked(prepared::query("aclnnIndexSelect", false,
+                              aclnnIndexSelectGetWorkspaceSize, source.t, 0,
+                              token_index->tensor, destination.t, &bytes,
+                              &executor),
+              "embedding device index prepare");
+      run(aclnnIndexSelect, bytes, executor);
+      result = this->result(output);
     } else if (n.op == "repeat") {
       V v = tensor(0);
       for (uint32_t j = 1; j < n.integer("count"); ++j)
@@ -131,6 +137,5 @@ V token(int id, int pos) {
       if (--remaining[j] == 0)
         values[j].reset();
   }
-  execution.end_step();
   return std::get<V>(std::move(*values[program.output]));
 }
