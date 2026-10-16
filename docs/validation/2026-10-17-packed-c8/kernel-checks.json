@@ -1,1 +1,1 @@
-{"status":"passed","cache_rows":512,"scale_max_abs_error":2.58313e-09,"quant_max_integer_error":1,"attention_values_checked":36864,"attention_max_abs_error":0.00120384}
+{"status":"passed","cache_rows":512,"scale_max_abs_error":2.58313e-09,"quant_max_integer_error":1,"attention_values_checked":36864,"attention_max_abs_error":0.00120384,"attention_workspace_bytes":93970944,"writer_workspace_bytes":512}

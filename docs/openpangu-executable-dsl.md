@@ -206,3 +206,12 @@ or see [generation and navigation instructions](plan-viewer.md).
 [Initial reusable-module NPU qualification](validation/2026-10-16-reusable-dsl/README.md): the original 107-line source expanded to the same 2,109 operations; all eight initialization programs and the complete three-prompt results were byte-identical to the flat-DSL baseline. The report includes expanded JSON with source mappings and a Graphviz diagram.
 
 [Full NPU evidence and plan-control experiment](validation/2026-10-15-dsl-execution/README.md): all 33 tokens across three prompts match the pinned offline reference. Recorded results, including logits/top-five values, are identical to the preceding native decoder.
+
+## OmniInfer-compatible MLA C8
+
+Use [92b-tp8-ep8-c8.inferfabric](../examples/openpangu/92b-tp8-ep8-c8.inferfabric)
+for DSA-only `int8_ds_mla` cache storage. Its explicit `pertile128` FP32 scales,
+BF16 rotary fields, packed attention consumer and layer selection differ from
+the older whole-row `int8`/`int4` formats above. See the
+[packed C8 contract](packed-mla-cache.md) and
+[full-model measurements](validation/2026-10-17-packed-c8/README.md).

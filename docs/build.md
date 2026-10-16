@@ -343,3 +343,24 @@ Prepared audit directories also contain `memory-rank-N.json`: device HBM before
 model initialization and after generation, including checkpoint parameters,
 prepared storage, graph and runtime overhead. Device-wide figures can include
 other processes; use arena manifests to inspect this executor's exact bindings.
+
+### Packed MLA C8 verification
+
+After the Ascend C cache library and native decoder build above, build and run
+`packed_cache_probe` inside the NPU container. It checks the fused vendor writer,
+per-128 scales, BF16 rotary bits, packed attention and changing device metadata
+under graph replay. Rust compiler changes still use the local cross-build.
+
+```bash
+cmake --build native-build --target openpangu_decode packed_cache_probe token_plan_test -j8
+native-build/packed_cache_probe
+./inferfabric-compiler compile-token examples/openpangu/92b-tp8-ep8-c8.inferfabric \
+  /models/92B cache-c8-plan --allow-stale-index-size
+native-build/token_plan_test cache-c8-plan
+```
+
+The installed Omni inference operator library must export
+`aclnnAiInfraKvQuantSparseFlashAttention` and support `pertile128` in
+`aclnnAiInfraKvRmsNormRopeCache`. Missing support fails; there is no host fallback.
+Follow [the C8 full-model qualification procedure](validation/2026-10-17-packed-c8/README.md)
+to prepare and bind the arena before ordinary execution.
