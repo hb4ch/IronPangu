@@ -88,17 +88,27 @@ V execute_token() {
     else if (n.op == "expert_linear") {
       const auto &r = std::get<Routes>(input(1));
       auto batch = resident::repeat(cast(tensor(0), ACL_BF16), r.ids.size());
-      result = grouped_linear(batch, r, bank(weight()));
+      result = grouped_linear(batch, r,
+                              bank(weight(), n.attrs.count("paired_weight")
+                                                 ? n.text("paired_weight")
+                                                 : ""));
     } else if (n.op == "expert_swiglu_down") {
-      const auto &r = std::get<Routes>(input(2));
-      const auto &gate = std::get<ExpertRows>(input(0)),
-                 &up = std::get<ExpertRows>(input(1));
-      std::vector<V> parts;
-      for (size_t j = 0; j < r.ids.size(); ++j) {
-        parts.push_back(gate.rows.at(j));
-        parts.push_back(up.rows.at(j));
+      if (n.inputs.size() == 2) {
+        const auto &r = std::get<Routes>(input(1));
+        const auto &packed = std::get<ExpertRows>(input(0));
+        result = grouped_linear(packed.packed, r, bank(weight()), true);
+      } else {
+        const auto &r = std::get<Routes>(input(2));
+        const auto &gate = std::get<ExpertRows>(input(0)),
+                   &up = std::get<ExpertRows>(input(1));
+        std::vector<V> parts;
+        for (size_t j = 0; j < r.ids.size(); ++j) {
+          parts.push_back(gate.rows.at(j));
+          parts.push_back(up.rows.at(j));
+        }
+        result =
+            grouped_linear(resident::concat(parts), r, bank(weight()), true);
       }
-      result = grouped_linear(resident::concat(parts), r, bank(weight()), true);
     } else if (n.op == "expert_reduce") {
       const auto &r = std::get<Routes>(input(1));
       const auto &rows = std::get<ExpertRows>(input(0));

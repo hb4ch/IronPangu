@@ -44,7 +44,7 @@ int main(int argc, char **argv) {
     reject([](auto &x) {
       for (auto &n : x.nodes)
         if (n.op == "expert_swiglu_down") {
-          n.inputs[2] = 0;
+          n.inputs.back() = 0;
           break;
         }
     });

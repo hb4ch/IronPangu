@@ -295,16 +295,28 @@ impl Node {
                 Routes
             }
             "expert_linear" => {
-                self.schema(inputs, &[Tensor(2560), Routes], &["weight", "width"])?;
+                let mut attrs = vec!["weight", "width"];
+                let paired = self.attrs.get("paired_weight");
+                if let Some(weight) = paired {
+                    attrs.push("paired_weight");
+                    if !weight.contains("{expert}") {
+                        return fail(self, "paired expert binding");
+                    }
+                }
+                self.schema(inputs, &[Tensor(2560), Routes], &attrs)?;
                 if width()? != 1024 || !self.attrs["weight"].contains("{expert}") {
                     return fail(self, "expert projection specialization/binding");
                 }
-                Experts(1024)
+                Experts(if paired.is_some() { 2048 } else { 1024 })
             }
             "expert_swiglu_down" => {
                 self.schema(
                     inputs,
-                    &[Experts(1024), Experts(1024), Routes],
+                    if inputs.len() == 2 {
+                        &[Experts(2048), Routes]
+                    } else {
+                        &[Experts(1024), Experts(1024), Routes]
+                    },
                     &["weight", "width"],
                 )?;
                 if width()? != 2560 || !self.attrs["weight"].contains("{expert}") {
@@ -362,16 +374,17 @@ impl Graph {
                 return fail(n, "context exceeds exact causal attention window");
             }
             if n.op == "expert_swiglu_down" {
-                for &j in &n.inputs[..2] {
+                let routes = *n.inputs.last().unwrap();
+                for &j in &n.inputs[..n.inputs.len() - 1] {
                     let source = &self.nodes[j];
-                    if source.op != "expert_linear" || source.inputs[1] != n.inputs[2] {
+                    if source.op != "expert_linear" || source.inputs[1] != routes {
                         return fail(n, "expert route provenance mismatch");
                     }
                 }
             }
             if n.op == "expert_reduce" {
                 let source = &self.nodes[n.inputs[0]];
-                if source.op != "expert_swiglu_down" || source.inputs[2] != n.inputs[1] {
+                if source.op != "expert_swiglu_down" || source.inputs.last() != Some(&n.inputs[1]) {
                     return fail(n, "expert route provenance mismatch");
                 }
             }

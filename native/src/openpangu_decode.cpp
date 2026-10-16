@@ -605,7 +605,8 @@ struct Decoder {
         : weights(size_t(count) * rows * columns, ACL_INT8),
           scales(size_t(count) * rows), n(rows), k(columns) {}
   };
-  std::map<std::string, std::unique_ptr<ExpertBank>> expert_banks;
+  std::map<std::pair<std::string, std::string>, std::unique_ptr<ExpertBank>>
+      expert_banks;
   V route_owner_table;
   V select(const V &source, const V &indices, size_t rows, size_t width) {
     if (source.size() != rows * width)
@@ -623,29 +624,35 @@ struct Decoder {
     run(aclnnIndexSelect, bytes, e);
     return out;
   }
-  ExpertBank &bank(const std::string &pattern) {
-    auto &ptr = expert_banks[pattern];
+  ExpertBank &bank(const std::string &pattern, const std::string &paired = "") {
+    auto &ptr = expert_banks[{pattern, paired}];
     if (ptr)
       return *ptr;
     auto &first = w(expert_name(pattern, rank * 32) + ".weight");
     int n = first.descriptor.shape[0], k = first.descriptor.shape[1];
     if (first.dtype != inferfabric::initialization::DType::I8)
       throw std::runtime_error("resident expert requires int8 contract");
-    ptr = std::make_unique<ExpertBank>(32, n, k);
+    int projections = paired.empty() ? 1 : 2;
+    ptr = std::make_unique<ExpertBank>(32, n * projections, k);
     for (int j = 0; j < 32; ++j) {
-      auto name = expert_name(pattern, rank * 32 + j);
-      auto &weight = w(name + ".weight"), &scale = w(name + ".weight_scale");
-      if (source_types.at(scale.descriptor.id) !=
-          inferfabric::initialization::DType::Bf16)
-        throw std::runtime_error(
-            "grouped expert requires lossless BF16 checkpoint scales");
-      if (weight.bytes != size_t(n) * k || scale.bytes != size_t(n) * 4)
-        throw std::runtime_error("expert bank shape");
-      resident::copy(static_cast<char *>(ptr->weights.data()) +
-                         size_t(j) * n * k,
-                     weight.data, weight.bytes);
-      resident::copy(static_cast<float *>(ptr->scales.data()) + size_t(j) * n,
-                     scale.data, scale.bytes);
+      for (int projection = 0; projection < projections; ++projection) {
+        auto name = expert_name(projection ? paired : pattern, rank * 32 + j);
+        auto &weight = w(name + ".weight"), &scale = w(name + ".weight_scale");
+        if (source_types.at(scale.descriptor.id) !=
+            inferfabric::initialization::DType::Bf16)
+          throw std::runtime_error(
+              "grouped expert requires lossless BF16 checkpoint scales");
+        if (weight.dtype != inferfabric::initialization::DType::I8 ||
+            weight.descriptor.shape != first.descriptor.shape ||
+            weight.bytes != size_t(n) * k || scale.bytes != size_t(n) * 4)
+          throw std::runtime_error("expert bank shape");
+        resident::copy(static_cast<char *>(ptr->weights.data()) +
+                           size_t(j * projections + projection) * n * k,
+                       weight.data, weight.bytes);
+        resident::copy(static_cast<float *>(ptr->scales.data()) +
+                           size_t(j * projections + projection) * n,
+                       scale.data, scale.bytes);
+      }
     }
     ptr->grouped_scales = cast(ptr->scales, ACL_BF16);
     return *ptr;

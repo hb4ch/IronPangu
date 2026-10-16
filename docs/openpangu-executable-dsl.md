@@ -7,7 +7,7 @@ A compile-time fold instantiates the blocks, choosing dense/MoE branches and
 attention windows. Scoped weights resolve checkpoint bindings without repeated
 full paths. See [module syntax and expansion rules](dsl-modules.md).
 
-The compiler expands this source into 1,881 primitive operations. The initial
+The compiler expands this source into 1,837 primitive operations. The initial
 module migration preserved all 2,109 operations of the qualified flat graph;
 the current placement leaves one gather and 92 explicit all-reduces per token. Shared experts are replicated
 as in the matched OmniInfer configuration, while MLA query projection emits only
@@ -30,12 +30,15 @@ let hidden = fold i in range(0, 46) carry(x = streams) {
 };
 ```
 
-For each MoE block the graph separately describes routing, owner-local gate/up
+For each MoE block the graph separately describes routing, owner-local paired gate/up
 projections, fused quantized SwiGLU/down, weighted expert reduction, FP32
 all-reduce, the shared expert's three projections and activation, and BF16 add.
 `{expert}` in a binding is expanded over the router's selected experts at runtime
 and over the local rank's parameter ownership during initialization planning.
-The fused activation/down kernel preserves the qualified W8A8 rounding boundary.
+`expert_linear(paired_weight=...)` binds both projections explicitly and produces
+packed expert rows with one input quantization and one grouped matmul. The two-input
+`expert_swiglu_down` consumes those rows directly. The original separate-projection
+form remains validated and executable. The fused activation/down kernel preserves the qualified W8A8 rounding boundary.
 
 ## Compilation and initialization
 

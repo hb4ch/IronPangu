@@ -9,7 +9,7 @@ fn full_decoder_is_explicit_and_round_trips_through_compiled_authoring() {
     let ModelDefinition::Execution { graph, parallel } = &model else {
         panic!("expected executable graph")
     };
-    assert_eq!(graph.nodes.len(), 1881);
+    assert_eq!(graph.nodes.len(), 1837);
     assert_eq!(graph.nodes.iter().filter(|n| n.op == "router").count(), 44);
     assert_eq!(
         graph
@@ -29,6 +29,26 @@ fn full_decoder_is_explicit_and_round_trips_through_compiled_authoring() {
     };
     assert_eq!(graph.encode().unwrap(), other.encode().unwrap());
     assert!(graph.dot().unwrap().contains("hidden.i45.block.output"));
+    let mut wrong_route = graph.clone();
+    let other_route = wrong_route
+        .nodes
+        .iter()
+        .position(|n| n.op == "router")
+        .unwrap();
+    let down = wrong_route
+        .nodes
+        .iter_mut()
+        .rev()
+        .find(|n| n.op == "expert_swiglu_down")
+        .unwrap();
+    *down.inputs.last_mut().unwrap() = other_route;
+    assert!(
+        wrong_route
+            .validate()
+            .unwrap_err()
+            .to_string()
+            .contains("provenance")
+    );
 }
 #[test]
 fn unsafe_dataflow_shapes_effects_and_budgets_are_rejected() {
@@ -42,7 +62,12 @@ fn unsafe_dataflow_shapes_effects_and_budgets_are_rejected() {
         SOURCE.replacen("theta = 6400000", "theta = 10000", 1),
         SOURCE.replacen("start = 512, width = 64", "start = 540, width = 64", 1),
         SOURCE.replacen("placement = \"tp_rows\"", "placement = \"magic\"", 1),
-        SOURCE.replacen("gate, up, routes", "gate, up, x", 1),
+        SOURCE.replacen("gate_up, routes", "gate_up, x", 1),
+        SOURCE.replacen(
+            "paired_weight = expert.up_proj",
+            "paired_weight = w.shared_experts.up_proj",
+            1,
+        ),
         SOURCE.replacen("yield logits;", "yield normalized;", 1),
         SOURCE.replace("context = 512", "context = 513"),
         SOURCE.replace("max_num_seqs = 1", "max_num_seqs = 4"),
@@ -52,6 +77,7 @@ fn unsafe_dataflow_shapes_effects_and_budgets_are_rejected() {
             1,
         ),
     ] {
+        assert_ne!(source, SOURCE, "negative fixture must mutate the source");
         assert!(definition(&source).is_err());
     }
 }
@@ -83,14 +109,13 @@ fn reusable_model_preserves_layers_with_explicit_communication_layouts() {
     .unwrap();
     assert_eq!(graph.max_context, baseline.max_context);
     assert_eq!(graph.eos, baseline.eos);
-    assert_eq!(baseline.nodes.len() - graph.nodes.len(), 228);
+    assert_eq!(baseline.nodes.len() - graph.nodes.len(), 272);
     for op in [
         "linear",
         "mhc_pre",
         "mhc_post",
         "mome",
         "router",
-        "expert_linear",
         "expert_swiglu_down",
         "latent_attention",
     ] {
@@ -138,6 +163,17 @@ fn reusable_model_preserves_layers_with_explicit_communication_layouts() {
         }
     }
     assert_eq!(shared, 132);
+    assert_eq!(
+        graph
+            .nodes
+            .iter()
+            .filter(|n| n.op == "expert_linear")
+            .count(),
+        44
+    );
+    for n in graph.nodes.iter().filter(|n| n.op == "expert_linear") {
+        assert!(n.attrs["paired_weight"].contains("{expert}"));
+    }
     for source in [
         SOURCE.replace(
             "input_layout = \"rank_local\"",

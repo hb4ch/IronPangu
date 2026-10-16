@@ -143,6 +143,10 @@ pub fn lower(graph: &Graph, devices: &[u32]) -> Result<Plan> {
             boundaries.push(Boundary {kind: BoundaryKind::PersistentState,
                 detail: "Device-packed owner-local expert banks; device-only owner ordering and sparse grouped INT8 matmul skip foreign routes and zero-local ranks. BF16 checkpoint scales are required for lossless scale storage; grouped dequantization is a distinct numerical implementation. Bank memory remains additional to loaded checkpoint storage".into()});
         }
+        if n.op == "expert_linear" && n.attrs.contains_key("paired_weight") {
+            boundaries.push(Boundary {kind: BoundaryKind::InternalLaunches,
+                detail: "Two explicitly bound projections are concatenated per owner-local expert during preparation; one input quantization and one sparse grouped matmul produce packed BF16 rows for fused activation/down. No intermediate re-packing or additional expert bank duplication".into()});
+        }
         if i == graph.output {
             boundaries.push(Boundary {kind: BoundaryKind::Synchronize,
                 detail: "Request output only: enqueue pinned D2H of permitted IDs/diagnostics, then complete this rank's stream once. No per-operator or device-global fence; teardown also completes the owning stream".into()});
@@ -175,6 +179,7 @@ pub fn lower(graph: &Graph, devices: &[u32]) -> Result<Plan> {
             candidates: vec![Candidate {
                 id: format!("ascend.token.device_resident.{}.v1", n.op),
                 contract_revision: revision.clone(), numerical_contract: match n.op.as_str() {
+                    "expert_linear" if n.attrs.contains_key("paired_weight") => "ascend_token_v1/expert_linear/paired_sparse_gmm_bf16_scales_v1".into(),
                     "linear" if n.attrs.get("placement").is_some_and(|p| p == "tp_columns") => "ascend_token_v1/linear/local_columns_bf16_partial_v1".into(),
                     "expert_linear" | "expert_swiglu_down" => format!("ascend_token_v1/{}/sparse_gmm_bf16_scales_v1", n.op),
                     "expert_reduce" => "ascend_token_v1/expert_reduce/fused_finalize_fp32_v1".into(),

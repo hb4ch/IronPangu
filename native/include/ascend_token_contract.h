@@ -142,10 +142,17 @@ inline void validate_kernels(const Plan &p) {
       eq("scoring", "sigmoid_bias_group_topk");
       eq("scale", "2.5");
     } else if (n.op == "expert_linear") {
-      check({{0, 2560}, {2, 0}}, {"weight", "width"}, {3, 1024});
+      if (n.attrs.count("paired_weight"))
+        check({{0, 2560}, {2, 0}}, {"weight", "paired_weight", "width"},
+              {3, 2048});
+      else
+        check({{0, 2560}, {2, 0}}, {"weight", "width"}, {3, 1024});
       eq("width", "1024");
     } else if (n.op == "expert_swiglu_down") {
-      check({{3, 1024}, {3, 1024}, {2, 0}}, {"weight", "width"}, {3, 2560});
+      if (n.inputs.size() == 2)
+        check({{3, 2048}, {2, 0}}, {"weight", "width"}, {3, 2560});
+      else
+        check({{3, 1024}, {3, 1024}, {2, 0}}, {"weight", "width"}, {3, 2560});
       eq("width", "2560");
     } else if (n.op == "expert_reduce")
       check({{3, 2560}, {2, 0}}, {}, {0, 2560});
@@ -154,14 +161,15 @@ inline void validate_kernels(const Plan &p) {
     else
       error();
     if (n.op == "expert_swiglu_down") {
-      auto &g = p.nodes[n.inputs[0]], &u = p.nodes[n.inputs[1]];
-      if (g.op != "expert_linear" || u.op != "expert_linear" ||
-          g.inputs[1] != n.inputs[2] || u.inputs[1] != n.inputs[2])
-        error();
+      for (size_t j = 0; j + 1 < n.inputs.size(); ++j) {
+        auto &g = p.nodes[n.inputs[j]];
+        if (g.op != "expert_linear" || g.inputs[1] != n.inputs.back())
+          error();
+      }
     }
     if (n.op == "expert_reduce") {
       auto &d = p.nodes[n.inputs[0]];
-      if (d.op != "expert_swiglu_down" || d.inputs[2] != n.inputs[1])
+      if (d.op != "expert_swiglu_down" || d.inputs.back() != n.inputs[1])
         error();
     }
     if (n.kind == 1 || n.kind == 4) {
@@ -246,8 +254,15 @@ inline void validate_bindings(const Plan &program,
       require(name + ".gate.weight", {256, 2560}, DType::Bf16);
       require(name + ".e_score_correction_bias", {256}, DType::F32);
     } else if (n.op == "expert_linear" || n.op == "expert_swiglu_down") {
-      for (int e = int(init.rank) * 32; e < int(init.rank + 1) * 32; ++e)
-        linear(bind_expert(name, e), width, n.width, true);
+      for (int e = int(init.rank) * 32; e < int(init.rank + 1) * 32; ++e) {
+        linear(bind_expert(name, e),
+               n.op == "expert_swiglu_down" && n.inputs.size() == 2 ? width / 2
+                                                                    : width,
+               n.integer("width"), true);
+        if (n.attrs.count("paired_weight"))
+          linear(bind_expert(n.text("paired_weight"), e), width,
+                 n.integer("width"), true);
+      }
     }
   }
 }

@@ -28,9 +28,9 @@ module RoutedMoE(x, w) {
     let routes = router(x, weight = w, experts = 256, topk = 8,
                         scoring = "sigmoid_bias_group_topk", scale = 2.5);
     let expert = child(w.experts, "{expert}");
-    let gate = expert_linear(x, routes, weight = expert.gate_proj, width = 1024);
-    let up = expert_linear(x, routes, weight = expert.up_proj, width = 1024);
-    let down = expert_swiglu_down(gate, up, routes, weight = expert.down_proj, width = 2560);
+    let gate_up = expert_linear(x, routes, weight = expert.gate_proj,
+                               paired_weight = expert.up_proj, width = 1024);
+    let down = expert_swiglu_down(gate_up, routes, weight = expert.down_proj, width = 2560);
     let local = expert_reduce(down, routes);
     let routed = allreduce(local);
     let shared = DenseFFN(x, w.shared_experts, 1024, false);

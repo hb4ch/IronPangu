@@ -199,12 +199,26 @@ pub fn initialization_plans(
                     for e in rank * 32..(rank + 1) * 32 {
                         b.linear(
                             &name.replace("{expert}", &e.to_string()),
-                            width,
+                            if n.op == "expert_swiglu_down" && n.inputs.len() == 2 {
+                                width / 2
+                            } else {
+                                width
+                            },
                             n.integer("width")? as u64,
                             false,
                             true,
                             false,
                         )?;
+                        if let Some(other) = n.attrs.get("paired_weight") {
+                            b.linear(
+                                &other.replace("{expert}", &e.to_string()),
+                                width,
+                                n.integer("width")? as u64,
+                                false,
+                                true,
+                                false,
+                            )?;
+                        }
                     }
                 }
                 _ => {
