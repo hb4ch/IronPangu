@@ -1,0 +1,12 @@
+{
+  "sha256": {
+    "family64-bound/execution.bin": "92be1f21f8f89cac78e38e2d79795218103bad1fb27815021a18a7a901d1e553",
+    "native-build-prefill-family/libinferfabric_program.so": "575ee1f742b05b208fcf5fd5e9b7dac5bb2b038924201b2b32b3f3e472f73312",
+    "retrieval-64k-input.json": "d56cfa42a2ff41c74ceb3a1fb86126c67f7a8d07363dd08b1b090839ac2a8b78",
+    "retrieval-64k-reference.json": "238299829f68743966950409c23a010581b01ff3ba4f864a31cd727439c622d0",
+    "family64-long/tokens.jsonl": "d5214c7ce3a5972ee4c08e9a0095aa57ce6e06f028da8017c713915907ac00a0",
+    "/models/92B/tokenizer.json": "7816b7b6138024e37c508ff82321e11b5ee559289184fa18f7536a3e460d3941"
+  },
+  "npu_workload_isolated": true,
+  "timing_note": "No reference or HTTP workload overlapped. CPU-only native builds overlapped later requests; first three requests preceded these builds."
+}
