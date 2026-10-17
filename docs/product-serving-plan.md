@@ -76,6 +76,17 @@ prefill chunks against a matching-budget reference, batch remaining attention
 work, then advance diverse 8K/16K/32K/64K and concurrent HTTP tests while preserving
 unresolved accuracy evidence. No admission gate changes.
 
+The [sixteen-token experiment](validation/2026-10-17-prefill16/README.md) measures
+32.5–32.8% lower isolated long-prompt TTFT than four-token chunks, with unchanged
+long native tokens. Its matched-budget reference still exposes post-EOS
+differences at 529 and 3,072 tokens; it remains unqualified. A concurrent 4,088-token
+HTTP case passes full output, cancellation/reuse and zero final page occupancy,
+but the peer short request sees 1.51-second TTFT and about 121 ms between streamed
+text chunks. A single larger chunk is therefore insufficient: implement faster
+batched attention plus multiple compiled prefill sizes, with a measured latency
+budget deciding which variant is legal alongside active decodes. Include every
+variant in maximum-workspace discovery and frozen arena binding.
+
 Experimental learned-index execution now includes explicit INT8 index queries/keys
 and FP16 scales/head weights in the [physical plan](learned-index-quantization.md).
 Its [C8 reference boundary comparison](validation/2026-10-17-learned-index-int8/README.md)
@@ -308,9 +319,9 @@ Our proposed node contains an edge token span, parent/children, absolute boundar
 
 Namespace keys include checkpoint and executable semantic identities, cache dtype/scale/layout, positions/RoPE settings, adapter identity when supported, tokenizer/template identity, state schema, rank topology and tenant/cache-sharing domain. Compare token spans exactly after hash lookup. A hash collision must never yield a hit. Sampling settings do not change prefix activations; initialize request-local RNG and penalty counts from the full request independently.
 
-A reusable boundary means **all** continuation components exist at the same position and are device-complete on every rank. Lookup returns the longest usable boundary, not simply the longest matching token edge. Full-attention prefixes need all required earlier pages; SWA needs the declared retained window; MoME needs its history snapshot; future DSA needs its index state. Metadata-only split points do not synthesize a historical recurrent snapshot. If a split lacks a complete checkpoint, back off and recompute from an earlier usable node.
+A reusable boundary means **all** continuation components exist at the same position and are device-complete on every rank. Lookup returns the longest usable boundary, not simply the longest matching token edge. Full-attention prefixes need all required earlier pages; SWA needs the declared retained window; MoME needs its history snapshot; learned DSA needs its index state. Metadata-only split points do not synthesize a historical recurrent snapshot. If a split lacks a complete checkpoint, back off and recompute from an earlier usable node.
 
-First implementation publishes checkpoints at completed chunk boundaries aligned to the least common multiple of applicable page sizes (32 tokens for the current 16/32 layouts). Seal full pages; keep incomplete tails private. Copy small hybrid snapshots into budgeted device checkpoint slots using planned D2D operations. A requester pins the matched resources atomically and clones mutable state into private slots before extending. Concurrent duplicate insertions converge on one committed node; unselected resources retire safely after completion.
+First implementation publishes checkpoints at completed chunk boundaries aligned to the least common multiple of applicable page sizes. Derive this from the serving manifest: the learned-index 92B plan has 16-token SWA, 32-token C8 and 64-token index pages, so its boundary alignment is 64 tokens, not 32. Chunk size alone does not define checkpoint eligibility. Seal full pages; keep incomplete tails private. Copy small hybrid snapshots into budgeted device checkpoint slots using planned D2D operations. A requester pins the matched resources atomically and clones mutable state into private slots before extending. Concurrent duplicate insertions converge on one committed node; unselected resources retire safely after completion.
 
 Do not cache sampled output as reusable next-token state. With a fully matched prompt and no retained logits, select a valid checkpoint strictly before the final prompt token and recompute the suffix to obtain the final logits. This also handles page-aligned prompts whose final checkpoint is otherwise a full hit. An optional future final-hidden/logit cache requires its own memory and semantic contract. Report only the tokens actually skipped as cached.
 

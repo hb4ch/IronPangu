@@ -1,0 +1,86 @@
+[
+  {
+    "case": "access-code-2049",
+    "native_identical_to_chunk4": true,
+    "reference_budget4": [
+      22,
+      18,
+      16,
+      24,
+      148902,
+      148900,
+      148900,
+      1114
+    ],
+    "reference_budget16": [
+      22,
+      18,
+      16,
+      24,
+      148902,
+      148900,
+      148900,
+      1114
+    ],
+    "ttft_chunk4_ms": 19064.158666666666,
+    "ttft_chunk16_ms": 12808.125333333333,
+    "ttft_reduction_percent": 32.815680160446284,
+    "tpot_chunk16_ms": 20.080904761904762
+  },
+  {
+    "case": "access-code-3072",
+    "native_identical_to_chunk4": true,
+    "reference_budget4": [
+      22,
+      18,
+      16,
+      24,
+      148902,
+      148900,
+      148900,
+      1114
+    ],
+    "reference_budget16": [
+      22,
+      18,
+      16,
+      24,
+      148902,
+      148900,
+      148900,
+      148902
+    ],
+    "ttft_chunk4_ms": 28549.600333333332,
+    "ttft_chunk16_ms": 19192.843666666668,
+    "ttft_reduction_percent": 32.77368704787822,
+    "tpot_chunk16_ms": 20.102666666666668
+  },
+  {
+    "case": "access-code-4088",
+    "native_identical_to_chunk4": true,
+    "reference_budget4": [
+      22,
+      18,
+      16,
+      24,
+      148902,
+      148900,
+      1114,
+      3735
+    ],
+    "reference_budget16": [
+      22,
+      18,
+      16,
+      24,
+      148902,
+      148900,
+      148900,
+      1114
+    ],
+    "ttft_chunk4_ms": 38050.013666666666,
+    "ttft_chunk16_ms": 25684.914666666667,
+    "ttft_reduction_percent": 32.49696336070523,
+    "tpot_chunk16_ms": 20.09247619047619
+  }
+]
