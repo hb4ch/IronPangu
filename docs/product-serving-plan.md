@@ -561,6 +561,29 @@ This is address planning only. Native stream execution, all-rank publication,
 complete recurrent-state coverage, inspectable copy audits and radix-cache hits
 remain required before enabling snapshot support.
 
+The native `inferfabric_program_copy_resident` implementation now has separate
+all-rank planning and execution commands. Source progress must equal the requested
+boundary; destination progress must be zero with private state reservations.
+Registered recurrent history, attention cache and index fields are range-checked
+against live frozen allocations before any rank launches. Copies run on each
+rank's existing stream; destination progress is published after every completion.
+The Rust adapter pins source ownership, submits destination writes to the state
+pool, and publishes arithmetic history only after that successful completion.
+Imported history is identified separately in scheduler-work audits. A copy is
+not immutable snapshot publication and does not enable cache hits by itself.
+
+`INFERFABRIC_STATE_COPY_AUDIT_DIR` records each rank's latest copy plan by logical
+node, field, offsets and bytes; prepared audits count actual D2D operations/bytes.
+The native qualification option `--copy-boundary` continues the source before
+checking the copied destination against both source output and the independent
+fixture. Its first-output timing is explicitly **restored suffix TTFT**, excluding
+prefix execution and copy latency, and must not be presented as cold TTFT or
+end-to-end prefix-cache latency. The [full-model device-copy qualification](validation/2026-10-17-device-continuation/README.md)
+now verifies all 72 copied continuation tokens against their independently
+advanced sources, with exact copy counts and all-rank resource audits. Known
+post-EOS reference differences remain. HTTP cache ownership/publication, hit,
+eviction and concurrency qualification are still required before production use.
+
 The host state pool now supports immutable sealed leases for the snapshot path.
 Sealing requires every in-flight rank operation to finish. Sealed allocations
 reject write submissions; read pins can survive the original owner's retirement,

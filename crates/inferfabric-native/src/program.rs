@@ -3,7 +3,7 @@ use inferfabric_ir::serving::Storage;
 use inferfabric_ir::serving::{Manifest, Phase};
 use inferfabric_ir::{arithmetic_history::ArithmeticHistory, serving::Variant};
 use inferfabric_model::{Result, invalid};
-use inferfabric_runtime::state_pool::{Lease, StatePool, Ticket};
+use inferfabric_runtime::state_pool::{Lease, SealedLease, StatePool, Ticket};
 use libloading::Library;
 use sha2::{Digest, Sha256};
 use std::collections::BTreeMap;
@@ -20,6 +20,7 @@ type Prefill = unsafe extern "C" fn(*mut c_void, *const u32, u32, u32, u32, *mut
 type Error = unsafe extern "C" fn() -> *const c_char;
 type BindPages = unsafe extern "C" fn(*mut c_void, u32, *const c_char, *const i32, u32) -> i32;
 type Resident = unsafe extern "C" fn(*mut c_void, u32) -> i32;
+type CopyResident = unsafe extern "C" fn(*mut c_void, u32, u32, u32) -> i32;
 type Capacity = unsafe extern "C" fn(*mut c_void, *mut u32) -> i32;
 type BindState = unsafe extern "C" fn(*mut c_void, u32, u32, *const i32, u32) -> i32;
 struct SharedState {
@@ -132,7 +133,20 @@ pub fn prefill_capacity(m: &Manifest) -> Result<u32> {
     }
     Ok(maximum)
 }
+fn copy_history(histories:&[ArithmeticHistory],source:u32,destination:u32,boundary:u32,pages:&[u32])->Result<ArithmeticHistory> {
+    let from=histories.get(source as usize).ok_or_else(||invalid("state copy source bounds"))?;
+    let to=histories.get(destination as usize).ok_or_else(||invalid("state copy destination bounds"))?;
+    if source==destination || boundary==0 || from.tokens()!=boundary || to.tokens()!=0 ||
+        pages.iter().any(|&page|page==0 || boundary%page!=0) {
+        return Err(invalid("state copy requires complete aligned source and empty destination history"));
+    }
+    from.prefix(boundary)
+}
+/// Opaque immutable resident generation. It does not carry host tensor contents.
+#[derive(Debug,Clone,Copy,PartialEq,Eq)]
+pub struct Snapshot {slot:u32, lease:SealedLease}
 pub struct Engine {
+    identity: inferfabric_ir::serving::Identity,
     _library: Library,
     ptr: *mut c_void,
     close: Close,
@@ -143,11 +157,15 @@ pub struct Engine {
     prefill_variants: Vec<u32>,
     variants: Vec<Variant>,
     histories: Vec<ArithmeticHistory>,
+    imported_tokens: Vec<u32>,
+    sealed: Vec<Option<SealedLease>>,
+    copy_page_tokens: Vec<u32>,
     history_audit_sequence: u64,
     error: Error,
     bind_pages_fn: Option<BindPages>,
     select_resident_fn: Option<Resident>,
     reset_resident_fn: Option<Resident>,
+    copy_resident_fn: Option<CopyResident>,
     bind_state_fn: Option<BindState>,
     shared: Option<SharedState>,
     selected: usize,
@@ -197,7 +215,11 @@ impl Engine {
                 prefill_tokens: prefill_capacity(&contract)?,
                 prefill_variants: contract.variants.iter().skip(1).map(|v|v.max_tokens).collect(),
                 variants: contract.variants.clone(),
+                identity: contract.identity.clone(),
                 histories: vec![ArithmeticHistory::default();contract.resident_sequences as usize],
+                imported_tokens: vec![0;contract.resident_sequences as usize],
+                sealed: vec![None;contract.resident_sequences as usize],
+                copy_page_tokens: contract.states.iter().filter_map(|s|match s.storage {Storage::Pages{page_tokens,..}=>Some(page_tokens),_=>None}).collect(),
                 history_audit_sequence: 0,
                 bind_state_fn: lib
                     .get::<BindState>(b"inferfabric_program_bind_state\0")
@@ -222,6 +244,7 @@ impl Engine {
                     .get::<Resident>(b"inferfabric_program_reset_resident\0")
                     .ok()
                     .map(|f| *f),
+                copy_resident_fn: lib.get::<CopyResident>(b"inferfabric_program_copy_resident\0").ok().map(|f|*f),
                 ptr: std::ptr::null_mut(),
                 _thread: PhantomData,
                 _library: lib,
@@ -300,6 +323,7 @@ impl Engine {
         Err(invalid(format!("program engine: {message}")))
     }
     pub fn reset(&mut self) -> Result<()> {
+        if self.sealed.iter().any(Option::is_some) {return Err(invalid("explicitly retire snapshots before engine reset"));}
         if let Some(shared) = &self.shared {
             let count = shared.leases.len();
             for slot in 0..count {
@@ -310,6 +334,7 @@ impl Engine {
         self.check(unsafe { (self.reset_fn)(self.ptr) })?;
         for slot in 0..self.histories.len() {self.audit_history(slot)?;}
         self.histories.fill(ArithmeticHistory::default());
+        self.imported_tokens.fill(0);
         self.selected=0;
         Ok(())
     }
@@ -320,7 +345,7 @@ impl Engine {
         let sequence=self.history_audit_sequence.checked_add(1).ok_or_else(||invalid("arithmetic audit sequence overflow"))?;
         let directory=std::path::PathBuf::from(directory);
         std::fs::create_dir_all(&directory)?;
-        let value=serde_json::json!({"format":"inferfabric.completed-arithmetic.v1","sequence":sequence,"resident":slot,"history":history});
+        let value=serde_json::json!({"format":"inferfabric.completed-arithmetic.v1","sequence":sequence,"resident":slot,"history":history,"imported_tokens":self.imported_tokens[slot]});
         // Exclusive files prevent accidental replacement of evidence from another run.
         use std::io::Write;
         let mut file=std::fs::OpenOptions::new().write(true).create_new(true).open(directory.join(format!("request-{sequence}.json")))?;
@@ -340,6 +365,12 @@ impl Engine {
         Ok(())
     }
     pub fn reset_resident(&mut self, slot: u32) -> Result<()> {
+        if self.sealed.get(slot as usize).ok_or_else(||invalid("resident slot bounds"))?.is_some() {
+            return Err(invalid("sealed snapshot cannot be reset as a request"));
+        }
+        if let Some(shared)=&self.shared && let Some(lease)=shared.leases[slot as usize] {
+            shared.pool.check_idle(1,lease)?;
+        }
         if slot == 0 && self.reset_resident_fn.is_none() {
             return self.reset();
         }
@@ -354,6 +385,7 @@ impl Engine {
         }
         self.audit_history(slot as usize)?;
         *self.histories.get_mut(slot as usize).ok_or_else(||invalid("resident history bounds"))?=ArithmeticHistory::default();
+        self.imported_tokens[slot as usize]=0;
         if let Some(shared) = &mut self.shared
             && let Some(lease) = shared
                 .leases
@@ -427,6 +459,82 @@ impl Engine {
         } else {
             Ok(())
         }
+    }
+    /// Explicit complete-state copy into an already reserved, reset resident.
+    /// This is not cache publication: the caller must separately seal ownership
+    /// and establish namespace/token identity before offering a prefix hit.
+    pub fn copy_resident(&mut self, source:u32, destination:u32, boundary:u32) -> Result<()> {
+        let copy=self.copy_resident_fn.ok_or_else(||invalid("backend has no explicit state-copy ABI"))?;
+        let history=copy_history(&self.histories,source,destination,boundary,&self.copy_page_tokens)?;
+        let shared=self.shared.as_mut().ok_or_else(||invalid("state copy requires shared ownership reservations"))?;
+        let source_lease=shared.leases[source as usize].ok_or_else(||invalid("copy source has no reservation"))?;
+        let destination_lease=shared.leases[destination as usize].ok_or_else(||invalid("copy destination has no reservation"))?;
+        if boundary>shared.token_limits[destination as usize] {
+            return Err(invalid("state copy exceeds destination reservation"));
+        }
+        let read=shared.pool.borrow(1,source_lease)?;
+        let ticket=match shared.pool.submit(1,&[destination_lease],&[read]) {
+            Ok(ticket)=>ticket,
+            Err(error)=>{shared.pool.release(1,read)?;return Err(error);}
+        };
+        let status=unsafe{copy(self.ptr,source,destination,boundary)};
+        self.finish_invocation(Some(ticket),status)?;
+        self.shared.as_mut().unwrap().pool.release(1,read)?;
+        self.histories[destination as usize]=history;
+        self.imported_tokens[destination as usize]=boundary;
+        Ok(())
+    }
+    /// Seal only complete, page-aligned state after its synchronous execution or
+    /// copy. Publication in a token index remains the cache owner's next step.
+    pub fn seal_resident(&mut self,slot:u32)->Result<Snapshot> {
+        let history=self.arithmetic_history(slot)?;
+        if history.tokens()==0 || self.copy_page_tokens.iter().any(|p|history.tokens()%p!=0) {
+            return Err(invalid("snapshot requires a complete aligned history"));
+        }
+        if self.copy_resident_fn.is_none() {return Err(invalid("backend cannot restore device snapshots"));}
+        let shared=self.shared.as_mut().ok_or_else(||invalid("snapshot requires shared reservations"))?;
+        let lease=shared.leases[slot as usize].ok_or_else(||invalid("snapshot resident has no reservation"))?;
+        let sealed=shared.pool.seal(1,lease)?;
+        self.sealed[slot as usize]=Some(sealed);
+        Ok(Snapshot{slot,lease:sealed})
+    }
+    pub fn identity(&self)->&inferfabric_ir::serving::Identity {&self.identity}
+    pub fn resident_capacity(&self)->u32 {self.histories.len() as u32}
+    pub fn checkpoint_alignment(&self)->Result<u32> {
+        let mut result=1u32;
+        for &page in &self.copy_page_tokens {
+            let (mut a,mut b)=(result,page);
+            while b!=0 {(a,b)=(b,a%b);}
+            result=(result/a).checked_mul(page).ok_or_else(||invalid("checkpoint alignment overflow"))?;
+        }
+        Ok(result)
+    }
+    fn check_snapshot(&self,snapshot:Snapshot)->Result<()> {
+        if self.sealed.get(snapshot.slot as usize)!=Some(&Some(snapshot.lease)) {
+            return Err(invalid("stale or foreign device snapshot"));
+        }
+        Ok(())
+    }
+    pub fn restore_snapshot(&mut self,snapshot:Snapshot,destination:u32)->Result<()> {
+        self.check_snapshot(snapshot)?;
+        self.copy_resident(snapshot.slot,destination,self.histories[snapshot.slot as usize].tokens())
+    }
+    /// The owning worker serializes restore and retirement. Check readers/ranks
+    /// before allowing the ordinary reset path to clear and retire storage.
+    pub fn retire_snapshot(&mut self,snapshot:Snapshot)->Result<()> {
+        self.check_snapshot(snapshot)?;
+        let shared=self.shared.as_ref().ok_or_else(||invalid("snapshot pool missing"))?;
+        let lease=shared.leases[snapshot.slot as usize].ok_or_else(||invalid("snapshot lease missing"))?;
+        shared.pool.check_idle(1,lease)?;
+        self.sealed[snapshot.slot as usize]=None;
+        if let Err(error)=self.reset_resident(snapshot.slot) {
+            // A failure may occur after device zeroing (for example audit I/O).
+            // Never expose the old checkpoint as usable after partial teardown.
+            if let Some(shared)=&mut self.shared {shared.pool.poison();}
+            self.sealed[snapshot.slot as usize]=Some(snapshot.lease);
+            return Err(error);
+        }
+        Ok(())
     }
     fn begin_invocation(&mut self, position: u32, count: u32) -> Result<Option<Ticket>> {
         if let Some(shared) = &mut self.shared {
@@ -541,6 +649,21 @@ impl Drop for Engine {
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn copy_preflight_preserves_completed_history_and_rejects_invalid_destinations() {
+        let m:Manifest=serde_json::from_str(include_str!("../../../docs/validation/2026-10-17-persistent-serving/serving.json")).unwrap();
+        let mut history=ArithmeticHistory::default();
+        for position in 0..64 {history.append_completed(&m.variants[0],position,1).unwrap();}
+        let histories=vec![history.clone(),ArithmeticHistory::default(),history.clone()];
+        assert_eq!(copy_history(&histories,0,1,64,&[16,32,64]).unwrap(),history);
+        for (source,destination,boundary) in [(0,0,64),(0,2,64),(0,1,0),(0,1,32),(0,1,128),(3,1,64),(0,3,64)] {
+            assert!(copy_history(&histories,source,destination,boundary,&[16,32,64]).is_err());
+        }
+        assert!(copy_history(&histories,0,1,64,&[0]).is_err());
+        assert!(copy_history(&histories,0,1,64,&[128]).is_err());
+        assert_eq!(histories[0],history);
+        assert_eq!(histories[1].tokens(),0);
+    }
     #[test]
     fn only_declared_native_chunk_envelopes_are_accepted() {
         let mut m: Manifest = serde_json::from_str(include_str!(

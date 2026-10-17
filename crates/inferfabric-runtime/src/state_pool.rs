@@ -308,6 +308,16 @@ impl StatePool {
         self.bindings(epoch, lease)?;
         self.pin(lease)
     }
+    /// Destructive device reset must be rejected before touching storage while
+    /// any reader or rank operation still references this allocation.
+    pub fn check_idle(&self, epoch:u64, lease:Lease)->Result<()> {
+        self.bindings(epoch,lease)?;
+        let allocation=&self.allocations[&lease];
+        if !allocation.borrowers.is_empty() || !allocation.pending.is_empty() {
+            return Err(invalid("state still has readers or incomplete rank work"));
+        }
+        Ok(())
+    }
     /// After all copy streams complete, prohibit any further write submission.
     /// There is no unseal: retirement and a fresh generation are required to write.
     pub fn seal(&mut self, epoch:u64, lease:Lease) -> Result<SealedLease> {

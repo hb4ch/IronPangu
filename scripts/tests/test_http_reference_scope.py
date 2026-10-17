@@ -47,6 +47,14 @@ class HttpReferenceScope(unittest.TestCase):
         self.assertEqual(module.expected_ids(case,99,False),[1,2,99,3,4])
         self.assertEqual(case['output_ids'],[1,2,99,3,4])
 
+    def test_imported_prefix_is_not_new_scheduler_work(self):
+        manifest={'resident_sequences':2,'variants':[{'numerical_class':'packed4','max_query_tokens':4,'max_tokens':4,'max_sequences':1,'max_context':65536}]}
+        record={'format':'inferfabric.completed-arithmetic.v1','sequence':1,'resident':1,'imported_tokens':64,'history':{'version':1,'spans':[{'start':0,'end':80,'query_tokens':4,'numerical_class':'packed4'}]}}
+        self.assertEqual(module.validate_histories([record],manifest,16)['completed_input_tokens'],16)
+        for imported in [-1,63,81]:
+            bad=copy.deepcopy(record);bad['imported_tokens']=imported
+            with self.assertRaises(ValueError):module.validate_histories([bad],manifest,80-imported)
+
     def test_no_eos_and_first_token_eos(self):
         self.assertEqual(module.expected_ids({'output_ids':[1,2]},99,True),[1,2])
         self.assertEqual(module.expected_ids({'output_ids':[99,99,2]},99,True),[99])

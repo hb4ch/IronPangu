@@ -57,7 +57,13 @@ def validate_histories(records, manifest, consumed):
                 raise ValueError('arithmetic history is not a complete declared invocation sequence')
             end=span['end']
         if not end:raise ValueError('empty completed arithmetic record')
-        total+=end
+        imported=record.get('imported_tokens',0)
+        if not isinstance(imported,int) or not 0<=imported<=end:
+            raise ValueError('invalid imported arithmetic prefix')
+        for span in record['history']['spans']:
+            if span['start']<imported<span['end'] and (imported-span['start'])%span['query_tokens']:
+                raise ValueError('imported arithmetic prefix splits an invocation')
+        total+=end-imported
     if not records or sequences!=set(range(1,len(records)+1)) or total!=consumed:
         raise ValueError('completed arithmetic does not account for scheduler work')
     return dict(request_histories=len(records),completed_input_tokens=total,all_scheduler_tokens_accounted=True)

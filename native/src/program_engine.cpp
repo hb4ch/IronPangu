@@ -8,7 +8,7 @@
 namespace {
 thread_local std::string last_error;
 std::atomic<bool> owned{false};
-enum class Command { Reset, Token, Prefill, BindPages, SelectResident, ResetResident };
+enum class Command { Reset, Token, Prefill, BindPages, SelectResident, ResetResident, PlanStateCopy, ExecuteStateCopy };
 struct Engine {
   std::string bundle, checkpoint;
   inferfabric::execution::Plan program;
@@ -128,6 +128,8 @@ struct Engine {
           if (cmd == Command::Reset) decoder.reset_request();
           else if (cmd == Command::SelectResident) decoder.select_resident(token,int(pos)-1);
           else if (cmd == Command::ResetResident) decoder.reset_resident(token);
+          else if (cmd == Command::PlanStateCopy) decoder.plan_continuation_copy(token,pos,want);
+          else if (cmd == Command::ExecuteStateCopy) decoder.execute_continuation_copy();
           else if (cmd == Command::BindPages && rank == token)
             decoder.bind_cache_pages(binding_component, binding_pages);
           else if (cmd == Command::Token) {
@@ -230,6 +232,16 @@ extern "C" int inferfabric_program_reset_resident(void *p, uint32_t slot) {
   return call([&] { auto &e=engine(p);
     if(slot>=e.next_positions.size())throw std::runtime_error("resident reset bounds");
     e.submit(Command::ResetResident,slot); e.next_positions[slot]=0;
+  });
+}
+extern "C" int inferfabric_program_copy_resident(void *p,uint32_t source,uint32_t destination,uint32_t boundary) {
+  return call([&] { auto &e=engine(p);
+    if(source==destination || source>=e.next_positions.size() || destination>=e.next_positions.size() ||
+       !boundary || boundary>e.program.context || e.next_positions[source]!=boundary || e.next_positions[destination])
+      throw std::runtime_error("state copy requires completed source and reset destination");
+    e.submit(Command::PlanStateCopy,source,destination,boundary);
+    e.submit(Command::ExecuteStateCopy);
+    e.next_positions[destination]=boundary;
   });
 }
 extern "C" int inferfabric_program_bind_pages(void *p, uint32_t rank, const char *component, const int32_t *pages, uint32_t count) {

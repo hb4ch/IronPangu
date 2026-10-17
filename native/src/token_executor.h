@@ -1430,6 +1430,7 @@ struct Decoder {
     // No graph pointer changes: only declared control metadata is updated.
   }
   // Runtime dispatch is defined separately from kernel implementations.
+#include "continuation_copy.inc"
 #include "token_dispatch.inc"
 };
 } // namespace inferfabric::token

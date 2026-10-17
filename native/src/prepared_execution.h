@@ -49,6 +49,7 @@ class Context {
   uint64_t backend_fingerprint_ = 0;
   int64_t instruction_ = -1;
   bool copies_allowed_=true, initialization_copies_allowed_=false;
+  uint64_t state_copy_operations_=0, state_copy_bytes_=0;
   std::map<int64_t,std::set<size_t>> instruction_slots_;
   void record(Block *b) {
     if(arena_) {
@@ -288,6 +289,25 @@ public:
     return workspace_;
   }
   size_t workspace_capacity() const { return workspace_bytes_; }
+  void validate_state_copy(void *base,uint64_t source,uint64_t destination,uint64_t bytes) const {
+    auto found=owned_.find(base);
+    if(!arena_ || capturing_ || found==owned_.end() || !found->second->live || !bytes)
+      throw std::runtime_error("state copy requires live frozen storage outside graph capture");
+    const auto capacity=found->second->bytes;
+    if(source>capacity || bytes>capacity-source || destination>capacity || bytes>capacity-destination ||
+       (source<destination+bytes && destination<source+bytes))
+      throw std::runtime_error("state copy field range bounds/overlap");
+  }
+  // Only registered continuation fields reach this entry point. This explicit
+  // operation does not relax the instruction-level prohibition on hidden copies.
+  void copy_state(void *base,uint64_t source,uint64_t destination,uint64_t bytes) {
+    require_stream(stream);
+    validate_state_copy(base,source,destination,bytes);
+    check(aclrtMemcpyAsync(static_cast<char *>(base)+destination,bytes,
+                          static_cast<char *>(base)+source,bytes,ACL_MEMCPY_DEVICE_TO_DEVICE,stream),
+          "planned state D2D");
+    ++state_copy_operations_;state_copy_bytes_+=bytes;
+  }
   void copy(void *dst, const void *src, size_t bytes) {
     require_stream(stream);
     if(!copies_allowed_) throw std::runtime_error("undeclared device copy at instruction "+std::to_string(instruction_));
@@ -430,6 +450,8 @@ public:
         << "\"device_allocations\":" << allocations_
         << ",\"device_bytes\":" << allocated_bytes_
         << ",\"buffer_reuses\":" << reuse_
+        << ",\"state_copy_operations\":" << state_copy_operations_
+        << ",\"state_copy_bytes\":" << state_copy_bytes_
         << ",\"descriptors\":" << descriptors_.size()
         << ",\"output_boundaries\":" << boundaries_ << ",\"invocations\":[";
     bool first = true;

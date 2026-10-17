@@ -82,7 +82,67 @@ int main(int argc, char **argv) {
       for(auto n:{16u,8u,4u,2u})if(n<=limit && (variant_mask&(1u<<n)))return n;
       return 1u;
     };
-    if (std::getenv("INFERFABRIC_INTERLEAVE_RESIDENTS")) {
+    if (const char *copy_boundary=std::getenv("INFERFABRIC_TEST_COPY_BOUNDARY")) {
+      const auto boundary=uint32_t(std::stoul(copy_boundary));
+      uint32_t residents=0;check(inferfabric_program_resident_capacity(engine,&residents));
+      if(residents<2 || !boundary || bindings.empty())throw std::runtime_error("copy probe needs two residents and explicit pages");
+      for(size_t request_id=0;request_id<requests.size();++request_id) {
+        const auto &request=requests[request_id];
+        if(boundary>=request.prompt.size())throw std::runtime_error("copy boundary must precede suffix");
+        for(uint32_t slot=0;slot<2;++slot)check(inferfabric_program_reset_resident(engine,slot));
+        for(uint32_t slot=0;slot<2;++slot) {
+          check(inferfabric_program_select_resident(engine,slot));
+          for(const auto &binding:bindings) {
+            auto pages=binding.pages;
+            for(auto &page:pages)page+=slot*pages.size();
+            check(inferfabric_program_bind_pages(engine,binding.rank,binding.component.c_str(),pages.data(),pages.size()));
+          }
+        }
+        check(inferfabric_program_select_resident(engine,0));
+        uint32_t unused=0;
+        for(uint32_t pos=0;pos<boundary;) {
+          auto count=choose_chunk(boundary-pos);
+          if(count>1)check(inferfabric_program_prefill(engine,request.prompt.data()+pos,count,pos,0,&unused));
+          else check(inferfabric_program_token(engine,request.prompt[pos],pos,0,&unused));
+          pos+=count;
+        }
+        // Invalid public requests must fail before worker dispatch and leave
+        // the group usable for the following valid copy.
+        if(!inferfabric_program_copy_resident(engine,0,0,boundary) ||
+           !inferfabric_program_copy_resident(engine,0,residents,boundary) ||
+           !inferfabric_program_copy_resident(engine,0,1,boundary+1))
+          throw std::runtime_error("invalid state-copy request accepted");
+        check(inferfabric_program_copy_resident(engine,0,1,boundary));
+        if(!inferfabric_program_copy_resident(engine,0,1,boundary))
+          throw std::runtime_error("state copy overwrote a nonempty resident");
+        std::vector<uint32_t> baseline;
+        for(uint32_t slot=0;slot<2;++slot) {
+          check(inferfabric_program_select_resident(engine,slot));
+          uint32_t pos=boundary,next=0,generated=0;
+          auto previous=std::chrono::steady_clock::now();
+          while(generated<request.steps) {
+            const auto count=pos<request.prompt.size()?choose_chunk(request.prompt.size()-pos):1;
+            const bool sample=pos+count>=request.prompt.size();
+            if(count>1)check(inferfabric_program_prefill(engine,request.prompt.data()+pos,count,pos,sample,&next));
+            else check(inferfabric_program_token(engine,pos<request.prompt.size()?request.prompt[pos]:next,pos,sample,&next));
+            pos+=count;
+            if(sample) {
+              const auto now=std::chrono::steady_clock::now();
+              if(!slot)baseline.push_back(next);
+              else {
+                if(next!=baseline.at(generated))throw std::runtime_error("copied continuation changed full-model output");
+                std::cout<<"{\"request\":"<<request_id<<",\"step\":"<<generated<<",\"token\":"<<next
+                         <<",\"elapsed_us\":"<<std::chrono::duration_cast<std::chrono::microseconds>(now-previous).count()<<"}\n"<<std::flush;
+              }
+              previous=now;++generated;
+            }
+          }
+        }
+      }
+      std::cerr<<"complete-state copies: source continues independently before destination; all output tokens equal\n";
+      check(inferfabric_program_close(engine)); engine=nullptr;
+      return 0;
+    } else if (std::getenv("INFERFABRIC_INTERLEAVE_RESIDENTS")) {
       uint32_t residents=0;
       check(inferfabric_program_resident_capacity(engine,&residents));
       if(residents<2)throw std::runtime_error("interleaving requires at least two compiled residents");

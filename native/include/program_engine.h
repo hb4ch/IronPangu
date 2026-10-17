@@ -15,6 +15,12 @@ int inferfabric_program_reset(void *engine);
 int inferfabric_program_resident_capacity(void *engine, uint32_t *count);
 int inferfabric_program_select_resident(void *engine, uint32_t slot);
 int inferfabric_program_reset_resident(void *engine, uint32_t slot);
+// Explicit complete-state D2D copy. Source must be exactly at boundary;
+// destination must be reset with private pages reserved for every component.
+// All ranks preflight before launch; position is published after all streams
+// complete. This copies state only, not logits or immutable-cache ownership.
+int inferfabric_program_copy_resident(void *engine, uint32_t source, uint32_t destination,
+                                     uint32_t boundary);
 // Bind a cache component's device block table after reset and before any token.
 // Metadata only; storage addresses and ACLGraph captures remain unchanged.
 int inferfabric_program_bind_pages(void *engine, uint32_t rank, const char *component,

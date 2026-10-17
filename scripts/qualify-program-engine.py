@@ -45,12 +45,17 @@ def main():
     p.add_argument('--packed-prefill', action='store_true', help='require the compiled packed chunk path')
     p.add_argument('--permuted-pages', action='store_true', help='qualify rank/component-specific noncontiguous device cache bindings')
     p.add_argument('--interleave', action='store_true', help='interleave resident histories token by token, including slot reuse while peers are live')
+    p.add_argument('--copy-boundary', type=int, help='Copy complete device state at this prefix boundary; compare independent source/destination continuations and reference')
     p.add_argument('--timeout-seconds', type=int, default=1800, help='Whole native run deadline; raise explicitly for the 64K qualification ladder')
     args = p.parse_args()
     if args.timeout_seconds < 1:
         p.error('--timeout-seconds must be positive')
+    if args.copy_boundary is not None and (args.copy_boundary<1 or not args.permuted_pages or args.prepare or args.interleave or args.output_diagnostics):
+        p.error('--copy-boundary requires positive boundary, frozen permuted pages, no interleave/diagnostics')
     args.output.mkdir(parents=True, exist_ok=False)
     cases = json.loads(args.cases.read_text()) * 3
+    if args.copy_boundary is not None and any(len(c['input_ids'])<=args.copy_boundary for c in cases):
+        p.error('copy boundary must precede every fixture suffix')
     if any(c.get('qualification', {}).get('output_is_placeholder') for c in cases):
         raise ValueError('placeholder outputs are not a reference; run the independent reference first')
     requests = args.output / 'requests.txt'
@@ -63,6 +68,11 @@ def main():
     env.pop('INFERFABRIC_INTERLEAVE_RESIDENTS', None)
     env.pop('INFERFABRIC_PACKED_PREFILL', None)
     env.pop('INFERFABRIC_OUTPUT_DIAGNOSTICS',None)
+    env.pop('INFERFABRIC_TEST_COPY_BOUNDARY',None)
+    env.pop('INFERFABRIC_STATE_COPY_AUDIT_DIR',None)
+    if args.copy_boundary is not None:
+        env['INFERFABRIC_TEST_COPY_BOUNDARY']=str(args.copy_boundary)
+        env['INFERFABRIC_STATE_COPY_AUDIT_DIR']=str((args.output/'state-copies').resolve())
     env.pop('INFERFABRIC_EXPERIMENTAL_LONG_CONTEXT',None)
     if args.experimental_long_context:
         env['INFERFABRIC_EXPERIMENTAL_LONG_CONTEXT']='1'
@@ -133,9 +143,10 @@ def main():
         actual = [r for r in rows if r['request'] == request]
         if [r['step'] for r in actual] != list(range(len(case['output_ids']))) or [r['token'] for r in actual] != case['output_ids']:
             raise RuntimeError(f"request {request} {case['case']}: full output mismatch")
-        measurements.append(dict(request=request, case=case['case'], prompt_tokens=len(case['input_ids']),
-                                 output_tokens=len(actual), engine_ttft_ms=actual[0]['elapsed_us']/1000,
-                                 tpot_ms=statistics.mean(r['elapsed_us']/1000 for r in actual[1:])))
+        measurement=dict(request=request, case=case['case'], prompt_tokens=len(case['input_ids']),
+                         output_tokens=len(actual), tpot_ms=statistics.mean(r['elapsed_us']/1000 for r in actual[1:]))
+        measurement['restored_suffix_ttft_ms' if args.copy_boundary is not None else 'engine_ttft_ms']=actual[0]['elapsed_us']/1000
+        measurements.append(measurement)
     for rank in range(8):
         audit = json.loads((args.output / 'transfers' / f'rank-{rank}.json').read_text())
         if audit['activation_host_transfers'] or audit['rejected']:
@@ -147,11 +158,12 @@ def main():
             counts = family or [program['prefill_tokens']]
             expected = {f'packed_prefill_{n}' if family else 'packed_prefill': 1 for n in counts}
             for case in cases:
-                remaining = len(case['input_ids'])
-                for n in reversed(counts):
-                    name = f'packed_prefill_{n}' if family else 'packed_prefill'
-                    expected[name] += remaining // n
-                    remaining %= n
+                segments=[len(case['input_ids'])] if args.copy_boundary is None else [args.copy_boundary]+[len(case['input_ids'])-args.copy_boundary]*2
+                for remaining in segments:
+                    for n in reversed(counts):
+                        name = f'packed_prefill_{n}' if family else 'packed_prefill'
+                        expected[name] += remaining // n
+                        remaining %= n
             graphs = [g for g in prepared['graphs'] if g['name'].startswith('packed_prefill')]
             actual = {g['name']: g['replays'] for g in graphs}
             if min(counts) <= 1 or sum(expected.values())<=len(expected) or len(graphs)!=len(expected) or actual != expected:
@@ -161,6 +173,16 @@ def main():
         if not args.prepare and (not prepared['arena']['frozen'] or any(
                 s['device_allocations'] or s['completion_boundaries'] for s in prepared['steps'])):
             raise RuntimeError('unfrozen arena, graph allocation or internal fence')
+        if args.copy_boundary is not None:
+            copied=json.loads((args.output/'state-copies'/f'rank-{rank}.json').read_text())
+            manifest=json.loads((args.plan/'serving.json').read_text())
+            required={s['logical_node'] for s in manifest['states'] if rank in s['ranks']}
+            if copied['source']!=0 or copied['destination']!=1 or copied['boundary']!=args.copy_boundary or {op['logical_node'] for op in copied['operations']}!=required:
+                raise RuntimeError('copy plan omits declared continuation state or has wrong boundary')
+            if any(op['primitive']!='D2D' or op['bytes']<=0 for op in copied['operations']) or not prepared['state_copy_operations'] or not prepared['state_copy_bytes']:
+                raise RuntimeError('complete device copies were not exercised')
+            if prepared['state_copy_operations']!=len(copied['operations'])*len(cases) or prepared['state_copy_bytes']!=sum(op['bytes'] for op in copied['operations'])*len(cases):
+                raise RuntimeError('device copy counters disagree with the repeated fixed-boundary plan')
     report = dict(format='inferfabric.persistent-program-qualification.v1', requests=len(cases),
                   output_tokens=expected_total, exact_fixture_tokens=True,
                   fixture_sha256=hashlib.sha256(args.cases.read_bytes()).hexdigest(),
@@ -168,6 +190,7 @@ def main():
                   binding_limit_rejections=binding_rejections,
                   interleaved_residents=args.interleave,
                   packed_prefill=args.packed_prefill,
+                  copied_prefix_tokens=args.copy_boundary,
                   scope='one loaded TP8/EP8 group, ' + ('compiled packed prefill and serial decode' if args.packed_prefill else 'serial token graph') + '; no long-context claim',
                   measurements=measurements)
     (args.output / 'results.json').write_text(json.dumps(report, indent=2) + '\n')

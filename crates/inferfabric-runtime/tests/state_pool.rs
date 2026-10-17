@@ -371,6 +371,7 @@ fn full_64k_ownership_with_mixed_requests_and_delayed_rank_retirement() {
     assert!(p.reserve(7, 4, 32_768).is_err());
     assert_eq!(p.usage(), occupied); // pressure must roll back every rank
     let flight = p.submit(7, &[long], &[]).unwrap();
+    assert!(p.check_idle(7,long).is_err());
     p.retire(7, long).unwrap();
     for rank in 0..7 {
         p.complete(7, flight, rank).unwrap();
@@ -378,6 +379,12 @@ fn full_64k_ownership_with_mixed_requests_and_delayed_rank_retirement() {
     assert!(p.reserve(7, 4, 65_536).is_err());
     p.complete(7, flight, 7).unwrap();
     let replacement = p.reserve(7, 4, 65_536).unwrap();
+    p.check_idle(7,replacement).unwrap();
+    let reader=p.borrow(7,replacement).unwrap();
+    assert!(p.check_idle(7,replacement).is_err());
+    p.release(7,reader).unwrap();
+    p.check_idle(7,replacement).unwrap();
+    assert!(p.check_idle(7,long).is_err());
     assert_ne!(replacement, long);
     assert!(p.page_address(7, long, "kv32", 0, 0).is_err());
     for lease in [replacement, medium, short] {
