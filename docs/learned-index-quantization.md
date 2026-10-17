@@ -30,6 +30,21 @@ The compiler expands the INT8 contract into the following physical DAG:
    operands directly and returns 2048 INT32 logical token indices. Shared
    attention consumers retain this device value; they do not recompute it.
 
+For a packed chunk of `T` tokens, the quantized selector makes one TND call with
+queries `[T,24,128]`, scales/head weights `[T,24]` and output `[T,1,2048]`.
+All chunk keys are appended on the owning stream first. Causal alignment uses
+query length `T` and the final chunk KV length, so row `r` cannot select a later
+chunk row. A persistent device array containing `1..max_query_tokens` supplies
+the selected query-count scalar; KV length remains a device metadata dependency.
+Neither length requires activation readback. Consumers alias the output rows;
+there are no index assembly copies. The physical recipe and viewer expose one
+call per chunk, zero assembly copies and the count-array shape. The BF16 path
+continues to use ordered per-query calls and explicit row assembly.
+
+Changing this backend requires fresh workspace discovery and arena preparation;
+the frozen bindings validate the backend fingerprint. Reusing an older arena
+with different descriptor or allocation behavior is not allowed.
+
 Index keys use `[physical_pages,64,1,128]` INT8 storage and scales use
 `[physical_pages,64,1]` FP16 storage. Both arrays share one page-ownership component
 and block table. Their combined payload is 130 bytes per token, versus 256 bytes

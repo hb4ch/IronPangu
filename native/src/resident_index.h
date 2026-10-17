@@ -28,14 +28,16 @@ struct IndexState {
   state::ResidentPages pages;
   openpangu::DeviceTensor keys,table,query_length;
   std::unique_ptr<openpangu::DeviceTensor> scales;
-  IndexState(uint32_t cap,uint32_t slots,bool shared_pages,bool quant=false)
+  IndexState(uint32_t cap,uint32_t slots,bool shared_pages,bool quant=false,uint32_t max_queries=1)
       :capacity(cap),residents(slots),shared(shared_pages),quantized(quant),pages(64,cap,slots,shared_pages),
        keys({int64_t(cap)*slots/64,64,1,128},quant?ACL_INT8:ACL_BF16,quant?1:2),table({1,cap/64},ACL_INT32,4),
-       query_length({1},ACL_INT32,4) {
+       query_length({max_queries},ACL_INT32,4) {
     if(!prepared::active)throw std::runtime_error("index state requires prepared context");
     if(quantized){scales=std::make_unique<openpangu::DeviceTensor>(std::vector<int64_t>{int64_t(cap)*slots/64,64,1},ACL_FLOAT16,2);prepared::active->zero(scales->data,scales->bytes);}
     prepared::active->zero(keys.data,keys.bytes);upload_table();
-    control_upload(query_length,std::vector<int32_t>{1});
+    std::vector<int32_t> lengths(max_queries);
+    for(uint32_t row=0;row<max_queries;++row)lengths[row]=row+1;
+    control_upload(query_length,lengths);
   }
   void upload_table(){
     std::vector<int32_t> ids(capacity/64,0);
@@ -70,7 +72,7 @@ struct IndexState {
     uint64_t bytes=0;aclOpExecutor *executor=nullptr;
     prepared::check(prepared::query("aclnnLightningIndexerEnhance",false,api.prepare,
         context.descriptor(query.data(),{1,24,128},ACL_BF16),keys.tensor,
-        context.descriptor(weights.data(),{1,24},ACL_BF16),query_length.tensor,length,table.tensor,
+        context.descriptor(weights.data(),{1,24},ACL_BF16),context.descriptor(query_length.data,{1},ACL_INT32),length,table.tensor,
         "TND","PA_BSND",2048,3,INT64_MAX,INT64_MAX,false,1,0,out.tensor,nullptr,&bytes,&executor),"sparse index prepare");
     prepared::check(api.launch(context.workspace(bytes),bytes,executor,context.stream),"sparse index launch");
     return Tensor::alias(out,ACL_INT32);
@@ -88,16 +90,16 @@ struct IndexState {
     };
     append(keys,key,128,ACL_INT8);append(*scales,scale,1,ACL_FLOAT16);
   }
-  Tensor select_quantized(const Tensor &query,const Tensor &query_scale,const Tensor &weights,aclTensor *length){
-    if(!quantized || query.dtype()!=ACL_INT8 || query.size()!=3072 || query_scale.dtype()!=ACL_FLOAT16 || query_scale.size()!=24 || weights.dtype()!=ACL_FLOAT16 || weights.size()!=24)
+  Tensor select_quantized(const Tensor &query,const Tensor &query_scale,const Tensor &weights,aclTensor *length,uint32_t rows){
+    if(!rows || rows>query_length.bytes/sizeof(int32_t) || !quantized || query.dtype()!=ACL_INT8 || query.size()!=size_t(rows)*3072 || query_scale.dtype()!=ACL_FLOAT16 || query_scale.size()!=size_t(rows)*24 || weights.dtype()!=ACL_FLOAT16 || weights.size()!=size_t(rows)*24)
       throw std::runtime_error("quantized sparse index operands");
     auto &context=*prepared::active;
-    openpangu::DeviceTensor out({1,1,2048},ACL_INT32,4);
+    openpangu::DeviceTensor out({rows,1,2048},ACL_INT32,4);
     uint64_t bytes=0;aclOpExecutor *executor=nullptr;
     prepared::check(prepared::query("aclnnAiInfraQuantLightningIndexer",false,aclnnAiInfraQuantLightningIndexerGetWorkspaceSize,
-      context.descriptor(query.data(),{1,24,128},ACL_INT8),keys.tensor,
-      context.descriptor(weights.data(),{1,24},ACL_FLOAT16),context.descriptor(query_scale.data(),{1,24},ACL_FLOAT16),
-      scales->tensor,query_length.tensor,length,table.tensor,0,0,"TND","PA_BSND",2048,3,INT64_MAX,INT64_MAX,
+      context.descriptor(query.data(),{rows,24,128},ACL_INT8),keys.tensor,
+      context.descriptor(weights.data(),{rows,24},ACL_FLOAT16),context.descriptor(query_scale.data(),{rows,24},ACL_FLOAT16),
+      scales->tensor,context.descriptor(static_cast<int32_t *>(query_length.data)+rows-1,{1},ACL_INT32),length,table.tensor,0,0,"TND","PA_BSND",2048,3,INT64_MAX,INT64_MAX,
       out.tensor,&bytes,&executor),"quant sparse index prepare");
     prepared::check(aclnnAiInfraQuantLightningIndexer(context.workspace(bytes),bytes,executor,context.stream),"quant sparse index launch");
     return Tensor::alias(out,ACL_INT32);

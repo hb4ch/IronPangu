@@ -6,6 +6,23 @@ use inferfabric_dsl::{authoring::ModelDefinition, definition};
 use inferfabric_ir::initialization::{DType, Instruction};
 use std::collections::BTreeMap;
 #[test]
+fn packed_quantized_index_selection_has_no_row_assembly() {
+    let source=include_str!("../../../examples/openpangu/92b-tp8-ep8-c8-learned.inferfabric");
+    for (source, quantized) in [(source.to_string(),true),(source.replace("cache_dtype = \"int8\"","cache_dtype = \"bf16\""),false)] {
+        let ModelDefinition::Execution {graph,..}=definition(&source).unwrap() else {panic!()};
+        for count in [2,4,16] {
+            let p=inferfabric_compiler::token_program::lower(&graph,None).unwrap().with_prefill_tokens(count).unwrap();
+            let recipes=inferfabric_compiler::token_program::recipes(&p,&graph);
+            for (i,r) in p.instructions.iter().zip(&recipes).filter(|(i,_)|i.op=="sparse_index") {
+                assert_eq!(r["packed_prefill"]["api_repetitions"],if quantized {1}else{count});
+                assert_eq!(r["packed_prefill"]["assembly_copies"],if quantized {0}else{count});
+                assert_eq!(r["value_fields"][0]["prefill_shape"],serde_json::json!([count,1,i.width]));
+                assert_eq!(r["packed_prefill"]["causal_alignment"].is_string(),quantized);
+            }
+        }
+    }
+}
+#[test]
 fn long_context_plans_require_implemented_cache_paths() {
     let source=include_str!("../../../examples/openpangu/92b-tp8-ep8-c8-learned.inferfabric");
     let ModelDefinition::Execution {mut graph,..}=definition(source).unwrap() else {panic!()};

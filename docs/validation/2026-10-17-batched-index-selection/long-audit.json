@@ -1,0 +1,530 @@
+[
+  {
+    "rank": 0,
+    "graphs": [
+      {
+        "name": "token_decode",
+        "replays": 67
+      },
+      {
+        "name": "packed_prefill",
+        "replays": 6907
+      }
+    ],
+    "arena": {
+      "format": "inferfabric.frozen-arena.v1",
+      "frozen": true,
+      "backend_fingerprint": "7229910864982334816",
+      "program_fingerprint": "2730592201964791100",
+      "bytes": 12536874496
+    },
+    "workspace": {
+      "planned": true,
+      "planned_bytes": 130916352,
+      "peak_requested_bytes": 130916352,
+      "growth_allocations": 0,
+      "slot": 0
+    },
+    "transfers": {
+      "format": "inferfabric.transfer-audit.v1",
+      "activation_host_transfers": 0,
+      "rejected": 0,
+      "boundaries": [
+        {
+          "role": "control_input",
+          "h2d_calls": 63822,
+          "h2d_bytes": 58499420,
+          "d2h_calls": 0,
+          "d2h_bytes": 0
+        },
+        {
+          "role": "parameter_preparation",
+          "h2d_calls": 505,
+          "h2d_bytes": 207457084,
+          "d2h_calls": 598,
+          "d2h_bytes": 152775396
+        },
+        {
+          "role": "request_output",
+          "h2d_calls": 0,
+          "h2d_bytes": 0,
+          "d2h_calls": 304,
+          "d2h_bytes": 10944
+        }
+      ]
+    },
+    "indexer": [
+      {
+        "name": "aclnnAiInfraQuantLightningIndexer",
+        "repeatable": false,
+        "preparations": 48,
+        "replays": 0
+      }
+    ],
+    "source_prepared_sha256": "f844c012eefa3a2294601fdfe5fed8b760ef4d3d9518f597f09db0763b52e85b",
+    "retained_step_device_allocations": 0,
+    "retained_step_internal_fences": 0
+  },
+  {
+    "rank": 1,
+    "graphs": [
+      {
+        "name": "token_decode",
+        "replays": 67
+      },
+      {
+        "name": "packed_prefill",
+        "replays": 6907
+      }
+    ],
+    "arena": {
+      "format": "inferfabric.frozen-arena.v1",
+      "frozen": true,
+      "backend_fingerprint": "7229910864982334816",
+      "program_fingerprint": "2730592201964791100",
+      "bytes": 12536874496
+    },
+    "workspace": {
+      "planned": true,
+      "planned_bytes": 130916352,
+      "peak_requested_bytes": 130916352,
+      "growth_allocations": 0,
+      "slot": 0
+    },
+    "transfers": {
+      "format": "inferfabric.transfer-audit.v1",
+      "activation_host_transfers": 0,
+      "rejected": 0,
+      "boundaries": [
+        {
+          "role": "control_input",
+          "h2d_calls": 63822,
+          "h2d_bytes": 58499420,
+          "d2h_calls": 0,
+          "d2h_bytes": 0
+        },
+        {
+          "role": "parameter_preparation",
+          "h2d_calls": 505,
+          "h2d_bytes": 207457084,
+          "d2h_calls": 598,
+          "d2h_bytes": 152775396
+        },
+        {
+          "role": "request_output",
+          "h2d_calls": 0,
+          "h2d_bytes": 0,
+          "d2h_calls": 76,
+          "d2h_bytes": 4864
+        }
+      ]
+    },
+    "indexer": [
+      {
+        "name": "aclnnAiInfraQuantLightningIndexer",
+        "repeatable": false,
+        "preparations": 48,
+        "replays": 0
+      }
+    ],
+    "source_prepared_sha256": "f844c012eefa3a2294601fdfe5fed8b760ef4d3d9518f597f09db0763b52e85b",
+    "retained_step_device_allocations": 0,
+    "retained_step_internal_fences": 0
+  },
+  {
+    "rank": 2,
+    "graphs": [
+      {
+        "name": "token_decode",
+        "replays": 67
+      },
+      {
+        "name": "packed_prefill",
+        "replays": 6907
+      }
+    ],
+    "arena": {
+      "format": "inferfabric.frozen-arena.v1",
+      "frozen": true,
+      "backend_fingerprint": "7229910864982334816",
+      "program_fingerprint": "2730592201964791100",
+      "bytes": 12536874496
+    },
+    "workspace": {
+      "planned": true,
+      "planned_bytes": 130916352,
+      "peak_requested_bytes": 130916352,
+      "growth_allocations": 0,
+      "slot": 0
+    },
+    "transfers": {
+      "format": "inferfabric.transfer-audit.v1",
+      "activation_host_transfers": 0,
+      "rejected": 0,
+      "boundaries": [
+        {
+          "role": "control_input",
+          "h2d_calls": 63822,
+          "h2d_bytes": 58499420,
+          "d2h_calls": 0,
+          "d2h_bytes": 0
+        },
+        {
+          "role": "parameter_preparation",
+          "h2d_calls": 505,
+          "h2d_bytes": 207457084,
+          "d2h_calls": 598,
+          "d2h_bytes": 152775396
+        },
+        {
+          "role": "request_output",
+          "h2d_calls": 0,
+          "h2d_bytes": 0,
+          "d2h_calls": 76,
+          "d2h_bytes": 4864
+        }
+      ]
+    },
+    "indexer": [
+      {
+        "name": "aclnnAiInfraQuantLightningIndexer",
+        "repeatable": false,
+        "preparations": 48,
+        "replays": 0
+      }
+    ],
+    "source_prepared_sha256": "f844c012eefa3a2294601fdfe5fed8b760ef4d3d9518f597f09db0763b52e85b",
+    "retained_step_device_allocations": 0,
+    "retained_step_internal_fences": 0
+  },
+  {
+    "rank": 3,
+    "graphs": [
+      {
+        "name": "token_decode",
+        "replays": 67
+      },
+      {
+        "name": "packed_prefill",
+        "replays": 6907
+      }
+    ],
+    "arena": {
+      "format": "inferfabric.frozen-arena.v1",
+      "frozen": true,
+      "backend_fingerprint": "7229910864982334816",
+      "program_fingerprint": "2730592201964791100",
+      "bytes": 12536874496
+    },
+    "workspace": {
+      "planned": true,
+      "planned_bytes": 130916352,
+      "peak_requested_bytes": 130916352,
+      "growth_allocations": 0,
+      "slot": 0
+    },
+    "transfers": {
+      "format": "inferfabric.transfer-audit.v1",
+      "activation_host_transfers": 0,
+      "rejected": 0,
+      "boundaries": [
+        {
+          "role": "control_input",
+          "h2d_calls": 63822,
+          "h2d_bytes": 58499420,
+          "d2h_calls": 0,
+          "d2h_bytes": 0
+        },
+        {
+          "role": "parameter_preparation",
+          "h2d_calls": 505,
+          "h2d_bytes": 207457084,
+          "d2h_calls": 598,
+          "d2h_bytes": 152775396
+        },
+        {
+          "role": "request_output",
+          "h2d_calls": 0,
+          "h2d_bytes": 0,
+          "d2h_calls": 76,
+          "d2h_bytes": 4864
+        }
+      ]
+    },
+    "indexer": [
+      {
+        "name": "aclnnAiInfraQuantLightningIndexer",
+        "repeatable": false,
+        "preparations": 48,
+        "replays": 0
+      }
+    ],
+    "source_prepared_sha256": "f844c012eefa3a2294601fdfe5fed8b760ef4d3d9518f597f09db0763b52e85b",
+    "retained_step_device_allocations": 0,
+    "retained_step_internal_fences": 0
+  },
+  {
+    "rank": 4,
+    "graphs": [
+      {
+        "name": "token_decode",
+        "replays": 67
+      },
+      {
+        "name": "packed_prefill",
+        "replays": 6907
+      }
+    ],
+    "arena": {
+      "format": "inferfabric.frozen-arena.v1",
+      "frozen": true,
+      "backend_fingerprint": "7229910864982334816",
+      "program_fingerprint": "2730592201964791100",
+      "bytes": 12536874496
+    },
+    "workspace": {
+      "planned": true,
+      "planned_bytes": 130916352,
+      "peak_requested_bytes": 130916352,
+      "growth_allocations": 0,
+      "slot": 0
+    },
+    "transfers": {
+      "format": "inferfabric.transfer-audit.v1",
+      "activation_host_transfers": 0,
+      "rejected": 0,
+      "boundaries": [
+        {
+          "role": "control_input",
+          "h2d_calls": 63822,
+          "h2d_bytes": 58499420,
+          "d2h_calls": 0,
+          "d2h_bytes": 0
+        },
+        {
+          "role": "parameter_preparation",
+          "h2d_calls": 505,
+          "h2d_bytes": 207457084,
+          "d2h_calls": 598,
+          "d2h_bytes": 152775396
+        },
+        {
+          "role": "request_output",
+          "h2d_calls": 0,
+          "h2d_bytes": 0,
+          "d2h_calls": 76,
+          "d2h_bytes": 4864
+        }
+      ]
+    },
+    "indexer": [
+      {
+        "name": "aclnnAiInfraQuantLightningIndexer",
+        "repeatable": false,
+        "preparations": 48,
+        "replays": 0
+      }
+    ],
+    "source_prepared_sha256": "f844c012eefa3a2294601fdfe5fed8b760ef4d3d9518f597f09db0763b52e85b",
+    "retained_step_device_allocations": 0,
+    "retained_step_internal_fences": 0
+  },
+  {
+    "rank": 5,
+    "graphs": [
+      {
+        "name": "token_decode",
+        "replays": 67
+      },
+      {
+        "name": "packed_prefill",
+        "replays": 6907
+      }
+    ],
+    "arena": {
+      "format": "inferfabric.frozen-arena.v1",
+      "frozen": true,
+      "backend_fingerprint": "7229910864982334816",
+      "program_fingerprint": "2730592201964791100",
+      "bytes": 12536874496
+    },
+    "workspace": {
+      "planned": true,
+      "planned_bytes": 130916352,
+      "peak_requested_bytes": 130916352,
+      "growth_allocations": 0,
+      "slot": 0
+    },
+    "transfers": {
+      "format": "inferfabric.transfer-audit.v1",
+      "activation_host_transfers": 0,
+      "rejected": 0,
+      "boundaries": [
+        {
+          "role": "control_input",
+          "h2d_calls": 63822,
+          "h2d_bytes": 58499420,
+          "d2h_calls": 0,
+          "d2h_bytes": 0
+        },
+        {
+          "role": "parameter_preparation",
+          "h2d_calls": 505,
+          "h2d_bytes": 207457084,
+          "d2h_calls": 598,
+          "d2h_bytes": 152775396
+        },
+        {
+          "role": "request_output",
+          "h2d_calls": 0,
+          "h2d_bytes": 0,
+          "d2h_calls": 76,
+          "d2h_bytes": 4864
+        }
+      ]
+    },
+    "indexer": [
+      {
+        "name": "aclnnAiInfraQuantLightningIndexer",
+        "repeatable": false,
+        "preparations": 48,
+        "replays": 0
+      }
+    ],
+    "source_prepared_sha256": "f844c012eefa3a2294601fdfe5fed8b760ef4d3d9518f597f09db0763b52e85b",
+    "retained_step_device_allocations": 0,
+    "retained_step_internal_fences": 0
+  },
+  {
+    "rank": 6,
+    "graphs": [
+      {
+        "name": "token_decode",
+        "replays": 67
+      },
+      {
+        "name": "packed_prefill",
+        "replays": 6907
+      }
+    ],
+    "arena": {
+      "format": "inferfabric.frozen-arena.v1",
+      "frozen": true,
+      "backend_fingerprint": "7229910864982334816",
+      "program_fingerprint": "2730592201964791100",
+      "bytes": 12536874496
+    },
+    "workspace": {
+      "planned": true,
+      "planned_bytes": 130916352,
+      "peak_requested_bytes": 130916352,
+      "growth_allocations": 0,
+      "slot": 0
+    },
+    "transfers": {
+      "format": "inferfabric.transfer-audit.v1",
+      "activation_host_transfers": 0,
+      "rejected": 0,
+      "boundaries": [
+        {
+          "role": "control_input",
+          "h2d_calls": 63822,
+          "h2d_bytes": 58499420,
+          "d2h_calls": 0,
+          "d2h_bytes": 0
+        },
+        {
+          "role": "parameter_preparation",
+          "h2d_calls": 505,
+          "h2d_bytes": 207457084,
+          "d2h_calls": 598,
+          "d2h_bytes": 152775396
+        },
+        {
+          "role": "request_output",
+          "h2d_calls": 0,
+          "h2d_bytes": 0,
+          "d2h_calls": 76,
+          "d2h_bytes": 4864
+        }
+      ]
+    },
+    "indexer": [
+      {
+        "name": "aclnnAiInfraQuantLightningIndexer",
+        "repeatable": false,
+        "preparations": 48,
+        "replays": 0
+      }
+    ],
+    "source_prepared_sha256": "f844c012eefa3a2294601fdfe5fed8b760ef4d3d9518f597f09db0763b52e85b",
+    "retained_step_device_allocations": 0,
+    "retained_step_internal_fences": 0
+  },
+  {
+    "rank": 7,
+    "graphs": [
+      {
+        "name": "token_decode",
+        "replays": 67
+      },
+      {
+        "name": "packed_prefill",
+        "replays": 6907
+      }
+    ],
+    "arena": {
+      "format": "inferfabric.frozen-arena.v1",
+      "frozen": true,
+      "backend_fingerprint": "7229910864982334816",
+      "program_fingerprint": "2730592201964791100",
+      "bytes": 12536874496
+    },
+    "workspace": {
+      "planned": true,
+      "planned_bytes": 130916352,
+      "peak_requested_bytes": 130916352,
+      "growth_allocations": 0,
+      "slot": 0
+    },
+    "transfers": {
+      "format": "inferfabric.transfer-audit.v1",
+      "activation_host_transfers": 0,
+      "rejected": 0,
+      "boundaries": [
+        {
+          "role": "control_input",
+          "h2d_calls": 63822,
+          "h2d_bytes": 58499420,
+          "d2h_calls": 0,
+          "d2h_bytes": 0
+        },
+        {
+          "role": "parameter_preparation",
+          "h2d_calls": 505,
+          "h2d_bytes": 207457084,
+          "d2h_calls": 598,
+          "d2h_bytes": 152775396
+        },
+        {
+          "role": "request_output",
+          "h2d_calls": 0,
+          "h2d_bytes": 0,
+          "d2h_calls": 76,
+          "d2h_bytes": 4864
+        }
+      ]
+    },
+    "indexer": [
+      {
+        "name": "aclnnAiInfraQuantLightningIndexer",
+        "repeatable": false,
+        "preparations": 48,
+        "replays": 0
+      }
+    ],
+    "source_prepared_sha256": "f844c012eefa3a2294601fdfe5fed8b760ef4d3d9518f597f09db0763b52e85b",
+    "retained_step_device_allocations": 0,
+    "retained_step_internal_fences": 0
+  }
+]

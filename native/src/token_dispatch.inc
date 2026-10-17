@@ -24,7 +24,7 @@ V execute_token() {
     const auto &n = program.nodes[i];
     execution.instruction(int64_t(i),
         n.op=="copy" || n.op=="repeat" || n.op=="concat" || n.op=="expert_pack" ||
-        (active_tokens>1 && (n.op=="gather" || n.op=="slice" || n.op=="query_project" || n.op=="query_rotary_extract" || n.op=="rope_bf16" || n.op=="rope_f32" || n.op=="rope" || n.op=="mla_query" || n.op=="mla_value" || n.op=="mome" || n.op=="latent_attention" || n.op=="packed_latent_attention" || n.op=="indexed_packed_attention" || n.op=="sparse_index")),
+        (active_tokens>1 && (n.op=="gather" || n.op=="slice" || n.op=="query_project" || n.op=="query_rotary_extract" || n.op=="rope_bf16" || n.op=="rope_f32" || n.op=="rope" || n.op=="mla_query" || n.op=="mla_value" || n.op=="mome" || n.op=="latent_attention" || n.op=="packed_latent_attention" || n.op=="indexed_packed_attention" || (n.op=="sparse_index" && program.nodes[n.inputs[0]].kind!=5))),
         n.op=="cache_c8_norm_rope_append" || n.op=="cache_quantize_append" || n.op=="sink_normalize" || n.op=="cache_append" || n.op=="cache_norm_rope_append" || n.op=="expert_gmm" || (n.op=="linear" && n.kernel=="paired_bf16"));
     inferfabric::profiling::Scope timing(n.op.c_str(), true);
     auto input = [&](size_t j) -> Value & {
@@ -169,7 +169,7 @@ V execute_token() {
     } else if(n.op=="index_cache_append") {
       auto &state=index_states[n.name];
       bool quant=n.attrs.count("cache_dtype") && n.text("cache_dtype")=="int8";
-      if(!state)state=std::make_unique<resident::IndexState>(((program.context+63)/64)*64,program.resident_sequences,program.shared_pages,quant);
+      if(!state)state=std::make_unique<resident::IndexState>(((program.context+63)/64)*64,program.resident_sequences,program.shared_pages,quant,program.prefill_tokens);
       each_row([&](uint32_t row){
         if(quant){const auto &q=std::get<Quantized>(input(0));state->append_quantized(q.values.view(row*128,128),q.scales.view(row,1),cache_append_descriptor(n.name,ACL_INT32));}
         else state->append(row_tensor(0,row),cache_append_descriptor(n.name,ACL_INT32));
@@ -177,8 +177,13 @@ V execute_token() {
       result=IndexCacheRef{n.name};
     } else if(n.op=="sparse_index") {
       auto &state=*index_states.at(std::get<IndexCacheRef>(input(2)).name);
-      result=SelectedIndices{row_values(n.width,[&](uint32_t row){
-        if(state.quantized){const auto &q=std::get<Quantized>(input(0));return state.select_quantized(q.values.view(row*3072,3072),q.scales.view(row*24,24),row_tensor(1,row),control_row(*packed_length));}
+      if(state.quantized) {
+        const auto &q=std::get<Quantized>(input(0));
+        // TND causal alignment uses the final KV length and total query count.
+        // All chunk keys have already been appended on this stream.
+        result=SelectedIndices{state.select_quantized(q.values,q.scales,tensor(1),
+            prefix(*packed_length,{1},(active_tokens-1)*sizeof(int32_t)),active_tokens)};
+      } else result=SelectedIndices{row_values(n.width,[&](uint32_t row){
         return state.select_indices(row_tensor(0,row),row_tensor(1,row),control_row(*packed_length));
       })};
     } else if(n.op=="indexed_packed_attention") {

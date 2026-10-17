@@ -67,9 +67,14 @@ therefore fails. TTFT reaches 38.66 seconds and TPOT 20.13 ms at 4,088; all eigh
 rank residency/arena audits pass. A 16-token chunk experiment also diverges after
 EOS and remains unpromoted. The independent quantized indexer now passes 2/4/16
 query-row causal/top-k checks through 65,536 keys, including graph replay.
-Next batch index queries in the physical recipe, qualify full-model output and
-prefill performance, then advance diverse 8K/16K/32K/64K and concurrent HTTP
-tests while preserving unresolved accuracy evidence. No admission gate changes.
+The [batched index-query implementation](validation/2026-10-17-batched-index-selection/README.md)
+now uses one call and no output assembly copies per quantized chunk, exposed in
+the physical recipe/viewer. All 99 standard tokens pass; all 72 long native
+tokens remain unchanged, including the known reference divergence. Measured
+TTFT improves 1.48–1.67%, with no arena/workspace growth. Next qualify larger
+prefill chunks against a matching-budget reference, batch remaining attention
+work, then advance diverse 8K/16K/32K/64K and concurrent HTTP tests while preserving
+unresolved accuracy evidence. No admission gate changes.
 
 Experimental learned-index execution now includes explicit INT8 index queries/keys
 and FP16 scales/head weights in the [physical plan](learned-index-quantization.md).
