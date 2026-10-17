@@ -1,0 +1,1876 @@
+{
+  "format": "inferfabric.serving-timeline.v1",
+  "devices": [
+    {
+      "device": "0",
+      "task_span_ms": 3008.75525,
+      "any_task_union_ms": 2977.7485,
+      "kinds": {
+        "AI_CORE": {
+          "count": 224,
+          "sum_ms": 18.05525,
+          "union_ms": 18.05525
+        },
+        "AI_CPU": {
+          "count": 8,
+          "sum_ms": 2.60725,
+          "union_ms": 2.60725
+        },
+        "AI_VECTOR_CORE": {
+          "count": 1472,
+          "sum_ms": 85.1035,
+          "union_ms": 85.1035
+        },
+        "MEMCPY_ASYNC": {
+          "count": 5748,
+          "sum_ms": 118.6945,
+          "union_ms": 39.97425
+        },
+        "MIX_AIC": {
+          "count": 333,
+          "sum_ms": 238.272,
+          "union_ms": 238.272
+        },
+        "MIX_AIV": {
+          "count": 244,
+          "sum_ms": 15.523,
+          "union_ms": 15.523
+        },
+        "NOTIFY_RECORD": {
+          "count": 13663,
+          "sum_ms": 3.7445,
+          "union_ms": 3.703
+        },
+        "NOTIFY_WAIT": {
+          "count": 13616,
+          "sum_ms": 11195.65975,
+          "union_ms": 2950.1415
+        }
+      }
+    },
+    {
+      "device": "1",
+      "task_span_ms": 3008.50125,
+      "any_task_union_ms": 2977.978,
+      "kinds": {
+        "AI_CORE": {
+          "count": 295,
+          "sum_ms": 26.41725,
+          "union_ms": 26.41725
+        },
+        "AI_CPU": {
+          "count": 9,
+          "sum_ms": 3.041,
+          "union_ms": 3.041
+        },
+        "AI_VECTOR_CORE": {
+          "count": 1888,
+          "sum_ms": 120.386,
+          "union_ms": 120.386
+        },
+        "MEMCPY_ASYNC": {
+          "count": 5653,
+          "sum_ms": 110.3835,
+          "union_ms": 37.8555
+        },
+        "MIX_AIC": {
+          "count": 333,
+          "sum_ms": 238.3885,
+          "union_ms": 238.3885
+        },
+        "MIX_AIV": {
+          "count": 244,
+          "sum_ms": 16.00225,
+          "union_ms": 16.00225
+        },
+        "NOTIFY_RECORD": {
+          "count": 13434,
+          "sum_ms": 3.745,
+          "union_ms": 3.543
+        },
+        "NOTIFY_WAIT": {
+          "count": 13453,
+          "sum_ms": 11196.64075,
+          "union_ms": 2950.13325
+        }
+      }
+    },
+    {
+      "device": "2",
+      "task_span_ms": 3008.74125,
+      "any_task_union_ms": 2978.302,
+      "kinds": {
+        "AI_CORE": {
+          "count": 249,
+          "sum_ms": 25.34475,
+          "union_ms": 25.34475
+        },
+        "AI_CPU": {
+          "count": 9,
+          "sum_ms": 2.93975,
+          "union_ms": 2.93975
+        },
+        "AI_VECTOR_CORE": {
+          "count": 1642,
+          "sum_ms": 104.3745,
+          "union_ms": 104.3745
+        },
+        "MEMCPY_ASYNC": {
+          "count": 5503,
+          "sum_ms": 116.67425,
+          "union_ms": 38.57175
+        },
+        "MIX_AIC": {
+          "count": 333,
+          "sum_ms": 237.55325,
+          "union_ms": 237.55325
+        },
+        "MIX_AIV": {
+          "count": 244,
+          "sum_ms": 15.8685,
+          "union_ms": 15.8685
+        },
+        "NOTIFY_RECORD": {
+          "count": 13712,
+          "sum_ms": 3.7535,
+          "union_ms": 3.33375
+        },
+        "NOTIFY_WAIT": {
+          "count": 13616,
+          "sum_ms": 11254.19925,
+          "union_ms": 2949.86
+        }
+      }
+    },
+    {
+      "device": "3",
+      "task_span_ms": 3008.9465,
+      "any_task_union_ms": 2980.33775,
+      "kinds": {
+        "AI_CORE": {
+          "count": 295,
+          "sum_ms": 26.379,
+          "union_ms": 26.379
+        },
+        "AI_CPU": {
+          "count": 9,
+          "sum_ms": 3.197,
+          "union_ms": 3.197
+        },
+        "AI_VECTOR_CORE": {
+          "count": 1888,
+          "sum_ms": 120.56025,
+          "union_ms": 120.56025
+        },
+        "MEMCPY_ASYNC": {
+          "count": 5653,
+          "sum_ms": 110.462,
+          "union_ms": 38.001
+        },
+        "MIX_AIC": {
+          "count": 333,
+          "sum_ms": 237.98525,
+          "union_ms": 237.98525
+        },
+        "MIX_AIV": {
+          "count": 244,
+          "sum_ms": 15.62575,
+          "union_ms": 15.62575
+        },
+        "NOTIFY_RECORD": {
+          "count": 13434,
+          "sum_ms": 3.6945,
+          "union_ms": 3.4815
+        },
+        "NOTIFY_WAIT": {
+          "count": 13453,
+          "sum_ms": 11153.68675,
+          "union_ms": 2957.49325
+        }
+      }
+    },
+    {
+      "device": "4",
+      "task_span_ms": 3009.11375,
+      "any_task_union_ms": 2971.3365,
+      "kinds": {
+        "AI_CORE": {
+          "count": 295,
+          "sum_ms": 26.3705,
+          "union_ms": 26.3705
+        },
+        "AI_CPU": {
+          "count": 9,
+          "sum_ms": 3.013,
+          "union_ms": 3.013
+        },
+        "AI_VECTOR_CORE": {
+          "count": 1888,
+          "sum_ms": 120.434,
+          "union_ms": 120.434
+        },
+        "MEMCPY_ASYNC": {
+          "count": 5653,
+          "sum_ms": 114.867,
+          "union_ms": 39.49575
+        },
+        "MIX_AIC": {
+          "count": 333,
+          "sum_ms": 238.623,
+          "union_ms": 238.623
+        },
+        "MIX_AIV": {
+          "count": 244,
+          "sum_ms": 15.68325,
+          "union_ms": 15.68325
+        },
+        "NOTIFY_RECORD": {
+          "count": 13434,
+          "sum_ms": 3.72475,
+          "union_ms": 3.32625
+        },
+        "NOTIFY_WAIT": {
+          "count": 13453,
+          "sum_ms": 11067.15625,
+          "union_ms": 2947.07125
+        }
+      }
+    },
+    {
+      "device": "5",
+      "task_span_ms": 3009.28575,
+      "any_task_union_ms": 1468.23025,
+      "kinds": {
+        "AI_CORE": {
+          "count": 249,
+          "sum_ms": 25.352,
+          "union_ms": 25.352
+        },
+        "AI_CPU": {
+          "count": 9,
+          "sum_ms": 3.196,
+          "union_ms": 3.196
+        },
+        "AI_VECTOR_CORE": {
+          "count": 1642,
+          "sum_ms": 104.83775,
+          "union_ms": 104.83775
+        },
+        "MEMCPY_ASYNC": {
+          "count": 5503,
+          "sum_ms": 77.657,
+          "union_ms": 49.8675
+        },
+        "MIX_AIC": {
+          "count": 333,
+          "sum_ms": 238.419,
+          "union_ms": 238.419
+        },
+        "MIX_AIV": {
+          "count": 244,
+          "sum_ms": 15.8945,
+          "union_ms": 15.8945
+        },
+        "NOTIFY_RECORD": {
+          "count": 13712,
+          "sum_ms": 3.714,
+          "union_ms": 3.6625
+        },
+        "NOTIFY_WAIT": {
+          "count": 13616,
+          "sum_ms": 2259.23225,
+          "union_ms": 1218.0705
+        }
+      }
+    },
+    {
+      "device": "6",
+      "task_span_ms": 3009.203,
+      "any_task_union_ms": 2978.03225,
+      "kinds": {
+        "AI_CORE": {
+          "count": 295,
+          "sum_ms": 26.43425,
+          "union_ms": 26.43425
+        },
+        "AI_CPU": {
+          "count": 9,
+          "sum_ms": 2.962,
+          "union_ms": 2.962
+        },
+        "AI_VECTOR_CORE": {
+          "count": 1888,
+          "sum_ms": 120.44875,
+          "union_ms": 120.44875
+        },
+        "MEMCPY_ASYNC": {
+          "count": 5653,
+          "sum_ms": 115.01325,
+          "union_ms": 39.4445
+        },
+        "MIX_AIC": {
+          "count": 333,
+          "sum_ms": 237.80375,
+          "union_ms": 237.80375
+        },
+        "MIX_AIV": {
+          "count": 244,
+          "sum_ms": 15.52475,
+          "union_ms": 15.52475
+        },
+        "NOTIFY_RECORD": {
+          "count": 13434,
+          "sum_ms": 3.6455,
+          "union_ms": 3.60325
+        },
+        "NOTIFY_WAIT": {
+          "count": 13453,
+          "sum_ms": 11145.49375,
+          "union_ms": 2949.488
+        }
+      }
+    },
+    {
+      "device": "7",
+      "task_span_ms": 3008.95675,
+      "any_task_union_ms": 2978.1575,
+      "kinds": {
+        "AI_CORE": {
+          "count": 249,
+          "sum_ms": 25.4175,
+          "union_ms": 25.4175
+        },
+        "AI_CPU": {
+          "count": 9,
+          "sum_ms": 3.1385,
+          "union_ms": 3.1385
+        },
+        "AI_VECTOR_CORE": {
+          "count": 1642,
+          "sum_ms": 104.27125,
+          "union_ms": 104.27125
+        },
+        "MEMCPY_ASYNC": {
+          "count": 5503,
+          "sum_ms": 109.77375,
+          "union_ms": 36.33275
+        },
+        "MIX_AIC": {
+          "count": 333,
+          "sum_ms": 238.0855,
+          "union_ms": 238.0855
+        },
+        "MIX_AIV": {
+          "count": 244,
+          "sum_ms": 16.184,
+          "union_ms": 16.184
+        },
+        "NOTIFY_RECORD": {
+          "count": 13712,
+          "sum_ms": 3.8515,
+          "union_ms": 3.24475
+        },
+        "NOTIFY_WAIT": {
+          "count": 13616,
+          "sum_ms": 11213.8395,
+          "union_ms": 2951.10475
+        }
+      }
+    }
+  ],
+  "host_api_inclusive": [
+    {
+      "Device_id": "host",
+      "Level": "node",
+      "API Name": "launch",
+      "Time(us)": "21702602.31",
+      "Count": "22896",
+      "Avg(us)": "947.877",
+      "Min(us)": "6.36",
+      "Max(us)": "100339.82",
+      "Variance": "27486849.687"
+    },
+    {
+      "Device_id": "host",
+      "Level": "acl",
+      "API Name": "hcom_allReduce_",
+      "Time(us)": "20623964.12",
+      "Count": "736",
+      "Avg(us)": "28021.69",
+      "Min(us)": "4846.88",
+      "Max(us)": "40556.94",
+      "Variance": "15890432.739"
+    },
+    {
+      "Device_id": "host",
+      "Level": "communication",
+      "API Name": "Notify_Wait",
+      "Time(us)": "8415736.7",
+      "Count": "111296",
+      "Avg(us)": "75.616",
+      "Min(us)": "9.96",
+      "Max(us)": "5560.87",
+      "Variance": "2218.928"
+    },
+    {
+      "Device_id": "host",
+      "Level": "communication",
+      "API Name": "Notify_Record",
+      "Time(us)": "8355020.98",
+      "Count": "111296",
+      "Avg(us)": "75.07",
+      "Min(us)": "9.57",
+      "Max(us)": "5762.66",
+      "Variance": "1984.889"
+    },
+    {
+      "Device_id": "host",
+      "Level": "communication",
+      "API Name": "Memcpy",
+      "Time(us)": "2732886.03",
+      "Count": "34560",
+      "Avg(us)": "79.077",
+      "Min(us)": "9.89",
+      "Max(us)": "10601.35",
+      "Variance": "38534.412"
+    },
+    {
+      "Device_id": "host",
+      "Level": "communication",
+      "API Name": "Reduce_Inline",
+      "Time(us)": "891455.39",
+      "Count": "11792",
+      "Avg(us)": "75.598",
+      "Min(us)": "10.11",
+      "Max(us)": "231.6",
+      "Variance": "1303.867"
+    },
+    {
+      "Device_id": "host",
+      "Level": "acl",
+      "API Name": "aclrtRecordNotify",
+      "Time(us)": "778845.41",
+      "Count": "111296",
+      "Avg(us)": "6.998",
+      "Min(us)": "2.44",
+      "Max(us)": "5710.36",
+      "Variance": "694.968"
+    },
+    {
+      "Device_id": "host",
+      "Level": "acl",
+      "API Name": "aclrtWaitAndResetNotify",
+      "Time(us)": "736966.35",
+      "Count": "111296",
+      "Avg(us)": "6.622",
+      "Min(us)": "2.1",
+      "Max(us)": "5496.37",
+      "Variance": "673.462"
+    },
+    {
+      "Device_id": "host",
+      "Level": "acl",
+      "API Name": "hcom_allGather_",
+      "Time(us)": "655713.2",
+      "Count": "8",
+      "Avg(us)": "81964.15",
+      "Min(us)": "17197.16",
+      "Max(us)": "100339.82",
+      "Variance": "703154690.795"
+    },
+    {
+      "Device_id": "host",
+      "Level": "acl",
+      "API Name": "aclrtSynchronizeStream",
+      "Time(us)": "517939.63",
+      "Count": "8",
+      "Avg(us)": "64742.454",
+      "Min(us)": "1942.3",
+      "Max(us)": "80455.02",
+      "Variance": "590883256.531"
+    },
+    {
+      "Device_id": "host",
+      "Level": "runtime",
+      "API Name": "StreamSynchronize",
+      "Time(us)": "517920.13",
+      "Count": "8",
+      "Avg(us)": "64740.016",
+      "Min(us)": "1939.85",
+      "Max(us)": "80451.78",
+      "Variance": "590881091.792"
+    },
+    {
+      "Device_id": "host",
+      "Level": "runtime",
+      "API Name": "NotifyRecord",
+      "Time(us)": "513040.81",
+      "Count": "111296",
+      "Avg(us)": "4.61",
+      "Min(us)": "1.53",
+      "Max(us)": "5709.06",
+      "Variance": "693.677"
+    },
+    {
+      "Device_id": "host",
+      "Level": "runtime",
+      "API Name": "NotifyWait",
+      "Time(us)": "444071.77",
+      "Count": "111296",
+      "Avg(us)": "3.99",
+      "Min(us)": "1.03",
+      "Max(us)": "3187.61",
+      "Variance": "401.155"
+    },
+    {
+      "Device_id": "host",
+      "Level": "acl",
+      "API Name": "aclrtMemcpyAsync",
+      "Time(us)": "415347.19",
+      "Count": "35152",
+      "Avg(us)": "11.816",
+      "Min(us)": "2.52",
+      "Max(us)": "10562.51",
+      "Variance": "36201.401"
+    },
+    {
+      "Device_id": "host",
+      "Level": "acl",
+      "API Name": "aclrtLaunchKernelWithHostArgs",
+      "Time(us)": "331022.75",
+      "Count": "22152",
+      "Avg(us)": "14.943",
+      "Min(us)": "3.88",
+      "Max(us)": "10248.32",
+      "Variance": "41457.499"
+    },
+    {
+      "Device_id": "host",
+      "Level": "runtime",
+      "API Name": "MemcpyAsync_Huge",
+      "Time(us)": "273799.87",
+      "Count": "35096",
+      "Avg(us)": "7.801",
+      "Min(us)": "1.16",
+      "Max(us)": "10558.75",
+      "Variance": "36255.999"
+    },
+    {
+      "Device_id": "host",
+      "Level": "runtime",
+      "API Name": "LaunchKernelV2",
+      "Time(us)": "263057.7",
+      "Count": "22152",
+      "Avg(us)": "11.875",
+      "Min(us)": "2.41",
+      "Max(us)": "10245.93",
+      "Variance": "41455.825"
+    },
+    {
+      "Device_id": "host",
+      "Level": "acl",
+      "API Name": "aclnnCast",
+      "Time(us)": "152565.1",
+      "Count": "5216",
+      "Avg(us)": "29.249",
+      "Min(us)": "14.35",
+      "Max(us)": "129.86",
+      "Variance": "79.157"
+    },
+    {
+      "Device_id": "host",
+      "Level": "acl",
+      "API Name": "aclnnMatmulGetWorkspaceSize",
+      "Time(us)": "150806.28",
+      "Count": "1624",
+      "Avg(us)": "92.861",
+      "Min(us)": "32.45",
+      "Max(us)": "445.34",
+      "Variance": "1315.143"
+    },
+    {
+      "Device_id": "host",
+      "Level": "acl",
+      "API Name": "ifOwnedAiInfraKvRmsNormRopeCache",
+      "Time(us)": "130858.32",
+      "Count": "368",
+      "Avg(us)": "355.593",
+      "Min(us)": "39.81",
+      "Max(us)": "10293.56",
+      "Variance": "2403867.355"
+    },
+    {
+      "Device_id": "host",
+      "Level": "acl",
+      "API Name": "aclmdlRICaptureGetInfo",
+      "Time(us)": "130356.13",
+      "Count": "809072",
+      "Avg(us)": "0.161",
+      "Min(us)": "0.07",
+      "Max(us)": "22.54",
+      "Variance": "0.005"
+    },
+    {
+      "Device_id": "host",
+      "Level": "acl",
+      "API Name": "aclnnGroupedMatmulV5GetWorkspaceSize",
+      "Time(us)": "116010.37",
+      "Count": "704",
+      "Avg(us)": "164.787",
+      "Min(us)": "128.64",
+      "Max(us)": "304.01",
+      "Variance": "847.852"
+    },
+    {
+      "Device_id": "host",
+      "Level": "acl",
+      "API Name": "aclrtReduceAsync",
+      "Time(us)": "87019.13",
+      "Count": "11792",
+      "Avg(us)": "7.38",
+      "Min(us)": "3.51",
+      "Max(us)": "78.05",
+      "Variance": "4.909"
+    },
+    {
+      "Device_id": "host",
+      "Level": "acl",
+      "API Name": "aclnnQuantMatmulV5GetWorkspaceSize",
+      "Time(us)": "79922.4",
+      "Count": "784",
+      "Avg(us)": "101.942",
+      "Min(us)": "68.81",
+      "Max(us)": "4832.72",
+      "Variance": "28789.313"
+    },
+    {
+      "Device_id": "host",
+      "Level": "acl",
+      "API Name": "GroupedMatmul_Tiling",
+      "Time(us)": "77420.52",
+      "Count": "1408",
+      "Avg(us)": "54.986",
+      "Min(us)": "0.19",
+      "Max(us)": "174.06",
+      "Variance": "3017.761"
+    },
+    {
+      "Device_id": "host",
+      "Level": "acl",
+      "API Name": "aclnnMatmul",
+      "Time(us)": "72014.63",
+      "Count": "1624",
+      "Avg(us)": "44.344",
+      "Min(us)": "20.6",
+      "Max(us)": "101.42",
+      "Variance": "92.44"
+    },
+    {
+      "Device_id": "host",
+      "Level": "acl",
+      "API Name": "MatMulV3_Tiling",
+      "Time(us)": "69726.72",
+      "Count": "2288",
+      "Avg(us)": "30.475",
+      "Min(us)": "0.16",
+      "Max(us)": "294.71",
+      "Variance": "986.692"
+    },
+    {
+      "Device_id": "host",
+      "Level": "acl",
+      "API Name": "aclnnAiInfraManifoldConstrainedHyperConnectionPreGetWorkspaceSize",
+      "Time(us)": "69374.1",
+      "Count": "744",
+      "Avg(us)": "93.245",
+      "Min(us)": "65.54",
+      "Max(us)": "254.25",
+      "Variance": "448.821"
+    },
+    {
+      "Device_id": "host",
+      "Level": "acl",
+      "API Name": "QuantBatchMatmulV3_Tiling",
+      "Time(us)": "55391.76",
+      "Count": "1568",
+      "Avg(us)": "35.326",
+      "Min(us)": "0.14",
+      "Max(us)": "4790.99",
+      "Variance": "15510.689"
+    },
+    {
+      "Device_id": "host",
+      "Level": "acl",
+      "API Name": "aclrtFreeHost",
+      "Time(us)": "53721.95",
+      "Count": "408",
+      "Avg(us)": "131.671",
+      "Min(us)": "3.29",
+      "Max(us)": "417.8",
+      "Variance": "5505.516"
+    },
+    {
+      "Device_id": "host",
+      "Level": "runtime",
+      "API Name": "HostFree",
+      "Time(us)": "52863.66",
+      "Count": "408",
+      "Avg(us)": "129.568",
+      "Min(us)": "2.53",
+      "Max(us)": "414.23",
+      "Variance": "5493.62"
+    },
+    {
+      "Device_id": "host",
+      "Level": "acl",
+      "API Name": "aclnnBatchMatMul",
+      "Time(us)": "46187.31",
+      "Count": "736",
+      "Avg(us)": "62.754",
+      "Min(us)": "43.68",
+      "Max(us)": "120.97",
+      "Variance": "110.776"
+    },
+    {
+      "Device_id": "host",
+      "Level": "acl",
+      "API Name": "aclnnCastGetWorkspaceSize",
+      "Time(us)": "45978.59",
+      "Count": "2224",
+      "Avg(us)": "20.674",
+      "Min(us)": "7.48",
+      "Max(us)": "816.85",
+      "Variance": "446.725"
+    },
+    {
+      "Device_id": "host",
+      "Level": "runtime",
+      "API Name": "ReduceAsync",
+      "Time(us)": "45869",
+      "Count": "11792",
+      "Avg(us)": "3.89",
+      "Min(us)": "1.57",
+      "Max(us)": "75.09",
+      "Variance": "2.079"
+    },
+    {
+      "Device_id": "host",
+      "Level": "acl",
+      "API Name": "ifOwnedAiInfraFusedInferAttentionSinkGetWorkspaceSize",
+      "Time(us)": "45012.02",
+      "Count": "240",
+      "Avg(us)": "187.55",
+      "Min(us)": "150.77",
+      "Max(us)": "395.71",
+      "Variance": "2236.388"
+    },
+    {
+      "Device_id": "host",
+      "Level": "acl",
+      "API Name": "aclnnRmsNorm",
+      "Time(us)": "40199.96",
+      "Count": "1984",
+      "Avg(us)": "20.262",
+      "Min(us)": "10.4",
+      "Max(us)": "278.86",
+      "Variance": "179.33"
+    },
+    {
+      "Device_id": "host",
+      "Level": "acl",
+      "API Name": "aclnnAiInfraFusedCausalConv1d",
+      "Time(us)": "38676.57",
+      "Count": "1104",
+      "Avg(us)": "35.033",
+      "Min(us)": "23.57",
+      "Max(us)": "58.84",
+      "Variance": "37.637"
+    },
+    {
+      "Device_id": "host",
+      "Level": "acl",
+      "API Name": "aclnnGroupedMatmulV5",
+      "Time(us)": "36531.24",
+      "Count": "704",
+      "Avg(us)": "51.891",
+      "Min(us)": "37.53",
+      "Max(us)": "90.55",
+      "Variance": "43.911"
+    },
+    {
+      "Device_id": "host",
+      "Level": "acl",
+      "API Name": "aclnnQuantMatmulV5",
+      "Time(us)": "36221.88",
+      "Count": "784",
+      "Avg(us)": "46.201",
+      "Min(us)": "32.12",
+      "Max(us)": "89.63",
+      "Variance": "58.724"
+    },
+    {
+      "Device_id": "host",
+      "Level": "acl",
+      "API Name": "aclnnAiInfraFusedCausalConv1dGetWorkspaceSize",
+      "Time(us)": "35211.57",
+      "Count": "1104",
+      "Avg(us)": "31.895",
+      "Min(us)": "21.44",
+      "Max(us)": "176.6",
+      "Variance": "86.151"
+    },
+    {
+      "Device_id": "host",
+      "Level": "acl",
+      "API Name": "aclnnRotaryPositionEmbeddingGetWorkspaceSize",
+      "Time(us)": "34716.14",
+      "Count": "496",
+      "Avg(us)": "69.992",
+      "Min(us)": "35.52",
+      "Max(us)": "7095.49",
+      "Variance": "100069.81"
+    },
+    {
+      "Device_id": "host",
+      "Level": "acl",
+      "API Name": "aclnnBatchMatMulGetWorkspaceSize",
+      "Time(us)": "34318.02",
+      "Count": "736",
+      "Avg(us)": "46.628",
+      "Min(us)": "30.95",
+      "Max(us)": "99.09",
+      "Variance": "93.045"
+    },
+    {
+      "Device_id": "host",
+      "Level": "acl",
+      "API Name": "ifOwnedAiInfraFusedInferAttentionSink",
+      "Time(us)": "32851.87",
+      "Count": "240",
+      "Avg(us)": "136.883",
+      "Min(us)": "104.38",
+      "Max(us)": "250.37",
+      "Variance": "263.811"
+    },
+    {
+      "Device_id": "host",
+      "Level": "acl",
+      "API Name": "aclnnAiInfraManifoldConstrainedHyperConnectionPre",
+      "Time(us)": "31651.37",
+      "Count": "744",
+      "Avg(us)": "42.542",
+      "Min(us)": "29.09",
+      "Max(us)": "87.83",
+      "Variance": "45.938"
+    },
+    {
+      "Device_id": "host",
+      "Level": "acl",
+      "API Name": "AiInfraManifoldConstrainedHyperConnectionPre_Tiling",
+      "Time(us)": "31641.65",
+      "Count": "1488",
+      "Avg(us)": "21.265",
+      "Min(us)": "0.16",
+      "Max(us)": "113.48",
+      "Variance": "465.354"
+    },
+    {
+      "Device_id": "host",
+      "Level": "acl",
+      "API Name": "aclnnCat",
+      "Time(us)": "31044.63",
+      "Count": "880",
+      "Avg(us)": "35.278",
+      "Min(us)": "24.62",
+      "Max(us)": "86.49",
+      "Variance": "44.267"
+    },
+    {
+      "Device_id": "host",
+      "Level": "acl",
+      "API Name": "RotaryPositionEmbedding_Tiling",
+      "Time(us)": "25981.95",
+      "Count": "992",
+      "Avg(us)": "26.191",
+      "Min(us)": "0.17",
+      "Max(us)": "7051.87",
+      "Variance": "50312.902"
+    },
+    {
+      "Device_id": "host",
+      "Level": "acl",
+      "API Name": "ifOwnedAiInfraKvRmsNormRopeCacheGetWorkspaceSize",
+      "Time(us)": "25822.75",
+      "Count": "368",
+      "Avg(us)": "70.171",
+      "Min(us)": "47.6",
+      "Max(us)": "268.23",
+      "Variance": "700.992"
+    },
+    {
+      "Device_id": "host",
+      "Level": "acl",
+      "API Name": "aclnnRotaryPositionEmbedding",
+      "Time(us)": "23770.34",
+      "Count": "496",
+      "Avg(us)": "47.924",
+      "Min(us)": "32.11",
+      "Max(us)": "322.26",
+      "Variance": "305.057"
+    },
+    {
+      "Device_id": "host",
+      "Level": "acl",
+      "API Name": "aclnnInplaceZero",
+      "Time(us)": "23743.72",
+      "Count": "704",
+      "Avg(us)": "33.727",
+      "Min(us)": "24.41",
+      "Max(us)": "58.17",
+      "Variance": "29.466"
+    },
+    {
+      "Device_id": "host",
+      "Level": "acl",
+      "API Name": "aclnnDynamicQuant",
+      "Time(us)": "23524.43",
+      "Count": "912",
+      "Avg(us)": "25.794",
+      "Min(us)": "16.83",
+      "Max(us)": "54.74",
+      "Variance": "28.391"
+    },
+    {
+      "Device_id": "host",
+      "Level": "acl",
+      "API Name": "aclnnDynamicQuantGetWorkspaceSize",
+      "Time(us)": "23331.87",
+      "Count": "912",
+      "Avg(us)": "25.583",
+      "Min(us)": "15.84",
+      "Max(us)": "66.24",
+      "Variance": "28.497"
+    },
+    {
+      "Device_id": "host",
+      "Level": "acl",
+      "API Name": "aclnnRmsNormGetWorkspaceSize",
+      "Time(us)": "23175.09",
+      "Count": "1984",
+      "Avg(us)": "11.681",
+      "Min(us)": "4.5",
+      "Max(us)": "58.06",
+      "Variance": "23.682"
+    },
+    {
+      "Device_id": "host",
+      "Level": "acl",
+      "API Name": "aclnnMoeGatingTopKGetWorkspaceSize",
+      "Time(us)": "22967.26",
+      "Count": "352",
+      "Avg(us)": "65.248",
+      "Min(us)": "36.65",
+      "Max(us)": "382.63",
+      "Variance": "783.041"
+    },
+    {
+      "Device_id": "host",
+      "Level": "acl",
+      "API Name": "aclnnMoeInitRoutingV3GetWorkspaceSize",
+      "Time(us)": "19908.28",
+      "Count": "352",
+      "Avg(us)": "56.558",
+      "Min(us)": "40.83",
+      "Max(us)": "118.95",
+      "Variance": "203.649"
+    },
+    {
+      "Device_id": "host",
+      "Level": "acl",
+      "API Name": "aclnnMoeInitRoutingV3",
+      "Time(us)": "17752.19",
+      "Count": "352",
+      "Avg(us)": "50.432",
+      "Min(us)": "36.83",
+      "Max(us)": "88.13",
+      "Variance": "73.437"
+    },
+    {
+      "Device_id": "host",
+      "Level": "acl",
+      "API Name": "AiInfraFusedInferAttentionSink_Tiling",
+      "Time(us)": "17568.71",
+      "Count": "480",
+      "Avg(us)": "36.601",
+      "Min(us)": "0.17",
+      "Max(us)": "158.6",
+      "Variance": "1386.571"
+    },
+    {
+      "Device_id": "host",
+      "Level": "acl",
+      "API Name": "aclnnManifoldConstrainedHyperConnectionSinkhornEnhance",
+      "Time(us)": "14511.25",
+      "Count": "736",
+      "Avg(us)": "19.716",
+      "Min(us)": "12.01",
+      "Max(us)": "211.99",
+      "Variance": "84.999"
+    },
+    {
+      "Device_id": "host",
+      "Level": "acl",
+      "API Name": "AiInfraFusedCausalConv1d_Tiling",
+      "Time(us)": "14305.36",
+      "Count": "2208",
+      "Avg(us)": "6.479",
+      "Min(us)": "0.12",
+      "Max(us)": "56.42",
+      "Variance": "44.261"
+    },
+    {
+      "Device_id": "host",
+      "Level": "acl",
+      "API Name": "aclnnCatGetWorkspaceSize",
+      "Time(us)": "13470.37",
+      "Count": "880",
+      "Avg(us)": "15.307",
+      "Min(us)": "10.12",
+      "Max(us)": "39.44",
+      "Variance": "9.454"
+    },
+    {
+      "Device_id": "host",
+      "Level": "acl",
+      "API Name": "aclnnAiInfraKvQuantSparseFlashAttention",
+      "Time(us)": "13157.42",
+      "Count": "128",
+      "Avg(us)": "102.792",
+      "Min(us)": "52.19",
+      "Max(us)": "4858.36",
+      "Variance": "178181.718"
+    },
+    {
+      "Device_id": "host",
+      "Level": "acl",
+      "API Name": "aclnnAiInfraManifoldConstrainedHyperConnectionPost",
+      "Time(us)": "13139.4",
+      "Count": "736",
+      "Avg(us)": "17.852",
+      "Min(us)": "10.41",
+      "Max(us)": "149.82",
+      "Variance": "49.879"
+    },
+    {
+      "Device_id": "host",
+      "Level": "acl",
+      "API Name": "aclrtCtxGetSysParamOpt",
+      "Time(us)": "12621.35",
+      "Count": "4528",
+      "Avg(us)": "2.787",
+      "Min(us)": "0.96",
+      "Max(us)": "27.43",
+      "Variance": "1.369"
+    },
+    {
+      "Device_id": "host",
+      "Level": "acl",
+      "API Name": "aclnnMoeFinalizeRoutingV2GetWorkspaceSize",
+      "Time(us)": "11471.11",
+      "Count": "352",
+      "Avg(us)": "32.588",
+      "Min(us)": "25.66",
+      "Max(us)": "54.94",
+      "Variance": "11.823"
+    },
+    {
+      "Device_id": "host",
+      "Level": "acl",
+      "API Name": "aclnnMoeGatingTopK",
+      "Time(us)": "10440.97",
+      "Count": "352",
+      "Avg(us)": "29.662",
+      "Min(us)": "12.88",
+      "Max(us)": "346.75",
+      "Variance": "2611.053"
+    },
+    {
+      "Device_id": "host",
+      "Level": "acl",
+      "API Name": "aclnnAdd",
+      "Time(us)": "9435.7",
+      "Count": "352",
+      "Avg(us)": "26.806",
+      "Min(us)": "16.76",
+      "Max(us)": "100.05",
+      "Variance": "76.986"
+    },
+    {
+      "Device_id": "host",
+      "Level": "acl",
+      "API Name": "aclnnMoeFinalizeRoutingV2",
+      "Time(us)": "8811.58",
+      "Count": "352",
+      "Avg(us)": "25.033",
+      "Min(us)": "18.19",
+      "Max(us)": "52.42",
+      "Variance": "27.684"
+    },
+    {
+      "Device_id": "host",
+      "Level": "acl",
+      "API Name": "aclrtGetResInCurrentThread",
+      "Time(us)": "8529.33",
+      "Count": "34240",
+      "Avg(us)": "0.249",
+      "Min(us)": "0.09",
+      "Max(us)": "10.28",
+      "Variance": "0.034"
+    },
+    {
+      "Device_id": "host",
+      "Level": "acl",
+      "API Name": "aclnnSwiGlu",
+      "Time(us)": "8516.8",
+      "Count": "368",
+      "Avg(us)": "23.143",
+      "Min(us)": "14.47",
+      "Max(us)": "96.64",
+      "Variance": "44.32"
+    },
+    {
+      "Device_id": "host",
+      "Level": "acl",
+      "API Name": "MoeInitRoutingV3_Tiling",
+      "Time(us)": "8394.76",
+      "Count": "704",
+      "Avg(us)": "11.924",
+      "Min(us)": "0.18",
+      "Max(us)": "49.74",
+      "Variance": "141.794"
+    },
+    {
+      "Device_id": "host",
+      "Level": "acl",
+      "API Name": "aclnnManifoldConstrainedHyperConnectionSinkhornEnhanceGetWorkspaceSize",
+      "Time(us)": "7889.6",
+      "Count": "736",
+      "Avg(us)": "10.72",
+      "Min(us)": "5.81",
+      "Max(us)": "56.41",
+      "Variance": "15.74"
+    },
+    {
+      "Device_id": "host",
+      "Level": "acl",
+      "API Name": "aclnnDequantSwigluQuantV2",
+      "Time(us)": "7841.79",
+      "Count": "352",
+      "Avg(us)": "22.278",
+      "Min(us)": "14.4",
+      "Max(us)": "53.6",
+      "Variance": "28.858"
+    },
+    {
+      "Device_id": "host",
+      "Level": "acl",
+      "API Name": "BatchMatMulV2_Tiling",
+      "Time(us)": "7789.96",
+      "Count": "736",
+      "Avg(us)": "10.584",
+      "Min(us)": "7.39",
+      "Max(us)": "34.48",
+      "Variance": "4.631"
+    },
+    {
+      "Device_id": "host",
+      "Level": "acl",
+      "API Name": "aclnnInplaceZeroGetWorkspaceSize",
+      "Time(us)": "7761.23",
+      "Count": "704",
+      "Avg(us)": "11.024",
+      "Min(us)": "8.48",
+      "Max(us)": "24.02",
+      "Variance": "1.975"
+    },
+    {
+      "Device_id": "host",
+      "Level": "acl",
+      "API Name": "Slice_Tiling",
+      "Time(us)": "7688.41",
+      "Count": "1104",
+      "Avg(us)": "6.964",
+      "Min(us)": "3.76",
+      "Max(us)": "69",
+      "Variance": "9.399"
+    },
+    {
+      "Device_id": "host",
+      "Level": "acl",
+      "API Name": "ConcatD_Tiling",
+      "Time(us)": "7627.25",
+      "Count": "880",
+      "Avg(us)": "8.667",
+      "Min(us)": "5.73",
+      "Max(us)": "37.7",
+      "Variance": "3.087"
+    },
+    {
+      "Device_id": "host",
+      "Level": "acl",
+      "API Name": "aclnnInplaceIndexCopy",
+      "Time(us)": "7362.03",
+      "Count": "128",
+      "Avg(us)": "57.516",
+      "Min(us)": "41.73",
+      "Max(us)": "102.03",
+      "Variance": "113.746"
+    },
+    {
+      "Device_id": "host",
+      "Level": "acl",
+      "API Name": "aclnnAiInfraManifoldConstrainedHyperConnectionPostGetWorkspaceSize",
+      "Time(us)": "7324.36",
+      "Count": "736",
+      "Avg(us)": "9.952",
+      "Min(us)": "5.21",
+      "Max(us)": "28.36",
+      "Variance": "11.893"
+    },
+    {
+      "Device_id": "host",
+      "Level": "acl",
+      "API Name": "AiInfraKvRmsNormRopeCache_Tiling",
+      "Time(us)": "6942.02",
+      "Count": "736",
+      "Avg(us)": "9.432",
+      "Min(us)": "0.14",
+      "Max(us)": "51.85",
+      "Variance": "90.1"
+    },
+    {
+      "Device_id": "host",
+      "Level": "acl",
+      "API Name": "aclnnAiInfraKvQuantSparseFlashAttentionGetWorkspaceSize",
+      "Time(us)": "6798.25",
+      "Count": "128",
+      "Avg(us)": "53.111",
+      "Min(us)": "41.03",
+      "Max(us)": "157.66",
+      "Variance": "159.938"
+    },
+    {
+      "Device_id": "host",
+      "Level": "acl",
+      "API Name": "aclrtGetStreamAttribute",
+      "Time(us)": "6308.45",
+      "Count": "20432",
+      "Avg(us)": "0.309",
+      "Min(us)": "0.13",
+      "Max(us)": "3.16",
+      "Variance": "0.014"
+    },
+    {
+      "Device_id": "host",
+      "Level": "acl",
+      "API Name": "aclrtMallocHost",
+      "Time(us)": "6189.88",
+      "Count": "408",
+      "Avg(us)": "15.171",
+      "Min(us)": "2.35",
+      "Max(us)": "86.08",
+      "Variance": "93.805"
+    },
+    {
+      "Device_id": "host",
+      "Level": "acl",
+      "API Name": "ZerosLike_Tiling",
+      "Time(us)": "6149.13",
+      "Count": "704",
+      "Avg(us)": "8.735",
+      "Min(us)": "6.1",
+      "Max(us)": "21.39",
+      "Variance": "2.114"
+    },
+    {
+      "Device_id": "host",
+      "Level": "acl",
+      "API Name": "MatMulV2_Tiling",
+      "Time(us)": "6107.07",
+      "Count": "608",
+      "Avg(us)": "10.045",
+      "Min(us)": "0.15",
+      "Max(us)": "51.1",
+      "Variance": "32.43"
+    },
+    {
+      "Device_id": "host",
+      "Level": "acl",
+      "API Name": "AsStrided_Tiling",
+      "Time(us)": "5631.19",
+      "Count": "2336",
+      "Avg(us)": "2.411",
+      "Min(us)": "1.26",
+      "Max(us)": "21.5",
+      "Variance": "0.958"
+    },
+    {
+      "Device_id": "host",
+      "Level": "acl",
+      "API Name": "aclrtGetHardwareSyncAddr",
+      "Time(us)": "5587.98",
+      "Count": "5760",
+      "Avg(us)": "0.97",
+      "Min(us)": "0.39",
+      "Max(us)": "11.26",
+      "Variance": "0.161"
+    },
+    {
+      "Device_id": "host",
+      "Level": "runtime",
+      "API Name": "HostMalloc",
+      "Time(us)": "5574.58",
+      "Count": "408",
+      "Avg(us)": "13.663",
+      "Min(us)": "1.65",
+      "Max(us)": "80.88",
+      "Variance": "89.312"
+    },
+    {
+      "Device_id": "host",
+      "Level": "acl",
+      "API Name": "MoeFinalizeRoutingV2_Tiling",
+      "Time(us)": "5526.85",
+      "Count": "704",
+      "Avg(us)": "7.851",
+      "Min(us)": "0.15",
+      "Max(us)": "29.25",
+      "Variance": "60.324"
+    },
+    {
+      "Device_id": "host",
+      "Level": "acl",
+      "API Name": "aclnnSwiGluGetWorkspaceSize",
+      "Time(us)": "5414.79",
+      "Count": "368",
+      "Avg(us)": "14.714",
+      "Min(us)": "8.81",
+      "Max(us)": "41.64",
+      "Variance": "16.689"
+    },
+    {
+      "Device_id": "host",
+      "Level": "acl",
+      "API Name": "DynamicQuant_Tiling",
+      "Time(us)": "5140.98",
+      "Count": "1824",
+      "Avg(us)": "2.819",
+      "Min(us)": "0.14",
+      "Max(us)": "28.18",
+      "Variance": "8.516"
+    },
+    {
+      "Device_id": "host",
+      "Level": "acl",
+      "API Name": "aclnnDequantSwigluQuantV2GetWorkspaceSize",
+      "Time(us)": "5093.97",
+      "Count": "352",
+      "Avg(us)": "14.472",
+      "Min(us)": "8.9",
+      "Max(us)": "52.4",
+      "Variance": "21.84"
+    },
+    {
+      "Device_id": "host",
+      "Level": "runtime",
+      "API Name": "BinaryGetFunctionByEntry",
+      "Time(us)": "4155.15",
+      "Count": "4536",
+      "Avg(us)": "0.916",
+      "Min(us)": "0.19",
+      "Max(us)": "7.5",
+      "Variance": "0.148"
+    },
+    {
+      "Device_id": "host",
+      "Level": "runtime",
+      "API Name": "CtxGetSysParamOpt",
+      "Time(us)": "3743.89",
+      "Count": "4528",
+      "Avg(us)": "0.827",
+      "Min(us)": "0.24",
+      "Max(us)": "2.65",
+      "Variance": "0.103"
+    },
+    {
+      "Device_id": "host",
+      "Level": "acl",
+      "API Name": "aclnnAiInfraQuantLightningIndexerGetWorkspaceSize",
+      "Time(us)": "3506.03",
+      "Count": "64",
+      "Avg(us)": "54.782",
+      "Min(us)": "40.32",
+      "Max(us)": "101",
+      "Variance": "199.3"
+    },
+    {
+      "Device_id": "host",
+      "Level": "acl",
+      "API Name": "Transpose_Tiling",
+      "Time(us)": "3416.91",
+      "Count": "1536",
+      "Avg(us)": "2.225",
+      "Min(us)": "0.22",
+      "Max(us)": "41.46",
+      "Variance": "11.712"
+    },
+    {
+      "Device_id": "host",
+      "Level": "acl",
+      "API Name": "aclnnInplaceIndexCopyGetWorkspaceSize",
+      "Time(us)": "3342.14",
+      "Count": "128",
+      "Avg(us)": "26.11",
+      "Min(us)": "12.4",
+      "Max(us)": "90.6",
+      "Variance": "152.599"
+    },
+    {
+      "Device_id": "host",
+      "Level": "acl",
+      "API Name": "AiInfraKvQuantSparseFlashAttention_Tiling",
+      "Time(us)": "3341.4",
+      "Count": "256",
+      "Avg(us)": "13.052",
+      "Min(us)": "0.15",
+      "Max(us)": "118.2",
+      "Variance": "212.863"
+    },
+    {
+      "Device_id": "host",
+      "Level": "acl",
+      "API Name": "aclnnAiInfraQuantLightningIndexer",
+      "Time(us)": "2525.26",
+      "Count": "64",
+      "Avg(us)": "39.457",
+      "Min(us)": "27.15",
+      "Max(us)": "85.03",
+      "Variance": "93.851"
+    },
+    {
+      "Device_id": "host",
+      "Level": "acl",
+      "API Name": "aclrtGetCurrentContext",
+      "Time(us)": "1749.57",
+      "Count": "744",
+      "Avg(us)": "2.352",
+      "Min(us)": "1.06",
+      "Max(us)": "13.81",
+      "Variance": "1.22"
+    },
+    {
+      "Device_id": "host",
+      "Level": "acl",
+      "API Name": "Cast_Tiling",
+      "Time(us)": "1748.12",
+      "Count": "2368",
+      "Avg(us)": "0.738",
+      "Min(us)": "0.14",
+      "Max(us)": "46.73",
+      "Variance": "8.033"
+    },
+    {
+      "Device_id": "host",
+      "Level": "acl",
+      "API Name": "AiInfraQuantLightningIndexer_Tiling",
+      "Time(us)": "1267.2",
+      "Count": "128",
+      "Avg(us)": "9.9",
+      "Min(us)": "0.17",
+      "Max(us)": "44.66",
+      "Variance": "113.134"
+    },
+    {
+      "Device_id": "host",
+      "Level": "acl",
+      "API Name": "aclnnIndexSelectGetWorkspaceSize",
+      "Time(us)": "1179.99",
+      "Count": "8",
+      "Avg(us)": "147.499",
+      "Min(us)": "75.87",
+      "Max(us)": "336.54",
+      "Variance": "6883.443"
+    },
+    {
+      "Device_id": "host",
+      "Level": "acl",
+      "API Name": "aclnnAddGetWorkspaceSize",
+      "Time(us)": "789.83",
+      "Count": "32",
+      "Avg(us)": "24.682",
+      "Min(us)": "16.16",
+      "Max(us)": "68.69",
+      "Variance": "87.834"
+    },
+    {
+      "Device_id": "host",
+      "Level": "acl",
+      "API Name": "ScatterUpdate_Tiling",
+      "Time(us)": "610.25",
+      "Count": "64",
+      "Avg(us)": "9.535",
+      "Min(us)": "6.82",
+      "Max(us)": "18.88",
+      "Variance": "6.297"
+    },
+    {
+      "Device_id": "host",
+      "Level": "acl",
+      "API Name": "Add_Tiling",
+      "Time(us)": "597.31",
+      "Count": "352",
+      "Avg(us)": "1.697",
+      "Min(us)": "0.14",
+      "Max(us)": "73.46",
+      "Variance": "32.164"
+    },
+    {
+      "Device_id": "host",
+      "Level": "acl",
+      "API Name": "aclnnIndexSelect",
+      "Time(us)": "510.19",
+      "Count": "8",
+      "Avg(us)": "63.774",
+      "Min(us)": "42.09",
+      "Max(us)": "98.52",
+      "Variance": "451.334"
+    },
+    {
+      "Device_id": "host",
+      "Level": "acl",
+      "API Name": "aclrtStreamGetId",
+      "Time(us)": "487.73",
+      "Count": "744",
+      "Avg(us)": "0.656",
+      "Min(us)": "0.53",
+      "Max(us)": "2.91",
+      "Variance": "0.016"
+    },
+    {
+      "Device_id": "host",
+      "Level": "acl",
+      "API Name": "GatherV3_Tiling",
+      "Time(us)": "420.97",
+      "Count": "16",
+      "Avg(us)": "26.311",
+      "Min(us)": "0.24",
+      "Max(us)": "106.93",
+      "Variance": "1034.915"
+    },
+    {
+      "Device_id": "host",
+      "Level": "acl",
+      "API Name": "aclrtMalloc",
+      "Time(us)": "236.53",
+      "Count": "8",
+      "Avg(us)": "29.566",
+      "Min(us)": "19.17",
+      "Max(us)": "42.41",
+      "Variance": "51.493"
+    },
+    {
+      "Device_id": "host",
+      "Level": "runtime",
+      "API Name": "MemcpyAsync",
+      "Time(us)": "219.94",
+      "Count": "56",
+      "Avg(us)": "3.927",
+      "Min(us)": "1.13",
+      "Max(us)": "21.27",
+      "Variance": "19.035"
+    },
+    {
+      "Device_id": "host",
+      "Level": "runtime",
+      "API Name": "BinaryGetFunctionByName",
+      "Time(us)": "216.23",
+      "Count": "64",
+      "Avg(us)": "3.379",
+      "Min(us)": "2.25",
+      "Max(us)": "7.6",
+      "Variance": "0.961"
+    },
+    {
+      "Device_id": "host",
+      "Level": "acl",
+      "API Name": "aclnnAiInfraFusedInferAttentionSinkMetadata",
+      "Time(us)": "211.46",
+      "Count": "8",
+      "Avg(us)": "26.433",
+      "Min(us)": "20.25",
+      "Max(us)": "36.48",
+      "Variance": "20.696"
+    },
+    {
+      "Device_id": "host",
+      "Level": "runtime",
+      "API Name": "DevMalloc",
+      "Time(us)": "208.08",
+      "Count": "8",
+      "Avg(us)": "26.01",
+      "Min(us)": "17.05",
+      "Max(us)": "39.57",
+      "Variance": "50.628"
+    },
+    {
+      "Device_id": "host",
+      "Level": "acl",
+      "API Name": "aclrtMemsetAsync",
+      "Time(us)": "136.22",
+      "Count": "8",
+      "Avg(us)": "17.028",
+      "Min(us)": "14.02",
+      "Max(us)": "20.08",
+      "Variance": "3.937"
+    },
+    {
+      "Device_id": "host",
+      "Level": "acl",
+      "API Name": "aclnnAiInfraFusedInferAttentionSinkMetadataGetWorkspaceSize",
+      "Time(us)": "125.73",
+      "Count": "8",
+      "Avg(us)": "15.716",
+      "Min(us)": "13.83",
+      "Max(us)": "18.44",
+      "Variance": "2.572"
+    },
+    {
+      "Device_id": "host",
+      "Level": "runtime",
+      "API Name": "ContextGetCurrent",
+      "Time(us)": "106.87",
+      "Count": "744",
+      "Avg(us)": "0.144",
+      "Min(us)": "0.11",
+      "Max(us)": "0.25",
+      "Variance": "0"
+    },
+    {
+      "Device_id": "host",
+      "Level": "acl",
+      "API Name": "aclrtFree",
+      "Time(us)": "59.07",
+      "Count": "8",
+      "Avg(us)": "7.384",
+      "Min(us)": "4.89",
+      "Max(us)": "10.73",
+      "Variance": "4.037"
+    },
+    {
+      "Device_id": "host",
+      "Level": "runtime",
+      "API Name": "DevFree",
+      "Time(us)": "37.54",
+      "Count": "8",
+      "Avg(us)": "4.692",
+      "Min(us)": "3.64",
+      "Max(us)": "5.81",
+      "Variance": "0.427"
+    },
+    {
+      "Device_id": "host",
+      "Level": "acl",
+      "API Name": "aclrtRegisterCpuFunc",
+      "Time(us)": "20.19",
+      "Count": "8",
+      "Avg(us)": "2.524",
+      "Min(us)": "1.52",
+      "Max(us)": "3.53",
+      "Variance": "0.577"
+    },
+    {
+      "Device_id": "host",
+      "Level": "runtime",
+      "API Name": "StreamSyncTaskFinish",
+      "Time(us)": "0",
+      "Count": "8",
+      "Avg(us)": "0",
+      "Min(us)": "0",
+      "Max(us)": "0",
+      "Variance": "0"
+    }
+  ],
+  "communication_inclusive": [
+    {
+      "Device_id": "3",
+      "OP Type": "hcom_allReduce_",
+      "Count": "92",
+      "Total Time(us)": "2562820.046",
+      "Min Time(us)": "593.392",
+      "Avg Time(us)": "27856.74",
+      "Max Time(us)": "37040.961",
+      "Ratio(%)": "99.532"
+    },
+    {
+      "Device_id": "2",
+      "OP Type": "hcom_allReduce_",
+      "Count": "92",
+      "Total Time(us)": "2561896.506",
+      "Min Time(us)": "842.557",
+      "Avg Time(us)": "27846.701",
+      "Max Time(us)": "36718.314",
+      "Ratio(%)": "99.541"
+    },
+    {
+      "Device_id": "0",
+      "OP Type": "hcom_allReduce_",
+      "Count": "92",
+      "Total Time(us)": "2561363.255",
+      "Min Time(us)": "899.258",
+      "Avg Time(us)": "27840.905",
+      "Max Time(us)": "36743.774",
+      "Ratio(%)": "99.541"
+    },
+    {
+      "Device_id": "6",
+      "OP Type": "hcom_allReduce_",
+      "Count": "92",
+      "Total Time(us)": "2560901.424",
+      "Min Time(us)": "681.367",
+      "Avg Time(us)": "27835.885",
+      "Max Time(us)": "37168.346",
+      "Ratio(%)": "99.526"
+    },
+    {
+      "Device_id": "1",
+      "OP Type": "hcom_allReduce_",
+      "Count": "92",
+      "Total Time(us)": "2560414.039",
+      "Min Time(us)": "859.217",
+      "Avg Time(us)": "27830.587",
+      "Max Time(us)": "36846.896",
+      "Ratio(%)": "99.55"
+    },
+    {
+      "Device_id": "7",
+      "OP Type": "hcom_allReduce_",
+      "Count": "92",
+      "Total Time(us)": "2560404.12",
+      "Min Time(us)": "617.96",
+      "Avg Time(us)": "27830.48",
+      "Max Time(us)": "37125.96",
+      "Ratio(%)": "99.53"
+    },
+    {
+      "Device_id": "4",
+      "OP Type": "hcom_allReduce_",
+      "Count": "92",
+      "Total Time(us)": "2553290.472",
+      "Min Time(us)": "508.25",
+      "Avg Time(us)": "27753.157",
+      "Max Time(us)": "37081.641",
+      "Ratio(%)": "99.526"
+    },
+    {
+      "Device_id": "5",
+      "OP Type": "hcom_allReduce_",
+      "Count": "92",
+      "Total Time(us)": "2457272.3",
+      "Min Time(us)": "507.04",
+      "Avg Time(us)": "26709.482",
+      "Max Time(us)": "35661.66",
+      "Ratio(%)": "99.505"
+    },
+    {
+      "Device_id": "5",
+      "OP Type": "hcom_allGather_",
+      "Count": "1",
+      "Total Time(us)": "12225.78",
+      "Min Time(us)": "12225.78",
+      "Avg Time(us)": "12225.78",
+      "Max Time(us)": "12225.78",
+      "Ratio(%)": "0.495"
+    },
+    {
+      "Device_id": "6",
+      "OP Type": "hcom_allGather_",
+      "Count": "1",
+      "Total Time(us)": "12201.388",
+      "Min Time(us)": "12201.388",
+      "Avg Time(us)": "12201.388",
+      "Max Time(us)": "12201.388",
+      "Ratio(%)": "0.474"
+    },
+    {
+      "Device_id": "4",
+      "OP Type": "hcom_allGather_",
+      "Count": "1",
+      "Total Time(us)": "12156.663",
+      "Min Time(us)": "12156.663",
+      "Avg Time(us)": "12156.663",
+      "Max Time(us)": "12156.663",
+      "Ratio(%)": "0.474"
+    },
+    {
+      "Device_id": "7",
+      "OP Type": "hcom_allGather_",
+      "Count": "1",
+      "Total Time(us)": "12086.8",
+      "Min Time(us)": "12086.8",
+      "Avg Time(us)": "12086.8",
+      "Max Time(us)": "12086.8",
+      "Ratio(%)": "0.47"
+    },
+    {
+      "Device_id": "3",
+      "OP Type": "hcom_allGather_",
+      "Count": "1",
+      "Total Time(us)": "12048.321",
+      "Min Time(us)": "12048.321",
+      "Avg Time(us)": "12048.321",
+      "Max Time(us)": "12048.321",
+      "Ratio(%)": "0.468"
+    },
+    {
+      "Device_id": "2",
+      "OP Type": "hcom_allGather_",
+      "Count": "1",
+      "Total Time(us)": "11824.376",
+      "Min Time(us)": "11824.376",
+      "Avg Time(us)": "11824.376",
+      "Max Time(us)": "11824.376",
+      "Ratio(%)": "0.459"
+    },
+    {
+      "Device_id": "0",
+      "OP Type": "hcom_allGather_",
+      "Count": "1",
+      "Total Time(us)": "11817.676",
+      "Min Time(us)": "11817.676",
+      "Avg Time(us)": "11817.676",
+      "Max Time(us)": "11817.676",
+      "Ratio(%)": "0.459"
+    },
+    {
+      "Device_id": "1",
+      "OP Type": "hcom_allGather_",
+      "Count": "1",
+      "Total Time(us)": "11563.831",
+      "Min Time(us)": "11563.831",
+      "Avg Time(us)": "11563.831",
+      "Max Time(us)": "11563.831",
+      "Ratio(%)": "0.45"
+    }
+  ],
+  "sources": {
+    "metadata-prefill-profile/PROF_000001_20261018051511265_00660429ALOGKCQJ/mindstudio_profiler_output/task_time_20261018051637.csv": "541a57447b16d1ada58b98233d9dbd41a53a7e6d58e082f002aa9e099689c83b",
+    "metadata-prefill-profile/PROF_000001_20261018051511265_00660429ALOGKCQJ/mindstudio_profiler_output/api_statistic_20261018051637.csv": "b57f39d3a48345253306122de857e434fd3ad462086bfdb35f28b3e6b2a22862",
+    "metadata-prefill-profile/PROF_000001_20261018051511265_00660429ALOGKCQJ/mindstudio_profiler_output/communication_statistic_20261018051637.csv": "d1fec62da3fb37ca8363544c048f2f32e9ec67463794104a0ce43ad50fa55a67"
+  },
+  "caveats": [
+    "API and communication durations include waits and overlap.",
+    "Task kinds overlap; unions must not be added across kinds or ranks.",
+    "Notify waits are not useful compute. Device task span excludes some host work.",
+    "Absolute timestamps are parsed as floating-point microseconds; submicrosecond precision is limited."
+  ]
+}

@@ -43,3 +43,7 @@ capture, and verify EOS-scoped output, allocation/transfer audits, actual
 prefill and decode timing. If it helps, qualify mixed requests and long contexts
 before changing the serving default. Do not attribute reductions in collective
 waits to communication improvements when rank readiness changed.
+
+## Current completion-scoped backend
+
+The [new 4K capture](validation/2026-10-18-current-prefill-profile/README.md) passes all 39 fixture tokens with the current frozen backend. Its 3.01-second profiled batch still shows large inclusive HCCL/notify intervals after device zero and metadata-lifetime fixes. Inspect actual collective implementation selection and host expansion before further kernel changes; waiting intervals alone do not prove bandwidth saturation. Keep the 4K uncaptured quantum and validate a targeted change on the smaller fixture before repeating 64K.

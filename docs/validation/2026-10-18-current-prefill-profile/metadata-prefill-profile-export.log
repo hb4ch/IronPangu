@@ -1,0 +1,81 @@
+[INFO] Start profiling....
+[INFO] Start export data in metadata-prefill-profile.
+Sun 18 Oct 2026 05:15:52 [WARNING] [MSVP] [661172] msprof_entrance.py: Msprof analysis is parsing data as root, which may cause potential system security risks.
+Sun 18 Oct 2026 05:15:52 [INFO] [MSVP] [661174] msprof_common.py: Start analyzing data in "/data/p00603624/inferfabric/openpangu92/metadata-prefill-profile/PROF_000001_20261018051511265_00660429ALOGKCQJ/host" ...
+Sun 18 Oct 2026 05:15:52 [INFO] [MSVP] [661174] msprof_common.py: It may take few minutes, please be patient ...
+Sun 18 Oct 2026 05:15:57 [INFO] [MSVP] [661174] msprof_common.py: Analysis data in "/data/p00603624/inferfabric/openpangu92/metadata-prefill-profile/PROF_000001_20261018051511265_00660429ALOGKCQJ/host" finished.
+Sun 18 Oct 2026 05:15:57 [INFO] [MSVP] [661174] msprof_common.py: Start analyzing data in "/data/p00603624/inferfabric/openpangu92/metadata-prefill-profile/PROF_000001_20261018051511265_00660429ALOGKCQJ/device_7" ...
+Sun 18 Oct 2026 05:15:57 [INFO] [MSVP] [661174] msprof_common.py: It may take few minutes, please be patient ...
+Sun 18 Oct 2026 05:15:57 [INFO] [MSVP] [661174] msprof_common.py: Analysis data in "/data/p00603624/inferfabric/openpangu92/metadata-prefill-profile/PROF_000001_20261018051511265_00660429ALOGKCQJ/device_7" finished.
+Sun 18 Oct 2026 05:15:57 [INFO] [MSVP] [661174] msprof_common.py: Start analyzing data in "/data/p00603624/inferfabric/openpangu92/metadata-prefill-profile/PROF_000001_20261018051511265_00660429ALOGKCQJ/device_6" ...
+Sun 18 Oct 2026 05:15:57 [INFO] [MSVP] [661174] msprof_common.py: It may take few minutes, please be patient ...
+Sun 18 Oct 2026 05:15:57 [INFO] [MSVP] [661174] msprof_common.py: Analysis data in "/data/p00603624/inferfabric/openpangu92/metadata-prefill-profile/PROF_000001_20261018051511265_00660429ALOGKCQJ/device_6" finished.
+Sun 18 Oct 2026 05:15:57 [INFO] [MSVP] [661174] msprof_common.py: Start analyzing data in "/data/p00603624/inferfabric/openpangu92/metadata-prefill-profile/PROF_000001_20261018051511265_00660429ALOGKCQJ/device_5" ...
+Sun 18 Oct 2026 05:15:57 [INFO] [MSVP] [661174] msprof_common.py: It may take few minutes, please be patient ...
+Sun 18 Oct 2026 05:15:58 [INFO] [MSVP] [661174] msprof_common.py: Analysis data in "/data/p00603624/inferfabric/openpangu92/metadata-prefill-profile/PROF_000001_20261018051511265_00660429ALOGKCQJ/device_5" finished.
+Sun 18 Oct 2026 05:15:58 [INFO] [MSVP] [661174] msprof_common.py: Start analyzing data in "/data/p00603624/inferfabric/openpangu92/metadata-prefill-profile/PROF_000001_20261018051511265_00660429ALOGKCQJ/device_4" ...
+Sun 18 Oct 2026 05:15:58 [INFO] [MSVP] [661174] msprof_common.py: It may take few minutes, please be patient ...
+Sun 18 Oct 2026 05:15:58 [INFO] [MSVP] [661174] msprof_common.py: Analysis data in "/data/p00603624/inferfabric/openpangu92/metadata-prefill-profile/PROF_000001_20261018051511265_00660429ALOGKCQJ/device_4" finished.
+Sun 18 Oct 2026 05:15:58 [INFO] [MSVP] [661174] msprof_common.py: Start analyzing data in "/data/p00603624/inferfabric/openpangu92/metadata-prefill-profile/PROF_000001_20261018051511265_00660429ALOGKCQJ/device_3" ...
+Sun 18 Oct 2026 05:15:58 [INFO] [MSVP] [661174] msprof_common.py: It may take few minutes, please be patient ...
+Sun 18 Oct 2026 05:15:58 [INFO] [MSVP] [661174] msprof_common.py: Analysis data in "/data/p00603624/inferfabric/openpangu92/metadata-prefill-profile/PROF_000001_20261018051511265_00660429ALOGKCQJ/device_3" finished.
+Sun 18 Oct 2026 05:15:58 [INFO] [MSVP] [661174] msprof_common.py: Start analyzing data in "/data/p00603624/inferfabric/openpangu92/metadata-prefill-profile/PROF_000001_20261018051511265_00660429ALOGKCQJ/device_2" ...
+Sun 18 Oct 2026 05:15:58 [INFO] [MSVP] [661174] msprof_common.py: It may take few minutes, please be patient ...
+Sun 18 Oct 2026 05:15:58 [INFO] [MSVP] [661174] msprof_common.py: Analysis data in "/data/p00603624/inferfabric/openpangu92/metadata-prefill-profile/PROF_000001_20261018051511265_00660429ALOGKCQJ/device_2" finished.
+Sun 18 Oct 2026 05:15:58 [INFO] [MSVP] [661174] msprof_common.py: Start analyzing data in "/data/p00603624/inferfabric/openpangu92/metadata-prefill-profile/PROF_000001_20261018051511265_00660429ALOGKCQJ/device_1" ...
+Sun 18 Oct 2026 05:15:58 [INFO] [MSVP] [661174] msprof_common.py: It may take few minutes, please be patient ...
+Sun 18 Oct 2026 05:15:58 [INFO] [MSVP] [661174] msprof_common.py: Analysis data in "/data/p00603624/inferfabric/openpangu92/metadata-prefill-profile/PROF_000001_20261018051511265_00660429ALOGKCQJ/device_1" finished.
+Sun 18 Oct 2026 05:15:58 [INFO] [MSVP] [661174] msprof_common.py: Start analyzing data in "/data/p00603624/inferfabric/openpangu92/metadata-prefill-profile/PROF_000001_20261018051511265_00660429ALOGKCQJ/device_0" ...
+Sun 18 Oct 2026 05:15:58 [INFO] [MSVP] [661174] msprof_common.py: It may take few minutes, please be patient ...
+Sun 18 Oct 2026 05:15:58 [INFO] [MSVP] [661174] msprof_common.py: Analysis data in "/data/p00603624/inferfabric/openpangu92/metadata-prefill-profile/PROF_000001_20261018051511265_00660429ALOGKCQJ/device_0" finished.
+Sun 18 Oct 2026 05:15:59 [INFO] [MSVP] [661174] msprof_export.py: All collected data will be exported, path is: /data/p00603624/inferfabric/openpangu92/metadata-prefill-profile/PROF_000001_20261018051511265_00660429ALOGKCQJ/device_7.
+Sun 18 Oct 2026 05:15:59 [INFO] [MSVP] [661174] msprof_export.py: All collected data will be exported, path is: /data/p00603624/inferfabric/openpangu92/metadata-prefill-profile/PROF_000001_20261018051511265_00660429ALOGKCQJ/device_6.
+Sun 18 Oct 2026 05:15:59 [INFO] [MSVP] [661174] msprof_export.py: All collected data will be exported, path is: /data/p00603624/inferfabric/openpangu92/metadata-prefill-profile/PROF_000001_20261018051511265_00660429ALOGKCQJ/device_5.
+Sun 18 Oct 2026 05:16:00 [INFO] [MSVP] [661174] msprof_export.py: All collected data will be exported, path is: /data/p00603624/inferfabric/openpangu92/metadata-prefill-profile/PROF_000001_20261018051511265_00660429ALOGKCQJ/device_4.
+Sun 18 Oct 2026 05:16:00 [INFO] [MSVP] [661174] msprof_export.py: All collected data will be exported, path is: /data/p00603624/inferfabric/openpangu92/metadata-prefill-profile/PROF_000001_20261018051511265_00660429ALOGKCQJ/device_3.
+Sun 18 Oct 2026 05:16:00 [INFO] [MSVP] [661174] msprof_export.py: All collected data will be exported, path is: /data/p00603624/inferfabric/openpangu92/metadata-prefill-profile/PROF_000001_20261018051511265_00660429ALOGKCQJ/device_2.
+Sun 18 Oct 2026 05:16:00 [INFO] [MSVP] [661174] msprof_export.py: All collected data will be exported, path is: /data/p00603624/inferfabric/openpangu92/metadata-prefill-profile/PROF_000001_20261018051511265_00660429ALOGKCQJ/device_1.
+Sun 18 Oct 2026 05:16:01 [INFO] [MSVP] [661174] msprof_export.py: All collected data will be exported, path is: /data/p00603624/inferfabric/openpangu92/metadata-prefill-profile/PROF_000001_20261018051511265_00660429ALOGKCQJ/device_0.
+Sun 18 Oct 2026 05:16:20 [WARNING] [MSVP] [661817] msprof_export.py: Can not find any host or device path in dir("/data/p00603624/inferfabric/openpangu92/metadata-prefill-profile"). 
+Sun 18 Oct 2026 05:16:21 [WARNING] [MSVP] [661818] msprof_entrance.py: Msprof analysis is parsing data as root, which may cause potential system security risks.
+Sun 18 Oct 2026 05:16:21 [INFO] [MSVP] [661820] msprof_export.py: The data in "/data/p00603624/inferfabric/openpangu92/metadata-prefill-profile/PROF_000001_20261018051511265_00660429ALOGKCQJ/host" has been analyzed. Parsing phase will be skipped.
+Sun 18 Oct 2026 05:16:21 [INFO] [MSVP] [661820] msprof_export.py: The data in "/data/p00603624/inferfabric/openpangu92/metadata-prefill-profile/PROF_000001_20261018051511265_00660429ALOGKCQJ/device_7" has been analyzed. Parsing phase will be skipped.
+Sun 18 Oct 2026 05:16:21 [INFO] [MSVP] [661820] msprof_export.py: The data in "/data/p00603624/inferfabric/openpangu92/metadata-prefill-profile/PROF_000001_20261018051511265_00660429ALOGKCQJ/device_6" has been analyzed. Parsing phase will be skipped.
+Sun 18 Oct 2026 05:16:21 [INFO] [MSVP] [661820] msprof_export.py: The data in "/data/p00603624/inferfabric/openpangu92/metadata-prefill-profile/PROF_000001_20261018051511265_00660429ALOGKCQJ/device_5" has been analyzed. Parsing phase will be skipped.
+Sun 18 Oct 2026 05:16:21 [INFO] [MSVP] [661820] msprof_export.py: The data in "/data/p00603624/inferfabric/openpangu92/metadata-prefill-profile/PROF_000001_20261018051511265_00660429ALOGKCQJ/device_4" has been analyzed. Parsing phase will be skipped.
+Sun 18 Oct 2026 05:16:21 [INFO] [MSVP] [661820] msprof_export.py: The data in "/data/p00603624/inferfabric/openpangu92/metadata-prefill-profile/PROF_000001_20261018051511265_00660429ALOGKCQJ/device_3" has been analyzed. Parsing phase will be skipped.
+Sun 18 Oct 2026 05:16:21 [INFO] [MSVP] [661820] msprof_export.py: The data in "/data/p00603624/inferfabric/openpangu92/metadata-prefill-profile/PROF_000001_20261018051511265_00660429ALOGKCQJ/device_2" has been analyzed. Parsing phase will be skipped.
+Sun 18 Oct 2026 05:16:21 [INFO] [MSVP] [661820] msprof_export.py: The data in "/data/p00603624/inferfabric/openpangu92/metadata-prefill-profile/PROF_000001_20261018051511265_00660429ALOGKCQJ/device_1" has been analyzed. Parsing phase will be skipped.
+Sun 18 Oct 2026 05:16:21 [INFO] [MSVP] [661820] msprof_export.py: The data in "/data/p00603624/inferfabric/openpangu92/metadata-prefill-profile/PROF_000001_20261018051511265_00660429ALOGKCQJ/device_0" has been analyzed. Parsing phase will be skipped.
+Sun 18 Oct 2026 05:16:21 [INFO] [MSVP] [661820] msprof_export.py: All collected data will be exported, path is: /data/p00603624/inferfabric/openpangu92/metadata-prefill-profile/PROF_000001_20261018051511265_00660429ALOGKCQJ/device_7.
+Sun 18 Oct 2026 05:16:21 [INFO] [MSVP] [661820] msprof_export.py: All collected data will be exported, path is: /data/p00603624/inferfabric/openpangu92/metadata-prefill-profile/PROF_000001_20261018051511265_00660429ALOGKCQJ/device_6.
+Sun 18 Oct 2026 05:16:21 [INFO] [MSVP] [661820] msprof_export.py: All collected data will be exported, path is: /data/p00603624/inferfabric/openpangu92/metadata-prefill-profile/PROF_000001_20261018051511265_00660429ALOGKCQJ/device_5.
+Sun 18 Oct 2026 05:16:21 [INFO] [MSVP] [661820] msprof_export.py: All collected data will be exported, path is: /data/p00603624/inferfabric/openpangu92/metadata-prefill-profile/PROF_000001_20261018051511265_00660429ALOGKCQJ/device_4.
+Sun 18 Oct 2026 05:16:21 [INFO] [MSVP] [661820] msprof_export.py: All collected data will be exported, path is: /data/p00603624/inferfabric/openpangu92/metadata-prefill-profile/PROF_000001_20261018051511265_00660429ALOGKCQJ/device_3.
+Sun 18 Oct 2026 05:16:21 [INFO] [MSVP] [661820] msprof_export.py: All collected data will be exported, path is: /data/p00603624/inferfabric/openpangu92/metadata-prefill-profile/PROF_000001_20261018051511265_00660429ALOGKCQJ/device_2.
+Sun 18 Oct 2026 05:16:21 [INFO] [MSVP] [661820] msprof_export.py: All collected data will be exported, path is: /data/p00603624/inferfabric/openpangu92/metadata-prefill-profile/PROF_000001_20261018051511265_00660429ALOGKCQJ/device_1.
+Sun 18 Oct 2026 05:16:21 [INFO] [MSVP] [661820] msprof_export.py: All collected data will be exported, path is: /data/p00603624/inferfabric/openpangu92/metadata-prefill-profile/PROF_000001_20261018051511265_00660429ALOGKCQJ/device_0.
+Sun 18 Oct 2026 05:16:22 [INFO] [MSVP] [661820] msprof_export.py: There is no summary data to export for "/data/p00603624/inferfabric/openpangu92/metadata-prefill-profile/PROF_000001_20261018051511265_00660429ALOGKCQJ/host"
+Sun 18 Oct 2026 05:16:39 [INFO] [MSVP] [661820] msprof_export.py: All collected data will be exported, path is: /data/p00603624/inferfabric/openpangu92/metadata-prefill-profile/PROF_000001_20261018051511265_00660429ALOGKCQJ/device_7.
+Sun 18 Oct 2026 05:16:39 [INFO] [MSVP] [661820] msprof_export.py: All collected data will be exported, path is: /data/p00603624/inferfabric/openpangu92/metadata-prefill-profile/PROF_000001_20261018051511265_00660429ALOGKCQJ/device_6.
+Sun 18 Oct 2026 05:16:39 [INFO] [MSVP] [661820] msprof_export.py: All collected data will be exported, path is: /data/p00603624/inferfabric/openpangu92/metadata-prefill-profile/PROF_000001_20261018051511265_00660429ALOGKCQJ/device_5.
+Sun 18 Oct 2026 05:16:39 [INFO] [MSVP] [661820] msprof_export.py: All collected data will be exported, path is: /data/p00603624/inferfabric/openpangu92/metadata-prefill-profile/PROF_000001_20261018051511265_00660429ALOGKCQJ/device_4.
+Sun 18 Oct 2026 05:16:39 [INFO] [MSVP] [661820] msprof_export.py: All collected data will be exported, path is: /data/p00603624/inferfabric/openpangu92/metadata-prefill-profile/PROF_000001_20261018051511265_00660429ALOGKCQJ/device_3.
+Sun 18 Oct 2026 05:16:39 [INFO] [MSVP] [661820] msprof_export.py: All collected data will be exported, path is: /data/p00603624/inferfabric/openpangu92/metadata-prefill-profile/PROF_000001_20261018051511265_00660429ALOGKCQJ/device_2.
+Sun 18 Oct 2026 05:16:39 [INFO] [MSVP] [661820] msprof_export.py: All collected data will be exported, path is: /data/p00603624/inferfabric/openpangu92/metadata-prefill-profile/PROF_000001_20261018051511265_00660429ALOGKCQJ/device_1.
+Sun 18 Oct 2026 05:16:39 [INFO] [MSVP] [661820] msprof_export.py: All collected data will be exported, path is: /data/p00603624/inferfabric/openpangu92/metadata-prefill-profile/PROF_000001_20261018051511265_00660429ALOGKCQJ/device_0.
+Sun 18 Oct 2026 05:16:39 [INFO] [MSVP] [661820] msprof_common.py: Start exporting summary output_file.
+Sun 18 Oct 2026 05:16:39 [INFO] [MSVP] [661820] msprof_common.py: End exporting summary output_file.The file is stored in the /data/p00603624/inferfabric/openpangu92/metadata-prefill-profile/PROF_000001_20261018051511265_00660429ALOGKCQJ/mindstudio_profiler_output path.
+Sun 18 Oct 2026 05:16:39 [WARNING] [MSVP] [661960] msprof_export.py: Can not find any host or device path in dir("/data/p00603624/inferfabric/openpangu92/metadata-prefill-profile"). 
+
+Cluster Tuning Report:
+1. For slow nodes, pay attention to the data preparation phase (threshold: 20%):
+	N/A
+2. For slow link, pay attention to the data bandwidth (threshold: 20%):
+	N/A
+
+
+Sun 18 Oct 2026 05:16:39 [WARNING] [MSVP] [661818] msprof_export.py: Cluster Tuning did not complete!
+[INFO] Export all data in metadata-prefill-profile done.
+[INFO] Profiling finished.
+[INFO] Process profiling data complete. Data is saved in /data/p00603624/inferfabric/openpangu92/metadata-prefill-profile
