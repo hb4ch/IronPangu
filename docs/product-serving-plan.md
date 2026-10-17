@@ -326,3 +326,13 @@ pool allocation, multiple recurrent slots, batch metadata staging, longer page
 boundary probes and true multi-sequence kernels. Per-component uploads increased
 short-prompt TPOT to 20.16–20.50 ms; consolidate those into stable batch metadata
 buffers before performance acceptance. No S3–S7 completion is implied.
+
+### Implementation record: packed cache control staging
+
+The metadata follow-up now stages append positions in one stable bank per rank,
+with compiler-visible offsets and fixed descriptor views. The 92B bank is 736
+bytes; it replaces 92 small token updates with one upload. Full 99-token fixtures
+and 224-token identity/shuffled boundary tests pass on NPU. Short-prompt TPOT is
+17.83–17.93 ms again; 504-token serial-prefill TTFT remains about 9.24 seconds,
+so packed/chunked prefill is still mandatory for the 64K target. See
+[qualification](validation/2026-10-17-cache-control-bank/README.md).

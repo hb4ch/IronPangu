@@ -1,0 +1,83 @@
+{
+  "format": "inferfabric.persistent-program-qualification.v1",
+  "requests": 9,
+  "output_tokens": 99,
+  "exact_fixture_tokens": true,
+  "fixture_sha256": "d543d78afd600b46215ed0a45fccede9a267cfec7f3170a5dc5c28421dd511a4",
+  "permuted_pages": true,
+  "scope": "one loaded TP8/EP8 group, serial token graph; no packed prefill or long-context claim",
+  "measurements": [
+    {
+      "request": 0,
+      "case": "arithmetic",
+      "prompt_tokens": 12,
+      "output_tokens": 8,
+      "engine_ttft_ms": 345.63,
+      "tpot_ms": 17.907714285714285
+    },
+    {
+      "request": 1,
+      "case": "geography",
+      "prompt_tokens": 15,
+      "output_tokens": 8,
+      "engine_ttft_ms": 330.453,
+      "tpot_ms": 17.89442857142857
+    },
+    {
+      "request": 2,
+      "case": "chinese",
+      "prompt_tokens": 14,
+      "output_tokens": 17,
+      "engine_ttft_ms": 319.6,
+      "tpot_ms": 17.929312499999998
+    },
+    {
+      "request": 3,
+      "case": "arithmetic",
+      "prompt_tokens": 12,
+      "output_tokens": 8,
+      "engine_ttft_ms": 283.182,
+      "tpot_ms": 17.885428571428573
+    },
+    {
+      "request": 4,
+      "case": "geography",
+      "prompt_tokens": 15,
+      "output_tokens": 8,
+      "engine_ttft_ms": 330.15,
+      "tpot_ms": 17.891857142857145
+    },
+    {
+      "request": 5,
+      "case": "chinese",
+      "prompt_tokens": 14,
+      "output_tokens": 17,
+      "engine_ttft_ms": 302.369,
+      "tpot_ms": 17.8865625
+    },
+    {
+      "request": 6,
+      "case": "arithmetic",
+      "prompt_tokens": 12,
+      "output_tokens": 8,
+      "engine_ttft_ms": 267.922,
+      "tpot_ms": 17.826142857142855
+    },
+    {
+      "request": 7,
+      "case": "geography",
+      "prompt_tokens": 15,
+      "output_tokens": 8,
+      "engine_ttft_ms": 319.152,
+      "tpot_ms": 17.90042857142857
+    },
+    {
+      "request": 8,
+      "case": "chinese",
+      "prompt_tokens": 14,
+      "output_tokens": 17,
+      "engine_ttft_ms": 302.47,
+      "tpot_ms": 17.917875
+    }
+  ]
+}

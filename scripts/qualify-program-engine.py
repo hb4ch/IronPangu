@@ -30,6 +30,7 @@ def main():
                INFERFABRIC_PREPARED_AUDIT_DIR=str((args.output / 'prepared').resolve()),
                INFERFABRIC_TRANSFER_AUDIT_DIR=str((args.output / 'transfers').resolve()))
     env.pop('INFERFABRIC_PREPARE_ARENA', None)
+    env.pop('INFERFABRIC_ALTERNATE_PAGE_LAYOUTS', None)
     if args.prepare:
         env['INFERFABRIC_PREPARE_ARENA'] = '1'
     if args.permuted_pages:

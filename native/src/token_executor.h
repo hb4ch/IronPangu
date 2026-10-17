@@ -115,6 +115,9 @@ struct Decoder {
   std::map<std::pair<std::string, std::string>, std::unique_ptr<DeviceTensor>> paired_projections;
   std::map<std::string, std::unique_ptr<MomeState>> mome_states;
   std::map<std::string, std::unique_ptr<AttentionState>> attention_states;
+  std::map<std::string, size_t> cache_control_offsets;
+  std::unique_ptr<DeviceTensor> cache_controls;
+  std::vector<uint8_t> cache_control_host;
   std::map<std::string, V> prepared_sinks;
   aclrtStream stream = nullptr;
   HcclComm comm = nullptr;
@@ -139,6 +142,16 @@ struct Decoder {
     for (const auto &load : p.instructions)
       source_types.emplace(load.destination, load.source_dtype);
     stream = this->execution.stream;
+    for (const auto &node : program.nodes)
+      if (node.op == "cache_append" || node.op == "cache_norm_rope_append" || node.op == "cache_c8_norm_rope_append") {
+        auto offset=cache_control_offsets.size()*16;
+        if (!cache_control_offsets.emplace(node.name,offset).second)
+          throw std::runtime_error("duplicate cache control binding");
+      }
+    if (!cache_control_offsets.empty()) {
+      cache_control_host.resize(cache_control_offsets.size()*16,0);
+      cache_controls=std::make_unique<DeviceTensor>(std::vector<int64_t>{int64_t(cache_control_host.size())},ACL_UINT8,1);
+    }
     token_index =
         std::make_unique<DeviceTensor>(std::vector<int64_t>{1}, ACL_INT32, 4);
     position_index =
@@ -610,7 +623,7 @@ struct Decoder {
     aclOpExecutor *executor = nullptr;
     checked(prepared::query("aclnnInplaceIndexCopy", false,
                             aclnnInplaceIndexCopyGetWorkspaceSize, cache.t, 0,
-                            state.append_index.tensor, source.t, &bytes,
+                            cache_append_descriptor(state_name,ACL_INT32), source.t, &bytes,
                             &executor),
             "cache device index prepare");
     run(aclnnInplaceIndexCopy, bytes, executor);
@@ -644,7 +657,7 @@ struct Decoder {
     checked(prepared::query("aclnnAiInfraKvRmsNormRopeCache", false,
                             aclnnAiInfraKvRmsNormRopeCacheGetWorkspaceSize,
                             kv.t, norm_weight.t, rotary_cos_bf16->tensor,
-                            rotary_sin_bf16->tensor, ptr->append_position.tensor,
+                            rotary_sin_bf16->tensor, cache_append_descriptor(state_name,ACL_INT64),
                             nullptr, ptr->key.tensor, nullptr, nullptr,
                             nullptr, nullptr, nullptr, 1e-5, cache_mode,
                             rotary_mode, quant_mode, true, rope_out.tensor, latent_out.tensor,
@@ -1141,16 +1154,24 @@ struct Decoder {
     for (const auto &node : program.nodes) if (node.op == "embedding") return node.integer("vocab");
     throw std::runtime_error("missing embedding vocabulary contract");
   }
+  aclTensor *cache_append_descriptor(const std::string &name, aclDataType dtype) {
+    if(dtype!=ACL_INT64 && dtype!=ACL_INT32)throw std::runtime_error("cache control dtype");
+    auto offset=cache_control_offsets.at(name)+(dtype==ACL_INT32?8:0);
+    return execution.descriptor(static_cast<uint8_t *>(cache_controls->data)+offset,{1},dtype);
+  }
   void set_token_inputs(int id, int pos) {
     if (pos < 0 || pos >= int(program.context) || id < 0 || uint32_t(id) >= vocabulary())
       throw std::runtime_error("token/context bound");
     current_position = pos;
-    for (auto &entry : attention_states) {
-      auto &state = *entry.second;
-      auto physical = state.page_binding.append(uint32_t(pos));
-      resident::control_upload(state.append_position, std::vector<int64_t>{int64_t(physical)});
-      resident::control_upload(state.append_index, std::vector<int32_t>{int32_t(physical)});
+    for (const auto &entry : cache_control_offsets) {
+      auto state=attention_states.find(entry.first);
+      uint64_t physical=state==attention_states.end()?uint64_t(pos):state->second->page_binding.append(uint32_t(pos));
+      if(physical>INT32_MAX)throw std::runtime_error("physical cache position overflow");
+      int64_t wide=int64_t(physical); int32_t narrow=int32_t(physical);
+      std::memcpy(cache_control_host.data()+entry.second,&wide,sizeof(wide));
+      std::memcpy(cache_control_host.data()+entry.second+8,&narrow,sizeof(narrow));
     }
+    if(cache_controls)resident::control_upload(*cache_controls,cache_control_host);
     resident::control_upload(*token_index, std::vector<int32_t>{id});
     resident::control_upload(*position_index, std::vector<int32_t>{pos});
     resident::control_upload(*cache_position, std::vector<int64_t>{pos});

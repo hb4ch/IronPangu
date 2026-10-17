@@ -245,6 +245,7 @@ fn serving_state_is_derived_from_expanded_operators() {
     assert!(states.iter().all(|s| !s.checkpoint_supported && s.ranks.len() == 8));
     let program = inferfabric_compiler::token_program::lower(&graph, None).unwrap();
     let recipes = inferfabric_compiler::token_program::recipes(&program, &graph);
+    let mut control_offsets = Vec::new();
     for state in states.iter().filter(|s| matches!(s.storage, Storage::Pages { .. })) {
         let lowered: Vec<_> = program.instructions.iter().enumerate().filter(|(_, i)|
             i.logical_node == state.logical_node && matches!(i.op.as_str(), "cache_append" | "cache_norm_rope_append" | "cache_c8_norm_rope_append")).collect();
@@ -254,5 +255,9 @@ fn serving_state_is_derived_from_expanded_operators() {
         let append = fields.iter().find(|f| f["name"] == "physical_append_position").unwrap();
         let Storage::Pages { page_tokens, .. } = state.storage else { unreachable!() };
         assert_eq!(append["page_tokens"], page_tokens);
+        assert_eq!(append["control_bank_bytes"], 46 * 16);
+        control_offsets.push(append["byte_offset"].as_u64().unwrap());
     }
+    control_offsets.sort_unstable();
+    assert_eq!(control_offsets, (0..46).map(|i| i*16).collect::<Vec<_>>());
 }

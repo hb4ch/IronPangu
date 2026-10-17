@@ -733,6 +733,9 @@ impl Program {
 /// Inspection metadata for backend recipes, separate from executable instructions.
 /// A vendor API may enqueue several device kernels; do not label it a measured launch.
 pub fn recipes(p: &Program, graph: &Graph) -> Vec<serde_json::Value> {
+    let cache_controls: BTreeMap<_, _> = p.instructions.iter()
+        .filter(|i| matches!(i.op.as_str(), "cache_c8_norm_rope_append" | "cache_norm_rope_append" | "cache_append"))
+        .enumerate().map(|(slot, i)| (i.name.as_str(), slot * 16)).collect();
     p.instructions.iter().map(|i| {
         let n = &graph.nodes[i.logical_node];
         let (apis, internal, materialization): (&[&str], &str, &str) = match i.op.as_str() {
@@ -829,7 +832,7 @@ pub fn recipes(p: &Program, graph: &Graph) -> Vec<serde_json::Value> {
         };
         if matches!(i.op.as_str(), "cache_c8_norm_rope_append" | "cache_norm_rope_append" | "cache_append") {
             fields.push(serde_json::json!({"name":"device_block_table","dtype":"int32","shape":[1,32],"role":"control_input","binding":"component/rank physical page IDs; stable device address"}));
-            fields.push(serde_json::json!({"name":"physical_append_position","dtype":if i.op=="cache_append" {"int32"} else {"int64"},"shape":[1],"role":"control_input","binding":"block_table[logical_position / page_tokens] * page_tokens + logical_position % page_tokens","page_tokens":if i.op=="cache_c8_norm_rope_append" {32} else {16}}));
+            fields.push(serde_json::json!({"name":"physical_append_position","dtype":if i.op=="cache_append" {"int32"} else {"int64"},"shape":[1],"role":"control_input","binding":"block_table[logical_position / page_tokens] * page_tokens + logical_position % page_tokens","page_tokens":if i.op=="cache_c8_norm_rope_append" {32} else {16},"staging":"one packed control upload per rank per invocation","control_bank_bytes":cache_controls.len()*16,"byte_offset":cache_controls[i.name.as_str()]+if i.op=="cache_append" {8} else {0}}));
         }
         serde_json::json!({"preparation":preparation,"value_fields":fields,"apis":apis,"internal":internal,"materialization":materialization,"placement":placement,"communication":communication,
             "granularity":if i.op=="sink_normalize" {"initialization recipe"} else {"instruction"}})
