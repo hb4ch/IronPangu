@@ -38,8 +38,15 @@ inline void validate_kernels(const Plan &p) {
     auto count=[&](const char *op){return std::count_if(p.nodes.begin(),p.nodes.end(),[&](const auto &n){return n.op==op;});};
     if((count("packed_latent_attention") || count("sparse_index") || count("indexed_packed_attention")) && count("packed_attention_metadata")!=1)
       throw std::runtime_error("packed attention metadata must have one declared writer");
-    if(count("latent_attention") && (count("attention_metadata")!=1 || count("attention_metadata_zero")!=1))
-      throw std::runtime_error("attention metadata must have one declared writer");
+    std::set<uint32_t> windows,zeros;
+    for(const auto &node:p.nodes) {
+      if(node.op=="attention_metadata" && !windows.insert(node.integer("window")).second)
+        throw std::runtime_error("attention metadata has duplicate window writer");
+      if(node.op=="attention_metadata_zero" && !zeros.insert(node.integer("window")).second)
+        throw std::runtime_error("attention metadata has duplicate window initialization");
+    }
+    if(windows!=zeros || (count("latent_attention") && windows.empty()))
+      throw std::runtime_error("attention metadata window writers missing");
   }
 
   for (size_t i = 0; i < p.nodes.size(); ++i) {
@@ -120,10 +127,11 @@ inline void validate_kernels(const Plan &p) {
       if(in.size()!=1 || in[0].first!=3)error();
       check({in[0]},{},{0,in[0].second*8});
     } else if(p.physical && n.op=="attention_metadata_zero") {
-      check({},{},{7,0});
+      check({},{"window"},{7,0});
+      if(!n.integer("window"))error();
     } else if(p.physical && n.op=="attention_metadata") {
-      check({{7,0}},{},{7,0});
-      if(p.nodes[n.inputs[0]].op!="attention_metadata_zero")error();
+      check({{7,0}},{"window"},{7,0});
+      if(p.nodes[n.inputs[0]].op!="attention_metadata_zero" || p.nodes[n.inputs[0]].integer("window")!=n.integer("window"))error();
     } else if (n.op == "embedding") {
       check({}, {"weight", "width", "vocab"}, {0, 2560});
       eq("width", "2560");
@@ -307,7 +315,7 @@ inline void validate_kernels(const Plan &p) {
           const auto &decoded=p.nodes[n.inputs[3]];
           if(decoded.op!="cache_dequantize" || decoded.inputs!=std::vector<uint32_t>{n.inputs[1]})error();
         } else check({{0,3456},{4,0},{7,0}},{"scale_dim","window","selection"},{0,3072});
-        if(p.nodes[n.inputs[2]].op!="attention_metadata")error();
+        if(p.nodes[n.inputs[2]].op!="attention_metadata" || p.nodes[n.inputs[2]].integer("window")!=n.integer("window"))error();
       } else check({{0, 3456}, {4, 0}}, {"scale_dim", "window", "selection"},{0,3072});
       eq("scale_dim", "192");
       eq("selection", "all_causal_within_window");

@@ -150,7 +150,7 @@ pub fn lower(graph: &Graph, inventory: Option<&Inventory>) -> Result<Program> {
     };
     let mut outputs = vec![];
     let mut casts = BTreeMap::new();
-    let mut attention_metadata = None;
+    let mut attention_metadata = BTreeMap::new();
     let mut route_quantizations = BTreeMap::new();
     for (logical, n) in graph.nodes.iter().enumerate() {
         let mut inputs: Vec<usize> = n.inputs.iter().map(|&i| outputs[i]).collect();
@@ -538,7 +538,8 @@ pub fn lower(graph: &Graph, inventory: Option<&Inventory>) -> Result<Program> {
         }
         if n.op == "latent_attention" {
             if n.attrs["selection"]=="learned_indices" {return Err(invalid("learned-index attention currently requires packed C8 cache"));}
-            let meta = if let Some(id) = attention_metadata {
+            let window = n.attrs["window"].clone();
+            let meta = if let Some(&id) = attention_metadata.get(&window) {
                 id
             } else {
                 let zero = emit(
@@ -547,7 +548,7 @@ pub fn lower(graph: &Graph, inventory: Option<&Inventory>) -> Result<Program> {
                     &n.name,
                     "attention_metadata_zero",
                     vec![],
-                    BTreeMap::new(),
+                    BTreeMap::from([("window".into(),window.clone())]),
                     7,
                     0,
                     "opaque",
@@ -558,12 +559,12 @@ pub fn lower(graph: &Graph, inventory: Option<&Inventory>) -> Result<Program> {
                     &n.name,
                     "attention_metadata",
                     vec![zero],
-                    BTreeMap::new(),
+                    BTreeMap::from([("window".into(),window.clone())]),
                     7,
                     0,
                     "opaque",
                 );
-                attention_metadata = Some(meta);
+                attention_metadata.insert(window,meta);
                 meta
             };
             inputs.push(meta);
@@ -828,7 +829,7 @@ pub fn recipes(p: &Program, graph: &Graph) -> Vec<serde_json::Value> {
             "expert_values" => (&[], "view packed expert rows as a tensor", "alias; no copy"),
             "expert_pack" => (&["aclrtMemcpyAsync"], "interleave gate/up rows for the same routing decision", "new BF16 packed rows; borrowed routing metadata"),
             "attention_metadata_zero" => (&["aclrtMemsetAsync"], "initialize metadata output once per token", "persistent metadata buffer"),
-            "attention_metadata" => (&["aclnnAiInfraFusedInferAttentionSinkMetadata"], "device sequence length; shared by attention instructions", "persistent device metadata"),
+            "attention_metadata" => (&["aclnnAiInfraFusedInferAttentionSinkMetadata"], "device sequence length; pre_tokens = declared window - 1; shared only within the same window", "persistent device metadata per window/query"),
             "cast" => (&["aclnnCast"], "", "new device output; shared by identical consumers"),
             "quantize" => (&["aclnnDynamicQuant"], "BF16 → signed INT8; per-token symmetric FP32 scale", "explicit INT8 payload + FP32 scale"),
             "index_quantize" => (&["aclnnDynamicQuant"], "BF16 → signed INT8; independent 128-column heads/keys with FP32 scale", "INT8 payload + FP32 scale per 128 columns"),

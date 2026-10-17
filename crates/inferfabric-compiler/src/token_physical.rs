@@ -146,9 +146,9 @@ pub fn lower(graph: &Graph, devices: &[u32]) -> Result<Plan> {
                 detail:"aclnnAiInfraKvQuantSparseFlashAttention consumes the selected-index SSA input and this layer's own packed C8 cache/page table; no selection recomputation or index readback".into()});
         } else if n.op == "latent_attention" {
             boundaries.push(Boundary { kind: BoundaryKind::InternalLaunches,
-                detail: "Dense FusedInferAttentionSink in TND sliding-window mode implements the validated all-causal-within-window contract (context <=512 and <=window). Bounded noncontiguous paged KV views stay on device. One AICPU metadata operation per rank/token is shared by attention nodes and captured for replay; no host length readback. This is a distinct numerical kernel from sparse Pioneer".into() });
+                detail: "Dense FusedInferAttentionSink in TND sliding-window mode uses the declared window for pre_tokens. Bounded noncontiguous paged KV views stay on device. AICPU metadata is shared only by consumers with the same window and captured for replay; no host length readback. Full-model serving remains limited to context <=512 and <=window".into() });
             boundaries.push(Boundary { kind: BoundaryKind::PersistentState,
-                detail: "Immutable sink latent/rotary views are packed once before capture (147456 bytes per distinct cache); a shared 4 MiB compressed causal mask and 4096-byte metadata buffer remain device resident".into() });
+                detail: "Immutable sink latent/rotary views are packed once before capture (147456 bytes per distinct cache); a shared 4 MiB compressed causal mask and 4096-byte metadata buffer per window/query remain device resident".into() });
             boundaries.push(Boundary { kind: BoundaryKind::ControlUpload,
                 detail: "Upload only sequence length each token; query length and causal mask are initialization constants. No per-token candidate-index upload".into() });
         }

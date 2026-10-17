@@ -41,6 +41,13 @@ contract; it does not yet enable recycling in the serving executor:
   writes reuse its pages. Qualify actual scatter, shared ownership and full-model
   wrap output before raising the context gate.
 
+The [explicit-window metadata implementation](validation/2026-10-17-window-metadata/README.md)
+now passes the full standard 92B native/HTTP regression. Dense attention and its
+metadata producer use the DSL window, with separate persistent buffers and
+validated dependencies per window. Ring allocation and serving-pool retention
+semantics remain pending; the pool must distinguish executable context from
+physical retained capacity instead of rejecting long requests at the ring size.
+
 Experimental learned-index execution now includes explicit INT8 index queries/keys
 and FP16 scales/head weights in the [physical plan](learned-index-quantization.md).
 Its [C8 reference boundary comparison](validation/2026-10-17-learned-index-int8/README.md)

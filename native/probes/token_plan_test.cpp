@@ -28,6 +28,11 @@ int main(int argc, char **argv) {
     reject([](auto &x) { x.nodes[0].width = 1; });
     reject([](auto &x) { x.nodes[0].attrs["ignored"] = "true"; });
     if (p.physical) {
+      if(std::any_of(p.nodes.begin(),p.nodes.end(),[](const auto &n){return n.op=="attention_metadata";})) {
+        reject([](auto &x){for(auto &n:x.nodes)if(n.op=="attention_metadata") {n.attrs["window"]="2047";break;}});
+        reject([](auto &x){for(auto &n:x.nodes)if(n.op=="attention_metadata_zero") {n.attrs.erase("window");break;}});
+        reject([](auto &x){for(auto &n:x.nodes)if(n.op=="latent_attention") {n.attrs["window"]=n.attrs["window"]=="512"?"2048":"512";break;}});
+      }
       reject([](auto &x) { x.nodes[0].dtype = "f32"; });
       reject([](auto &x) { x.nodes[0].kernel = "unbound"; });
       reject([](auto &x) { for (auto &n : x.nodes) if (n.op == "cast") { n.kernel="copy"; break; } });

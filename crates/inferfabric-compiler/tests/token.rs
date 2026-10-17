@@ -5,6 +5,22 @@ use inferfabric_compiler::{
 use inferfabric_dsl::{authoring::ModelDefinition, definition};
 use inferfabric_ir::initialization::{DType, Instruction};
 use std::collections::BTreeMap;
+#[test]
+fn dense_attention_metadata_is_shared_only_with_matching_windows() {
+    let ModelDefinition::Execution {graph,..}=definition(include_str!("../../../examples/openpangu/92b-tp8-ep8.inferfabric")).unwrap() else {panic!()};
+    let p=inferfabric_compiler::token_program::lower(&graph,None).unwrap();
+    let mut windows=BTreeMap::new();
+    for (id,n) in p.instructions.iter().enumerate().filter(|(_,n)|n.op=="attention_metadata") {
+        assert!(windows.insert(n.attrs["window"].clone(),id).is_none());
+        let zero=&p.instructions[n.inputs[0]];
+        assert_eq!(zero.op,"attention_metadata_zero");
+        assert_eq!(zero.attrs,n.attrs);
+    }
+    assert_eq!(windows.len(),2);
+    for n in p.instructions.iter().filter(|n|n.op=="latent_attention") {
+        assert_eq!(windows[&n.attrs["window"]],n.inputs[2]);
+    }
+}
 fn fixture() -> (
     inferfabric_authoring::execution::Graph,
     inferfabric_model::OpenPanguParallel,

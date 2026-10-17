@@ -17,7 +17,7 @@ static std::string expert_name(std::string pattern, int expert) {
   return pattern;
 }
 V execute_token() {
-  metadata_enqueued = false;
+  metadata_enqueued.clear();
   std::vector<std::unique_ptr<Value>> values(program.nodes.size());
   auto remaining = program.uses;
   for (size_t i = 0; i < program.nodes.size(); ++i) {
@@ -77,9 +77,10 @@ V execute_token() {
       run(aclnnIndexSelect, bytes, executor);
       result = this->result(output);
     } else if(n.op=="attention_metadata_zero") {
-      execution.zero(attention_metadata->data,attention_metadata->bytes);result=std::monostate{};
+      auto &metadata=*attention_metadata.at(n.integer("window"));
+      execution.zero(metadata.data,metadata.bytes);result=std::monostate{};
     } else if(n.op=="attention_metadata") {
-      prepare_attention_metadata(true);result=std::monostate{};
+      prepare_attention_metadata(n.integer("window"),true);result=std::monostate{};
     } else if(n.op=="mhc_pre_project") {
       result=pre(tensor(0),weight(),false,n.name,true);
     } else if(n.op=="mhc_sinkhorn") {
@@ -201,7 +202,7 @@ V execute_token() {
       });
       result = n.name;
     } else if (n.op == "latent_attention")
-      result = row_values(n.width,[&](uint32_t row){return attend(row_tensor(0,row), std::get<std::string>(input(1)),n.inputs.size()==4?&tensor(3):nullptr);});
+      result = row_values(n.width,[&](uint32_t row){return attend(row_tensor(0,row), std::get<std::string>(input(1)),n.integer("window"),n.inputs.size()==4?&tensor(3):nullptr);});
     else if (n.op == "swiglu")
       result = n.inputs.size() == 1 ? activate(tensor(0)) : activate(tensor(0), tensor(1));
     else if (n.op == "router")
