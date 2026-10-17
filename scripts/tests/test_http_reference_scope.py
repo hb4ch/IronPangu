@@ -33,11 +33,28 @@ class HttpReferenceScope(unittest.TestCase):
     def test_process_resources_requires_live_complete_linux_counters(self):
         with tempfile.TemporaryDirectory() as directory:
             root=Path(directory);process=root/'123';process.mkdir();(process/'fd').mkdir()
-            (process/'fd'/'0').touch()
+            (process/'fd'/'0').symlink_to('/dev/null')
             (process/'status').write_text('Name:\tserver\nVmRSS:\t12 kB\nVmHWM:\t30 kB\nThreads:\t8\n')
-            self.assertEqual(module.process_resources(123,root),dict(rss_bytes=12288,peak_rss_bytes=30720,threads=8,file_descriptors=1))
+            self.assertEqual(module.process_resources(123,root),dict(rss_bytes=12288,peak_rss_bytes=30720,threads=8,file_descriptors=1,fd_targets={'0':'/dev/null'},socket_states={}))
             (process/'status').write_text('Threads:\t8\n')
             with self.assertRaises(ValueError):module.process_resources(123,root)
+
+    def test_fd_identity_records_socket_state_and_preserves_closed_count(self):
+        from unittest.mock import patch
+        with tempfile.TemporaryDirectory() as directory:
+            root=Path(directory);process=root/'123';(process/'fd').mkdir(parents=True)
+            (process/'status').write_text('VmRSS: 12 kB\nVmHWM: 30 kB\nThreads: 8\n')
+            (process/'fd'/'4').symlink_to('socket:[777]')
+            (process/'net').mkdir()
+            (process/'net'/'tcp').write_text('header\n0: local remote 08 queue timer retr uid timeout 777\n')
+            observed=module.process_resources(123,root)
+            self.assertEqual(observed['fd_targets'],{'4':'socket:[777]'})
+            self.assertEqual(observed['socket_states'],{'777':{'protocol':'tcp','state_hex':'08'}})
+            with patch.object(module.os,'readlink',side_effect=FileNotFoundError):
+                raced=module.process_resources(123,root)
+            self.assertEqual(raced['file_descriptors'],1)
+            self.assertEqual(raced['fd_targets'],{'4':None})
+            self.assertEqual(raced['socket_states'],{})
 
     def test_prefix_boundary_matches_full_chunk_checkpoint_contract(self):
         self.assertEqual(module.prefix_boundary(8176,64,4096),4096)

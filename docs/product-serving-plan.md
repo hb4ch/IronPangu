@@ -33,6 +33,13 @@ Remaining foundation work is ordered by dependency:
    Compare TTFT/ITL/goodput with matched OmniInfer conditions; isolated decode
    timings do not close this gate.
 
+The first [24-wave 64K resource gate](validation/2026-10-18-bulk-domain-load/README.md)
+completes all 120 reference load/recovery responses, but **fails** because wave
+14 samples one additional FD (77 versus 76); final FD count returns to baseline.
+RSS growth is 73.96 MiB, below 128 MiB, and threads remain stable. FD identity
+instrumentation has been added without relaxing the gate. Resolve or explain
+this observation before marking the repeated-load gate complete.
+
 Non-greedy 92B sampling, wider prefix-cache budgets, broader quality and sustained
 production SLO evidence also remain release gates. Keep experimental long-context
 and bulk-domain qualification explicit until those applicable gates are met.

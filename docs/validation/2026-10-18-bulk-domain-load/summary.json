@@ -1,0 +1,11 @@
+{
+  "passed": false,
+  "completed_waves": 24,
+  "completed_reference_requests": 120,
+  "rss_growth_mib": 73.9609375,
+  "fd_increase_waves": [
+    14
+  ],
+  "final_fd": 76,
+  "load_elapsed_lower_bound_seconds": 261.003922787
+}

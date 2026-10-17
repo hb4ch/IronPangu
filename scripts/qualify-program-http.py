@@ -44,8 +44,28 @@ def process_resources(pid, proc_root=Path('/proc')):
             fields[key] = int(parts[0])
     if set(fields) != {'VmRSS', 'VmHWM', 'Threads'}:
         raise ValueError('missing live process resource counters')
+    # Preserve the enumeration count even if an FD closes while readlink runs.
+    # These identities diagnose transient sockets without relaxing the gate.
+    descriptors = list((root/'fd').iterdir())
+    targets = {}
+    for descriptor in descriptors:
+        try:
+            targets[descriptor.name] = os.readlink(descriptor)
+        except FileNotFoundError:
+            targets[descriptor.name] = None  # closed during observation
+    inodes = {target[8:-1] for target in targets.values()
+              if target and target.startswith('socket:[') and target.endswith(']')}
+    socket_states = {}
+    for protocol in ('tcp', 'tcp6'):
+        table = root / 'net' / protocol
+        if table.exists():
+            for line in table.read_text().splitlines()[1:]:
+                row = line.split()
+                if len(row) >= 10 and row[9] in inodes:
+                    socket_states[row[9]] = dict(protocol=protocol, state_hex=row[3])
     return dict(rss_bytes=fields['VmRSS']*1024, peak_rss_bytes=fields['VmHWM']*1024,
-                threads=fields['Threads'], file_descriptors=sum(1 for _ in (root/'fd').iterdir()))
+                threads=fields['Threads'], file_descriptors=len(descriptors),
+                fd_targets=targets, socket_states=socket_states)
 
 
 def resource_growth(samples, rss_limit_mib):
