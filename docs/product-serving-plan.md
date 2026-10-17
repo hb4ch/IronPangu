@@ -40,6 +40,16 @@ RSS growth is 73.96 MiB, below 128 MiB, and threads remain stable. FD identity
 instrumentation has been added without relaxing the gate. Resolve or explain
 this observation before marking the repeated-load gate complete.
 
+A local real-TCP regression now exercises the production HTTP connection loop
+with a synthetic streaming body: a stalled client stops body polling within a
+bounded deadline and byte envelope, a peer health request still completes,
+reading resumes output polling, and disconnect drops the source before graceful
+shutdown completes. Run `cargo test --manifest-path vendor/rust/Cargo.toml
+-p vllm-server transport_backpressure_tests --lib` in local WSL. This passes,
+but is transport-layer evidence only: full-model slow-client admission,
+cancellation and memory-pressure qualification remains open. No production
+listener behavior or timeout was changed to make the test pass.
+
 Non-greedy 92B sampling, wider prefix-cache budgets, broader quality and sustained
 production SLO evidence also remain release gates. Keep experimental long-context
 and bulk-domain qualification explicit until those applicable gates are met.
