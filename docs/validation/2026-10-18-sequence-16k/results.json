@@ -1,0 +1,357 @@
+{
+  "passed": true,
+  "stage": "frozen",
+  "exact_output_tokens": 39,
+  "requests": 6,
+  "arena_bytes": [
+    39572690960,
+    39572690960,
+    39572690960,
+    39572690960,
+    39572690960,
+    39572690960,
+    39572690960,
+    39572690960
+  ],
+  "workspace_bytes": [
+    159221248,
+    159221248,
+    159221248,
+    159221248,
+    159221248,
+    159221248,
+    159221248,
+    159221248
+  ],
+  "activation_host_transfers": [
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0
+  ],
+  "process": {
+    "returncode": 0,
+    "elapsed_seconds": 153.1629723701626,
+    "command": [
+      "/data/p00603624/inferfabric/openpangu92/native-build-head-batch/program_engine_probe",
+      "/data/p00603624/inferfabric/openpangu92/pooled8k-clean-frozen-plan",
+      "/models/92B",
+      "/data/p00603624/inferfabric/openpangu92/sequence16k-fixture/requests.txt"
+    ],
+    "preparation": false
+  },
+  "batch_trace": {
+    "batches": 32,
+    "prefill_chunks": [
+      [
+        4096,
+        4096,
+        4096,
+        4080
+      ],
+      [
+        12
+      ],
+      [
+        4096,
+        4096,
+        4096,
+        4080
+      ],
+      [
+        12
+      ],
+      [
+        4096,
+        4096,
+        4096,
+        4080
+      ],
+      [
+        12
+      ]
+    ],
+    "pure_decode_batch_us": [
+      30484,
+      28982,
+      28554,
+      28471,
+      29275,
+      27693,
+      31405,
+      52028,
+      28724,
+      28499,
+      29431,
+      23518,
+      22642,
+      22369,
+      22365,
+      22353,
+      22381,
+      22235
+    ],
+    "pure_decode_batches": [
+      {
+        "sequences": 2,
+        "elapsed_us": 30484
+      },
+      {
+        "sequences": 2,
+        "elapsed_us": 28982
+      },
+      {
+        "sequences": 2,
+        "elapsed_us": 28554
+      },
+      {
+        "sequences": 2,
+        "elapsed_us": 28471
+      },
+      {
+        "sequences": 2,
+        "elapsed_us": 29275
+      },
+      {
+        "sequences": 2,
+        "elapsed_us": 27693
+      },
+      {
+        "sequences": 2,
+        "elapsed_us": 31405
+      },
+      {
+        "sequences": 2,
+        "elapsed_us": 52028
+      },
+      {
+        "sequences": 2,
+        "elapsed_us": 28724
+      },
+      {
+        "sequences": 2,
+        "elapsed_us": 28499
+      },
+      {
+        "sequences": 2,
+        "elapsed_us": 29431
+      },
+      {
+        "sequences": 1,
+        "elapsed_us": 23518
+      },
+      {
+        "sequences": 1,
+        "elapsed_us": 22642
+      },
+      {
+        "sequences": 1,
+        "elapsed_us": 22369
+      },
+      {
+        "sequences": 1,
+        "elapsed_us": 22365
+      },
+      {
+        "sequences": 1,
+        "elapsed_us": 22353
+      },
+      {
+        "sequences": 1,
+        "elapsed_us": 22381
+      },
+      {
+        "sequences": 1,
+        "elapsed_us": 22235
+      }
+    ],
+    "completed_input_tokens": 49173,
+    "timing_scope": "completed native ABI call including sampling/consensus; pure-decode batches exclude competing prefill"
+  },
+  "first_token_ms": {
+    "0": 25543.219,
+    "1": 25366.593,
+    "2": 23948.239,
+    "3": 848.03,
+    "4": 24795.671,
+    "5": 904.797
+  },
+  "pure_decode_median_ms": {
+    "1": 22.369,
+    "2": 28.982
+  },
+  "rank_audits": [
+    {
+      "rank": 0,
+      "frozen": true,
+      "workspace_growth": 0,
+      "graphs": [
+        {
+          "name": "token_decode",
+          "replays": 1
+        },
+        {
+          "name": "sequence_decode_1",
+          "replays": 8
+        },
+        {
+          "name": "sequence_decode_2",
+          "replays": 12
+        }
+      ],
+      "step_device_allocations": 0,
+      "step_internal_fences": 0
+    },
+    {
+      "rank": 1,
+      "frozen": true,
+      "workspace_growth": 0,
+      "graphs": [
+        {
+          "name": "token_decode",
+          "replays": 1
+        },
+        {
+          "name": "sequence_decode_1",
+          "replays": 8
+        },
+        {
+          "name": "sequence_decode_2",
+          "replays": 12
+        }
+      ],
+      "step_device_allocations": 0,
+      "step_internal_fences": 0
+    },
+    {
+      "rank": 2,
+      "frozen": true,
+      "workspace_growth": 0,
+      "graphs": [
+        {
+          "name": "token_decode",
+          "replays": 1
+        },
+        {
+          "name": "sequence_decode_1",
+          "replays": 8
+        },
+        {
+          "name": "sequence_decode_2",
+          "replays": 12
+        }
+      ],
+      "step_device_allocations": 0,
+      "step_internal_fences": 0
+    },
+    {
+      "rank": 3,
+      "frozen": true,
+      "workspace_growth": 0,
+      "graphs": [
+        {
+          "name": "token_decode",
+          "replays": 1
+        },
+        {
+          "name": "sequence_decode_1",
+          "replays": 8
+        },
+        {
+          "name": "sequence_decode_2",
+          "replays": 12
+        }
+      ],
+      "step_device_allocations": 0,
+      "step_internal_fences": 0
+    },
+    {
+      "rank": 4,
+      "frozen": true,
+      "workspace_growth": 0,
+      "graphs": [
+        {
+          "name": "token_decode",
+          "replays": 1
+        },
+        {
+          "name": "sequence_decode_1",
+          "replays": 8
+        },
+        {
+          "name": "sequence_decode_2",
+          "replays": 12
+        }
+      ],
+      "step_device_allocations": 0,
+      "step_internal_fences": 0
+    },
+    {
+      "rank": 5,
+      "frozen": true,
+      "workspace_growth": 0,
+      "graphs": [
+        {
+          "name": "token_decode",
+          "replays": 1
+        },
+        {
+          "name": "sequence_decode_1",
+          "replays": 8
+        },
+        {
+          "name": "sequence_decode_2",
+          "replays": 12
+        }
+      ],
+      "step_device_allocations": 0,
+      "step_internal_fences": 0
+    },
+    {
+      "rank": 6,
+      "frozen": true,
+      "workspace_growth": 0,
+      "graphs": [
+        {
+          "name": "token_decode",
+          "replays": 1
+        },
+        {
+          "name": "sequence_decode_1",
+          "replays": 8
+        },
+        {
+          "name": "sequence_decode_2",
+          "replays": 12
+        }
+      ],
+      "step_device_allocations": 0,
+      "step_internal_fences": 0
+    },
+    {
+      "rank": 7,
+      "frozen": true,
+      "workspace_growth": 0,
+      "graphs": [
+        {
+          "name": "token_decode",
+          "replays": 1
+        },
+        {
+          "name": "sequence_decode_1",
+          "replays": 8
+        },
+        {
+          "name": "sequence_decode_2",
+          "replays": 12
+        }
+      ],
+      "step_device_allocations": 0,
+      "step_internal_fences": 0
+    }
+  ]
+}
