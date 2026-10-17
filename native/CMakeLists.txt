@@ -154,6 +154,11 @@ target_compile_options(resident_tensor_probe PRIVATE -Wall -Wextra -Werror
 target_compile_definitions(resident_tensor_probe PRIVATE IF_REQUIRE_DEVICE_RESIDENCY=1)
 
 add_executable(prepared_execution_probe probes/prepared_execution_probe.cpp)
+add_executable(rotary_prefix_probe probes/rotary_prefix_probe.cpp)
+target_include_directories(rotary_prefix_probe PRIVATE "${ACL_INCLUDE}")
+target_link_libraries(rotary_prefix_probe PRIVATE "${ACL_LIBRARY}" "${OPAPI_LIBRARY}" "${NNOPBASE_LIBRARY}")
+target_compile_options(rotary_prefix_probe PRIVATE -Wall -Wextra -Werror -include "${CMAKE_CURRENT_SOURCE_DIR}/src/resident_transfer.h")
+target_compile_definitions(rotary_prefix_probe PRIVATE IF_REQUIRE_DEVICE_RESIDENCY=1)
 target_include_directories(prepared_execution_probe PRIVATE "${ACL_INCLUDE}")
 target_link_libraries(prepared_execution_probe PRIVATE "${ACL_LIBRARY}" "${OPAPI_LIBRARY}" "${NNOPBASE_LIBRARY}")
 target_compile_options(prepared_execution_probe PRIVATE -Wall -Wextra -Werror

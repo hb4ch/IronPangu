@@ -98,9 +98,10 @@ remaining columns. It requires a `heads * head_dim` tensor, 1–64 heads, and a
 head dimension greater than 64 and at most 512. Lowering exposes two
 `column_slice` materializations, `rope_bf16`, and `concat_columns`; it uses BF16
 input, coefficients and output. This is distinct from the existing FP32 `rope`
-contract. The compiler contract and native build are tested; numerical and full
-model qualification of this new path remain pending. It does not raise context
-admission limits.
+contract. The compiler contract and native build are tested; the shared native
+helper has [bit-exact NPU and graph evidence](validation/2026-10-17-rotary-prefix/README.md).
+Full model qualification of this new path remains pending. It does not raise
+context admission limits.
 
 Each call and iteration has a hygienic instance path, for example
 `hidden.i12.next.attention.query.local`. Primitive graph node names use these
