@@ -52,6 +52,12 @@ EOS-scoped outputs and unchanged device-memory audits. Fix and requalify this
 serving-foundation regression before secondary feature work. Thread and FD
 counts remain stable; allocator retention versus execution metadata growth is
 not yet established. Do not raise the RSS threshold to turn this into a pass.
+The [host allocator diagnostic](validation/2026-10-18-host-allocator/README.md)
+then observed allocated arena bytes tracking RSS growth, with nearly unchanged
+free arena and mmap bytes. Its original probe affected shutdown, so it supplies
+runtime allocation evidence only, not a completed qualification. The corrected
+probe passes a signal-handling regression test; allocation-site attribution and
+the serving fix remain open.
 
 Validation proceeds from focused shape/lifetime checks to a short full-model
 HTTP regression, then longer-context qualification. Re-run costly full-model

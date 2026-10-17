@@ -1,0 +1,75 @@
+{
+  "waves": 8,
+  "observations": [
+    {
+      "round": 0,
+      "rss_bytes": 7505125376,
+      "sample_offset_ms": 91.003205,
+      "allocated_arena_bytes": 6576546144,
+      "free_arena_bytes": 314793632,
+      "mmap_bytes": 504397824
+    },
+    {
+      "round": 1,
+      "rss_bytes": 7596322816,
+      "sample_offset_ms": -350.919268,
+      "allocated_arena_bytes": 6666255024,
+      "free_arena_bytes": 315594064,
+      "mmap_bytes": 504397824
+    },
+    {
+      "round": 2,
+      "rss_bytes": 7620972544,
+      "sample_offset_ms": -408.118096,
+      "allocated_arena_bytes": 6691081120,
+      "free_arena_bytes": 315593824,
+      "mmap_bytes": 504397824
+    },
+    {
+      "round": 3,
+      "rss_bytes": 7706836992,
+      "sample_offset_ms": 637.759166,
+      "allocated_arena_bytes": 6781389200,
+      "free_arena_bytes": 315414128,
+      "mmap_bytes": 504397824
+    },
+    {
+      "round": 4,
+      "rss_bytes": 7727276032,
+      "sample_offset_ms": 398.344195,
+      "allocated_arena_bytes": 6865474176,
+      "free_arena_bytes": 315452800,
+      "mmap_bytes": 504397824
+    },
+    {
+      "round": 5,
+      "rss_bytes": 7813369856,
+      "sample_offset_ms": 173.303688,
+      "allocated_arena_bytes": 6884029200,
+      "free_arena_bytes": 314694896,
+      "mmap_bytes": 504397824
+    },
+    {
+      "round": 6,
+      "rss_bytes": 7833214976,
+      "sample_offset_ms": -537.01352,
+      "allocated_arena_bytes": 6904509920,
+      "free_arena_bytes": 313915936,
+      "mmap_bytes": 504397824
+    },
+    {
+      "round": 7,
+      "rss_bytes": 7850283008,
+      "sample_offset_ms": -678.411684,
+      "allocated_arena_bytes": 6918805648,
+      "free_arena_bytes": 316553072,
+      "mmap_bytes": 504397824
+    }
+  ],
+  "growth": {
+    "rss_bytes": 345157632,
+    "allocated_arena_bytes": 342259504,
+    "free_arena_bytes": 1759440,
+    "mmap_bytes": 0
+  }
+}

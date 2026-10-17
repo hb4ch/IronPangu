@@ -505,3 +505,22 @@ even when it fails. The limit is a qualification tolerance, not a production
 memory budget. These samples do not measure continuous RSS peaks or slow-socket
 buffer bounds; the separate per-rank audits check device allocations, workspace,
 activation transfers and final shared-page reclamation.
+
+For a failing host RSS gate, build the optional diagnostic in the Linux container:
+
+```sh
+g++ -std=c++17 -shared -fPIC -O2 -pthread -Wall -Wextra -Werror \
+  native/probes/host_allocator_probe.cpp -o host_allocator_probe.so
+python3 scripts/test-host-allocator-probe.py ./host_allocator_probe.so
+```
+
+Then add `--host-allocator-probe ./host_allocator_probe.so` to the HTTP
+qualifier. Only the server receives `LD_PRELOAD`; the native execution library
+and frozen plan remain unchanged. The diagnostic writes `host-allocator.jsonl`
+every two seconds using glibc 2.33+ `mallinfo2`. It adds one host thread and one
+file descriptor, which are present before the first load-wave baseline. It makes
+no ACL calls or device reads. Compare allocated arena bytes, free arena bytes
+and mmap bytes with timestamped post-wave RSS samples. Allocator counters are
+not allocation stack traces and do not alone prove a leak or its owner. Sampling
+can contend with host allocations; timing under this diagnostic is not a
+production performance result. It is opt-in and rejects existing output files.

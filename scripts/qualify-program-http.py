@@ -147,6 +147,7 @@ def main():
     p.add_argument('--load-rounds', type=int, default=0, help='Repeated concurrent reference waves with disconnect/recovery between waves')
     p.add_argument('--load-concurrency', type=int, default=4, help='Clients per repeated-load wave, within bounded admission capacity')
     p.add_argument('--load-rss-growth-limit-mib', type=float, help='Require >=2 load waves; bound post-wave RSS growth from wave 1, with no thread/FD growth')
+    p.add_argument('--host-allocator-probe', type=Path, help='Optional Linux preload diagnostic library, applied only to the server process')
     p.add_argument('--request-timeout-seconds', type=int, default=120, help='Socket inactivity timeout, not a whole-run deadline; raise for 64K prefill')
     p.add_argument('--respect-eos', action='store_true', help='Test normal serving through first EOS; preserve full references and report the narrower comparison scope')
     p.add_argument('--check-arithmetic-history', action='store_true', help='Require completed per-resident invocation histories to account for all scheduler work')
@@ -242,6 +243,11 @@ def main():
                INFERFABRIC_PREPARED_AUDIT_DIR=str((args.output/'prepared').resolve()),
                INFERFABRIC_TRANSFER_AUDIT_DIR=str((args.output/'transfers').resolve()))
     env.pop('INFERFABRIC_PREPARE_ARENA', None)
+    if args.host_allocator_probe:
+        probe=args.host_allocator_probe.resolve(strict=True)
+        env['LD_PRELOAD']=str(probe)+(' '+env['LD_PRELOAD'] if env.get('LD_PRELOAD') else '')
+        env['INFERFABRIC_HOST_ALLOCATOR_AUDIT']=str((args.output/'host-allocator.jsonl').resolve())
+        env['INFERFABRIC_HOST_ALLOCATOR_EXECUTABLE']=str(args.server.resolve())
     command = [str(args.server.resolve()), '--program', str(args.plan), str(args.checkpoint), str(args.library), str(args.port)]
     if args.prefix_cases:
         command += ['--prefix-cache-slots','1','--prefix-cache-namespace','qualification']
@@ -389,6 +395,7 @@ def main():
                         waves.append(dict(round=round_id,requests=observations,recovery=metrics))
                         if args.load_rss_growth_limit_mib is not None:
                             waves[-1]['process_resources'] = process_resources(server.pid)
+                            waves[-1]['resource_sample_time_ns'] = time.time_ns()
                         (args.output/'load-progress.json').write_text(json.dumps(dict(complete=False,rounds=waves),indent=2)+'\n')
                 load=dict(rounds=args.load_rounds,concurrency=args.load_concurrency,
                           completed_reference_requests=args.load_rounds*(args.load_concurrency+1),
