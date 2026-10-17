@@ -17,6 +17,30 @@ Metadata/ownership tests cover 65,536 tokens and the full 512-token native/HTTP
 regression passes. This does not raise the serving context gate: BF16 SWA storage
 still needs window recycling and longer-context decoder qualification.
 
+The [SWA ring operator qualification](validation/2026-10-17-sliding-window/README.md)
+now verifies absolute-position repeated-page tables through position 65,535,
+including 120 exact ACLGraph replays. It establishes the following integration
+contract; it does not yet enable recycling in the serving executor:
+
+- Derive each cache's window from its attention consumer, rejecting incompatible
+  consumers. Record window, page size, physical retention and absolute table
+  length in the physical plan and serving manifest.
+- Reserve enough unique owned pages for the union of all windows in a prewritten
+  chunk. A 512-token window and four-token chunk require 34 16-token pages at
+  arbitrary alignment. Preserve the smaller full-context allocation when the
+  compiled context does not reach a wrap.
+- Keep the ownership binding unique. Expand it into an absolute device table by
+  mapping logical page `i` to owned page `i % ring_pages`; repeated table entries
+  must not be mistaken for independently owned pool pages.
+- Scatter through that mapping; keep RoPE and sequence lengths absolute. Use
+  the declared window minus one for both attention and metadata `pre_tokens`,
+  rather than deriving it from maximum model context. Metadata reuse must be
+  keyed by compatible window contracts.
+- Select/reset/release resident ownership without changing graph pointers.
+  Prefix snapshots must own or copy their retained ring state before subsequent
+  writes reuse its pages. Qualify actual scatter, shared ownership and full-model
+  wrap output before raising the context gate.
+
 Experimental learned-index execution now includes explicit INT8 index queries/keys
 and FP16 scales/head weights in the [physical plan](learned-index-quantization.md).
 Its [C8 reference boundary comparison](validation/2026-10-17-learned-index-int8/README.md)
