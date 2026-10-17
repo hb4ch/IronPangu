@@ -1,5 +1,8 @@
 cmake_minimum_required(VERSION 3.16)
 project(inferfabric_acl LANGUAGES CXX)
+add_executable(sequence_batch_test probes/sequence_batch_test.cpp)
+target_compile_features(sequence_batch_test PRIVATE cxx_std_17)
+target_compile_options(sequence_batch_test PRIVATE -Wall -Wextra -Werror -UNDEBUG)
 add_executable(page_binding_test probes/page_binding_test.cpp)
 add_executable(state_copy_plan_test probes/state_copy_plan_test.cpp)
 add_executable(page_span_test probes/page_span_test.cpp)

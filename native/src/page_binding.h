@@ -113,10 +113,16 @@ public:
     shared_pages_[slot].clear();
   }
   uint64_t append(uint32_t position) const {
-    if(!shared_)return slots_[active_].append(position);
-    if(position>=logical_tokens_ || position/page_tokens_>=shared_pages_[active_].size())
+    return append(active_,position);
+  }
+  // Packed batches resolve each row without changing the selected resident or
+  // uploading another request's device page table as a side effect.
+  uint64_t append(uint32_t slot,uint32_t position) const {
+    if(slot>=slots_.size())throw std::runtime_error("page append slot");
+    if(!shared_)return slots_[slot].append(position);
+    if(position>=logical_tokens_ || position/page_tokens_>=shared_pages_[slot].size())
       throw std::runtime_error("append outside reserved shared pages");
-    return uint64_t(shared_pages_[active_][position/page_tokens_])*page_tokens_+position%page_tokens_;
+    return uint64_t(shared_pages_[slot][position/page_tokens_])*page_tokens_+position%page_tokens_;
   }
   const std::vector<int32_t> &pages(uint32_t slot) const {
     if(slot>=slots_.size())throw std::runtime_error("page lookup slot");

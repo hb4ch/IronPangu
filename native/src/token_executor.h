@@ -1,5 +1,6 @@
 #pragma once
 #include "cache_quantization.h"
+#include "sequence_batch.h"
 // Device-resident execution of a validated generic token program.
 // No activation or routing value has a host representation.
 #include "ascend_token_contract.h"
@@ -1266,15 +1267,18 @@ struct Decoder {
     if((count!=1 && !program.supports_prefill(count)) || pos<0 || size_t(pos)+count>program.context)
       throw std::runtime_error("compiled token chunk bounds");
     for(auto id:tokens)if(id>=vocabulary())throw std::runtime_error("chunk token vocabulary");
+    const auto batch=inferfabric::execution::SequenceBatch::make(
+        {{active_resident,uint32_t(pos),uint32_t(count),false}},
+        program.resident_sequences,program.prefill_tokens,program.context);
     active_tokens=count;active_row=0;current_position=pos;
-    if(mome_query_starts)resident::control_upload(*mome_query_starts,std::vector<int32_t>{0,int32_t(count)});
+    if(mome_query_starts)resident::control_upload(*mome_query_starts,batch.starts);
     std::vector<int32_t> ids(program.prefill_tokens,0), positions(program.prefill_tokens,0);
     std::vector<int64_t> positions64(program.prefill_tokens,0), lengths(program.prefill_tokens,0);
     Host c(program.prefill_tokens*64,0), sn(program.prefill_tokens*64,0);
     std::vector<uint16_t> cb(program.prefill_tokens*64,0), sb(program.prefill_tokens*64,0);
     for(size_t row=0;row<count;++row) {
-      int position=pos+row;ids[row]=tokens[row];positions[row]=position;
-      positions64[row]=position;lengths[row]=position+1;
+      int position=batch.positions[row];ids[row]=tokens[row];positions[row]=position;
+      positions64[row]=position;lengths[row]=batch.lengths[row];
       for(const auto &entry:cache_control_offsets) {
         auto state=attention_states.find(entry.first);
         uint64_t physical=state==attention_states.end()?uint64_t(position):state->second->append(position);
