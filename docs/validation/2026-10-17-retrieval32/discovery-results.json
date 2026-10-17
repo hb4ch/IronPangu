@@ -1,0 +1,110 @@
+{
+  "format": "inferfabric.persistent-program-qualification.v1",
+  "requests": 12,
+  "output_tokens": 123,
+  "exact_fixture_tokens": true,
+  "fixture_sha256": "3a05e7ac9bb3a2e4432dc71717262771d35cd817b8d506d303f3d4b0777b926d",
+  "permuted_pages": true,
+  "binding_limit_rejections": 0,
+  "interleaved_residents": true,
+  "packed_prefill": true,
+  "scope": "one loaded TP8/EP8 group, compiled packed prefill and serial decode; no long-context claim",
+  "measurements": [
+    {
+      "request": 0,
+      "case": "arithmetic",
+      "prompt_tokens": 12,
+      "output_tokens": 8,
+      "engine_ttft_ms": 1049.244,
+      "tpot_ms": 47.921142857142854
+    },
+    {
+      "request": 1,
+      "case": "geography",
+      "prompt_tokens": 15,
+      "output_tokens": 8,
+      "engine_ttft_ms": 356.505,
+      "tpot_ms": 799.3368571428572
+    },
+    {
+      "request": 2,
+      "case": "chinese",
+      "prompt_tokens": 14,
+      "output_tokens": 17,
+      "engine_ttft_ms": 5569.256,
+      "tpot_ms": 86.972375
+    },
+    {
+      "request": 3,
+      "case": "access-code-529",
+      "prompt_tokens": 529,
+      "output_tokens": 8,
+      "engine_ttft_ms": 12251.792,
+      "tpot_ms": 822.1267142857143
+    },
+    {
+      "request": 4,
+      "case": "arithmetic",
+      "prompt_tokens": 12,
+      "output_tokens": 8,
+      "engine_ttft_ms": 336.991,
+      "tpot_ms": 86.76442857142857
+    },
+    {
+      "request": 5,
+      "case": "geography",
+      "prompt_tokens": 15,
+      "output_tokens": 8,
+      "engine_ttft_ms": 491.855,
+      "tpot_ms": 69.50585714285714
+    },
+    {
+      "request": 6,
+      "case": "chinese",
+      "prompt_tokens": 14,
+      "output_tokens": 17,
+      "engine_ttft_ms": 276.811,
+      "tpot_ms": 393.58
+    },
+    {
+      "request": 7,
+      "case": "access-code-529",
+      "prompt_tokens": 529,
+      "output_tokens": 8,
+      "engine_ttft_ms": 13512.805,
+      "tpot_ms": 790.4302857142857
+    },
+    {
+      "request": 8,
+      "case": "arithmetic",
+      "prompt_tokens": 12,
+      "output_tokens": 8,
+      "engine_ttft_ms": 314.058,
+      "tpot_ms": 86.33485714285715
+    },
+    {
+      "request": 9,
+      "case": "geography",
+      "prompt_tokens": 15,
+      "output_tokens": 8,
+      "engine_ttft_ms": 483.674,
+      "tpot_ms": 80.93242857142857
+    },
+    {
+      "request": 10,
+      "case": "chinese",
+      "prompt_tokens": 14,
+      "output_tokens": 17,
+      "engine_ttft_ms": 289.337,
+      "tpot_ms": 391.0426875
+    },
+    {
+      "request": 11,
+      "case": "access-code-529",
+      "prompt_tokens": 529,
+      "output_tokens": 8,
+      "engine_ttft_ms": 2489.973,
+      "tpot_ms": 22.131285714285713
+    }
+  ]
+}

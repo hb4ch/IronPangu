@@ -1,0 +1,12 @@
+{
+  "sha256": {
+    "family32-bound/execution.bin": "242bbee5c982d6d670ae1ce440ad2a8cff1a9397f77481217dab0dac11bc4d9d",
+    "native-build-prefill-family/libinferfabric_program.so": "575ee1f742b05b208fcf5fd5e9b7dac5bb2b038924201b2b32b3f3e472f73312",
+    "retrieval-32k-input.json": "e0c446a2b9420345df0a052103af13f36ae851808d18d1b26b86896c2623a257",
+    "retrieval-32k-reference.json": "464336e24fae2dccc21d3456e31128fde2ba35ca9f905b5b321d1ea832d5b4bd",
+    "family32-long/tokens.jsonl": "9e7a26bd9c3c742c64798446a31f648ccc19f9b8de4674619ec55f3fcbad8667",
+    "/models/92B/tokenizer.json": "7816b7b6138024e37c508ff82321e11b5ee559289184fa18f7536a3e460d3941"
+  },
+  "timing_isolated": false,
+  "timing_note": "Independent 64K reference ran concurrently on devices 8-15. Recorded native timings are not isolated performance evidence."
+}
