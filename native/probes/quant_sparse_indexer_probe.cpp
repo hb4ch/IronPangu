@@ -5,8 +5,8 @@
 
 // Independent oracle for the INT8/FP16 vendor boundary, including causal
 // selection over shuffled pages. This does not qualify model quantization.
-struct QuantIndexerProbe {
-  static constexpr int capacity=65536, page=64, heads=24, dim=128, topk=2048, rows=2;
+template<int rows> struct QuantIndexerProbe {
+  static constexpr int capacity=65536, page=64, heads=24, dim=128, topk=2048;
   openpangu::DeviceTensor q{{rows,heads,dim},ACL_INT8,1},
     k{{capacity/page,page,1,dim},ACL_INT8,1}, weights{{rows,heads},ACL_FLOAT16,2},
     qs{{rows,heads},ACL_FLOAT16,2}, ks{{capacity/page,page,1},ACL_FLOAT16,2},
@@ -23,8 +23,8 @@ struct QuantIndexerProbe {
     std::vector<int8_t> queries(rows*heads*dim), keys(capacity*dim);
     std::vector<uint16_t> ws(rows*heads), query_scales(rows*heads,0x3c00), key_scales(capacity);
     for(int r=0;r<rows;++r) {
-      queries[r*heads*dim]=r?-1:1;
-      queries[(r*heads+1)*dim]=r?1:-1;
+      queries[r*heads*dim]=r%2?-1:1;
+      queries[(r*heads+1)*dim]=r%2?1:-1;
       ws[r*heads]=0x3c00; // FP16 1
       ws[r*heads+1]=0x3400; // FP16 .25
       query_scales[r*heads]=0x3800;
@@ -51,7 +51,7 @@ struct QuantIndexerProbe {
   void launch(){if(!op.executor)prepare();op.run(aclnnAiInfraQuantLightningIndexer,stream);}
   static float score(int token,int row) {
     int c=code(token);
-    float dot=float(c%255-127)*std::ldexp(1.f,(c/255)%4-3)*(row?-1.f:1.f);
+    float dot=float(c%255-127)*std::ldexp(1.f,(c/255)%4-3)*(row%2?-1.f:1.f);
     return std::max(0.f,.5f*dot)+.25f*std::max(0.f,-dot);
   }
   void verify(int length) {
@@ -73,7 +73,7 @@ struct QuantIndexerProbe {
     }
   }
   void run() {
-    const std::vector<int> cases{2,511,512,513,2047,2048,2049,4096,8192,16384,32768,65536};
+    const std::vector<int> cases{rows,511,512,513,2047,2048,2049,4096,8192,16384,32768,65536};
     for(int n:cases){set_length(n);launch();check(aclrtSynchronizeStream(stream),"result fence");verify(n);}
     set_length(capacity);
     check(aclmdlRICaptureBegin(stream,ACL_MODEL_RI_CAPTURE_MODE_GLOBAL),"capture begin");
@@ -84,8 +84,10 @@ struct QuantIndexerProbe {
   }
   ~QuantIndexerProbe(){if(graph)aclmdlRIDestroy(graph);if(stream)aclrtDestroyStream(stream);}
 };
-int main(){try{check(aclInit(nullptr),"init");check(aclrtSetDevice(0),"device");
-  {QuantIndexerProbe p;p.run();std::cout<<"{\"status\":\"passed\",\"capacity\":65536,\"topk\":2048,\"checked_indices\":"
+template<int rows> void qualify() {
+  QuantIndexerProbe<rows> p;p.run();std::cout<<"{\"status\":\"passed\",\"query_tokens\":"<<rows<<",\"capacity\":65536,\"topk\":2048,\"checked_indices\":"
     <<p.checked<<",\"workspace_bytes\":"<<p.op.bytes<<",\"graph_replays\":24}\n";}
+int main(){try{check(aclInit(nullptr),"init");check(aclrtSetDevice(0),"device");
+  qualify<2>();qualify<4>();qualify<16>();
   check(aclrtResetDevice(0),"reset");check(aclFinalize(),"finalize");return 0;
 }catch(const std::exception &e){std::cerr<<e.what()<<"\n";return 1;}}

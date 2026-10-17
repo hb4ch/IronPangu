@@ -1,0 +1,260 @@
+{
+  "format": "inferfabric.reference-comparison.v1",
+  "reference_sha256": "a66e8a43eb45ec43466aa85e2df9334a20c986e5a40acd9b078c2c6581f0f29a",
+  "tokens_sha256": "3c0b6c527668d73c87b60bbc03370c91345a08eb609309d9c24f8e924fba0485",
+  "timing_scope": "native step durations; interleaved runs include peer work",
+  "cases": [
+    {
+      "case": "arithmetic",
+      "prompt_tokens": 12,
+      "reference_output_ids": [
+        16,
+        520,
+        220,
+        16,
+        292,
+        220,
+        17,
+        148902
+      ],
+      "native_output_ids_by_repetition": [
+        [
+          16,
+          520,
+          220,
+          16,
+          292,
+          220,
+          17,
+          148902
+        ],
+        [
+          16,
+          520,
+          220,
+          16,
+          292,
+          220,
+          17,
+          148902
+        ],
+        [
+          16,
+          520,
+          220,
+          16,
+          292,
+          220,
+          17,
+          148902
+        ]
+      ],
+      "exact_all_tokens": true,
+      "exact_through_reference_eos": true,
+      "stable_repetitions": true,
+      "repetitions": 3,
+      "ttft_ms_mean": 1199.2553333333333,
+      "tpot_samples": 21,
+      "tpot_ms_mean": 113.99961904761905,
+      "tpot_ms_median": 46.544
+    },
+    {
+      "case": "geography",
+      "prompt_tokens": 15,
+      "reference_output_ids": [
+        1114,
+        11786,
+        336,
+        17320,
+        405,
+        21072,
+        13,
+        148902
+      ],
+      "native_output_ids_by_repetition": [
+        [
+          1114,
+          11786,
+          336,
+          17320,
+          405,
+          21072,
+          13,
+          148902
+        ],
+        [
+          1114,
+          11786,
+          336,
+          17320,
+          405,
+          21072,
+          13,
+          148902
+        ],
+        [
+          1114,
+          11786,
+          336,
+          17320,
+          405,
+          21072,
+          13,
+          148902
+        ]
+      ],
+      "exact_all_tokens": true,
+      "exact_through_reference_eos": true,
+      "stable_repetitions": true,
+      "repetitions": 3,
+      "ttft_ms_mean": 1293.6846666666668,
+      "tpot_samples": 21,
+      "tpot_ms_mean": 74.91633333333333,
+      "tpot_ms_median": 46.06
+    },
+    {
+      "case": "chinese",
+      "prompt_tokens": 14,
+      "reference_output_ids": [
+        8255,
+        541,
+        33949,
+        65826,
+        305,
+        13209,
+        83005,
+        40889,
+        462,
+        24820,
+        95922,
+        689,
+        109259,
+        6951,
+        122559,
+        380,
+        148902
+      ],
+      "native_output_ids_by_repetition": [
+        [
+          8255,
+          541,
+          33949,
+          65826,
+          305,
+          13209,
+          83005,
+          40889,
+          462,
+          24820,
+          95922,
+          689,
+          109259,
+          6951,
+          122559,
+          380,
+          148902
+        ],
+        [
+          8255,
+          541,
+          33949,
+          65826,
+          305,
+          13209,
+          83005,
+          40889,
+          462,
+          24820,
+          95922,
+          689,
+          109259,
+          6951,
+          122559,
+          380,
+          148902
+        ],
+        [
+          8255,
+          541,
+          33949,
+          65826,
+          305,
+          13209,
+          83005,
+          40889,
+          462,
+          24820,
+          95922,
+          689,
+          109259,
+          6951,
+          122559,
+          380,
+          148902
+        ]
+      ],
+      "exact_all_tokens": true,
+      "exact_through_reference_eos": true,
+      "stable_repetitions": true,
+      "repetitions": 3,
+      "ttft_ms_mean": 1438.839,
+      "tpot_samples": 48,
+      "tpot_ms_mean": 134.635,
+      "tpot_ms_median": 128.3675
+    },
+    {
+      "case": "access-code-529",
+      "prompt_tokens": 529,
+      "reference_output_ids": [
+        22,
+        18,
+        16,
+        24,
+        148902,
+        148900,
+        148900,
+        1114
+      ],
+      "native_output_ids_by_repetition": [
+        [
+          22,
+          18,
+          16,
+          24,
+          148902,
+          148900,
+          148900,
+          148900
+        ],
+        [
+          22,
+          18,
+          16,
+          24,
+          148902,
+          148900,
+          148900,
+          148900
+        ],
+        [
+          22,
+          18,
+          16,
+          24,
+          148902,
+          148900,
+          148900,
+          148900
+        ]
+      ],
+      "exact_all_tokens": false,
+      "exact_through_reference_eos": true,
+      "stable_repetitions": true,
+      "repetitions": 3,
+      "ttft_ms_mean": 5021.244333333333,
+      "tpot_samples": 21,
+      "tpot_ms_mean": 38.51880952380952,
+      "tpot_ms_median": 46.387
+    }
+  ]
+}

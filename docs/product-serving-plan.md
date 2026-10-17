@@ -60,8 +60,16 @@ now matches all 72 independent-reference output tokens at prompt lengths 529,
 TPOT is 19.78–19.97 ms. This validates these retrieval cases, not general 2K or 64K
 serving. Compilation can represent up to 65,536 tokens on implemented cache paths;
 native admission above 512 requires the explicit experimental qualification opt-in.
-Next test selection beyond 2,048 candidates and broader output cases, while
-addressing prefill throughput and preserving the unresolved accuracy evidence.
+The [full-model selection experiment](validation/2026-10-17-long-index-selection/README.md)
+now covers 2,049, 3,072 and 4,088 prompt tokens: all match through EOS, but the
+4,088-token forced continuation differs after EOS. Its full-token qualification
+therefore fails. TTFT reaches 38.66 seconds and TPOT 20.13 ms at 4,088; all eight
+rank residency/arena audits pass. A 16-token chunk experiment also diverges after
+EOS and remains unpromoted. The independent quantized indexer now passes 2/4/16
+query-row causal/top-k checks through 65,536 keys, including graph replay.
+Next batch index queries in the physical recipe, qualify full-model output and
+prefill performance, then advance diverse 8K/16K/32K/64K and concurrent HTTP
+tests while preserving unresolved accuracy evidence. No admission gate changes.
 
 Experimental learned-index execution now includes explicit INT8 index queries/keys
 and FP16 scales/head weights in the [physical plan](learned-index-quantization.md).
