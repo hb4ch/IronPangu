@@ -12,6 +12,19 @@ spec.loader.exec_module(module)
 
 
 class QualificationProcess(unittest.TestCase):
+    def test_eos_scope_preserves_reference_and_requests_no_forced_continuation(self):
+        cases = [dict(input_ids=[1], output_ids=[2, 99, 7, 8]),
+                 dict(input_ids=[1], output_ids=[99, 3]),
+                 dict(input_ids=[1], output_ids=[2, 3])]
+        scoped = module.scoped_cases(cases, 99, True)
+        self.assertEqual([c['output_ids'] for c in scoped], [[2, 99], [99], [2, 3]])
+        self.assertEqual(cases[0]['output_ids'], [2, 99, 7, 8])
+        self.assertEqual(module.scoped_cases(cases, 99, False), cases)
+        for invalid in [dict(output_ids=[]), dict(output_ids=[99], qualification=dict(output_is_placeholder=True))]:
+            for mode in [True, False]:
+                with self.assertRaises(ValueError):
+                    module.scoped_cases([invalid], 99, mode)
+
     def test_uncaptured_forward_audit_rejects_graphs_missing_counts_and_fragmentation(self):
         program = dict(uncaptured_prefill=True, prefill_tokens=4096, prefill_variants=[])
         audit = dict(graphs=[dict(name='token_decode', replays=2)],

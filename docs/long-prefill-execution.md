@@ -74,9 +74,17 @@ the physical plan rather than hiding it in the executor.
 3. Native checks: full 92B outputs against the independent reference, chunk
    boundary and SWA-wrap cases, cold and APC-hit 64K requests. Count actual model
    forwards and prove that no prefill graph was captured or replayed.
-4. Report TTFT, decode TPOT, peak HBM and per-rank arena/workspace audits. Preserve
-   known forced post-EOS mismatches as failures; report through-EOS correctness
-   separately. Do not lift the production context gate from scheduler tests.
+4. Report TTFT, decode TPOT, peak HBM and per-rank arena/workspace audits. Per the
+   2026-10-17 scope decision, use normal first-EOS stopping for serving qualification;
+   forced post-EOS differences are deferred, not a blocker for that gate. Preserve
+   their historical evidence separately. Do not lift the production context gate
+   from scheduler tests.
+
+Native qualification supports `--respect-eos`, using the compiled plan's EOS and
+requesting only the reference outputs through that token. Its report labels this
+`through_first_eos`, retains the original reference hash/count, and does not claim
+full forced-continuation parity. The default remains full comparison for diagnosis.
+Answer mismatches before EOS and every resource/graph audit remain hard failures.
 
 ## Implementation status
 

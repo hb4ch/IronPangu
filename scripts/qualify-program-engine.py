@@ -57,11 +57,24 @@ def validate_uncaptured_prefill(program, prepared, cases, copy_boundary=None):
         raise RuntimeError('uncaptured model forward/token count mismatch')
 
 
+def scoped_cases(cases, eos, respect_eos):
+    """Keep independent references immutable; request only the selected scope."""
+    result = []
+    for case in cases:
+        ids = case['output_ids']
+        if not ids or case.get('qualification', {}).get('output_is_placeholder'):
+            raise ValueError('empty or placeholder outputs are not an independent reference')
+        end = ids.index(eos) + 1 if respect_eos and eos in ids else len(ids)
+        result.append(dict(case, output_ids=list(ids[:end])))
+    return result
+
+
 def main():
     p = argparse.ArgumentParser(description=__doc__)
     for name in ('binary', 'plan', 'checkpoint', 'cases', 'output'):
         p.add_argument('--' + name, required=True, type=Path)
     p.add_argument('--prepare', action='store_true')
+    p.add_argument('--respect-eos', action='store_true', help='Request and compare only through the first compiled EOS; preserve full references and report the scope')
     p.add_argument('--experimental-long-context', action='store_true', help='Explicitly opt in to unqualified context above 512 for hardware qualification')
     p.add_argument('--output-diagnostics', action='store_true', help='Record existing sampler top-five request outputs; no activation readback')
     p.add_argument('--check-binding-limits', action='store_true', help='Reject oversized bindings through both ABIs, then verify valid retries and inference')
@@ -76,7 +89,9 @@ def main():
     if args.copy_boundary is not None and (args.copy_boundary<1 or not args.permuted_pages or args.prepare or args.interleave or args.output_diagnostics):
         p.error('--copy-boundary requires positive boundary, frozen permuted pages, no interleave/diagnostics')
     args.output.mkdir(parents=True, exist_ok=False)
-    cases = json.loads(args.cases.read_text()) * 3
+    references = json.loads(args.cases.read_text()) * 3
+    eos = json.loads((args.plan / 'device-program.json').read_text())['eos']
+    cases = scoped_cases(references, eos, args.respect_eos)
     if args.copy_boundary is not None and any(len(c['input_ids'])<=args.copy_boundary for c in cases):
         p.error('copy boundary must precede every fixture suffix')
     if any(c.get('qualification', {}).get('output_is_placeholder') for c in cases):
@@ -167,7 +182,7 @@ def main():
         if [r['step'] for r in actual] != list(range(len(case['output_ids']))) or [r['token'] for r in actual] != case['output_ids']:
             raise RuntimeError(f"request {request} {case['case']}: full output mismatch")
         measurement=dict(request=request, case=case['case'], prompt_tokens=len(case['input_ids']),
-                         output_tokens=len(actual), tpot_ms=statistics.mean(r['elapsed_us']/1000 for r in actual[1:]))
+                         output_tokens=len(actual), tpot_ms=statistics.mean(r['elapsed_us']/1000 for r in actual[1:]) if len(actual)>1 else None)
         measurement['restored_suffix_ttft_ms' if args.copy_boundary is not None else 'engine_ttft_ms']=actual[0]['elapsed_us']/1000
         measurements.append(measurement)
     for rank in range(8):
@@ -209,7 +224,10 @@ def main():
             if prepared['state_copy_operations']!=len(copied['operations'])*len(cases) or prepared['state_copy_bytes']!=sum(op['bytes'] for op in copied['operations'])*len(cases):
                 raise RuntimeError('device copy counters disagree with the repeated fixed-boundary plan')
     report = dict(format='inferfabric.persistent-program-qualification.v1', requests=len(cases),
-                  output_tokens=expected_total, exact_fixture_tokens=True,
+                  output_tokens=expected_total, exact_fixture_tokens=not args.respect_eos,
+                  exact_scoped_tokens=True,
+                  reference_comparison_scope='through_first_eos' if args.respect_eos else 'full_forced_continuation',
+                  reference_output_tokens=sum(len(c['output_ids']) for c in references),
                   fixture_sha256=hashlib.sha256(args.cases.read_bytes()).hexdigest(),
                   permuted_pages=args.permuted_pages,
                   binding_limit_rejections=binding_rejections,
