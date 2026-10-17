@@ -1,6 +1,7 @@
 #pragma once
 #include "cache_quantization.h"
 #include "sequence_batch.h"
+#include "resident_convolution.h"
 // Device-resident execution of a validated generic token program.
 // No activation or routing value has a host representation.
 #include "ascend_token_contract.h"
@@ -468,17 +469,9 @@ struct Decoder {
       sequence_scratch=std::make_unique<DeviceTensor>(std::vector<int64_t>{queries,int64_t(channels)},ACL_BF16,2);
     if (position != current_position)
       throw std::runtime_error("position input mismatch");
-    uint64_t bytes = 0;
-    aclOpExecutor *e = nullptr;
-    checked(prepared::query("aclnnAiInfraFusedCausalConv1d", false,
-                            aclnnAiInfraFusedCausalConv1dGetWorkspaceSize,
-                            input_view.t, s.weight.tensor, s.state.tensor,
-                            queries>1 ? mome_query_starts->tensor : s.starts.tensor, resident_index->tensor, nullptr, nullptr,
-                            nullptr, control_row(*position_index), nullptr, nullptr,
-                            nullptr, 0, -1, 0, queries, 1, 128, 1, true, sequence_scratch ? sequence_scratch->tensor : s.out.tensor,
-                            &bytes, &e),
-            "MoME prepare");
-    run(aclnnAiInfraFusedCausalConv1d, bytes, e);
+    resident::causal_convolution(input_view.t,s.weight.tensor,s.state.tensor,
+        queries>1?mome_query_starts->tensor:s.starts.tensor,resident_index->tensor,
+        control_row(*position_index),sequence_scratch?sequence_scratch->tensor:s.out.tensor,queries);
     return inplace ? x : result(s.input);
   }
   struct HC {
