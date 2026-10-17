@@ -336,3 +336,23 @@ and 224-token identity/shuffled boundary tests pass on NPU. Short-prompt TPOT is
 17.83–17.93 ms again; 504-token serial-prefill TTFT remains about 9.24 seconds,
 so packed/chunked prefill is still mandatory for the 64K target. See
 [qualification](validation/2026-10-17-cache-control-bank/README.md).
+
+### Implementation record: context admission and 64K ownership boundaries
+
+The state allocator now bounds reservations by the executable context envelope as
+well as each component's capacity. Rounded cache pages and extra pool storage do
+not grant a longer executable context. Per-invocation variant validation remains
+mandatory; this reservation bound is not permission to use a smaller-context variant.
+
+Local tests cover an unaligned 33-token executable with 64-token storage, plus a
+synthetic eight-rank 65,536-token ownership envelope with simultaneous 32,769-token
+and 17-token requests. They check final-page byte addresses, overflow rejection,
+all-rank rollback under pressure, delayed eighth-rank completion, stale leases and
+return to baseline after retirement. The runtime suite passes (11 tests), and
+runtime-only strict Clippy passes with `--no-deps`; dependency-inclusive Clippy
+still reports existing compiler argument-count and collapsible-condition findings.
+
+These are host ownership tests, not NPU long-context qualification. Native kernels,
+ACLGraph and the serving limit are unchanged at 512. Shared native multi-request
+state, learned DSA, SWA recycling and packed/chunked prefill remain required before
+the 64K release gate can pass.

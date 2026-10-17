@@ -73,6 +73,7 @@ struct Flight {
 pub struct StatePool {
     id: u64,
     epoch: u64,
+    max_context: u32,
     next: u64,
     pools: Vec<Pool>,
     allocations: BTreeMap<Lease, Allocation>,
@@ -130,6 +131,14 @@ impl StatePool {
         Ok(Self {
             id,
             epoch,
+            // Page rounding and spare pool capacity do not expand the executable
+            // envelope. Per-invocation legality is still checked by validate_batch.
+            max_context: manifest
+                .variants
+                .iter()
+                .map(|v| v.max_context)
+                .max()
+                .unwrap(),
             next: 0,
             pools,
             allocations: BTreeMap::new(),
@@ -158,6 +167,9 @@ impl StatePool {
         self.live(epoch)?;
         if tokens == 0 || self.allocations.values().any(|a| a.request == request) {
             return Err(invalid("empty or duplicate state reservation"));
+        }
+        if tokens > self.max_context {
+            return Err(invalid("state reservation exceeds executable context"));
         }
         let mut bindings = Vec::new();
         // Prepare every reservation before mutating any free list.

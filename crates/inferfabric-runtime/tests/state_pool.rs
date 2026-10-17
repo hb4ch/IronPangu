@@ -205,3 +205,77 @@ fn interleaved_lifetimes_return_to_baseline_without_duplicate_physical_ids() {
         assert_eq!(p.usage(), baseline);
     }
 }
+
+#[test]
+fn rounded_storage_does_not_extend_executable_context() {
+    let mut m = manifest();
+    m.variants[0].max_context = 33;
+    let mut p = StatePool::new(&m, 7, budgets()).unwrap();
+    let baseline = p.usage();
+    assert!(p.reserve(7, 1, 34).is_err());
+    assert!(p.reserve(7, 1, 64).is_err());
+    assert_eq!(p.usage(), baseline);
+    let lease = p.reserve(7, 1, 33).unwrap();
+    assert!(p.page_address(7, lease, "kv32", 0, 32).is_ok());
+    assert!(p.page_address(7, lease, "kv32", 0, 33).is_err());
+    p.retire(7, lease).unwrap();
+    assert_eq!(p.usage(), baseline);
+}
+
+#[test]
+fn full_64k_ownership_with_mixed_requests_and_delayed_rank_retirement() {
+    // Synthetic ownership envelope, not a claim that a native 64K variant exists.
+    // Full histories deliberately avoid assuming unimplemented SWA recycling.
+    let mut m = manifest();
+    m.identity.devices = (0..8).collect();
+    m.variants[0].max_context = 65_536;
+    for s in &mut m.states {
+        s.capacity_tokens = 65_536;
+        s.ranks = (0..8).collect();
+    }
+    let mut capacities = BTreeMap::new();
+    for s in &m.states {
+        let units = match s.storage {
+            Storage::Pages { page_tokens, .. } => 2 * 65_536 / page_tokens,
+            Storage::Slot { .. } => 4,
+        };
+        for &rank in &s.ranks {
+            capacities.insert((s.id.clone(), rank), units);
+        }
+    }
+    let mut p = StatePool::new(&m, 7, capacities).unwrap();
+    let baseline = p.usage();
+    assert!(p.reserve(7, 99, 65_537).is_err());
+    assert_eq!(p.usage(), baseline);
+    let long = p.reserve(7, 1, 65_536).unwrap();
+    let medium = p.reserve(7, 2, 32_769).unwrap();
+    let short = p.reserve(7, 3, 17).unwrap();
+    for rank in 0..8 {
+        for (component, page_tokens, row_bytes) in [("kv16", 16, 1152), ("kv32", 32, 656)] {
+            let end = p.page_address(7, long, component, rank, 65_535).unwrap();
+            assert_eq!(end.physical_page, 65_536 / page_tokens - 1);
+            assert_eq!(end.row_in_page, page_tokens - 1);
+            assert_eq!(end.byte_offset, 65_535 * row_bytes);
+            let next = p.page_address(7, medium, component, rank, 0).unwrap();
+            assert_eq!(next.byte_offset, 65_536 * row_bytes);
+            assert!(p.page_address(7, long, component, rank, 65_536).is_err());
+        }
+    }
+    let occupied = p.usage();
+    assert!(p.reserve(7, 4, 32_768).is_err());
+    assert_eq!(p.usage(), occupied); // pressure must roll back every rank
+    let flight = p.submit(7, &[long], &[]).unwrap();
+    p.retire(7, long).unwrap();
+    for rank in 0..7 {
+        p.complete(7, flight, rank).unwrap();
+    }
+    assert!(p.reserve(7, 4, 65_536).is_err());
+    p.complete(7, flight, 7).unwrap();
+    let replacement = p.reserve(7, 4, 65_536).unwrap();
+    assert_ne!(replacement, long);
+    assert!(p.page_address(7, long, "kv32", 0, 0).is_err());
+    for lease in [replacement, medium, short] {
+        p.retire(7, lease).unwrap();
+    }
+    assert_eq!(p.usage(), baseline);
+}
