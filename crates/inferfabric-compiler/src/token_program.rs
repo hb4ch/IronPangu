@@ -548,6 +548,23 @@ pub fn lower(graph: &Graph, inventory: Option<&Inventory>) -> Result<Program> {
                 inputs.push(decoded);
             }
         }
+        if n.op == "rotary_prefix" {
+            let rows = n.integer("heads")?;
+            let columns = n.integer("head_dim")?;
+            let rotary = n.integer("rotary_dim")?;
+            let mut parts = vec![];
+            for (start, count) in [(0, rotary), (rotary, columns - rotary)] {
+                parts.push(emit(&mut p, logical, &n.name, "column_slice", inputs.clone(),
+                    BTreeMap::from([("rows".into(), rows.to_string()), ("start".into(), start.to_string()),
+                        ("width".into(), count.to_string())]), 0, rows * count, "bf16"));
+            }
+            let rotated = emit(&mut p, logical, &n.name, "rope_bf16", vec![parts[0]],
+                BTreeMap::from([("theta".into(), n.attrs["theta"].clone())]), 0, rows * rotary, "bf16");
+            let output = emit(&mut p, logical, &n.name, "concat_columns", vec![rotated, parts[1]],
+                BTreeMap::from([("rows".into(), rows.to_string())]), 0, width, "bf16");
+            outputs.push(output);
+            continue;
+        }
         // Expand the query recipe before serialization. Every conversion and
         // materialization has its own SSA value and scheduling position.
         if n.op == "mla_query" || n.op == "rope" {
@@ -803,6 +820,8 @@ pub fn recipes(p: &Program, graph: &Graph) -> Vec<serde_json::Value> {
             "mhc_post" => (&["aclnnAiInfraManifoldConstrainedHyperConnectionPost"], "BF16 residual and branch; FP32 mixing", "persistent output"),
             "query_project" => (&["aclnnBatchMatMul"], "strided local query/weight views; BF16 input/output", "new BF16 latent query"),
             "query_rotary_extract" => (&["aclnnCast"], "strided BF16 rotary columns to contiguous FP32", "new FP32 rotary input"),
+            "column_slice" => (&["aclnnCast"], "materialize declared strided BF16 columns without dtype conversion", "new contiguous BF16 output; source is a borrowed strided view"),
+            "rope_bf16" => (&["aclnnRotaryPositionEmbedding"], "BF16 half rotation with BF16 position-derived coefficients", "new BF16 output"),
             "rope_f32" => (&["aclnnRotaryPositionEmbedding"], "FP32 rotation; rounding is a separate instruction", "new FP32 output"),
             "concat_columns" => (&["aclnnCat"], "concatenate columns of declared row matrices", "new contiguous output"),
             "rope" => (&["aclnnRotaryPositionEmbedding", "aclnnCast"], "FP32 rotation → BF16 rounding", "FP32 temporary + BF16 result"),
@@ -891,8 +910,8 @@ pub fn recipes(p: &Program, graph: &Graph) -> Vec<serde_json::Value> {
                 }
             }
         }
-        let per_query = matches!(i.op.as_str(), "mome"|"mome_inplace"|"query_project"|"query_rotary_extract"|"rope"|"rope_f32"|"mla_query"|"mla_value"|"cache_append"|"cache_norm_rope_append"|"cache_c8_norm_rope_append"|"latent_attention"|"packed_latent_attention"|"attention_metadata"|"packed_attention_metadata");
-        let assembly = matches!(i.op.as_str(), "repeat"|"slice"|"query_project"|"query_rotary_extract"|"rope"|"rope_f32"|"mla_query"|"mla_value"|"mome"|"latent_attention"|"packed_latent_attention");
+        let per_query = matches!(i.op.as_str(), "mome"|"mome_inplace"|"query_project"|"query_rotary_extract"|"rope"|"rope_bf16"|"rope_f32"|"mla_query"|"mla_value"|"cache_append"|"cache_norm_rope_append"|"cache_c8_norm_rope_append"|"latent_attention"|"packed_latent_attention"|"attention_metadata"|"packed_attention_metadata");
+        let assembly = matches!(i.op.as_str(), "repeat"|"slice"|"query_project"|"query_rotary_extract"|"rope"|"rope_bf16"|"rope_f32"|"mla_query"|"mla_value"|"mome"|"latent_attention"|"packed_latent_attention");
         let packed = if p.prefill_tokens > 1 { serde_json::json!({
             "tokens":p.prefill_tokens,
             "schedule":if i.op=="sink_normalize" {"shared initialization constant"} else if per_query {"ordered per-query calls"} else {"token matrix"},

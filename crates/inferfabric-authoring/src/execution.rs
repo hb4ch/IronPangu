@@ -236,6 +236,17 @@ impl Node {
                 }
                 Tensor(b)
             }
+            "rotary_prefix" => {
+                let heads = self.integer("heads")?;
+                let head_dim = self.integer("head_dim")?;
+                let rotary_dim = self.integer("rotary_dim")?;
+                if heads == 0 || heads > 64 || head_dim <= rotary_dim || head_dim > 512 || rotary_dim != 64 {
+                    return fail(self, "unsupported rotary prefix shape");
+                }
+                self.schema(inputs, &[Tensor(heads * head_dim)], &["heads", "head_dim", "rotary_dim", "theta"])?;
+                if self.integer("theta")? != 6400000 { return fail(self, "unsupported rotary theta"); }
+                Tensor(heads * head_dim)
+            }
             "rope" => {
                 self.schema(inputs, &[Tensor(64)], &["theta"])?;
                 if self.attrs["theta"] != "6400000" {

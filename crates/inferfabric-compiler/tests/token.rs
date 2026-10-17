@@ -56,6 +56,32 @@ plan P for Renamed {target=ascend_token_v1;tp=8;ep=8;devices=[0,1,2,3,4,5,6,7];m
     (graph, parallel, inventory)
 }
 #[test]
+fn rotary_prefix_expands_into_explicit_bf16_column_operations() {
+    let (mut graph, _, inventory) = fixture();
+    graph.nodes.insert(1, inferfabric_authoring::execution::Node {
+        source: None, name: "leading_rotary".into(), op: "rotary_prefix".into(), inputs: vec![0],
+        attrs: BTreeMap::from([("heads".into(), "20".into()), ("head_dim".into(), "128".into()),
+            ("rotary_dim".into(), "64".into()), ("theta".into(), "6400000".into())]),
+    });
+    graph.nodes[2].inputs=vec![1];graph.nodes[3].inputs=vec![2];graph.output=3;
+    let p=inferfabric_compiler::token_program::lower(&graph,Some(&inventory)).unwrap();
+    let ops:Vec<_>=p.instructions.iter().filter(|i|i.logical_node==1).collect();
+    assert_eq!(ops.iter().map(|i|i.op.as_str()).collect::<Vec<_>>(),
+        ["column_slice","column_slice","rope_bf16","concat_columns"]);
+    assert_eq!(ops[0].attrs["start"],"0");assert_eq!(ops[1].attrs["start"],"64");
+    assert_eq!(ops[0].width,1280);assert_eq!(ops[3].width,2560);
+    assert!(ops.iter().all(|i|i.dtype=="bf16"));
+    p.encode().unwrap();
+    let recipes=inferfabric_compiler::token_program::recipes(&p,&graph);
+    let text=serde_json::to_string(&recipes).unwrap();
+    assert!(text.contains("materialize declared strided BF16 columns"));
+    for (key,value) in [("heads","0"),("heads","65"),("head_dim","64"),("rotary_dim","32"),("theta","10000")] {
+        let mut bad=graph.clone();bad.nodes[1].attrs.insert(key.into(),value.into());
+        assert!(bad.validate().is_err());
+    }
+}
+
+#[test]
 fn paired_projection_binds_both_replicated_bf16_matrices() {
     let (mut graph, parallel, mut inventory) = fixture();
     graph.nodes[1].attrs.extend([

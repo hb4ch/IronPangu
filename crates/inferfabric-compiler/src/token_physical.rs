@@ -120,6 +120,12 @@ pub fn lower(graph: &Graph, devices: &[u32]) -> Result<Plan> {
             boundaries.push(Boundary { kind: BoundaryKind::InternalLaunches,
                 detail: "Read-only device operands borrow shared allocation leases instead of copying into staging tensors. mHC retains the residual lease through post; writes and recycling remain ordered on the owning stream".into() });
         }
+        if n.op == "rotary_prefix" {
+            boundaries.push(Boundary { kind: BoundaryKind::InternalLaunches,
+                detail: "Explicit strided BF16 prefix/tail materialization, BF16 half rotary using BF16 coefficients, and column concatenation; no implicit dtype conversion. Physical instructions expose each intermediate allocation. Native numerical qualification remains required".into() });
+            boundaries.push(Boundary { kind: BoundaryKind::ControlUpload,
+                detail: "Position-derived rotary coefficients only; no activation readback".into() });
+        }
         if n.op == "cache_norm_rope_append" {
             boundaries.push(Boundary { kind: BoundaryKind::InternalLaunches,
                 detail: "Fused KV RMS normalization, half-rotary and paged cache write; BF16 input, gamma and rotary coefficients, epsilon 1e-5. Position is a device control input. Combined latent/rotary cache remains device resident; no implicit readback or fallback. Numerical contract differs from separate FP32 rotary".into() });

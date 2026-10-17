@@ -524,6 +524,29 @@ struct Decoder {
     run(api.post, bytes, e);
     return result(s.out).view(0,size_t(active_tokens)*10240);
   }
+  V column_slice(const V &input, int64_t rows, int64_t start, int64_t width) {
+    if(input.dtype()!=ACL_BF16 || rows<=0 || input.size()%rows || start<0 || width<=0 || start+width>int64_t(input.size()/rows))
+      throw std::runtime_error("column slice contract");
+    int64_t columns=input.size()/rows;
+    auto *view=execution.strided_descriptor(static_cast<uint16_t *>(input.data())+start,
+        input.size()-start,{rows,width},{columns,1},ACL_BF16);
+    DeviceTensor out({rows,width},ACL_BF16,2);
+    uint64_t bytes=0;aclOpExecutor *executor=nullptr;
+    checked(prepared::query("column_slice",false,aclnnCastGetWorkspaceSize,view,ACL_BF16,out.tensor,&bytes,&executor),"column slice prepare");
+    run(aclnnCast,bytes,executor);return result(out);
+  }
+  V rope_bf16(const V &input) {
+    if(input.dtype()!=ACL_BF16 || !input.size() || input.size()%64)
+      throw std::runtime_error("BF16 rotary contract");
+    int64_t heads=input.size()/64;
+    DeviceTensor out({1,heads,1,64},ACL_BF16,2);
+    View x(input.data(),{1,heads,1,64},ACL_BF16);
+    uint64_t bytes=0;aclOpExecutor *executor=nullptr;
+    checked(prepared::query("aclnnRotaryPositionEmbedding",false,aclnnRotaryPositionEmbeddingGetWorkspaceSize,
+        x.t,control_row(*rotary_cos_bf16,{1,1,1,64}),control_row(*rotary_sin_bf16,{1,1,1,64}),
+        0,out.tensor,&bytes,&executor),"BF16 rotary prepare");
+    run(aclnnRotaryPositionEmbedding,bytes,executor);return result(out);
+  }
   V rope(const V &input, int pos, bool fp32_output = false) {
     if (!input.size() || input.size() % 64 || pos != current_position)
       throw std::runtime_error("rotary shape/position contract");

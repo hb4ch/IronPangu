@@ -194,8 +194,17 @@ inline void validate_kernels(const Plan &p) {
     } else if (p.physical && n.op == "rope_f32") {
       if(tensor(0)!=64 && tensor(0)!=384) error();
       check({{0,tensor(0)}},{"theta"},{0,tensor(0)});eq("theta","6400000");
+    } else if (p.physical && n.op == "column_slice") {
+      auto rows=n.integer("rows"), width=n.integer("width"), start=n.integer("start");
+      if(!rows || rows>64 || tensor(0)%rows || !width || start>tensor(0)/rows || width>tensor(0)/rows-start)error();
+      check({{0,tensor(0)}},{"rows","start","width"},{0,rows*width});
+    } else if (p.physical && n.op == "rope_bf16") {
+      if(!tensor(0) || tensor(0)%64 || tensor(0)>64*64)error();
+      check({{0,tensor(0)}},{"theta"},{0,tensor(0)});eq("theta","6400000");
     } else if (p.physical && n.op == "concat_columns") {
-      check({{0,3072},{0,384}},{"rows"},{0,3456});eq("rows","6");
+      auto rows=n.integer("rows");
+      if(!rows || rows>64 || tensor(0)%rows || tensor(1)%rows)error();
+      check({{0,tensor(0)},{0,tensor(1)}},{"rows"},{0,tensor(0)+tensor(1)});
     } else if (n.op == "rope") {
       check({{0, 64}}, {"theta"}, {0, 64});
       eq("theta", "6400000");

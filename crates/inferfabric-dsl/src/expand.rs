@@ -20,6 +20,7 @@ const PRIMITIVES: &[&str] = &[
     "mome",
     "slice",
     "rope",
+    "rotary_prefix",
     "concat",
     "mla_query",
     "mla_value",
