@@ -2,6 +2,7 @@ use inferfabric_ir::serving::*;
 fn manifest() -> Manifest {
     Manifest {
         version: VERSION,
+        resident_sequences: 1,
         identity: Identity {
             program_sha256: "a".repeat(64),
             checkpoint_metadata_sha256: "b".repeat(64),

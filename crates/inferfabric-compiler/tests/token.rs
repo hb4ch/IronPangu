@@ -261,3 +261,29 @@ fn serving_state_is_derived_from_expanded_operators() {
     control_offsets.sort_unstable();
     assert_eq!(control_offsets, (0..46).map(|i| i*16).collect::<Vec<_>>());
 }
+
+#[test]
+fn resident_capacity_is_executable_and_inspectable_without_claiming_batching() {
+    let (graph, _, inventory) = fixture();
+    let serial = inferfabric_compiler::token_program::lower(&graph, Some(&inventory)).unwrap();
+    assert!(serial.clone().with_resident_sequences(0).is_err());
+    assert!(serial.clone().with_resident_sequences(65).is_err());
+    let resident = serial.clone().with_resident_sequences(2).unwrap();
+    let binary = resident.encode().unwrap();
+    assert_eq!(&binary[..8], b"IFTOKN03");
+    assert_eq!(u32::from_le_bytes(binary[24..28].try_into().unwrap()), 2);
+    assert_eq!(&serial.encode().unwrap()[..8], b"IFTOKN02");
+    assert_eq!(resident.instructions, serial.instructions);
+    let recipes = inferfabric_compiler::token_program::recipes(&resident, &graph);
+    for (instruction, recipe) in resident.instructions.iter().zip(recipes) {
+        let fields = recipe["value_fields"].as_array().unwrap();
+        if instruction.op == "mome_inplace" || instruction.op == "mome" {
+            assert!(fields.iter().any(|f| f["name"] == "recurrent_history" && f["shape"][0] == 2));
+        }
+        if matches!(instruction.op.as_str(), "cache_append" | "cache_norm_rope_append" | "cache_c8_norm_rope_append") {
+            assert!(fields.iter().any(|f| f["name"] == "resident_partition" && f["resident_sequences"] == 2));
+        }
+    }
+    let (variants, _) = inferfabric_compiler::token_serving::envelope(&graph, 8).unwrap();
+    assert_eq!(variants[0].max_sequences, 1);
+}

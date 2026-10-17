@@ -9,6 +9,12 @@ uint32_t inferfabric_program_abi_version(void);
 // preparation=1 is an offline qualification mode; never expose HTTP readiness.
 int inferfabric_program_open(const char *bundle, const char *checkpoint, uint32_t preparation, void **out);
 int inferfabric_program_reset(void *engine);
+// Resident capacity is compiled into the executable. Selection only stages
+// control metadata; cache/recurrent storage and graph addresses remain fixed.
+// Reset one slot without disturbing other requests. Calls remain serialized.
+int inferfabric_program_resident_capacity(void *engine, uint32_t *count);
+int inferfabric_program_select_resident(void *engine, uint32_t slot);
+int inferfabric_program_reset_resident(void *engine, uint32_t slot);
 // Bind a cache component's device block table after reset and before any token.
 // Metadata only; storage addresses and ACLGraph captures remain unchanged.
 int inferfabric_program_bind_pages(void *engine, uint32_t rank, const char *component,

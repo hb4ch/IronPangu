@@ -126,9 +126,22 @@ fn run() -> Result<()> {
                 args[2]
             );
         }
-        Some("compile-token")
-            if args.len() == 4 || (args.len() == 5 && args[4] == "--allow-stale-index-size") =>
+        Some("compile-token") if args.len() >= 4 =>
         {
+            let (mut allow_stale, mut resident_sequences) = (false, None);
+            let mut options = args[4..].iter();
+            while let Some(option) = options.next() {
+                match option.as_str() {
+                    "--allow-stale-index-size" if !allow_stale => allow_stale = true,
+                    "--resident-sequences" if resident_sequences.is_none() => {
+                        let count = options.next().ok_or_else(|| invalid("missing resident sequence count"))?
+                            .parse::<usize>().map_err(|_| invalid("invalid resident sequence count"))?;
+                        if !(1..=64).contains(&count) { return Err(invalid("resident sequences must be 1..64")); }
+                        resident_sequences = Some(count);
+                    }
+                    _ => return Err(invalid("unknown or duplicate compile-token option")),
+                }
+            }
             let inferfabric_dsl::authoring::ModelDefinition::Execution { parallel, graph } =
                 inferfabric_dsl::definition(&fs::read_to_string(&args[1])?)?
             else {
@@ -136,13 +149,14 @@ fn run() -> Result<()> {
             };
             let inventory = inferfabric_compiler::openpangu::inspect_inventory(
                 Path::new(&args[2]),
-                args.len() == 5,
+                allow_stale,
             )?;
-            inferfabric_compiler::token::write_bundle(
+            inferfabric_compiler::token::write_bundle_with_resident_sequences(
                 &graph,
                 &parallel,
                 &inventory,
                 Path::new(&args[3]),
+                resident_sequences.unwrap_or(1),
             )?;
             println!(
                 "token graph nodes={} ranks={} output={}",
@@ -256,7 +270,7 @@ fn run() -> Result<()> {
         }
         _ => {
             return Err(invalid(
-                "usage: inferfabric compile-token MODEL CHECKPOINT OUTPUT_DIR [--allow-stale-index-size] | plan-openpangu DSL CHECKPOINT OUTPUT.json [--allow-stale-index-size] | bind-openpangu-checkpoint CHECKPOINT_DIR OUTPUT.json [--allow-stale-index-size] | inspect-openpangu CONFIG.json OUTPUT.json | inspect-openpangu-checkpoint CHECKPOINT_DIR OUTPUT.json [--allow-stale-index-size] | explain-model TYPED-PLAN.json --html MODEL.html | plan GRAPH.json OUTPUT.ifplan [--dump-ir DIR] | explain PLAN.ifplan [--html OUTPUT.html] | execute PLAN.ifplan INPUTS.json REPORT.json | npu-model-probe DSL CHECKPOINT LIBRARY DEVICE TOKENS_JSON REPORT | npu-delta-probe LIBRARY DEVICE REPORT | npu-conv-probe CHECKPOINT LIBRARY DEVICE REPORT | npu-layer-probe CHECKPOINT LIBRARY DEVICE REPORT | npu-attention-probe CHECKPOINT LIBRARY DEVICE REPORT | npu-math-probe DSL CHECKPOINT LIBRARY DEVICE REPORT | compile-checkpoint MODEL.inferfabric CHECKPOINT_DIR OUTPUT.json | compile MODEL.inferfabric OUTPUT | inspect ARTIFACT | demo MODEL.inferfabric REQUESTS.json",
+                "usage: inferfabric compile-token MODEL CHECKPOINT OUTPUT_DIR [--allow-stale-index-size] [--resident-sequences N] | plan-openpangu DSL CHECKPOINT OUTPUT.json [--allow-stale-index-size] | bind-openpangu-checkpoint CHECKPOINT_DIR OUTPUT.json [--allow-stale-index-size] | inspect-openpangu CONFIG.json OUTPUT.json | inspect-openpangu-checkpoint CHECKPOINT_DIR OUTPUT.json [--allow-stale-index-size] | explain-model TYPED-PLAN.json --html MODEL.html | plan GRAPH.json OUTPUT.ifplan [--dump-ir DIR] | explain PLAN.ifplan [--html OUTPUT.html] | execute PLAN.ifplan INPUTS.json REPORT.json | npu-model-probe DSL CHECKPOINT LIBRARY DEVICE TOKENS_JSON REPORT | npu-delta-probe LIBRARY DEVICE REPORT | npu-conv-probe CHECKPOINT LIBRARY DEVICE REPORT | npu-layer-probe CHECKPOINT LIBRARY DEVICE REPORT | npu-attention-probe CHECKPOINT LIBRARY DEVICE REPORT | npu-math-probe DSL CHECKPOINT LIBRARY DEVICE REPORT | compile-checkpoint MODEL.inferfabric CHECKPOINT_DIR OUTPUT.json | compile MODEL.inferfabric OUTPUT | inspect ARTIFACT | demo MODEL.inferfabric REQUESTS.json",
             ));
         }
     }

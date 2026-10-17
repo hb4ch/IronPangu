@@ -356,3 +356,26 @@ These are host ownership tests, not NPU long-context qualification. Native kerne
 ACLGraph and the serving limit are unchanged at 512. Shared native multi-request
 state, learned DSA, SWA recycling and packed/chunked prefill remain required before
 the 64K release gate can pass.
+
+### Implementation record: shared native resident states
+
+The compiler now accepts a resident-sequence capacity independently of invocation
+batch size. A versioned binary resource header drives disjoint native page
+partitions and recurrent slots; physical recipes/viewer show their expanded shapes.
+One engine shares weights, scratch, workspace and ACLGraph. C ABI and Rust adapter
+operations select a resident or reset its state independently, retain per-resident
+positions/mappings, and reject mappings into another resident's partition.
+
+Full 92B NPU tests match all 99 immutable expected tokens when interleaving two
+residents, using shuffled pages and reusing finished slots while peers remain live.
+The serial baseline also matches all 99 tokens. Frozen arena growth is only
+23,422,464 bytes/rank; shared workspace stays 130,916,352 bytes/rank with zero
+activation host transfers or replay allocations. Another 336 output tokens across
+42 interleaved page-boundary requests match the previous serial oracle, through
+504 prompt tokens plus eight generated tokens. See
+[qualification and limits](validation/2026-10-17-resident-states/README.md).
+
+This advances S2 storage; it does not complete S2's multi-sequence kernels or S4's
+packed scheduler. Next connect resident lifecycle to the Rust HTTP worker, then
+replace serial token invocations with qualified packed variants. Native storage
+currently uses fixed disjoint partitions, not dynamic cross-request page lending.

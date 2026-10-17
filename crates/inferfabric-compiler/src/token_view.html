@@ -506,7 +506,7 @@
       "<p>Per-token vendor API invocations, casts, packing, zeroing and collectives are executable rows. Parameter/state preparation is labeled separately. Bound arena slots come from hardware preparation; vendor-internal kernels and costs remain opaque.</p>";
     if (data.serving_envelope) {
       const [variants, states] = data.serving_envelope;
-      $("#serving").innerHTML = "<p>Compiler capabilities; hardware readiness and qualification are separate. Current state is request-private.</p>" +
+      $("#serving").innerHTML = `<p>Compiler capabilities; hardware readiness and qualification are separate. Resident capacity: <b>${program.resident_sequences ?? 1}</b> requests in disjoint page partitions and recurrent slots. Weights, scratch and the token graph are shared. Resident capacity is distinct from invocation batch size below.</p>` +
         variants.map(v => `<p><b>${esc(v.id)}</b>: ${esc(v.phase)}, ${v.max_sequences} sequences, ${v.max_tokens} input tokens, context ${v.max_context}; packed prefill: ${v.packed}; numerical class: ${esc(v.numerical_class)}</p>`).join("") +
         `<p>${states.length} persistent continuation components. Checkpoint restore supported: ${states.filter(s => s.checkpoint_supported).length}.</p><table><thead><tr><th>State / ranks</th><th>Storage</th><th>Retention</th></tr></thead><tbody>` +
         states.map(s => `<tr><td>${esc(s.id)}<small>ranks ${s.ranks.join(", ")}</small></td><td>${esc(JSON.stringify(s.storage))}</td><td>capacity ${s.capacity_tokens}; window ${s.window_tokens ?? "full prefix"}</td></tr>`).join("") + "</tbody></table>";

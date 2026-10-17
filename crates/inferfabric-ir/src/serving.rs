@@ -69,6 +69,9 @@ pub struct State {
 #[serde(deny_unknown_fields)]
 pub struct Manifest {
     pub version: u32,
+    /// Storage capacity, not a claim of packed multi-sequence kernel support.
+    #[serde(default = "single_resident")]
+    pub resident_sequences: u32,
     pub identity: Identity,
     pub vocab_size: u32,
     pub eos: u32,
@@ -79,6 +82,8 @@ pub struct Manifest {
     pub limitations: Vec<String>,
 }
 
+fn single_resident() -> u32 { 1 }
+
 fn hash(value: &str) -> bool {
     value.len() == 64
         && value
@@ -88,6 +93,7 @@ fn hash(value: &str) -> bool {
 impl Manifest {
     pub fn validate(&self) -> Result<()> {
         if self.version != VERSION
+            || self.resident_sequences == 0 || self.resident_sequences > 64
             || !hash(&self.identity.program_sha256)
             || !hash(&self.identity.checkpoint_metadata_sha256)
             || !hash(&self.identity.backend_revision)

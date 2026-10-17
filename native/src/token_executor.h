@@ -117,6 +117,8 @@ struct Decoder {
   std::map<std::string, std::unique_ptr<AttentionState>> attention_states;
   std::map<std::string, size_t> cache_control_offsets;
   std::unique_ptr<DeviceTensor> cache_controls;
+  std::unique_ptr<DeviceTensor> resident_index;
+  uint32_t active_resident = 0;
   std::vector<uint8_t> cache_control_host;
   std::map<std::string, V> prepared_sinks;
   aclrtStream stream = nullptr;
@@ -142,6 +144,8 @@ struct Decoder {
     for (const auto &load : p.instructions)
       source_types.emplace(load.destination, load.source_dtype);
     stream = this->execution.stream;
+    resident_index=std::make_unique<DeviceTensor>(std::vector<int64_t>{1},ACL_INT32,4);
+    resident::control_upload(*resident_index,std::vector<int32_t>{0});
     for (const auto &node : program.nodes)
       if (node.op == "cache_append" || node.op == "cache_norm_rope_append" || node.op == "cache_c8_norm_rope_append") {
         auto offset=cache_control_offsets.size()*16;
@@ -391,7 +395,7 @@ struct Decoder {
     auto &ptr = mome_states[state_name];
     if (!ptr) {
       resident::TransferScope constants(resident::TransferRole::ControlInput);
-      ptr = std::make_unique<MomeState>(x.size());
+      ptr = std::make_unique<MomeState>(x.size(), program.resident_sequences);
       auto &source = cpu(name + ".weight");
       std::vector<uint16_t> weight(source.size());
       for (size_t j = 0; j < x.size(); ++j)
@@ -409,7 +413,7 @@ struct Decoder {
     checked(prepared::query("aclnnAiInfraFusedCausalConv1d", false,
                             aclnnAiInfraFusedCausalConv1dGetWorkspaceSize,
                             input_view.t, s.weight.tensor, s.state.tensor,
-                            s.starts.tensor, s.slots.tensor, nullptr, nullptr,
+                            s.starts.tensor, resident_index->tensor, nullptr, nullptr,
                             nullptr, position_index->tensor, nullptr, nullptr,
                             nullptr, 0, -1, 0, 1, 1, 128, 1, true, s.out.tensor,
                             &bytes, &e),
@@ -609,7 +613,7 @@ struct Decoder {
     auto &ptr = attention_states[state_name];
     if (!ptr) {
       resident::TransferScope constants(resident::TransferRole::ControlInput);
-      ptr = std::make_unique<AttentionState>();
+      ptr = std::make_unique<AttentionState>(16,512,false,program.resident_sequences);
       prepared::Context::InitializationCopies declared(execution);
       to_device(ptr->sink, sink_values);
     }
@@ -617,7 +621,7 @@ struct Decoder {
     auto key = cast(latent, ACL_BF16);
     if (pos != current_position)
       throw std::runtime_error("cache position mismatch");
-    View cache(state.key.data, {int64_t(program.context), 576}, ACL_BF16);
+    View cache(state.key.data, {int64_t(state.physical_capacity), 576}, ACL_BF16);
     View source(key.data(), {1, 576}, ACL_BF16);
     uint64_t bytes = 0;
     aclOpExecutor *executor = nullptr;
@@ -637,7 +641,7 @@ struct Decoder {
     auto &ptr = attention_states[state_name];
     if (!ptr) {
       resident::TransferScope constants(resident::TransferRole::ControlInput);
-      ptr = std::make_unique<AttentionState>(packed?8:16,((program.context+31)/32)*32,packed);
+      ptr = std::make_unique<AttentionState>(packed?8:16,((program.context+31)/32)*32,packed,program.resident_sequences);
       prepared::Context::InitializationCopies declared(execution);
       to_device(ptr->sink, sinks);
     }
@@ -766,8 +770,8 @@ struct Decoder {
         {1, 6, 64}, {3456, 576, 1}, ACL_BF16);
     // Preserve the actual backing extent and view offset for paged cache views.
     auto cache_view = [&](int64_t width, int64_t offset) {
-      int64_t shape[] = {state.cache_capacity/16, 16, width};
-      int64_t storage[] = {state.cache_capacity/16, 16, 576};
+      int64_t shape[] = {state.physical_capacity/16, 16, width};
+      int64_t storage[] = {state.physical_capacity/16, 16, 576};
       int64_t strides[] = {16 * 576, 576, 1};
       return aclCreateTensor(shape, 3, ACL_BF16, strides, offset, ACL_FORMAT_ND,
                              storage, 3, decoded?decoded->data():state.key.data);
@@ -1222,8 +1226,46 @@ struct Decoder {
       if (s.scales) execution.zero(s.scales->data, s.scales->bytes);
     }
     execution.complete();
+    select_resident(0, -1);
     current_position = -1;
     execution.clear_step_history();
+  }
+  void select_resident(uint32_t slot, int last_position) {
+    if(slot>=program.resident_sequences || last_position < -1 || last_position>=int(program.context))
+      throw std::runtime_error("resident selection bounds");
+    if(slot!=active_resident) {
+      resident::control_upload(*resident_index,std::vector<int32_t>{int32_t(slot)});
+      for(auto &entry:attention_states) {
+        auto &state=*entry.second;
+        state.page_binding.select(slot);
+        upload_page_table(state);
+      }
+      active_resident=slot;
+    }
+    current_position=last_position;
+  }
+  void reset_resident(uint32_t slot) {
+    if(slot>=program.resident_sequences)throw std::runtime_error("resident reset bounds");
+    for(auto &entry:mome_states) {
+      auto &state=entry.second->state;
+      auto bytes=state.bytes/program.resident_sequences;
+      execution.zero(static_cast<uint8_t *>(state.data)+slot*bytes,bytes);
+    }
+    for(auto &entry:attention_states) {
+      auto &state=*entry.second;
+      auto bytes=state.key.bytes/program.resident_sequences;
+      execution.zero(static_cast<uint8_t *>(state.key.data)+slot*bytes,bytes);
+      if(state.scales)execution.zero(state.scales->data,state.scales->bytes);
+    }
+    execution.complete();
+    if(slot==active_resident)current_position=-1;
+  }
+  void upload_page_table(AttentionState &state) {
+    const auto &pages=state.page_binding.pages();
+    if(pages.size()>32)throw std::runtime_error("device block table capacity");
+    std::vector<int32_t> table(32,0);
+    std::copy(pages.begin(),pages.end(),table.begin());
+    resident::control_upload(state.table,table);
   }
   void bind_cache_pages(const std::string &name, const std::vector<int32_t> &pages) {
     if (current_position != -1) throw std::runtime_error("page binding requires a reset request");
@@ -1234,9 +1276,7 @@ struct Decoder {
       throw std::runtime_error("row-quantized cache paging is not implemented");
     if (pages.size()>32) throw std::runtime_error("device block table capacity");
     state.page_binding.bind(pages);
-    std::vector<int32_t> table(32,0);
-    std::copy(pages.begin(),pages.end(),table.begin());
-    resident::control_upload(state.table,table);
+    upload_page_table(state);
     // No graph pointer changes: only declared control metadata is updated.
   }
   // Runtime dispatch is defined separately from kernel implementations.

@@ -7,7 +7,7 @@
 namespace {
 thread_local std::string last_error;
 std::atomic<bool> owned{false};
-enum class Command { Reset, Token, BindPages };
+enum class Command { Reset, Token, BindPages, SelectResident, ResetResident };
 struct Engine {
   std::string bundle, checkpoint;
   inferfabric::execution::Plan program;
@@ -20,7 +20,8 @@ struct Engine {
   uint64_t generation = 0;
   Command command = Command::Reset;
   uint32_t input = 0, position = 0, sample = 0, output = 0;
-  uint32_t next_position = 0;
+  uint32_t active_resident = 0;
+  std::vector<uint32_t> next_positions;
   uint32_t vocabulary = 0;
   std::string binding_component;
   std::vector<int32_t> binding_pages;
@@ -31,6 +32,7 @@ struct Engine {
   Engine(const char *path, const char *weights, bool prepare) : bundle(path), checkpoint(weights),
       program(inferfabric::execution::Plan::read(bundle + "/execution.bin")), preparation(prepare) {
     inferfabric::execution::validate_kernels(program);
+    next_positions.resize(program.resident_sequences,0);
     if (!program.physical || program.context < 3)
       throw std::runtime_error("persistent engine requires a physical token program with context >=3");
     if (!std::getenv("INFERFABRIC_DECODE_GRAPH"))
@@ -106,6 +108,8 @@ struct Engine {
           }
           uint32_t next = 0;
           if (cmd == Command::Reset) decoder.reset_request();
+          else if (cmd == Command::SelectResident) decoder.select_resident(token,int(pos)-1);
+          else if (cmd == Command::ResetResident) decoder.reset_resident(token);
           else if (cmd == Command::BindPages && rank == token)
             decoder.bind_cache_pages(binding_component, binding_pages);
           else if (cmd == Command::Token) {
@@ -187,12 +191,29 @@ extern "C" int inferfabric_program_open(const char *bundle, const char *checkpoi
   });
 }
 extern "C" int inferfabric_program_reset(void *p) {
-  return call([&] { auto &e = engine(p); e.submit(Command::Reset); e.next_position = 0; });
+  return call([&] { auto &e = engine(p); e.submit(Command::Reset);
+    std::fill(e.next_positions.begin(),e.next_positions.end(),0); e.active_resident=0; });
+}
+extern "C" int inferfabric_program_resident_capacity(void *p, uint32_t *count) {
+  return call([&] { if(!count)throw std::runtime_error("null resident capacity"); *count=engine(p).program.resident_sequences; });
+}
+extern "C" int inferfabric_program_select_resident(void *p, uint32_t slot) {
+  return call([&] { auto &e=engine(p);
+    if(slot>=e.next_positions.size())throw std::runtime_error("resident selection bounds");
+    if(slot!=e.active_resident)e.submit(Command::SelectResident,slot,e.next_positions[slot]);
+    e.active_resident=slot;
+  });
+}
+extern "C" int inferfabric_program_reset_resident(void *p, uint32_t slot) {
+  return call([&] { auto &e=engine(p);
+    if(slot>=e.next_positions.size())throw std::runtime_error("resident reset bounds");
+    e.submit(Command::ResetResident,slot); e.next_positions[slot]=0;
+  });
 }
 extern "C" int inferfabric_program_bind_pages(void *p, uint32_t rank, const char *component, const int32_t *pages, uint32_t count) {
   return call([&] {
     auto &e=engine(p);
-    if (e.next_position || rank>=e.loads.size() || !component || !pages || !count || count>32)
+    if (e.next_positions[e.active_resident] || rank>=e.loads.size() || !component || !pages || !count || count>32)
       throw std::runtime_error("invalid page binding arguments");
     e.binding_component=component;
     e.binding_pages.assign(pages,pages+count);
@@ -206,9 +227,9 @@ extern "C" int inferfabric_program_info(void *p, uint32_t *context, uint32_t *vo
 extern "C" int inferfabric_program_token(void *p, uint32_t token, uint32_t position, uint32_t sample, uint32_t *output) {
   return call([&] {
     auto &e = engine(p);
-    if (!output || sample > 1 || position != e.next_position || position >= e.program.context || token >= e.vocabulary)
+    if (!output || sample > 1 || position != e.next_positions[e.active_resident] || position >= e.program.context || token >= e.vocabulary)
       throw std::runtime_error("invalid program token/position/output");
-    *output = e.submit(Command::Token, token, position, sample); ++e.next_position;
+    *output = e.submit(Command::Token, token, position, sample); ++e.next_positions[e.active_resident];
   });
 }
 extern "C" int inferfabric_program_close(void *p) {

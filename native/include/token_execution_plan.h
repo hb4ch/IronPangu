@@ -32,6 +32,7 @@ struct Node {
 struct Plan {
   bool physical = false;
   uint32_t context = 0, eos = 0, output = 0;
+  uint32_t resident_sequences = 1;
   std::vector<Node> nodes;
   std::vector<uint32_t> uses;
   static Plan read(const std::string &path) {
@@ -56,14 +57,17 @@ struct Plan {
       return v;
     };
     char magic[8];
-    if (!s.read(magic, 8) || (std::memcmp(magic, "IFTOKN01", 8) && std::memcmp(magic, "IFTOKN02", 8)))
+    if (!s.read(magic, 8) || (std::memcmp(magic, "IFTOKN01", 8) && std::memcmp(magic, "IFTOKN02", 8) && std::memcmp(magic, "IFTOKN03", 8)))
       throw std::runtime_error("missing/unsupported execution plan");
     Plan p;
-    p.physical = !std::memcmp(magic, "IFTOKN02", 8);
+    p.physical = std::memcmp(magic, "IFTOKN01", 8) != 0;
     p.context = number();
     p.eos = number();
     p.output = number();
     auto count = number();
+    if (!std::memcmp(magic, "IFTOKN03", 8)) p.resident_sequences = number();
+    if (!p.resident_sequences || p.resident_sequences > 64)
+      throw std::runtime_error("resident sequence capacity");
     if (!p.context || p.context > 512 || p.eos >= 151552 || !count ||
         count > 10000 || p.output >= count)
       throw std::runtime_error("token plan bounds");
@@ -75,6 +79,8 @@ struct Plan {
       n.width = number();
       n.name = str();
       n.op = str();
+      if (p.resident_sequences > 1 && n.op == "cache_quantize_append")
+        throw std::runtime_error("resident slots require paged cache operators");
       if (n.kind > (p.physical ? 7u : 4u) || (n.width > 200000 && !(p.physical && n.op=="cache_dequantize" && n.width==((p.context+15)/16)*16*576)) || !names.insert(n.name).second)
         throw std::runtime_error("invalid node descriptor");
       auto inputs = number();

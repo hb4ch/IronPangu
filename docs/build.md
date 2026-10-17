@@ -377,3 +377,30 @@ The installed Omni inference operator library must export
 `aclnnAiInfraKvRmsNormRopeCache`. Missing support fails; there is no host fallback.
 Follow [the C8 full-model qualification procedure](validation/2026-10-17-packed-c8/README.md)
 to prepare and bind the arena before ordinary execution.
+
+### Multiple resident request states
+
+Compile storage capacity separately from the invocation batch size:
+
+```bash
+./inferfabric-compiler compile-token examples/openpangu/92b-tp8-ep8-c8.inferfabric \
+  /models/92B resident-source --allow-stale-index-size --resident-sequences 2
+cmake --build native-build --target program_engine_probe page_binding_test -j4
+native-build/page_binding_test
+```
+
+`--resident-sequences` accepts 1–64. Counts above one emit the `IFTOKN03` binary
+header with an explicit resident capacity. Each cache gets disjoint page partitions
+and each recurrent operator gets independent slots. Weights, scratch and the token
+graph remain shared. The physical program and viewer expose the resulting shapes.
+BF16 and packed C8 support this contract; older row-quantized cache operators reject
+multi-resident compilation. This option does not enlarge context or enable packed
+multi-sequence kernels.
+
+Rebuild the native library and perform workspace discovery, fixed-workspace
+preparation and arena binding for this new binary. Use
+`scripts/qualify-program-engine.py --interleave --permuted-pages` at each stage to
+test independent continuation and slot reuse against the immutable full-model
+fixtures. The C ABI and Rust adapter expose capacity, select-resident and
+reset-resident operations. The HTTP worker still needs scheduling integration;
+resident storage qualification alone is not continuous batching.

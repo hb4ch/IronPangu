@@ -343,11 +343,22 @@ pub fn write_bundle(
     inventory: &Inventory,
     output: &std::path::Path,
 ) -> Result<()> {
+    write_bundle_with_resident_sequences(graph, topology, inventory, output, 1)
+}
+pub fn write_bundle_with_resident_sequences(
+    graph: &Graph,
+    topology: &OpenPanguParallel,
+    inventory: &Inventory,
+    output: &std::path::Path,
+    resident_sequences: usize,
+) -> Result<()> {
     let plans = initialization_plans(graph, topology, inventory)?;
-    let program = crate::token_program::lower(graph, Some(inventory))?;
+    let program = crate::token_program::lower(graph, Some(inventory))?.with_resident_sequences(resident_sequences)?;
     let binary = program.encode()?;
     let physical = crate::token_physical::lower(graph, &topology.devices)?;
-    let serving = crate::token_serving::lower(graph, &physical, &binary, &inventory.metadata_sha256)?;
+    let mut serving = crate::token_serving::lower(graph, &physical, &binary, &inventory.metadata_sha256)?;
+    serving.resident_sequences = resident_sequences as u32;
+    serving.validate()?;
     if output.exists() {
         return Err(invalid(
             "token bundle output already exists; choose a new directory",

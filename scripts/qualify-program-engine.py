@@ -21,6 +21,7 @@ def main():
         p.add_argument('--' + name, required=True, type=Path)
     p.add_argument('--prepare', action='store_true')
     p.add_argument('--permuted-pages', action='store_true', help='qualify rank/component-specific noncontiguous device cache bindings')
+    p.add_argument('--interleave', action='store_true', help='interleave resident histories token by token, including slot reuse while peers are live')
     args = p.parse_args()
     args.output.mkdir(parents=True, exist_ok=False)
     cases = json.loads(args.cases.read_text()) * 3
@@ -31,6 +32,9 @@ def main():
                INFERFABRIC_TRANSFER_AUDIT_DIR=str((args.output / 'transfers').resolve()))
     env.pop('INFERFABRIC_PREPARE_ARENA', None)
     env.pop('INFERFABRIC_ALTERNATE_PAGE_LAYOUTS', None)
+    env.pop('INFERFABRIC_INTERLEAVE_RESIDENTS', None)
+    if args.interleave:
+        env['INFERFABRIC_INTERLEAVE_RESIDENTS'] = '1'
     if args.prepare:
         env['INFERFABRIC_PREPARE_ARENA'] = '1'
     if args.permuted_pages:
@@ -65,6 +69,8 @@ def main():
     expected_total = sum(len(c['output_ids']) for c in cases)
     if len(rows) != expected_total:
         raise RuntimeError('incomplete or unexpected output records')
+    if args.interleave and len({r.get('resident') for r in rows}) < 2:
+        raise RuntimeError('interleaving did not exercise multiple resident slots')
     measurements = []
     for request, case in enumerate(cases):
         actual = [r for r in rows if r['request'] == request]
@@ -80,10 +86,14 @@ def main():
         prepared = json.loads((args.output / 'prepared' / f'rank-{rank}.json').read_text())
         if not args.prepare and (not prepared['workspace']['planned'] or prepared['workspace']['growth_allocations']):
             raise RuntimeError('workspace growth or missing fixed plan')
+        if not args.prepare and (not prepared['arena']['frozen'] or any(
+                s['device_allocations'] or s['completion_boundaries'] for s in prepared['steps'])):
+            raise RuntimeError('unfrozen arena, graph allocation or internal fence')
     report = dict(format='inferfabric.persistent-program-qualification.v1', requests=len(cases),
                   output_tokens=expected_total, exact_fixture_tokens=True,
                   fixture_sha256=hashlib.sha256(args.cases.read_bytes()).hexdigest(),
                   permuted_pages=args.permuted_pages,
+                  interleaved_residents=args.interleave,
                   scope='one loaded TP8/EP8 group, serial token graph; no packed prefill or long-context claim',
                   measurements=measurements)
     (args.output / 'results.json').write_text(json.dumps(report, indent=2) + '\n')

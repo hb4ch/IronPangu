@@ -14,6 +14,8 @@ type Close = unsafe extern "C" fn(*mut c_void) -> i32;
 type Token = unsafe extern "C" fn(*mut c_void, u32, u32, u32, *mut u32) -> i32;
 type Error = unsafe extern "C" fn() -> *const c_char;
 type BindPages = unsafe extern "C" fn(*mut c_void, u32, *const c_char, *const i32, u32) -> i32;
+type Resident = unsafe extern "C" fn(*mut c_void, u32) -> i32;
+type Capacity = unsafe extern "C" fn(*mut c_void, *mut u32) -> i32;
 pub fn manifest(bundle: &Path) -> Result<Manifest> {
     let m: Manifest = serde_json::from_slice(&std::fs::read(bundle.join("serving.json"))?)
         .map_err(|e| invalid(e.to_string()))?;
@@ -43,6 +45,8 @@ pub struct Engine {
     token_fn: Token,
     error: Error,
     bind_pages_fn: Option<BindPages>,
+    select_resident_fn: Option<Resident>,
+    reset_resident_fn: Option<Resident>,
     _thread: PhantomData<Rc<()>>,
 }
 impl Engine {
@@ -84,6 +88,8 @@ impl Engine {
                 token_fn: symbol!("inferfabric_program_token", Token),
                 error: symbol!("inferfabric_program_error", Error),
                 bind_pages_fn: lib.get::<BindPages>(b"inferfabric_program_bind_pages\0").ok().map(|f| *f),
+                select_resident_fn: lib.get::<Resident>(b"inferfabric_program_select_resident\0").ok().map(|f| *f),
+                reset_resident_fn: lib.get::<Resident>(b"inferfabric_program_reset_resident\0").ok().map(|f| *f),
                 ptr: std::ptr::null_mut(),
                 _thread: PhantomData,
                 _library: lib,
@@ -95,6 +101,14 @@ impl Engine {
             }
             let (mut context, mut vocab, mut eos) = (0, 0, 0);
             result.check(info(result.ptr, &mut context, &mut vocab, &mut eos))?;
+            let mut residents = 1;
+            if let Ok(capacity) = result._library.get::<Capacity>(b"inferfabric_program_resident_capacity\0") {
+                result.check(capacity(result.ptr, &mut residents))?;
+            }
+            if residents != contract.resident_sequences || (residents > 1 &&
+                (result.select_resident_fn.is_none() || result.reset_resident_fn.is_none())) {
+                return Err(invalid("native resident capacity differs from serving manifest"));
+            }
             if (context, vocab, eos)
                 != (
                     contract.variants[0].max_context,
@@ -118,6 +132,14 @@ impl Engine {
     }
     pub fn reset(&mut self) -> Result<()> {
         self.check(unsafe { (self.reset_fn)(self.ptr) })
+    }
+    pub fn select_resident(&mut self, slot: u32) -> Result<()> {
+        let select = self.select_resident_fn.ok_or_else(|| invalid("backend does not support resident selection"))?;
+        self.check(unsafe { select(self.ptr, slot) })
+    }
+    pub fn reset_resident(&mut self, slot: u32) -> Result<()> {
+        let reset = self.reset_resident_fn.ok_or_else(|| invalid("backend does not support resident reset"))?;
+        self.check(unsafe { reset(self.ptr, slot) })
     }
     /// Update device page metadata after reset; no cache content or graph address moves.
     pub fn bind_pages(&mut self, rank: u32, component: &str, pages: &[u32]) -> Result<()> {

@@ -108,14 +108,14 @@ pub fn lower(
         .find(|n| n.op == "embedding")
         .ok_or_else(|| invalid("serving embedding contract"))?
         .integer("vocab")?;
-    let manifest = Manifest { version: VERSION,
+    let manifest = Manifest { version: VERSION, resident_sequences: 1,
         identity: Identity { program_sha256: crate::token_physical::digest(program), checkpoint_metadata_sha256: checkpoint.into(),
             backend_revision: crate::token_physical::digest(&serde_json::to_vec(physical).map_err(|e| invalid(e.to_string()))?),
             devices: physical.ranks.iter().map(|r| r.device).collect() },
         vocab_size: u32::try_from(vocab).map_err(|_| invalid("vocab overflow"))?,
         eos: u32::try_from(graph.eos).map_err(|_| invalid("eos overflow"))?, variants, states, qualification: None,
         limitations: vec!["Single sequence and one input token per invocation; prompt processing is serial, not packed prefill".into(),
-            "State is request-private; pooled pages, checkpoint restore and prefix reuse are not implemented".into(),
+            "Resident states use disjoint page partitions and recurrent slots; invocation batch size remains one; checkpoint restore and prefix reuse are not implemented".into(),
             "Compiler contract only: startup must verify native binary, frozen resources and hardware qualification before readiness".into()] };
     manifest.validate()?;
     Ok(manifest)

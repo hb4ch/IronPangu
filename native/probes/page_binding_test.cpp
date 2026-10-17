@@ -25,5 +25,19 @@ int main() {
   rejects([]{ PageBinding p(16,31,2); });
   rejects([]{ PageBinding p(16,64,3); });
   rejects([]{ PageBinding p(16,16,UINT32_MAX); });
+  for(auto page_tokens:{16u,32u}) {
+    inferfabric::state::ResidentPages p(page_tokens,page_tokens*3,2);
+    p.bind({2,0,1});
+    p.select(1);
+    assert(p.append(0)==3*page_tokens);
+    p.bind({5,3,4});
+    rejects([&]{p.bind({0,3,4});});
+    rejects([&]{p.select(2);});
+    assert(p.append(0)==5*page_tokens);
+    p.select(0);
+    assert(p.append(0)==2*page_tokens);
+    rejects([&]{p.bind({3,0,1});});
+    assert(p.append(0)==2*page_tokens);
+  }
   std::cout<<"page bindings: fragmented addresses and invalid-update rollback passed\n";
 }

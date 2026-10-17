@@ -1,0 +1,442 @@
+[
+  {
+    "rank": 0,
+    "arena": {
+      "format": "inferfabric.frozen-arena.v1",
+      "frozen": true,
+      "backend_fingerprint": "5321843807145840169",
+      "program_fingerprint": "2567067653085328895",
+      "bytes": 12431494720,
+      "slot_count": 3465
+    },
+    "workspace": {
+      "planned": true,
+      "planned_bytes": 130916352,
+      "peak_requested_bytes": 130916352,
+      "growth_allocations": 0,
+      "slot": 0
+    },
+    "transfers": {
+      "format": "inferfabric.transfer-audit.v1",
+      "activation_host_transfers": 0,
+      "rejected": 0,
+      "boundaries": [
+        {
+          "role": "control_input",
+          "h2d_calls": 295685,
+          "h2d_bytes": 51007872,
+          "d2h_calls": 0,
+          "d2h_bytes": 0
+        },
+        {
+          "role": "parameter_preparation",
+          "h2d_calls": 505,
+          "h2d_bytes": 207457084,
+          "d2h_calls": 598,
+          "d2h_bytes": 152775396
+        },
+        {
+          "role": "request_output",
+          "h2d_calls": 0,
+          "h2d_bytes": 0,
+          "d2h_calls": 1348,
+          "d2h_bytes": 48528
+        }
+      ]
+    },
+    "memory": {
+      "rank": 0,
+      "hbm_used_bytes": 33811193856,
+      "hbm_growth_bytes": 33378705408
+    },
+    "source_prepared_sha256": "c6b7810463bc891af35c5a014e60ac09e69b152746de17e64dca4f6a4804d2df",
+    "retained_steps": 5403,
+    "retained_step_device_allocations": 0,
+    "retained_step_internal_fences": 0
+  },
+  {
+    "rank": 1,
+    "arena": {
+      "format": "inferfabric.frozen-arena.v1",
+      "frozen": true,
+      "backend_fingerprint": "5321843807145840169",
+      "program_fingerprint": "2567067653085328895",
+      "bytes": 12431494720,
+      "slot_count": 3465
+    },
+    "workspace": {
+      "planned": true,
+      "planned_bytes": 130916352,
+      "peak_requested_bytes": 130916352,
+      "growth_allocations": 0,
+      "slot": 0
+    },
+    "transfers": {
+      "format": "inferfabric.transfer-audit.v1",
+      "activation_host_transfers": 0,
+      "rejected": 0,
+      "boundaries": [
+        {
+          "role": "control_input",
+          "h2d_calls": 295685,
+          "h2d_bytes": 51007872,
+          "d2h_calls": 0,
+          "d2h_bytes": 0
+        },
+        {
+          "role": "parameter_preparation",
+          "h2d_calls": 505,
+          "h2d_bytes": 207457084,
+          "d2h_calls": 598,
+          "d2h_bytes": 152775396
+        },
+        {
+          "role": "request_output",
+          "h2d_calls": 0,
+          "h2d_bytes": 0,
+          "d2h_calls": 337,
+          "d2h_bytes": 21568
+        }
+      ]
+    },
+    "memory": {
+      "rank": 1,
+      "hbm_used_bytes": 33550774272,
+      "hbm_growth_bytes": 33370087424
+    },
+    "source_prepared_sha256": "c6b7810463bc891af35c5a014e60ac09e69b152746de17e64dca4f6a4804d2df",
+    "retained_steps": 5403,
+    "retained_step_device_allocations": 0,
+    "retained_step_internal_fences": 0
+  },
+  {
+    "rank": 2,
+    "arena": {
+      "format": "inferfabric.frozen-arena.v1",
+      "frozen": true,
+      "backend_fingerprint": "5321843807145840169",
+      "program_fingerprint": "2567067653085328895",
+      "bytes": 12431494720,
+      "slot_count": 3465
+    },
+    "workspace": {
+      "planned": true,
+      "planned_bytes": 130916352,
+      "peak_requested_bytes": 130916352,
+      "growth_allocations": 0,
+      "slot": 0
+    },
+    "transfers": {
+      "format": "inferfabric.transfer-audit.v1",
+      "activation_host_transfers": 0,
+      "rejected": 0,
+      "boundaries": [
+        {
+          "role": "control_input",
+          "h2d_calls": 295685,
+          "h2d_bytes": 51007872,
+          "d2h_calls": 0,
+          "d2h_bytes": 0
+        },
+        {
+          "role": "parameter_preparation",
+          "h2d_calls": 505,
+          "h2d_bytes": 207457084,
+          "d2h_calls": 598,
+          "d2h_bytes": 152775396
+        },
+        {
+          "role": "request_output",
+          "h2d_calls": 0,
+          "h2d_bytes": 0,
+          "d2h_calls": 337,
+          "d2h_bytes": 21568
+        }
+      ]
+    },
+    "memory": {
+      "rank": 2,
+      "hbm_used_bytes": 33812312064,
+      "hbm_growth_bytes": 33377062912
+    },
+    "source_prepared_sha256": "c6b7810463bc891af35c5a014e60ac09e69b152746de17e64dca4f6a4804d2df",
+    "retained_steps": 5403,
+    "retained_step_device_allocations": 0,
+    "retained_step_internal_fences": 0
+  },
+  {
+    "rank": 3,
+    "arena": {
+      "format": "inferfabric.frozen-arena.v1",
+      "frozen": true,
+      "backend_fingerprint": "5321843807145840169",
+      "program_fingerprint": "2567067653085328895",
+      "bytes": 12431494720,
+      "slot_count": 3465
+    },
+    "workspace": {
+      "planned": true,
+      "planned_bytes": 130916352,
+      "peak_requested_bytes": 130916352,
+      "growth_allocations": 0,
+      "slot": 0
+    },
+    "transfers": {
+      "format": "inferfabric.transfer-audit.v1",
+      "activation_host_transfers": 0,
+      "rejected": 0,
+      "boundaries": [
+        {
+          "role": "control_input",
+          "h2d_calls": 295685,
+          "h2d_bytes": 51007872,
+          "d2h_calls": 0,
+          "d2h_bytes": 0
+        },
+        {
+          "role": "parameter_preparation",
+          "h2d_calls": 505,
+          "h2d_bytes": 207457084,
+          "d2h_calls": 598,
+          "d2h_bytes": 152775396
+        },
+        {
+          "role": "request_output",
+          "h2d_calls": 0,
+          "h2d_bytes": 0,
+          "d2h_calls": 337,
+          "d2h_bytes": 21568
+        }
+      ]
+    },
+    "memory": {
+      "rank": 3,
+      "hbm_used_bytes": 33551872000,
+      "hbm_growth_bytes": 33369866240
+    },
+    "source_prepared_sha256": "c6b7810463bc891af35c5a014e60ac09e69b152746de17e64dca4f6a4804d2df",
+    "retained_steps": 5403,
+    "retained_step_device_allocations": 0,
+    "retained_step_internal_fences": 0
+  },
+  {
+    "rank": 4,
+    "arena": {
+      "format": "inferfabric.frozen-arena.v1",
+      "frozen": true,
+      "backend_fingerprint": "5321843807145840169",
+      "program_fingerprint": "2567067653085328895",
+      "bytes": 12431494720,
+      "slot_count": 3465
+    },
+    "workspace": {
+      "planned": true,
+      "planned_bytes": 130916352,
+      "peak_requested_bytes": 130916352,
+      "growth_allocations": 0,
+      "slot": 0
+    },
+    "transfers": {
+      "format": "inferfabric.transfer-audit.v1",
+      "activation_host_transfers": 0,
+      "rejected": 0,
+      "boundaries": [
+        {
+          "role": "control_input",
+          "h2d_calls": 295685,
+          "h2d_bytes": 51007872,
+          "d2h_calls": 0,
+          "d2h_bytes": 0
+        },
+        {
+          "role": "parameter_preparation",
+          "h2d_calls": 505,
+          "h2d_bytes": 207457084,
+          "d2h_calls": 598,
+          "d2h_bytes": 152775396
+        },
+        {
+          "role": "request_output",
+          "h2d_calls": 0,
+          "h2d_bytes": 0,
+          "d2h_calls": 337,
+          "d2h_bytes": 21568
+        }
+      ]
+    },
+    "memory": {
+      "rank": 4,
+      "hbm_used_bytes": 33819570176,
+      "hbm_growth_bytes": 33377062912
+    },
+    "source_prepared_sha256": "c6b7810463bc891af35c5a014e60ac09e69b152746de17e64dca4f6a4804d2df",
+    "retained_steps": 5403,
+    "retained_step_device_allocations": 0,
+    "retained_step_internal_fences": 0
+  },
+  {
+    "rank": 5,
+    "arena": {
+      "format": "inferfabric.frozen-arena.v1",
+      "frozen": true,
+      "backend_fingerprint": "5321843807145840169",
+      "program_fingerprint": "2567067653085328895",
+      "bytes": 12431494720,
+      "slot_count": 3465
+    },
+    "workspace": {
+      "planned": true,
+      "planned_bytes": 130916352,
+      "peak_requested_bytes": 130916352,
+      "growth_allocations": 0,
+      "slot": 0
+    },
+    "transfers": {
+      "format": "inferfabric.transfer-audit.v1",
+      "activation_host_transfers": 0,
+      "rejected": 0,
+      "boundaries": [
+        {
+          "role": "control_input",
+          "h2d_calls": 295685,
+          "h2d_bytes": 51007872,
+          "d2h_calls": 0,
+          "d2h_bytes": 0
+        },
+        {
+          "role": "parameter_preparation",
+          "h2d_calls": 505,
+          "h2d_bytes": 207457084,
+          "d2h_calls": 598,
+          "d2h_bytes": 152775396
+        },
+        {
+          "role": "request_output",
+          "h2d_calls": 0,
+          "h2d_bytes": 0,
+          "d2h_calls": 337,
+          "d2h_bytes": 21568
+        }
+      ]
+    },
+    "memory": {
+      "rank": 5,
+      "hbm_used_bytes": 33537384448,
+      "hbm_growth_bytes": 33369825280
+    },
+    "source_prepared_sha256": "c6b7810463bc891af35c5a014e60ac09e69b152746de17e64dca4f6a4804d2df",
+    "retained_steps": 5403,
+    "retained_step_device_allocations": 0,
+    "retained_step_internal_fences": 0
+  },
+  {
+    "rank": 6,
+    "arena": {
+      "format": "inferfabric.frozen-arena.v1",
+      "frozen": true,
+      "backend_fingerprint": "5321843807145840169",
+      "program_fingerprint": "2567067653085328895",
+      "bytes": 12431494720,
+      "slot_count": 3465
+    },
+    "workspace": {
+      "planned": true,
+      "planned_bytes": 130916352,
+      "peak_requested_bytes": 130916352,
+      "growth_allocations": 0,
+      "slot": 0
+    },
+    "transfers": {
+      "format": "inferfabric.transfer-audit.v1",
+      "activation_host_transfers": 0,
+      "rejected": 0,
+      "boundaries": [
+        {
+          "role": "control_input",
+          "h2d_calls": 295685,
+          "h2d_bytes": 51007872,
+          "d2h_calls": 0,
+          "d2h_bytes": 0
+        },
+        {
+          "role": "parameter_preparation",
+          "h2d_calls": 505,
+          "h2d_bytes": 207457084,
+          "d2h_calls": 598,
+          "d2h_bytes": 152775396
+        },
+        {
+          "role": "request_output",
+          "h2d_calls": 0,
+          "h2d_bytes": 0,
+          "d2h_calls": 337,
+          "d2h_bytes": 21568
+        }
+      ]
+    },
+    "memory": {
+      "rank": 6,
+      "hbm_used_bytes": 33802911744,
+      "hbm_growth_bytes": 33376489472
+    },
+    "source_prepared_sha256": "c6b7810463bc891af35c5a014e60ac09e69b152746de17e64dca4f6a4804d2df",
+    "retained_steps": 5403,
+    "retained_step_device_allocations": 0,
+    "retained_step_internal_fences": 0
+  },
+  {
+    "rank": 7,
+    "arena": {
+      "format": "inferfabric.frozen-arena.v1",
+      "frozen": true,
+      "backend_fingerprint": "5321843807145840169",
+      "program_fingerprint": "2567067653085328895",
+      "bytes": 12431494720,
+      "slot_count": 3465
+    },
+    "workspace": {
+      "planned": true,
+      "planned_bytes": 130916352,
+      "peak_requested_bytes": 130916352,
+      "growth_allocations": 0,
+      "slot": 0
+    },
+    "transfers": {
+      "format": "inferfabric.transfer-audit.v1",
+      "activation_host_transfers": 0,
+      "rejected": 0,
+      "boundaries": [
+        {
+          "role": "control_input",
+          "h2d_calls": 295685,
+          "h2d_bytes": 51007872,
+          "d2h_calls": 0,
+          "d2h_bytes": 0
+        },
+        {
+          "role": "parameter_preparation",
+          "h2d_calls": 505,
+          "h2d_bytes": 207457084,
+          "d2h_calls": 598,
+          "d2h_bytes": 152775396
+        },
+        {
+          "role": "request_output",
+          "h2d_calls": 0,
+          "h2d_bytes": 0,
+          "d2h_calls": 337,
+          "d2h_bytes": 21568
+        }
+      ]
+    },
+    "memory": {
+      "rank": 7,
+      "hbm_used_bytes": 33551519744,
+      "hbm_growth_bytes": 33370132480
+    },
+    "source_prepared_sha256": "c6b7810463bc891af35c5a014e60ac09e69b152746de17e64dca4f6a4804d2df",
+    "retained_steps": 5403,
+    "retained_step_device_allocations": 0,
+    "retained_step_internal_fences": 0
+  }
+]

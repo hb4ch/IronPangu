@@ -1,0 +1,348 @@
+{
+  "format": "inferfabric.persistent-program-qualification.v1",
+  "requests": 42,
+  "output_tokens": 336,
+  "exact_fixture_tokens": true,
+  "fixture_sha256": "35790d1147ede8a49cb91d55d812eab79ce666af2e8ea313d0cbf0448c583747",
+  "permuted_pages": true,
+  "interleaved_residents": true,
+  "scope": "one loaded TP8/EP8 group, serial token graph; no packed prefill or long-context claim",
+  "measurements": [
+    {
+      "request": 0,
+      "case": "serial_layout_oracle_1",
+      "prompt_tokens": 1,
+      "output_tokens": 8,
+      "engine_ttft_ms": 180.893,
+      "tpot_ms": 37.89342857142857
+    },
+    {
+      "request": 1,
+      "case": "serial_layout_oracle_15",
+      "prompt_tokens": 15,
+      "output_tokens": 8,
+      "engine_ttft_ms": 673.408,
+      "tpot_ms": 37.79642857142857
+    },
+    {
+      "request": 2,
+      "case": "serial_layout_oracle_16",
+      "prompt_tokens": 16,
+      "output_tokens": 8,
+      "engine_ttft_ms": 699.336,
+      "tpot_ms": 37.73957142857143
+    },
+    {
+      "request": 3,
+      "case": "serial_layout_oracle_17",
+      "prompt_tokens": 17,
+      "output_tokens": 8,
+      "engine_ttft_ms": 734.492,
+      "tpot_ms": 37.751714285714286
+    },
+    {
+      "request": 4,
+      "case": "serial_layout_oracle_31",
+      "prompt_tokens": 31,
+      "output_tokens": 8,
+      "engine_ttft_ms": 1255.339,
+      "tpot_ms": 37.893142857142855
+    },
+    {
+      "request": 5,
+      "case": "serial_layout_oracle_32",
+      "prompt_tokens": 32,
+      "output_tokens": 8,
+      "engine_ttft_ms": 1289.319,
+      "tpot_ms": 37.95242857142857
+    },
+    {
+      "request": 6,
+      "case": "serial_layout_oracle_33",
+      "prompt_tokens": 33,
+      "output_tokens": 8,
+      "engine_ttft_ms": 1332.082,
+      "tpot_ms": 38.06442857142857
+    },
+    {
+      "request": 7,
+      "case": "serial_layout_oracle_63",
+      "prompt_tokens": 63,
+      "output_tokens": 8,
+      "engine_ttft_ms": 2480.183,
+      "tpot_ms": 38.331714285714284
+    },
+    {
+      "request": 8,
+      "case": "serial_layout_oracle_64",
+      "prompt_tokens": 64,
+      "output_tokens": 8,
+      "engine_ttft_ms": 2521.054,
+      "tpot_ms": 38.341
+    },
+    {
+      "request": 9,
+      "case": "serial_layout_oracle_65",
+      "prompt_tokens": 65,
+      "output_tokens": 8,
+      "engine_ttft_ms": 2554.598,
+      "tpot_ms": 38.56842857142857
+    },
+    {
+      "request": 10,
+      "case": "serial_layout_oracle_127",
+      "prompt_tokens": 127,
+      "output_tokens": 8,
+      "engine_ttft_ms": 4957.026,
+      "tpot_ms": 38.84842857142857
+    },
+    {
+      "request": 11,
+      "case": "serial_layout_oracle_255",
+      "prompt_tokens": 255,
+      "output_tokens": 8,
+      "engine_ttft_ms": 9931.509,
+      "tpot_ms": 39.098
+    },
+    {
+      "request": 12,
+      "case": "serial_layout_oracle_480",
+      "prompt_tokens": 480,
+      "output_tokens": 8,
+      "engine_ttft_ms": 18740.118,
+      "tpot_ms": 39.429
+    },
+    {
+      "request": 13,
+      "case": "serial_layout_oracle_504",
+      "prompt_tokens": 504,
+      "output_tokens": 8,
+      "engine_ttft_ms": 19940.334,
+      "tpot_ms": 47.233000000000004
+    },
+    {
+      "request": 14,
+      "case": "serial_layout_oracle_1",
+      "prompt_tokens": 1,
+      "output_tokens": 8,
+      "engine_ttft_ms": 72.124,
+      "tpot_ms": 38.61842857142857
+    },
+    {
+      "request": 15,
+      "case": "serial_layout_oracle_15",
+      "prompt_tokens": 15,
+      "output_tokens": 8,
+      "engine_ttft_ms": 610.734,
+      "tpot_ms": 38.76342857142857
+    },
+    {
+      "request": 16,
+      "case": "serial_layout_oracle_16",
+      "prompt_tokens": 16,
+      "output_tokens": 8,
+      "engine_ttft_ms": 653.734,
+      "tpot_ms": 38.894
+    },
+    {
+      "request": 17,
+      "case": "serial_layout_oracle_17",
+      "prompt_tokens": 17,
+      "output_tokens": 8,
+      "engine_ttft_ms": 687.029,
+      "tpot_ms": 38.64657142857143
+    },
+    {
+      "request": 18,
+      "case": "serial_layout_oracle_31",
+      "prompt_tokens": 31,
+      "output_tokens": 8,
+      "engine_ttft_ms": 1227.42,
+      "tpot_ms": 38.68742857142857
+    },
+    {
+      "request": 19,
+      "case": "serial_layout_oracle_32",
+      "prompt_tokens": 32,
+      "output_tokens": 8,
+      "engine_ttft_ms": 1260.194,
+      "tpot_ms": 38.556
+    },
+    {
+      "request": 20,
+      "case": "serial_layout_oracle_33",
+      "prompt_tokens": 33,
+      "output_tokens": 8,
+      "engine_ttft_ms": 1313.316,
+      "tpot_ms": 38.908142857142856
+    },
+    {
+      "request": 21,
+      "case": "serial_layout_oracle_63",
+      "prompt_tokens": 63,
+      "output_tokens": 8,
+      "engine_ttft_ms": 2514.167,
+      "tpot_ms": 38.533857142857144
+    },
+    {
+      "request": 22,
+      "case": "serial_layout_oracle_64",
+      "prompt_tokens": 64,
+      "output_tokens": 8,
+      "engine_ttft_ms": 2492.348,
+      "tpot_ms": 46.51242857142857
+    },
+    {
+      "request": 23,
+      "case": "serial_layout_oracle_65",
+      "prompt_tokens": 65,
+      "output_tokens": 8,
+      "engine_ttft_ms": 2579.658,
+      "tpot_ms": 38.566428571428574
+    },
+    {
+      "request": 24,
+      "case": "serial_layout_oracle_127",
+      "prompt_tokens": 127,
+      "output_tokens": 8,
+      "engine_ttft_ms": 4929.456,
+      "tpot_ms": 38.43685714285714
+    },
+    {
+      "request": 25,
+      "case": "serial_layout_oracle_255",
+      "prompt_tokens": 255,
+      "output_tokens": 8,
+      "engine_ttft_ms": 9887.578,
+      "tpot_ms": 39.001285714285714
+    },
+    {
+      "request": 26,
+      "case": "serial_layout_oracle_480",
+      "prompt_tokens": 480,
+      "output_tokens": 8,
+      "engine_ttft_ms": 18727.837,
+      "tpot_ms": 39.672
+    },
+    {
+      "request": 27,
+      "case": "serial_layout_oracle_504",
+      "prompt_tokens": 504,
+      "output_tokens": 8,
+      "engine_ttft_ms": 20093.767,
+      "tpot_ms": 39.068
+    },
+    {
+      "request": 28,
+      "case": "serial_layout_oracle_1",
+      "prompt_tokens": 1,
+      "output_tokens": 8,
+      "engine_ttft_ms": 78.716,
+      "tpot_ms": 38.86485714285714
+    },
+    {
+      "request": 29,
+      "case": "serial_layout_oracle_15",
+      "prompt_tokens": 15,
+      "output_tokens": 8,
+      "engine_ttft_ms": 626.386,
+      "tpot_ms": 38.791714285714285
+    },
+    {
+      "request": 30,
+      "case": "serial_layout_oracle_16",
+      "prompt_tokens": 16,
+      "output_tokens": 8,
+      "engine_ttft_ms": 656.495,
+      "tpot_ms": 38.61371428571429
+    },
+    {
+      "request": 31,
+      "case": "serial_layout_oracle_17",
+      "prompt_tokens": 17,
+      "output_tokens": 8,
+      "engine_ttft_ms": 697.654,
+      "tpot_ms": 38.74028571428571
+    },
+    {
+      "request": 32,
+      "case": "serial_layout_oracle_31",
+      "prompt_tokens": 31,
+      "output_tokens": 8,
+      "engine_ttft_ms": 1236.426,
+      "tpot_ms": 38.62085714285714
+    },
+    {
+      "request": 33,
+      "case": "serial_layout_oracle_32",
+      "prompt_tokens": 32,
+      "output_tokens": 8,
+      "engine_ttft_ms": 1281.684,
+      "tpot_ms": 38.98014285714286
+    },
+    {
+      "request": 34,
+      "case": "serial_layout_oracle_33",
+      "prompt_tokens": 33,
+      "output_tokens": 8,
+      "engine_ttft_ms": 1314.197,
+      "tpot_ms": 38.73757142857143
+    },
+    {
+      "request": 35,
+      "case": "serial_layout_oracle_63",
+      "prompt_tokens": 63,
+      "output_tokens": 8,
+      "engine_ttft_ms": 2508.99,
+      "tpot_ms": 38.555
+    },
+    {
+      "request": 36,
+      "case": "serial_layout_oracle_64",
+      "prompt_tokens": 64,
+      "output_tokens": 8,
+      "engine_ttft_ms": 2532.421,
+      "tpot_ms": 37.848571428571425
+    },
+    {
+      "request": 37,
+      "case": "serial_layout_oracle_65",
+      "prompt_tokens": 65,
+      "output_tokens": 8,
+      "engine_ttft_ms": 2550.305,
+      "tpot_ms": 38.22714285714286
+    },
+    {
+      "request": 38,
+      "case": "serial_layout_oracle_127",
+      "prompt_tokens": 127,
+      "output_tokens": 8,
+      "engine_ttft_ms": 4950.764,
+      "tpot_ms": 38.90157142857143
+    },
+    {
+      "request": 39,
+      "case": "serial_layout_oracle_255",
+      "prompt_tokens": 255,
+      "output_tokens": 8,
+      "engine_ttft_ms": 9939.514,
+      "tpot_ms": 39.266285714285715
+    },
+    {
+      "request": 40,
+      "case": "serial_layout_oracle_480",
+      "prompt_tokens": 480,
+      "output_tokens": 8,
+      "engine_ttft_ms": 18771.602,
+      "tpot_ms": 39.486285714285714
+    },
+    {
+      "request": 41,
+      "case": "serial_layout_oracle_504",
+      "prompt_tokens": 504,
+      "output_tokens": 8,
+      "engine_ttft_ms": 15776.39,
+      "tpot_ms": 18.72057142857143
+    }
+  ]
+}

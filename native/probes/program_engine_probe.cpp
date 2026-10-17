@@ -47,6 +47,52 @@ int main(int argc, char **argv) {
     }
     for (const auto &r : requests) if (!r.steps || r.steps > 128 || r.prompt.empty()) throw std::runtime_error("probe request bound");
     check(inferfabric_program_open(argv[1], argv[2], std::getenv("INFERFABRIC_PREPARE_ARENA") ? 1 : 0, &engine));
+    if (std::getenv("INFERFABRIC_INTERLEAVE_RESIDENTS")) {
+      uint32_t residents=0;
+      check(inferfabric_program_resident_capacity(engine,&residents));
+      if(residents<2)throw std::runtime_error("interleaving requires at least two compiled residents");
+      struct Live { size_t request; unsigned position=0, generated=0, next=0; std::chrono::steady_clock::time_point previous; };
+      std::vector<Live> live(residents);
+      size_t admitted=0, completed=0;
+      auto admit=[&](unsigned slot) {
+        check(inferfabric_program_reset_resident(engine,slot));
+        live[slot]={admitted++,0,0,0,std::chrono::steady_clock::now()};
+        check(inferfabric_program_select_resident(engine,slot));
+        for(const auto &b:bindings) {
+          auto pages=b.pages;
+          for(auto &page:pages)page+=slot*pages.size();
+          check(inferfabric_program_bind_pages(engine,b.rank,b.component.c_str(),pages.data(),pages.size()));
+        }
+      };
+      for(unsigned slot=0;slot<residents;++slot) {
+        live[slot].request=requests.size();
+        if(admitted<requests.size())admit(slot);
+      }
+      while(completed<requests.size())for(unsigned slot=0;slot<residents;++slot) {
+        auto &r=live[slot];
+        if(r.request>=requests.size())continue;
+        const auto &request=requests[r.request];
+        check(inferfabric_program_select_resident(engine,slot));
+        auto token=r.position<request.prompt.size()?request.prompt[r.position]:r.next;
+        auto sample=r.position+1>=request.prompt.size();
+        check(inferfabric_program_token(engine,token,r.position,sample,&r.next));
+        ++r.position;
+        if(sample) {
+          auto now=std::chrono::steady_clock::now();
+          auto us=std::chrono::duration_cast<std::chrono::microseconds>(now-r.previous).count();
+          std::cout<<"{\"request\":"<<r.request<<",\"resident\":"<<slot<<",\"step\":"<<r.generated
+                   <<",\"token\":"<<r.next<<",\"elapsed_us\":"<<us<<"}"<<std::endl;
+          r.previous=now;
+          if(++r.generated==request.steps) {
+            ++completed;
+            r.request=requests.size();
+            if(admitted<requests.size())admit(slot);
+          }
+        }
+      }
+      check(inferfabric_program_close(engine)); engine=nullptr;
+      return 0;
+    }
     for (unsigned request = 0; request < requests.size(); ++request) {
       const auto &prompt = requests[request].prompt;
       auto steps = requests[request].steps;
