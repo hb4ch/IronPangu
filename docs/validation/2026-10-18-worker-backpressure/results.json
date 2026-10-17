@@ -1,0 +1,193 @@
+{
+  "scope": "native worker bounded consumer; not HTTP socket backpressure",
+  "reference_sha256": "3a05e7ac9bb3a2e4432dc71717262771d35cd817b8d506d303f3d4b0777b926d",
+  "binary_sha256": "bdb01a852ad6bc641846eab4be67b3b0461b3b896d1d0d4826eef836da0d23b5",
+  "library_sha256": "b9d2f6e0b818ad410fb412bc0fbb814598f1fa272bb1ec9776019f94334d2472",
+  "execution_sha256": "8a67f634e4e1d6ad775eca274c947119e4115160b559f2abb04fcb43872de02c",
+  "output_tokens_conserved": 8,
+  "reference_scope": "through_first_eos",
+  "test_queue_capacity": 2,
+  "production_queue_capacity": 64,
+  "peer_reference": true,
+  "cancellation": true,
+  "slot_reuse": true,
+  "remaining_occupied_bytes": 0,
+  "ranks": [
+    {
+      "rank": 0,
+      "arena_bytes": 40492359704,
+      "graphs": [
+        {
+          "name": "token_decode",
+          "replays": 1
+        },
+        {
+          "name": "sequence_decode_1",
+          "replays": 30
+        },
+        {
+          "name": "sequence_decode_2",
+          "replays": 1
+        },
+        {
+          "name": "sequence_decode_3",
+          "replays": 1
+        }
+      ]
+    },
+    {
+      "rank": 1,
+      "arena_bytes": 40492359704,
+      "graphs": [
+        {
+          "name": "token_decode",
+          "replays": 1
+        },
+        {
+          "name": "sequence_decode_1",
+          "replays": 30
+        },
+        {
+          "name": "sequence_decode_2",
+          "replays": 1
+        },
+        {
+          "name": "sequence_decode_3",
+          "replays": 1
+        }
+      ]
+    },
+    {
+      "rank": 2,
+      "arena_bytes": 40492359704,
+      "graphs": [
+        {
+          "name": "token_decode",
+          "replays": 1
+        },
+        {
+          "name": "sequence_decode_1",
+          "replays": 30
+        },
+        {
+          "name": "sequence_decode_2",
+          "replays": 1
+        },
+        {
+          "name": "sequence_decode_3",
+          "replays": 1
+        }
+      ]
+    },
+    {
+      "rank": 3,
+      "arena_bytes": 40492359704,
+      "graphs": [
+        {
+          "name": "token_decode",
+          "replays": 1
+        },
+        {
+          "name": "sequence_decode_1",
+          "replays": 30
+        },
+        {
+          "name": "sequence_decode_2",
+          "replays": 1
+        },
+        {
+          "name": "sequence_decode_3",
+          "replays": 1
+        }
+      ]
+    },
+    {
+      "rank": 4,
+      "arena_bytes": 40492359704,
+      "graphs": [
+        {
+          "name": "token_decode",
+          "replays": 1
+        },
+        {
+          "name": "sequence_decode_1",
+          "replays": 30
+        },
+        {
+          "name": "sequence_decode_2",
+          "replays": 1
+        },
+        {
+          "name": "sequence_decode_3",
+          "replays": 1
+        }
+      ]
+    },
+    {
+      "rank": 5,
+      "arena_bytes": 40492359704,
+      "graphs": [
+        {
+          "name": "token_decode",
+          "replays": 1
+        },
+        {
+          "name": "sequence_decode_1",
+          "replays": 30
+        },
+        {
+          "name": "sequence_decode_2",
+          "replays": 1
+        },
+        {
+          "name": "sequence_decode_3",
+          "replays": 1
+        }
+      ]
+    },
+    {
+      "rank": 6,
+      "arena_bytes": 40492359704,
+      "graphs": [
+        {
+          "name": "token_decode",
+          "replays": 1
+        },
+        {
+          "name": "sequence_decode_1",
+          "replays": 30
+        },
+        {
+          "name": "sequence_decode_2",
+          "replays": 1
+        },
+        {
+          "name": "sequence_decode_3",
+          "replays": 1
+        }
+      ]
+    },
+    {
+      "rank": 7,
+      "arena_bytes": 40492359704,
+      "graphs": [
+        {
+          "name": "token_decode",
+          "replays": 1
+        },
+        {
+          "name": "sequence_decode_1",
+          "replays": 30
+        },
+        {
+          "name": "sequence_decode_2",
+          "replays": 1
+        },
+        {
+          "name": "sequence_decode_3",
+          "replays": 1
+        }
+      ]
+    }
+  ]
+}

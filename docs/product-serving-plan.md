@@ -1,6 +1,56 @@
 # Product serving execution and scheduling
 
-Latest implementation evidence: [shared-page ownership in native HTTP serving](validation/2026-10-17-shared-pages/README.md),
+## Execution priority and release gates (2026-10-18)
+
+Work follows this dependency order. Finish the serving foundation before APC or
+secondary optimizations; a component probe alone does not complete a gate.
+
+1. **Bulk prefill and bounded memory:** execute the uncached suffix in eager,
+   uncaptured chunks of up to 4,096 tokens, with actual tail lengths. No
+   token-by-token prefill and no long-prefill graph capture. Qualify frozen
+   workspace/arena coverage across supported chunk shapes and request reuse.
+2. **Continuous batching through HTTP:** combine independent requests and mixed
+   prefill/decode work within `max_num_seqs` and `max_num_batched_tokens`.
+   Preserve decode graphs, device residency, exact output, cancellation safety
+   and resident reuse. This depends on gate 1's memory contract.
+3. **Long-context serving:** exercise multiple 4K chunks, then 8K/16K/32K/64K
+   prompts with independent output references, concurrent short requests, TTFT,
+   TPOT and memory measurements. A cold 65,536-token prompt requires 16 bulk
+   forwards. Do not advertise 64K readiness from kernel-only tests.
+4. **APC and production hardening:** qualify trie snapshots, arithmetic-history
+   compatibility, eviction and isolation after the execution geometry is stable;
+   then complete overload, backpressure and sustained-load release gates.
+
+Current evidence: the [pooled arena contract](validation/2026-10-18-pooled-arena/README.md)
+resolved the earlier HTTP reuse failures. [64K HTTP serving](validation/2026-10-18-device-zero-http64k/README.md)
+now passes independent EOS-scoped output, mixed requests, cancellation and page
+reclamation with 4096-token uncaptured chunks. Planned device zero reduced the
+measured long-request TTFT range from roughly 98–100 seconds to 34–61 seconds;
+the variance and mixed-load latency remain performance gaps.
+
+[Prefix reuse through HTTP](validation/2026-10-18-prefix-http/README.md) passes
+4K-prefix hits, different-suffix continuation, salt isolation and eviction with
+two active residents plus one snapshot. Its arithmetic identity preserves
+batch history compatibility rather than accepting snapshots from arbitrary
+peer geometries. [64K warm-prefix restoration](validation/2026-10-18-prefix64-http/README.md)
+now passes 61,440-token reuse, salt isolation and eviction: measured warm TTFT
+was 2.97–3.68 seconds versus 31.9–33.9 seconds for cold requests in that run.
+Remaining release gates include sustained load, transport backpressure, fault
+recovery, wider cache budgets and model-quality coverage. Native program serving
+still rejects unsupported non-greedy sampling; it must not silently claim the
+capabilities of other native backends. The experimental long-context opt-in
+remains until the release gates are met.
+
+Validation proceeds from focused shape/lifetime checks to a short full-model
+HTTP regression, then longer-context qualification. Re-run costly full-model
+tests only after a concrete fix or new release gate warrants them.
+
+## Earlier implementation records (historical)
+
+The records below describe the staged implementation and its limits at each
+milestone. Use the current evidence above for present qualification status.
+
+Earlier evidence: [shared-page ownership in native HTTP serving](validation/2026-10-17-shared-pages/README.md),
 [native four-token packed prefill](validation/2026-10-17-packed-prefill/README.md)
 and [Rust HTTP chunk scheduling](validation/2026-10-17-packed-http/README.md).
 The frozen TP8/EP8 path passes full output fixtures and chunk/page-boundary
@@ -764,6 +814,19 @@ replace serial token invocations with qualified packed variants. Native storage
 currently uses fixed disjoint partitions, not dynamic cross-request page lending.
 
 ### Implementation record: Rust HTTP resident scheduling
+
+Program output buffering is bounded independently of the context envelope: each
+request can queue at most 64 generated-output messages. A full output queue pauses
+that resident before its next device invocation, preserving every token and its
+continuation state. Other residents keep their scheduling opportunities, and
+cancellation/shutdown remain checked while a client is paused. When every client
+is paused, the worker waits briefly instead of spinning. Local worker tests cover
+consumer resumption, peer progress and cancellation with a full queue. Real
+transport-level slow-client/load qualification remains an open release gate.
+The [full-model worker backpressure test](validation/2026-10-18-worker-backpressure/README.md)
+also passes on NPU using a two-message test queue and normal EOS-scoped output;
+the production queue remains 64 messages. This does not substitute for a socket
+buffering or sustained-load test.
 
 The vLLM 0.25.1 Rust program worker now admits requests into available native
 resident slots, advances prefill/decode with a rotating token budget and reuses a

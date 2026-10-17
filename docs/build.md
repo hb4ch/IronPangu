@@ -463,3 +463,24 @@ storage before retirement. `qualify-program-http.py` automatically verifies
 cross-partition bindings and zero remaining occupied ownership for shared bundles.
 This does not yet enable prefix sharing, SWA ring recycling or 64K execution.
 See [shared-page qualification](validation/2026-10-17-shared-pages/README.md).
+
+### Native slow-consumer qualification
+
+Build the opt-in test executable in local WSL with
+`bash scripts/cross-frontend-tests.sh`; it writes
+`.deploy/inferfabric-server-tests`. Copy it into the NPU container and run
+`scripts/qualify-program-backpressure.py` there with `--binary`, `--plan`,
+`--checkpoint`, `--library`, `--cases` and a new `--output` directory. Use a frozen
+shared-page plan with at least two residents and sufficient context for the
+fixture prompt plus its reference output through EOS. Source the same CANN/vendor environments as
+normal serving. Contexts above 512 still require the experimental opt-in.
+
+The test uses a two-message queue to force backpressure before a short reference
+reaches EOS; production queues remain capped at 64 messages. It checks peer
+reference output, drains and compares the complete EOS-scoped continuation
+against an unthrottled run, then cancels a full queue
+and verifies slot reuse. The wrapper checks every rank's frozen arena, workspace,
+device-residency counters and final ownership reclamation. This isolates native
+worker backpressure; HTTP socket buffering and sustained slow-client load remain
+separate qualification gates. The hardware test is ignored by ordinary local
+`cargo test` runs and must not be counted as passing until explicitly executed.

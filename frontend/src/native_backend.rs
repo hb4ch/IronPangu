@@ -4,6 +4,9 @@ mod worker;
 mod program_worker;
 #[path = "program_cached.rs"]
 mod program_cached;
+#[cfg(test)]
+#[path = "program_backpressure_test.rs"]
+mod program_backpressure_test;
 use futures::Stream;
 use std::{
     path::PathBuf,
@@ -229,7 +232,9 @@ impl GenerationBackend for Backend {
         }
         let id = req.request_id.clone();
         let cancel = Arc::new(AtomicBool::new(false));
-        let (tx, rx) = mpsc::channel(self.context + 1);
+        // Program scheduling applies per-request backpressure. Its output queue
+        // must not scale with a 64K (or larger future) context envelope.
+        let (tx, rx) = mpsc::channel(if self.program_mode { 64 } else { self.context + 1 });
         self.tx
             .try_send(Job {
                 req,
