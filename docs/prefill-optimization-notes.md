@@ -115,3 +115,7 @@ native Docker build and the viewer regression pass. The full NPU discovery,
 fixed-workspace and frozen-arena qualification is still required before acceptance.
 
 The [three-stage native qualification](validation/2026-10-18-output-rows/README.md) now passes 39/39 tokens per stage with the executable candidate. Frozen arena reservation falls by 2,482,421,272 bytes per rank. 64K HTTP/APC and a post-change collective capture remain pending; the compilation opt-in stays in place.
+
+## Qualified communication-domain candidate
+
+The [40 MiB collective-domain test](validation/2026-10-18-collective-domains/README.md) passes synthetic reduction correctness and interleaved HOST decode graph replay with an AI_CPU bulk domain. Median worst-rank call time is 0.899 ms versus 35.983 ms for HOST in this diagnostic. This justifies explicit per-variant communicator planning and full-model qualification; it is not a model speedup claim. Keep the process-global HOST mode fixed, create domains before preparation, and expose their memory/selection in the physical plan.

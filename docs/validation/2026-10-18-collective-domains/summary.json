@@ -1,0 +1,18 @@
+{
+  "host": {
+    "passed": true,
+    "iterations": 20,
+    "median_worst_rank_ms": 35.983000000000004,
+    "min_worst_rank_ms": 35.1514,
+    "max_worst_rank_ms": 36.649699999999996,
+    "median_rank_enqueue_ms": 34.7921
+  },
+  "aicpu": {
+    "passed": true,
+    "iterations": 20,
+    "median_worst_rank_ms": 0.899002,
+    "min_worst_rank_ms": 0.837206,
+    "max_worst_rank_ms": 1.898,
+    "median_rank_enqueue_ms": 0.30378750000000004
+  }
+}
