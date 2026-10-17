@@ -709,8 +709,67 @@ impl Program {
         self.uncaptured_prefill = true;
         self.prefill_tokens = 4096;
         self.prefill_variants.clear();
+        self.batch_head_projections();
         let residents = self.resident_sequences;
         self.with_resident_sequences(residents)
+    }
+    fn batch_head_projections(&mut self) {
+        let previous = std::mem::take(&mut self.instructions);
+        let mut outputs = Vec::with_capacity(previous.len());
+        for mut instruction in previous {
+            instruction.inputs = instruction.inputs.iter().map(|&id| outputs[id]).collect();
+            if matches!(instruction.op.as_str(), "query_project" | "mla_value") {
+                let query = instruction.op == "query_project";
+                let replicated = query && instruction.attrs.get("input_layout").is_some_and(|v|v=="replicated");
+                let weight = instruction.attrs["weight"].clone();
+                let (k,n) = if query {(128,512)} else {(512,128)};
+                let original_name = instruction.name.clone();
+                instruction.op = "head_matmul".into();
+                instruction.kernel = "aclnnBatchMatMul".into();
+                instruction.reason = "Batch all query rows by head; explicit head-major result and separate token-layout materialization".into();
+                instruction.attrs = BTreeMap::from([
+                    ("weight".into(),weight), ("heads".into(),"6".into()),
+                    ("k".into(),k.to_string()), ("n".into(),n.to_string()),
+                    ("input_head_stride".into(),if query {"192"} else {"512"}.into()),
+                    ("input_rank_stride".into(),if replicated {"1152"} else {"0"}.into()),
+                    ("weight_rows".into(),"1536".into()), ("weight_cols".into(),"512".into()),
+                    ("weight_offset".into(),if query {"0"} else {"65536"}.into()),
+                    ("weight_head_stride".into(),"131072".into()),
+                    ("weight_k_stride".into(),if query {"512"} else {"1"}.into()),
+                    ("weight_n_stride".into(),if query {"1"} else {"512"}.into()),
+                ]);
+                let id = self.instructions.len();
+                let mut layout = instruction.clone();
+                layout.name = format!("{original_name}__token_layout");
+                layout.op = "head_to_token".into();
+                layout.kernel = "aclnnCast".into();
+                layout.inputs = vec![id];
+                layout.attrs = BTreeMap::from([("heads".into(),"6".into()),("width".into(),n.to_string())]);
+                layout.reason = "Explicit BF16 [heads,tokens,width] to [tokens,heads,width]; one-token decode is an alias".into();
+                self.instructions.push(instruction);
+                self.instructions.push(layout);
+            } else if matches!(instruction.op.as_str(),"gather"|"repeat") && instruction.dtype=="bf16" {
+                let gather=instruction.op=="gather";
+                let heads=if gather {8} else {instruction.attrs["count"].parse::<usize>().unwrap()};
+                let width=instruction.width/heads;
+                instruction.op=if gather {"gather_heads"} else {"repeat_heads"}.into();
+                instruction.kernel=if gather {"HcclAllGather"} else {"aclrtMemcpyAsync"}.into();
+                instruction.attrs=BTreeMap::from([("heads".into(),heads.to_string())]);
+                instruction.reason="Whole token matrix per rank/repetition; separate explicit token-layout conversion".into();
+                let id=self.instructions.len();
+                let mut layout=instruction.clone();
+                layout.name=format!("{}__token_layout",instruction.name);
+                layout.op="head_to_token".into();layout.kernel="aclnnCast".into();
+                layout.inputs=vec![id];
+                layout.attrs=BTreeMap::from([("heads".into(),heads.to_string()),("width".into(),width.to_string())]);
+                layout.reason="Explicit head-major to token-major materialization; decode aliases input".into();
+                self.instructions.push(instruction);self.instructions.push(layout);
+            } else {
+                self.instructions.push(instruction);
+            }
+            outputs.push(self.instructions.len()-1);
+        }
+        self.output = outputs[self.output];
     }
     pub fn prefill_counts(&self) -> Vec<usize> {
         if !self.prefill_variants.is_empty() {self.prefill_variants.clone()}
@@ -767,6 +826,11 @@ impl Program {
         }
         let mut names = std::collections::BTreeSet::new();
         for (id, i) in self.instructions.iter().enumerate() {
+            if self.uncaptured_prefill && (matches!(i.op.as_str(),
+                "mome"|"query_project"|"query_rotary_extract"|"rope"|"rope_f32"|"mla_query"|"mla_value"|"repeat"|"gather") ||
+                (i.op=="sparse_index" && i.inputs.first().and_then(|&input|self.instructions.get(input)).is_none_or(|node|node.kind!=5))) {
+                return Err(invalid(format!("uncaptured prefill has no batched lowering for {}",i.op)));
+            }
             if i.kind > 9
                 || (i.width > 200000 && !(i.op == "cache_dequantize" && i.width == self.max_context.div_ceil(16)*16*576))
                 || i.inputs.len() > 8
@@ -913,7 +977,10 @@ fn recipes_for_query(p: &Program, graph: &Graph, query_tokens: usize) -> Vec<ser
             },
             "allreduce" => (&["HcclAllReduce"], "sum; dtype is explicit; runtime chooses HCCL transport algorithm", "new device output"),
             "gather" => (&["HcclAllGather"], "BF16 rank-order concatenation", "new device output"),
-            "slice" | "mhc_input" => (&[], "shared allocation lease", "alias; no copy"),
+            "gather_heads" => (&["HcclAllGather"], "BF16 whole token matrix per rank", "new rank-major output; explicit head_to_token consumer"),
+            "repeat_heads" => (&["aclrtMemcpyAsync"], "one whole token matrix copy per declared repetition", "new repetition-major output; explicit head_to_token consumer"),
+            "slice" => (&["aclnnCast"], "single-token alias; multi-token same-dtype strided column materialization", "one contiguous token matrix for prefill; no per-row assembly"),
+            "mhc_input" => (&[], "shared allocation lease", "alias; no copy"),
             "repeat" | "concat" => (&["aclrtMemcpyAsync"], "device-to-device materialization", "new contiguous output"),
             "norm" | "optional_norm" if i.kernel != "alias" => (&["aclnnRmsNorm"], "BF16 operands; vendor accumulation contract", "new output + inverse RMS"),
             "optional_norm" => (&[], "checkpoint binding absent", "alias; no copy"),
@@ -922,6 +989,8 @@ fn recipes_for_query(p: &Program, graph: &Graph, query_tokens: usize) -> Vec<ser
             "mhc_merge" => (&["aclnnAiInfraManifoldConstrainedHyperConnectionPre"], "BF16 residual; FP32 phi and mixing", "persistent state; source alias"),
             "mhc_post" => (&["aclnnAiInfraManifoldConstrainedHyperConnectionPost"], "BF16 residual and branch; FP32 mixing", "persistent output"),
             "query_project" => (&["aclnnBatchMatMul"], "strided local query/weight views; BF16 input/output", "new BF16 latent query"),
+            "head_matmul" => (&["aclnnBatchMatMul"], "declared BF16 strided input/weight views; one 3D batch matmul over all query rows per head", "new contiguous BF16 [heads,tokens,columns]; layout conversion is a separate instruction"),
+            "head_to_token" => (&["aclnnCast"], "same-dtype BF16 strided materialization, no numerical cast; one-token decode aliases input", "explicit [heads,tokens,width] to [tokens,heads,width] device layout conversion"),
             "query_rotary_extract" => (&["aclnnCast"], "strided BF16 rotary columns to contiguous FP32", "new FP32 rotary input"),
             "column_slice" => (&["aclnnCast"], "materialize declared strided BF16 columns without dtype conversion", "new contiguous BF16 output; source is a borrowed strided view"),
             "rope_bf16" => (&["aclnnRotaryPositionEmbedding"], "BF16 half rotation with BF16 position-derived coefficients", "new BF16 output"),
@@ -931,7 +1000,7 @@ fn recipes_for_query(p: &Program, graph: &Graph, query_tokens: usize) -> Vec<ser
             "mla_query" => (&["aclnnBatchMatMul", "aclnnCast", "aclnnRotaryPositionEmbedding", "aclnnCast", "aclnnCat"], "strided BF16 → FP32 rotary extraction → BF16 rounding; packed with latent query", "immutable weights packed once; rotary and concatenation temporaries"),
             "mla_value" => (&["aclnnBatchMatMul"], "BF16 heads", "immutable weights packed once; new output"),
             "sink_normalize" => (&["aclnnRmsNorm", "aclrtMemcpyAsync"], "initialization only after first preparation", "persistent normalized sink"),
-            "packed_attention_metadata" => (&["if_packed_attention_metadata"], "device position -> causal INT32 indices and sequence length", "shared persistent indices and length; no activation transfer"),
+            "packed_attention_metadata" => (&["if_packed_attention_metadata_batch"], "all device positions -> causal INT32 indices and sequence lengths in one launch; scalar entry for decode", "shared persistent indices and lengths; no activation transfer"),
             "cache_c8_norm_rope_append" => (&["aclnnAiInfraKvRmsNormRopeCache"], "fused RMSNorm + BF16 rotary + pertile128 INT8 latent quantization; 4 FP32 scales", "packed PA_BSND rows: 512 INT8 bytes + 64 BF16 rotary + 4 FP32 scales = 656 bytes; no BF16 mirror"),
             "index_cache_append" if i.attrs.get("cache_dtype").is_some_and(|v|v=="int8") => (&["aclnnInplaceIndexCopy", "aclnnInplaceIndexCopy"], "INT8 key and FP16 scale append at same physical row; page size 64", "separate key/scale arrays share exclusive page ownership; no implicit quantization"),
             "index_cache_append" => (&["aclnnInplaceIndexCopy"], "BF16 index key append at device physical row; page size 64", "persistent paged BF16 keys; exclusive request ownership"),
@@ -958,7 +1027,7 @@ fn recipes_for_query(p: &Program, graph: &Graph, query_tokens: usize) -> Vec<ser
         }) };
         let communication = match i.op.as_str() {
             "allreduce" => "AllReduce(sum), ranks 0–7",
-            "gather" => "AllGather, ranks 0–7",
+            "gather" | "gather_heads" => "AllGather, ranks 0–7",
             "route_quantize" | "expert_act_quantize" | "expert_gmm" | "expert_zero" | "expert_pack" | "expert_linear" | "expert_swiglu_down" | "expert_reduce" => "EP owner-local compute; explicit downstream AllReduce combines partials",
             _ => "none in this instruction",
         };
@@ -1043,20 +1112,39 @@ fn recipes_for_query(p: &Program, graph: &Graph, query_tokens: usize) -> Vec<ser
                 }
             }
         }
+        if matches!(i.op.as_str(),"head_matmul"|"head_to_token"|"gather_heads"|"repeat_heads") {
+            let heads=i.attrs["heads"].parse::<usize>().unwrap();
+            let width=if matches!(i.op.as_str(),"gather_heads"|"repeat_heads") {i.width/heads}
+                else {i.attrs[if i.op=="head_matmul" {"n"} else {"width"}].parse::<usize>().unwrap()};
+            fields[0]=serde_json::json!({"name":"value","dtype":"bf16","shape":[heads,1,width],
+                "prefill_shape":if i.op!="head_to_token" {vec![heads,query_tokens,width]} else {vec![query_tokens,heads,width]},
+                "layout":if i.op!="head_to_token" {"head,token,column"} else {"token,head,column"}});
+            if i.op=="head_matmul" {
+                let k=i.attrs["k"].parse::<usize>().unwrap();
+                fields.push(serde_json::json!({"name":"input_view","dtype":"bf16","shape":[heads,query_tokens,k],
+                    "role":"borrowed_strided_view","strides_elements":[i.attrs["input_head_stride"].parse::<usize>().unwrap(),p.instructions[i.inputs[0]].width,1],
+                    "rank_offset_elements":i.attrs["input_rank_stride"],"materialization":"vendor 3D BatchMatMul strided-input contract"}));
+                fields.push(serde_json::json!({"name":"weight_view","dtype":"bf16","shape":[heads,k,width],
+                    "role":"borrowed_parameter_view","binding":i.attrs["weight"],"offset_elements":i.attrs["weight_offset"],
+                    "strides_elements":[i.attrs["weight_head_stride"].parse::<usize>().unwrap(),i.attrs["weight_k_stride"].parse::<usize>().unwrap(),i.attrs["weight_n_stride"].parse::<usize>().unwrap()]}));
+            }
+        }
         let batched_index = i.op=="sparse_index" && p.instructions[i.inputs[0]].kind==5;
         let batched_attention = matches!(i.op.as_str(),"indexed_packed_attention"|"packed_latent_attention"|"latent_attention");
         let batched_window = matches!(i.op.as_str(),"latent_attention"|"attention_metadata");
         let batched_rotary = i.op=="rope_bf16";
         let batched_mome = p.uncaptured_prefill && i.op=="mome_inplace";
-        let batched = batched_index || batched_attention || batched_window || batched_rotary || batched_mome;
+        let batched_cache = matches!(i.op.as_str(),"cache_append"|"cache_norm_rope_append"|"cache_c8_norm_rope_append"|"index_cache_append");
+        let batched = batched_index || batched_attention || batched_window || batched_rotary || batched_mome || batched_cache || i.op=="packed_attention_metadata";
         let per_query = !batched && matches!(i.op.as_str(), "mome"|"mome_inplace"|"query_project"|"query_rotary_extract"|"rope"|"rope_bf16"|"rope_f32"|"mla_query"|"mla_value"|"index_cache_append"|"cache_append"|"cache_norm_rope_append"|"cache_c8_norm_rope_append"|"latent_attention"|"indexed_packed_attention"|"sparse_index"|"packed_latent_attention"|"attention_metadata"|"packed_attention_metadata");
-        let assembly = !batched && matches!(i.op.as_str(), "repeat"|"slice"|"query_project"|"query_rotary_extract"|"rope"|"rope_bf16"|"rope_f32"|"mla_query"|"mla_value"|"mome"|"latent_attention"|"indexed_packed_attention"|"sparse_index"|"packed_latent_attention");
+        let assembly = !batched && matches!(i.op.as_str(), "repeat"|"query_project"|"query_rotary_extract"|"rope"|"rope_bf16"|"rope_f32"|"mla_query"|"mla_value"|"mome"|"latent_attention"|"indexed_packed_attention"|"sparse_index"|"packed_latent_attention");
         let packed = if query_tokens > 1 { serde_json::json!({
             "tokens":query_tokens,
             "schedule":if i.op=="sink_normalize" {"shared initialization constant"} else if per_query {"ordered per-query calls"} else {"token matrix"},
-            "api_repetitions":if per_query {query_tokens} else {1},
+            "api_repetitions":if i.op=="repeat_heads" {i.attrs["heads"].parse::<usize>().unwrap()} else if per_query {query_tokens} else {1},
             "causal_alignment":if batched_mome {Some("one causal sequence per resident; query starts [0,T], computed tokens = absolute chunk start; update two-row recurrent history once after the sequence")} else if batched_window {Some("one TND sequence; total query count and final chunk KV length; per-row causal window from declared pre_tokens; one shared metadata buffer per window")} else if batched_index || batched_attention {Some("one TND sequence; total query count and final chunk KV length; all chunk keys appended before selection/attention; each attention row consumes its own causal indices")} else {None},
             "coefficient_layout":if batched_rotary {Some("BF16 [tokens,1,1,64] cosine/sine; one absolute position per token; broadcast across heads")} else {None},
+            "cache_append_layout":if batched_cache {Some("one batch of independent token rows; device physical positions are a strided vector in the packed control bank (16 bytes per row); BF16/C8 norm-rope input [tokens,1,1,576], cosine/sine [tokens,1,1,64]; index copy source [tokens,width]")} else {None},
             "output_elements":if i.kind==0 {Some(i.width*if i.op=="sink_normalize" {1} else {query_tokens})} else {None},
             "assembly_copies":if assembly {query_tokens} else if i.op=="gather" {8*query_tokens} else {0},
             "assembly_api":"aclrtMemcpyAsync device-to-device",

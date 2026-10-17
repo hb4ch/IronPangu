@@ -23,7 +23,7 @@ V execute_token() {
   for (size_t i = 0; i < program.nodes.size(); ++i) {
     const auto &n = program.nodes[i];
     execution.instruction(int64_t(i),
-        n.op=="copy" || n.op=="repeat" || n.op=="concat" || n.op=="expert_pack" ||
+        n.op=="copy" || n.op=="repeat" || n.op=="repeat_heads" || n.op=="concat" || n.op=="expert_pack" ||
         (active_tokens>1 && (n.op=="gather" || n.op=="slice" || n.op=="query_project" || n.op=="query_rotary_extract" || n.op=="rope_f32" || n.op=="rope" || n.op=="mla_query" || n.op=="mla_value" || n.op=="mome" || (n.op=="sparse_index" && program.nodes[n.inputs[0]].kind!=5))),
         n.op=="cache_c8_norm_rope_append" || n.op=="cache_quantize_append" || n.op=="sink_normalize" || n.op=="cache_append" || n.op=="cache_norm_rope_append" || n.op=="expert_gmm" || (n.op=="linear" && n.kernel=="paired_bf16"));
     inferfabric::profiling::Scope timing(n.op.c_str(), true);
@@ -102,6 +102,10 @@ V execute_token() {
       result=expert_gmm(std::get<RoutedQuantized>(input(0)),std::get<ExpertRows>(input(1)),bank(weight(),n.attrs.count("paired_weight")?n.text("paired_weight"):""));
     } else if(n.op=="expert_values") {
       result=std::get<ExpertRows>(input(0)).packed;
+    } else if (n.op == "repeat_heads") {
+      result=resident::repeat(tensor(0),n.integer("heads"));
+    } else if (n.op == "gather_heads") {
+      result=gather(tensor(0),true);
     } else if (n.op == "repeat") {
       result = row_values(n.width,[&](uint32_t row){return resident::repeat(row_tensor(0,row), n.integer("count"));});
     } else if (n.op == "mhc_pre" || n.op == "mhc_merge")
@@ -137,7 +141,12 @@ V execute_token() {
       auto start = n.integer("start"), width = n.integer("width");
       if (size_t(start) + width > tensor(0).size()/active_tokens)
         throw std::runtime_error("slice bounds");
-      result = row_values(n.width,[&](uint32_t row){return resident::slice(row_tensor(0,row), start, width);});
+      result = active_tokens==1 ? resident::slice(tensor(0),start,width)
+                               : column_slice(tensor(0),active_tokens,start,width);
+    } else if (n.op == "head_matmul") {
+      result=head_matmul(tensor(0),n);
+    } else if (n.op == "head_to_token") {
+      result=head_to_token(tensor(0),n.integer("heads"),n.integer("width"));
     } else if (n.op == "query_project") {
       result=row_values(n.width,[&](uint32_t row){return query_project(row_tensor(0,row),weight(),n.text("input_layout")=="rank_local");});
     } else if (n.op == "query_rotary_extract") {
@@ -163,19 +172,17 @@ V execute_token() {
     else if (n.op == "sink_normalize")
       result = normalize_sinks(n.name, weight(), n.text("norm"));
     else if (n.op == "cache_append") {
-      each_row([&](uint32_t row){append_cache(row_tensor(0,row), tensor(1), n.name, current_position);});
+      append_cache(tensor(0), tensor(1), n.name, current_position);
       result = n.name;
     } else if(n.op=="cache_c8_norm_rope_append") {
-      each_row([&](uint32_t row){append_normalized_cache(row_tensor(0,row),tensor(1),weight(),n.name,current_position,true);});
+      append_normalized_cache(tensor(0),tensor(1),weight(),n.name,current_position,true);
       result=n.name;
     } else if(n.op=="index_cache_append") {
       auto &state=index_states[n.name];
       bool quant=n.attrs.count("cache_dtype") && n.text("cache_dtype")=="int8";
       if(!state)state=std::make_unique<resident::IndexState>(((program.context+63)/64)*64,program.resident_sequences,program.shared_pages,quant,program.prefill_tokens);
-      each_row([&](uint32_t row){
-        if(quant){const auto &q=std::get<Quantized>(input(0));state->append_quantized(q.values.view(row*128,128),q.scales.view(row,1),cache_append_descriptor(n.name,ACL_INT32));}
-        else state->append(row_tensor(0,row),cache_append_descriptor(n.name,ACL_INT32));
-      });
+      if(quant){const auto &q=std::get<Quantized>(input(0));state->append_quantized(q.values,q.scales,cache_append_descriptor(n.name,ACL_INT32,active_tokens),active_tokens);}
+      else state->append(tensor(0),cache_append_descriptor(n.name,ACL_INT32,active_tokens),active_tokens);
       result=IndexCacheRef{n.name};
     } else if(n.op=="sparse_index") {
       auto &state=*index_states.at(std::get<IndexCacheRef>(input(2)).name);
@@ -203,10 +210,11 @@ V execute_token() {
     } else if(n.op=="cache_dequantize") {
       result=dequantize_cache(std::get<std::string>(input(0)));
     } else if (n.op == "cache_norm_rope_append") {
-      each_row([&](uint32_t row){
-        if(program.physical) append_normalized_cache(row_tensor(0,row),tensor(1),weight(),n.name,current_position);
-        else append_normalized_cache(resident::concat(row_tensor(0,row),row_tensor(1,row)),tensor(2),weight(),n.name,current_position);
-      });
+      if(program.physical) append_normalized_cache(tensor(0),tensor(1),weight(),n.name,current_position);
+      else {
+        if(active_tokens!=1)throw std::runtime_error("batched cache requires physical lowering");
+        append_normalized_cache(resident::concat(tensor(0),tensor(1)),tensor(2),weight(),n.name,current_position);
+      }
       result = n.name;
     } else if (n.op == "latent_attention")
       result = attend(tensor(0),std::get<std::string>(input(1)),n.integer("window"),n.inputs.size()==4?&tensor(3):nullptr);

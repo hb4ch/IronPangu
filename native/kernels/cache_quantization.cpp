@@ -66,14 +66,26 @@ extern "C" void if_cache_dequantize(void *packed,void *scales,void *output,void 
       (uint8_t*)output,(uint8_t*)position,width,capacity,bits);
 }
 
-// Causal candidates are generated from device control state, once per token.
+// One launch generates every row's causal candidates from device control state.
 extern "C" __global__ __aicore__ void packed_attention_metadata_kernel(
-    GM_ADDR position_addr, GM_ADDR indices_addr, GM_ADDR length_addr, uint32_t capacity) {
-  int64_t position=*((__gm__ int64_t*)position_addr);
+    GM_ADDR position_addr, GM_ADDR indices_addr, GM_ADDR length_addr, uint32_t capacity, uint32_t rows) {
+  auto positions=(__gm__ int64_t*)position_addr;
   auto indices=(__gm__ int32_t*)indices_addr;
-  *((__gm__ int32_t*)length_addr)=int32_t(position+1);
-  for(uint32_t i=0;i<capacity;++i)indices[i]=int64_t(i)<=position?int32_t(i):-1;
+  auto lengths=(__gm__ int32_t*)length_addr;
+  // Scalar GM stores can share a writeback line. Give each core a disjoint
+  // aligned 256-byte length span instead of interleaving adjacent INT32 cells.
+  for(uint32_t begin=AscendC::GetBlockIdx()*64;begin<rows;begin+=AscendC::GetBlockNum()*64) {
+    uint32_t end=begin+64<rows?begin+64:rows;
+    for(uint32_t row=begin;row<end;++row) {
+      int64_t position=positions[row];
+      lengths[row]=int32_t(position+1);
+      for(uint32_t i=0;i<capacity;++i)indices[row*capacity+i]=int64_t(i)<=position?int32_t(i):-1;
+    }
+  }
 }
 extern "C" void if_packed_attention_metadata(void *position,void *indices,void *length,uint32_t capacity,void *stream) {
-  packed_attention_metadata_kernel<<<1,nullptr,stream>>>((uint8_t*)position,(uint8_t*)indices,(uint8_t*)length,capacity);
+  packed_attention_metadata_kernel<<<1,nullptr,stream>>>((uint8_t*)position,(uint8_t*)indices,(uint8_t*)length,capacity,1);
+}
+extern "C" void if_packed_attention_metadata_batch(void *position,void *indices,void *length,uint32_t capacity,uint32_t rows,void *stream) {
+  packed_attention_metadata_kernel<<<32,nullptr,stream>>>((uint8_t*)position,(uint8_t*)indices,(uint8_t*)length,capacity,rows);
 }

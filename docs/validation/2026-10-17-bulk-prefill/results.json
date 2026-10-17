@@ -1,0 +1,1124 @@
+{
+  "format": "inferfabric.persistent-program-qualification.v1",
+  "requests": 21,
+  "output_tokens": 159,
+  "exact_fixture_tokens": false,
+  "exact_scoped_tokens": true,
+  "reference_comparison_scope": "through_first_eos",
+  "reference_output_tokens": 195,
+  "fixture_sha256": "4ea7d9427651a4c510e5162a7cc9ee78ac5c417e33077f1e23c0b7a1463517a3",
+  "permuted_pages": true,
+  "binding_limit_rejections": 0,
+  "interleaved_residents": false,
+  "packed_prefill": true,
+  "copied_prefix_tokens": null,
+  "uncaptured_prefill_audits": [
+    {
+      "rank": 0,
+      "observed_total_forwards": 23,
+      "observed_total_tokens": 37529,
+      "preparation_forwards": 2,
+      "preparation_tokens": 8192,
+      "request_forwards": 21,
+      "request_tokens": 29337,
+      "expected_request_segments": [
+        [
+          [
+            12
+          ]
+        ],
+        [
+          [
+            15
+          ]
+        ],
+        [
+          [
+            14
+          ]
+        ],
+        [
+          [
+            529
+          ]
+        ],
+        [
+          [
+            2049
+          ]
+        ],
+        [
+          [
+            3072
+          ]
+        ],
+        [
+          [
+            4088
+          ]
+        ],
+        [
+          [
+            12
+          ]
+        ],
+        [
+          [
+            15
+          ]
+        ],
+        [
+          [
+            14
+          ]
+        ],
+        [
+          [
+            529
+          ]
+        ],
+        [
+          [
+            2049
+          ]
+        ],
+        [
+          [
+            3072
+          ]
+        ],
+        [
+          [
+            4088
+          ]
+        ],
+        [
+          [
+            12
+          ]
+        ],
+        [
+          [
+            15
+          ]
+        ],
+        [
+          [
+            14
+          ]
+        ],
+        [
+          [
+            529
+          ]
+        ],
+        [
+          [
+            2049
+          ]
+        ],
+        [
+          [
+            3072
+          ]
+        ],
+        [
+          [
+            4088
+          ]
+        ]
+      ],
+      "scope": "per rank; uncaptured counts exclude one-token tails executed by the token entry; segment chunk lists are expected schedules, not a per-request runtime trace"
+    },
+    {
+      "rank": 1,
+      "observed_total_forwards": 23,
+      "observed_total_tokens": 37529,
+      "preparation_forwards": 2,
+      "preparation_tokens": 8192,
+      "request_forwards": 21,
+      "request_tokens": 29337,
+      "expected_request_segments": [
+        [
+          [
+            12
+          ]
+        ],
+        [
+          [
+            15
+          ]
+        ],
+        [
+          [
+            14
+          ]
+        ],
+        [
+          [
+            529
+          ]
+        ],
+        [
+          [
+            2049
+          ]
+        ],
+        [
+          [
+            3072
+          ]
+        ],
+        [
+          [
+            4088
+          ]
+        ],
+        [
+          [
+            12
+          ]
+        ],
+        [
+          [
+            15
+          ]
+        ],
+        [
+          [
+            14
+          ]
+        ],
+        [
+          [
+            529
+          ]
+        ],
+        [
+          [
+            2049
+          ]
+        ],
+        [
+          [
+            3072
+          ]
+        ],
+        [
+          [
+            4088
+          ]
+        ],
+        [
+          [
+            12
+          ]
+        ],
+        [
+          [
+            15
+          ]
+        ],
+        [
+          [
+            14
+          ]
+        ],
+        [
+          [
+            529
+          ]
+        ],
+        [
+          [
+            2049
+          ]
+        ],
+        [
+          [
+            3072
+          ]
+        ],
+        [
+          [
+            4088
+          ]
+        ]
+      ],
+      "scope": "per rank; uncaptured counts exclude one-token tails executed by the token entry; segment chunk lists are expected schedules, not a per-request runtime trace"
+    },
+    {
+      "rank": 2,
+      "observed_total_forwards": 23,
+      "observed_total_tokens": 37529,
+      "preparation_forwards": 2,
+      "preparation_tokens": 8192,
+      "request_forwards": 21,
+      "request_tokens": 29337,
+      "expected_request_segments": [
+        [
+          [
+            12
+          ]
+        ],
+        [
+          [
+            15
+          ]
+        ],
+        [
+          [
+            14
+          ]
+        ],
+        [
+          [
+            529
+          ]
+        ],
+        [
+          [
+            2049
+          ]
+        ],
+        [
+          [
+            3072
+          ]
+        ],
+        [
+          [
+            4088
+          ]
+        ],
+        [
+          [
+            12
+          ]
+        ],
+        [
+          [
+            15
+          ]
+        ],
+        [
+          [
+            14
+          ]
+        ],
+        [
+          [
+            529
+          ]
+        ],
+        [
+          [
+            2049
+          ]
+        ],
+        [
+          [
+            3072
+          ]
+        ],
+        [
+          [
+            4088
+          ]
+        ],
+        [
+          [
+            12
+          ]
+        ],
+        [
+          [
+            15
+          ]
+        ],
+        [
+          [
+            14
+          ]
+        ],
+        [
+          [
+            529
+          ]
+        ],
+        [
+          [
+            2049
+          ]
+        ],
+        [
+          [
+            3072
+          ]
+        ],
+        [
+          [
+            4088
+          ]
+        ]
+      ],
+      "scope": "per rank; uncaptured counts exclude one-token tails executed by the token entry; segment chunk lists are expected schedules, not a per-request runtime trace"
+    },
+    {
+      "rank": 3,
+      "observed_total_forwards": 23,
+      "observed_total_tokens": 37529,
+      "preparation_forwards": 2,
+      "preparation_tokens": 8192,
+      "request_forwards": 21,
+      "request_tokens": 29337,
+      "expected_request_segments": [
+        [
+          [
+            12
+          ]
+        ],
+        [
+          [
+            15
+          ]
+        ],
+        [
+          [
+            14
+          ]
+        ],
+        [
+          [
+            529
+          ]
+        ],
+        [
+          [
+            2049
+          ]
+        ],
+        [
+          [
+            3072
+          ]
+        ],
+        [
+          [
+            4088
+          ]
+        ],
+        [
+          [
+            12
+          ]
+        ],
+        [
+          [
+            15
+          ]
+        ],
+        [
+          [
+            14
+          ]
+        ],
+        [
+          [
+            529
+          ]
+        ],
+        [
+          [
+            2049
+          ]
+        ],
+        [
+          [
+            3072
+          ]
+        ],
+        [
+          [
+            4088
+          ]
+        ],
+        [
+          [
+            12
+          ]
+        ],
+        [
+          [
+            15
+          ]
+        ],
+        [
+          [
+            14
+          ]
+        ],
+        [
+          [
+            529
+          ]
+        ],
+        [
+          [
+            2049
+          ]
+        ],
+        [
+          [
+            3072
+          ]
+        ],
+        [
+          [
+            4088
+          ]
+        ]
+      ],
+      "scope": "per rank; uncaptured counts exclude one-token tails executed by the token entry; segment chunk lists are expected schedules, not a per-request runtime trace"
+    },
+    {
+      "rank": 4,
+      "observed_total_forwards": 23,
+      "observed_total_tokens": 37529,
+      "preparation_forwards": 2,
+      "preparation_tokens": 8192,
+      "request_forwards": 21,
+      "request_tokens": 29337,
+      "expected_request_segments": [
+        [
+          [
+            12
+          ]
+        ],
+        [
+          [
+            15
+          ]
+        ],
+        [
+          [
+            14
+          ]
+        ],
+        [
+          [
+            529
+          ]
+        ],
+        [
+          [
+            2049
+          ]
+        ],
+        [
+          [
+            3072
+          ]
+        ],
+        [
+          [
+            4088
+          ]
+        ],
+        [
+          [
+            12
+          ]
+        ],
+        [
+          [
+            15
+          ]
+        ],
+        [
+          [
+            14
+          ]
+        ],
+        [
+          [
+            529
+          ]
+        ],
+        [
+          [
+            2049
+          ]
+        ],
+        [
+          [
+            3072
+          ]
+        ],
+        [
+          [
+            4088
+          ]
+        ],
+        [
+          [
+            12
+          ]
+        ],
+        [
+          [
+            15
+          ]
+        ],
+        [
+          [
+            14
+          ]
+        ],
+        [
+          [
+            529
+          ]
+        ],
+        [
+          [
+            2049
+          ]
+        ],
+        [
+          [
+            3072
+          ]
+        ],
+        [
+          [
+            4088
+          ]
+        ]
+      ],
+      "scope": "per rank; uncaptured counts exclude one-token tails executed by the token entry; segment chunk lists are expected schedules, not a per-request runtime trace"
+    },
+    {
+      "rank": 5,
+      "observed_total_forwards": 23,
+      "observed_total_tokens": 37529,
+      "preparation_forwards": 2,
+      "preparation_tokens": 8192,
+      "request_forwards": 21,
+      "request_tokens": 29337,
+      "expected_request_segments": [
+        [
+          [
+            12
+          ]
+        ],
+        [
+          [
+            15
+          ]
+        ],
+        [
+          [
+            14
+          ]
+        ],
+        [
+          [
+            529
+          ]
+        ],
+        [
+          [
+            2049
+          ]
+        ],
+        [
+          [
+            3072
+          ]
+        ],
+        [
+          [
+            4088
+          ]
+        ],
+        [
+          [
+            12
+          ]
+        ],
+        [
+          [
+            15
+          ]
+        ],
+        [
+          [
+            14
+          ]
+        ],
+        [
+          [
+            529
+          ]
+        ],
+        [
+          [
+            2049
+          ]
+        ],
+        [
+          [
+            3072
+          ]
+        ],
+        [
+          [
+            4088
+          ]
+        ],
+        [
+          [
+            12
+          ]
+        ],
+        [
+          [
+            15
+          ]
+        ],
+        [
+          [
+            14
+          ]
+        ],
+        [
+          [
+            529
+          ]
+        ],
+        [
+          [
+            2049
+          ]
+        ],
+        [
+          [
+            3072
+          ]
+        ],
+        [
+          [
+            4088
+          ]
+        ]
+      ],
+      "scope": "per rank; uncaptured counts exclude one-token tails executed by the token entry; segment chunk lists are expected schedules, not a per-request runtime trace"
+    },
+    {
+      "rank": 6,
+      "observed_total_forwards": 23,
+      "observed_total_tokens": 37529,
+      "preparation_forwards": 2,
+      "preparation_tokens": 8192,
+      "request_forwards": 21,
+      "request_tokens": 29337,
+      "expected_request_segments": [
+        [
+          [
+            12
+          ]
+        ],
+        [
+          [
+            15
+          ]
+        ],
+        [
+          [
+            14
+          ]
+        ],
+        [
+          [
+            529
+          ]
+        ],
+        [
+          [
+            2049
+          ]
+        ],
+        [
+          [
+            3072
+          ]
+        ],
+        [
+          [
+            4088
+          ]
+        ],
+        [
+          [
+            12
+          ]
+        ],
+        [
+          [
+            15
+          ]
+        ],
+        [
+          [
+            14
+          ]
+        ],
+        [
+          [
+            529
+          ]
+        ],
+        [
+          [
+            2049
+          ]
+        ],
+        [
+          [
+            3072
+          ]
+        ],
+        [
+          [
+            4088
+          ]
+        ],
+        [
+          [
+            12
+          ]
+        ],
+        [
+          [
+            15
+          ]
+        ],
+        [
+          [
+            14
+          ]
+        ],
+        [
+          [
+            529
+          ]
+        ],
+        [
+          [
+            2049
+          ]
+        ],
+        [
+          [
+            3072
+          ]
+        ],
+        [
+          [
+            4088
+          ]
+        ]
+      ],
+      "scope": "per rank; uncaptured counts exclude one-token tails executed by the token entry; segment chunk lists are expected schedules, not a per-request runtime trace"
+    },
+    {
+      "rank": 7,
+      "observed_total_forwards": 23,
+      "observed_total_tokens": 37529,
+      "preparation_forwards": 2,
+      "preparation_tokens": 8192,
+      "request_forwards": 21,
+      "request_tokens": 29337,
+      "expected_request_segments": [
+        [
+          [
+            12
+          ]
+        ],
+        [
+          [
+            15
+          ]
+        ],
+        [
+          [
+            14
+          ]
+        ],
+        [
+          [
+            529
+          ]
+        ],
+        [
+          [
+            2049
+          ]
+        ],
+        [
+          [
+            3072
+          ]
+        ],
+        [
+          [
+            4088
+          ]
+        ],
+        [
+          [
+            12
+          ]
+        ],
+        [
+          [
+            15
+          ]
+        ],
+        [
+          [
+            14
+          ]
+        ],
+        [
+          [
+            529
+          ]
+        ],
+        [
+          [
+            2049
+          ]
+        ],
+        [
+          [
+            3072
+          ]
+        ],
+        [
+          [
+            4088
+          ]
+        ],
+        [
+          [
+            12
+          ]
+        ],
+        [
+          [
+            15
+          ]
+        ],
+        [
+          [
+            14
+          ]
+        ],
+        [
+          [
+            529
+          ]
+        ],
+        [
+          [
+            2049
+          ]
+        ],
+        [
+          [
+            3072
+          ]
+        ],
+        [
+          [
+            4088
+          ]
+        ]
+      ],
+      "scope": "per rank; uncaptured counts exclude one-token tails executed by the token entry; segment chunk lists are expected schedules, not a per-request runtime trace"
+    }
+  ],
+  "scope": "one loaded TP8/EP8 group, compiled packed prefill and serial decode; no long-context claim",
+  "measurements": [
+    {
+      "request": 0,
+      "case": "arithmetic",
+      "prompt_tokens": 12,
+      "output_tokens": 8,
+      "tpot_ms": 23.893857142857144,
+      "engine_ttft_ms": 1059.451
+    },
+    {
+      "request": 1,
+      "case": "geography",
+      "prompt_tokens": 15,
+      "output_tokens": 8,
+      "tpot_ms": 23.517857142857142,
+      "engine_ttft_ms": 685.52
+    },
+    {
+      "request": 2,
+      "case": "chinese",
+      "prompt_tokens": 14,
+      "output_tokens": 17,
+      "tpot_ms": 23.609375,
+      "engine_ttft_ms": 665.215
+    },
+    {
+      "request": 3,
+      "case": "access-code-529",
+      "prompt_tokens": 529,
+      "output_tokens": 5,
+      "tpot_ms": 26.5155,
+      "engine_ttft_ms": 3276.864
+    },
+    {
+      "request": 4,
+      "case": "access-code-2049",
+      "prompt_tokens": 2049,
+      "output_tokens": 5,
+      "tpot_ms": 25.4795,
+      "engine_ttft_ms": 8981.834
+    },
+    {
+      "request": 5,
+      "case": "access-code-3072",
+      "prompt_tokens": 3072,
+      "output_tokens": 5,
+      "tpot_ms": 25.62725,
+      "engine_ttft_ms": 11188.132
+    },
+    {
+      "request": 6,
+      "case": "access-code-4088",
+      "prompt_tokens": 4088,
+      "output_tokens": 5,
+      "tpot_ms": 24.8215,
+      "engine_ttft_ms": 6829.271
+    },
+    {
+      "request": 7,
+      "case": "arithmetic",
+      "prompt_tokens": 12,
+      "output_tokens": 8,
+      "tpot_ms": 23.125,
+      "engine_ttft_ms": 659.892
+    },
+    {
+      "request": 8,
+      "case": "geography",
+      "prompt_tokens": 15,
+      "output_tokens": 8,
+      "tpot_ms": 22.86857142857143,
+      "engine_ttft_ms": 675.7
+    },
+    {
+      "request": 9,
+      "case": "chinese",
+      "prompt_tokens": 14,
+      "output_tokens": 17,
+      "tpot_ms": 23.2395,
+      "engine_ttft_ms": 695.591
+    },
+    {
+      "request": 10,
+      "case": "access-code-529",
+      "prompt_tokens": 529,
+      "output_tokens": 5,
+      "tpot_ms": 26.58675,
+      "engine_ttft_ms": 2713.498
+    },
+    {
+      "request": 11,
+      "case": "access-code-2049",
+      "prompt_tokens": 2049,
+      "output_tokens": 5,
+      "tpot_ms": 25.714,
+      "engine_ttft_ms": 6600.192
+    },
+    {
+      "request": 12,
+      "case": "access-code-3072",
+      "prompt_tokens": 3072,
+      "output_tokens": 5,
+      "tpot_ms": 26.75775,
+      "engine_ttft_ms": 6735.11
+    },
+    {
+      "request": 13,
+      "case": "access-code-4088",
+      "prompt_tokens": 4088,
+      "output_tokens": 5,
+      "tpot_ms": 25.96075,
+      "engine_ttft_ms": 6754.001
+    },
+    {
+      "request": 14,
+      "case": "arithmetic",
+      "prompt_tokens": 12,
+      "output_tokens": 8,
+      "tpot_ms": 23.821857142857144,
+      "engine_ttft_ms": 698.908
+    },
+    {
+      "request": 15,
+      "case": "geography",
+      "prompt_tokens": 15,
+      "output_tokens": 8,
+      "tpot_ms": 23.83657142857143,
+      "engine_ttft_ms": 658.714
+    },
+    {
+      "request": 16,
+      "case": "chinese",
+      "prompt_tokens": 14,
+      "output_tokens": 17,
+      "tpot_ms": 23.9019375,
+      "engine_ttft_ms": 649.139
+    },
+    {
+      "request": 17,
+      "case": "access-code-529",
+      "prompt_tokens": 529,
+      "output_tokens": 5,
+      "tpot_ms": 25.28275,
+      "engine_ttft_ms": 3547.841
+    },
+    {
+      "request": 18,
+      "case": "access-code-2049",
+      "prompt_tokens": 2049,
+      "output_tokens": 5,
+      "tpot_ms": 25.345,
+      "engine_ttft_ms": 6366.102
+    },
+    {
+      "request": 19,
+      "case": "access-code-3072",
+      "prompt_tokens": 3072,
+      "output_tokens": 5,
+      "tpot_ms": 26.778750000000002,
+      "engine_ttft_ms": 6637.508
+    },
+    {
+      "request": 20,
+      "case": "access-code-4088",
+      "prompt_tokens": 4088,
+      "output_tokens": 5,
+      "tpot_ms": 38.079,
+      "engine_ttft_ms": 6661.141
+    }
+  ]
+}

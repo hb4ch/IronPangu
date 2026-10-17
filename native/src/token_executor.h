@@ -12,6 +12,8 @@
 #include "prepared_weight_views.h"
 #include "resident_tensor.h"
 #include "resident_rotary.h"
+#include "resident_head.h"
+#include "resident_cache_writer.h"
 #include "resident_index.h"
 #include "resident_transfer.h"
 #include <aclnn_ai_infra_fused_causal_conv1d.h>
@@ -314,7 +316,7 @@ struct Decoder {
     run(kind == '*' ? aclnnMul : kind == '+' ? aclnnAdd : aclnnSub, bytes, e);
     return out;
   }
-  V gather(const V &x) {
+  V gather(const V &x, bool head_major=false) {
     auto a = cast(x, ACL_BF16);
     DeviceTensor b({int64_t(x.size() * 8)}, ACL_BF16, 2);
     {
@@ -323,7 +325,7 @@ struct Decoder {
                             comm, stream),
               "all gather");
     }
-    if(active_tokens==1)return result(b);
+    if(active_tokens==1 || head_major)return result(b);
     // HCCL produces rank-major rows; the next operator consumes token-major rows.
     V output(x.size()*8,ACL_BF16);
     auto width=x.size()/active_tokens;
@@ -577,6 +579,25 @@ struct Decoder {
     run(aclnnRotaryPositionEmbedding, bytes, e);
     return fp32_output ? result(out, ACL_FLOAT) : rounded(result(out, ACL_FLOAT));
   }
+  V head_matmul(const V &input, const inferfabric::execution::Node &n) {
+    auto &weight=w(n.text("weight")+".weight");
+    int64_t heads=n.integer("heads"), k=n.integer("k"), columns=n.integer("n");
+    if(input.dtype()!=ACL_BF16 || input.size()%active_tokens)
+      throw std::runtime_error("head matmul input storage");
+    auto offset=size_t(rank)*n.integer("input_rank_stride");
+    auto *x=execution.strided_descriptor(static_cast<uint16_t *>(input.data())+offset,
+        input.size()-offset,{heads,int64_t(active_tokens),k},
+        {int64_t(n.integer("input_head_stride")),int64_t(input.size()/active_tokens),1},ACL_BF16);
+    auto weight_offset=n.integer("weight_offset");
+    auto *bank=weight_views.get(static_cast<uint16_t *>(weight.data)+weight_offset,
+        weight.bytes/2-weight_offset,{heads,k,columns},
+        {int64_t(n.integer("weight_head_stride")),int64_t(n.integer("weight_k_stride")),
+         int64_t(n.integer("weight_n_stride"))},ACL_BF16);
+    return resident::head_matmul(x,bank,heads,active_tokens,columns);
+  }
+  V head_to_token(const V &input, uint32_t heads, uint32_t width) {
+    return resident::head_to_token(input,heads,active_tokens,width);
+  }
   V query_project(const V &q, const std::string &weight_name, bool local_heads) {
     auto &weight = w(weight_name + ".weight");
     auto local = resident::slice(q, local_heads ? 0 : rank * 1152, 1152);
@@ -693,12 +714,13 @@ struct Decoder {
     if (pos != current_position)
       throw std::runtime_error("cache position mismatch");
     View cache(state.key.data, {int64_t(state.physical_capacity), 576}, ACL_BF16);
-    View source(key.data(), {1, 576}, ACL_BF16);
+    if(key.size()!=size_t(active_tokens)*576)throw std::runtime_error("cache chunk shape");
+    View source(key.data(), {int64_t(active_tokens), 576}, ACL_BF16);
     uint64_t bytes = 0;
     aclOpExecutor *executor = nullptr;
     checked(prepared::query("aclnnInplaceIndexCopy", false,
                             aclnnInplaceIndexCopyGetWorkspaceSize, cache.t, 0,
-                            cache_append_descriptor(state_name,ACL_INT32), source.t, &bytes,
+                            cache_append_descriptor(state_name,ACL_INT32,active_tokens), source.t, &bytes,
                             &executor),
             "cache device index prepare");
     run(aclnnInplaceIndexCopy, bytes, executor);
@@ -707,7 +729,7 @@ struct Decoder {
   void append_normalized_cache(const V &input,
                                const V &sinks, const std::string &norm_name,
                                const std::string &state_name, int pos, bool packed=false) {
-    if (input.size() != 576 || input.dtype()!=ACL_BF16 || pos != current_position)
+    if (input.size() != size_t(active_tokens)*576 || input.dtype()!=ACL_BF16 || pos != current_position)
       throw std::runtime_error("fused cache shape/position contract");
     auto &ptr = attention_states[state_name];
     if (!ptr) {
@@ -717,29 +739,12 @@ struct Decoder {
       prepared::Context::InitializationCopies declared(execution);
       to_device(ptr->sink, sinks);
     }
-    View kv(input.data(), {1, 1, 1, 576}, ACL_BF16);
     auto &gamma = w(norm_name + ".weight");
     View norm_weight(gamma.data, {512}, ACL_BF16);
-    // This vendor API requires output descriptors even for a cache-only consumer.
-    DeviceTensor rope_out({1, 1, 1, 64}, ACL_BF16, 2),
-        latent_out({1, 1, 1, 512}, ACL_BF16, 2);
-    // The vendor's absent separate rope cache selects combined [latent, rope]
-    // storage, matching the existing paged cache contract. Position stays on device.
-    char cache_mode[] = "PA", rotary_mode[] = "half";
-    char quant_none[]="none", quant_c8[]="pertile128";
-    char *quant_mode=packed?quant_c8:quant_none;
-    uint64_t bytes = 0;
-    aclOpExecutor *e = nullptr;
-    checked(prepared::query("aclnnAiInfraKvRmsNormRopeCache", false,
-                            aclnnAiInfraKvRmsNormRopeCacheGetWorkspaceSize,
-                            kv.t, norm_weight.t, control_row(*rotary_cos_bf16,{1,1,1,64}),
-                            control_row(*rotary_sin_bf16,{1,1,1,64}), cache_append_descriptor(state_name,ACL_INT64),
-                            nullptr, ptr->key.tensor, nullptr, nullptr,
-                            nullptr, nullptr, nullptr, 1e-5, cache_mode,
-                            rotary_mode, quant_mode, true, rope_out.tensor, latent_out.tensor,
-                            &bytes, &e),
-            "fused cache normalization/rotary prepare");
-    run(aclnnAiInfraKvRmsNormRopeCache, bytes, e);
+    resident::normalized_cache_append(input,norm_weight.t,
+        prefix(*rotary_cos_bf16,{int64_t(active_tokens),1,1,64}),
+        prefix(*rotary_sin_bf16,{int64_t(active_tokens),1,1,64}),
+        cache_append_descriptor(state_name,ACL_INT64,active_tokens),ptr->key.tensor,active_tokens,packed);
   }
   V normalize_cache_row(const V &input, const std::string &norm_name) {
     if(input.size()!=576 || input.dtype()!=ACL_BF16)throw std::runtime_error("cache normalize contract");
@@ -796,10 +801,8 @@ struct Decoder {
       resident::control_upload(*packed_query_lengths,counts);
     }
     execution.require_stream(stream);
-    for(uint32_t row=0;row<active_tokens;++row)
-      if_packed_attention_metadata(static_cast<int64_t *>(cache_position->data)+row,
-          static_cast<int32_t *>(packed_indices->data)+row*512,
-          static_cast<int32_t *>(packed_length->data)+row,512,stream);
+    if(active_tokens==1)if_packed_attention_metadata(cache_position->data,packed_indices->data,packed_length->data,512,stream);
+    else if_packed_attention_metadata_batch(cache_position->data,packed_indices->data,packed_length->data,512,active_tokens,stream);
 #else
     throw std::runtime_error("packed attention metadata kernel not built");
 #endif
@@ -1250,10 +1253,13 @@ struct Decoder {
     for (const auto &node : program.nodes) if (node.op == "embedding") return node.integer("vocab");
     throw std::runtime_error("missing embedding vocabulary contract");
   }
-  aclTensor *cache_append_descriptor(const std::string &name, aclDataType dtype) {
+  aclTensor *cache_append_descriptor(const std::string &name, aclDataType dtype, uint32_t rows=1) {
     if(dtype!=ACL_INT64 && dtype!=ACL_INT32)throw std::runtime_error("cache control dtype");
     auto offset=cache_control_offsets.at(name)+active_row*16+(dtype==ACL_INT32?8:0);
-    return execution.descriptor(static_cast<uint8_t *>(cache_controls->data)+offset,{1},dtype);
+    if(!rows || rows>active_tokens-active_row)throw std::runtime_error("cache control row bounds");
+    auto stride=16/resident::element_bytes(dtype);
+    return execution.strided_descriptor(static_cast<uint8_t *>(cache_controls->data)+offset,
+        (rows-1)*stride+1,{rows},{int64_t(stride)},dtype);
   }
   void set_chunk_inputs(const std::vector<uint32_t> &tokens, int pos) {
     auto count=tokens.size();

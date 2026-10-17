@@ -53,11 +53,11 @@ struct IndexState {
     if(shared)pages.release(slot);
     if(active)upload_table();
   }
-  void append(const Tensor &key,aclTensor *position){
-    if(key.dtype()!=ACL_BF16 || key.size()!=128)throw std::runtime_error("index key contract");
+  void append(const Tensor &key,aclTensor *position,uint32_t rows=1){
+    if(!rows || rows>4096 || key.dtype()!=ACL_BF16 || key.size()!=size_t(rows)*128)throw std::runtime_error("index key contract");
     auto &context=*prepared::active;
     auto *cache=context.descriptor(keys.data,{int64_t(capacity)*residents,128},ACL_BF16);
-    auto *source=context.descriptor(key.data(),{1,128},ACL_BF16);
+    auto *source=context.descriptor(key.data(),{rows,128},ACL_BF16);
     uint64_t bytes=0;aclOpExecutor *executor=nullptr;
     prepared::check(prepared::query("index_cache_append",false,aclnnInplaceIndexCopyGetWorkspaceSize,
         cache,0,position,source,&bytes,&executor),"index cache append prepare");
@@ -76,15 +76,15 @@ struct IndexState {
     prepared::check(api.launch(context.workspace(bytes),bytes,executor,context.stream),"sparse index launch");
     return Tensor::alias(out,ACL_INT32);
   }
-  void append_quantized(const Tensor &key,const Tensor &scale,aclTensor *position){
-    if(!quantized || key.dtype()!=ACL_INT8 || key.size()!=128 || scale.dtype()!=ACL_FLOAT16 || scale.size()!=1)
+  void append_quantized(const Tensor &key,const Tensor &scale,aclTensor *position,uint32_t rows=1){
+    if(!rows || rows>4096 || !quantized || key.dtype()!=ACL_INT8 || key.size()!=size_t(rows)*128 || scale.dtype()!=ACL_FLOAT16 || scale.size()!=rows)
       throw std::runtime_error("quantized index key contract");
     auto &context=*prepared::active;
     auto append=[&](openpangu::DeviceTensor &dest,const Tensor &src,int64_t width,aclDataType dtype){
       uint64_t bytes=0;aclOpExecutor *executor=nullptr;
       prepared::check(prepared::query("index_cache_append",false,aclnnInplaceIndexCopyGetWorkspaceSize,
         context.descriptor(dest.data,{int64_t(capacity)*residents,width},dtype),0,position,
-        context.descriptor(src.data(),{1,width},dtype),&bytes,&executor),"quant index append prepare");
+        context.descriptor(src.data(),{rows,width},dtype),&bytes,&executor),"quant index append prepare");
       prepared::check(aclnnInplaceIndexCopy(context.workspace(bytes),bytes,executor,context.stream),"quant index append");
     };
     append(keys,key,128,ACL_INT8);append(*scales,scale,1,ACL_FLOAT16);

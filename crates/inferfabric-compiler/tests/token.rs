@@ -6,6 +6,40 @@ use inferfabric_dsl::{authoring::ModelDefinition, definition};
 use inferfabric_ir::initialization::{DType, Instruction};
 use std::collections::BTreeMap;
 #[test]
+fn uncaptured_head_projection_has_explicit_layout_and_stable_ssa() {
+    let ModelDefinition::Execution {mut graph,..}=definition(include_str!("../../../examples/openpangu/92b-tp8-ep8-c8-learned.inferfabric")).unwrap() else {panic!()};
+    graph.max_context=4096;
+    let base=inferfabric_compiler::token_program::lower(&graph,None).unwrap();
+    let count=base.instructions.iter().filter(|i|matches!(i.op.as_str(),"query_project"|"mla_value"|"gather"|"repeat")).count();
+    assert!(count>0);
+    let plan=base.clone().with_uncaptured_prefill().unwrap();
+    assert_eq!(plan.instructions.len(),base.instructions.len()+count);
+    assert_eq!(plan,plan.clone().with_uncaptured_prefill().unwrap());
+    assert_eq!(plan.instructions[plan.output].logical_node,base.instructions[base.output].logical_node);
+    assert_eq!(plan.instructions[plan.output].width,base.instructions[base.output].width);
+    let recipes=inferfabric_compiler::token_program::recipes(&plan,&graph);
+    for (id,node) in plan.instructions.iter().enumerate() {
+        assert_ne!(recipes[id]["packed_prefill"]["schedule"],"ordered per-query calls");
+        assert!(node.inputs.iter().all(|&input|input<id));
+        assert!(!matches!(node.op.as_str(),"query_project"|"mla_value"|"gather"|"repeat"));
+        if node.op=="head_matmul" {
+            let consumer=&plan.instructions[id+1];
+            assert_eq!(consumer.op,"head_to_token");
+            assert_eq!(consumer.inputs,vec![id]);
+            let width=node.attrs["n"].parse::<usize>().unwrap();
+            assert_eq!(recipes[id]["value_fields"][0]["prefill_shape"],serde_json::json!([6,4096,width]));
+            assert_eq!(recipes[id+1]["value_fields"][0]["prefill_shape"],serde_json::json!([4096,6,width]));
+            assert_eq!(recipes[id]["packed_prefill"]["api_repetitions"],1);
+            assert_eq!(recipes[id]["packed_prefill"]["assembly_copies"],0);
+        }
+    }
+    let mut invalid=plan.clone();
+    let node=invalid.instructions.iter_mut().find(|i|i.op=="head_matmul").unwrap();
+    node.op="query_project".into();
+    assert!(invalid.validate().is_err());
+}
+
+#[test]
 fn uncaptured_prefill_is_a_bounded_envelope_not_a_graph_family() {
     let (mut graph, _, inventory) = fixture();
     graph.max_context = 65_536;

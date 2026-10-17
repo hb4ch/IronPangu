@@ -12,7 +12,7 @@ inline bool exclusive_region(const Plan &p, uint32_t input, size_t owner) {
       start += p.nodes[id].integer("start"); id = p.nodes[id].inputs[0];
     }
     auto &op = p.nodes[id].op;
-    return Region{id, start, width, op == "linear" || op == "norm" || op == "mla_value" || op == "copy"};
+    return Region{id, start, width, op == "linear" || op == "norm" || op == "mla_value" || op == "copy" || op == "head_to_token"};
   };
   auto a = region(input);
   if (!a.fresh) return false;
@@ -55,6 +55,10 @@ inline void validate_kernels(const Plan &p) {
 
   for (size_t i = 0; i < p.nodes.size(); ++i) {
     const auto &n = p.nodes[i];
+    if(p.uncaptured_prefill && (n.op=="mome" || n.op=="query_project" || n.op=="query_rotary_extract" ||
+        n.op=="rope" || n.op=="rope_f32" || n.op=="mla_query" || n.op=="mla_value" || n.op=="repeat" || n.op=="gather" ||
+        (n.op=="sparse_index" && p.nodes.at(n.inputs.at(0)).kind!=5)))
+      throw std::runtime_error("uncaptured prefill requires batched lowering: "+n.op);
     if(n.op=="cache_append" || n.op=="cache_norm_rope_append")
       (void)paged_state_contract(p,n);
     std::vector<T> in;
@@ -205,6 +209,43 @@ inline void validate_kernels(const Plan &p) {
       if (uint64_t(n.integer("start")) + w() > a)
         error();
       check({{0, a}}, {"start", "width"}, {0, w()});
+    } else if (p.physical && (n.op=="gather_heads" || n.op=="repeat_heads")) {
+      uint64_t heads=n.integer("heads");
+      if(!heads || heads>64 || heads*tensor(0)>200000 || n.dtype!="bf16" || p.nodes[n.inputs[0]].dtype!="bf16")error();
+      if(n.op=="gather_heads" && heads!=8)error();
+      check({{0,tensor(0)}},{"heads"},{0,uint32_t(heads*tensor(0))});
+      size_t consumers=0;
+      for(const auto &consumer:p.nodes)for(auto input:consumer.inputs)if(input==i) {
+        ++consumers;if(consumer.op!="head_to_token")error();
+      }
+      if(consumers!=1 || p.output==i)error();
+    } else if (p.physical && n.op == "head_matmul") {
+      uint64_t heads=n.integer("heads"),k=n.integer("k"),columns=n.integer("n");
+      uint64_t rows=n.integer("weight_rows"),cols=n.integer("weight_cols");
+      if(!heads || heads>64 || !k || k>65536 || !columns || heads*columns>200000 ||
+         !rows || rows>200000 || !cols || cols>200000 || n.dtype!="bf16" ||
+         p.nodes[n.inputs.at(0)].dtype!="bf16" || n.kernel!="aclnnBatchMatMul")error();
+      check({{0,tensor(0)}},{"weight","heads","k","n","input_head_stride","input_rank_stride",
+        "weight_rows","weight_cols","weight_offset","weight_head_stride","weight_k_stride","weight_n_stride"},
+        {0,uint32_t(heads*columns)});
+      if(7ull*n.integer("input_rank_stride")+(heads-1)*n.integer("input_head_stride")+k>tensor(0) ||
+         uint64_t(n.integer("weight_offset"))+(heads-1)*n.integer("weight_head_stride")+
+         (k-1)*n.integer("weight_k_stride")+(columns-1)*n.integer("weight_n_stride")>=rows*cols)error();
+      size_t consumers=0;
+      for(const auto &consumer:p.nodes)for(auto input:consumer.inputs)if(input==i) {
+        ++consumers;if(consumer.op!="head_to_token")error();
+      }
+      if(consumers!=1 || p.output==i)error();
+    } else if (p.physical && n.op == "head_to_token") {
+      auto heads=n.integer("heads"),width=n.integer("width");
+      if(!heads || heads>64 || !width || uint64_t(heads)*width>200000 || n.dtype!="bf16" || n.kernel!="aclnnCast")error();
+      check({{0,heads*width}},{"heads","width"},{0,heads*width});
+      const auto &source=p.nodes[n.inputs[0]];
+      if(source.integer("heads")!=heads)error();
+      if(source.op=="head_matmul") {if(source.integer("n")!=width)error();}
+      else if(source.op=="gather_heads" || source.op=="repeat_heads") {
+        if(p.nodes[source.inputs.at(0)].width!=width)error();
+      } else error();
     } else if (p.physical && (n.op == "query_project" || n.op == "query_rotary_extract")) {
       auto layout=n.text("input_layout");
       if(layout!="rank_local" && layout!="replicated") error();
@@ -372,6 +413,10 @@ inline void validate_kernels(const Plan &p) {
       if (n.dtype != output_dtype) error();
       if (n.op == "concat" && p.nodes[n.inputs[0]].dtype != p.nodes[n.inputs[1]].dtype) error();
       auto expected_kernel = n.op == "add_f32" ? "add" : n.op;
+      if(n.op=="head_matmul")expected_kernel="aclnnBatchMatMul";
+      if(n.op=="head_to_token")expected_kernel="aclnnCast";
+      if(n.op=="gather_heads")expected_kernel="HcclAllGather";
+      if(n.op=="repeat_heads")expected_kernel="aclrtMemcpyAsync";
       if (n.op != "linear" && n.op != "optional_norm" && n.kernel != expected_kernel) error();
       if (n.op == "linear" && n.kernel != "bf16" && n.kernel != "int8" && n.kernel != "paired_bf16") error();
       if (n.op == "optional_norm" && n.kernel != "norm" && n.kernel != "alias") error();
@@ -485,7 +530,9 @@ inline void validate_bindings(const Plan &program,
               {merge ? 1 : 3}, DType::F32);
       require(name + (merge ? ".branch_beta_pre" : ".branch_beta"),
               {merge ? 4 : 24}, DType::F32);
-    } else if (n.op == "mla_query" || n.op == "query_project" || n.op == "mla_value")
+    } else if (n.op == "head_matmul")
+      require(name + ".weight", {n.integer("weight_rows"), n.integer("weight_cols")}, DType::Bf16);
+    else if (n.op == "mla_query" || n.op == "query_project" || n.op == "mla_value")
       require(name + ".weight", {1536, 512}, DType::Bf16);
     else if (n.op == "sink_normalize") {
       require(name + ".param_sink_compressed_kv", {128, 512}, DType::Bf16);

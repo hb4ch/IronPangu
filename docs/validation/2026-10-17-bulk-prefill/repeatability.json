@@ -1,0 +1,59 @@
+{
+  "format": "inferfabric.sampler-repeatability.v1",
+  "passed": true,
+  "scope": "through_first_eos",
+  "criterion": "exact sampled token, logit and top-five diagnostics across repeated requests",
+  "reference_sha256": "4ea7d9427651a4c510e5162a7cc9ee78ac5c417e33077f1e23c0b7a1463517a3",
+  "diagnostics_sha256": "94b228d39e0fb32219ae29af811085d4c4ad89be61a6ea85e3698176357a7e8f",
+  "cases": [
+    {
+      "case": "arithmetic",
+      "compared_tokens_per_run": 8,
+      "ignored_post_eos_records": 0,
+      "stable": true,
+      "differences": []
+    },
+    {
+      "case": "geography",
+      "compared_tokens_per_run": 8,
+      "ignored_post_eos_records": 0,
+      "stable": true,
+      "differences": []
+    },
+    {
+      "case": "chinese",
+      "compared_tokens_per_run": 17,
+      "ignored_post_eos_records": 0,
+      "stable": true,
+      "differences": []
+    },
+    {
+      "case": "access-code-529",
+      "compared_tokens_per_run": 5,
+      "ignored_post_eos_records": 0,
+      "stable": true,
+      "differences": []
+    },
+    {
+      "case": "access-code-2049",
+      "compared_tokens_per_run": 5,
+      "ignored_post_eos_records": 0,
+      "stable": true,
+      "differences": []
+    },
+    {
+      "case": "access-code-3072",
+      "compared_tokens_per_run": 5,
+      "ignored_post_eos_records": 0,
+      "stable": true,
+      "differences": []
+    },
+    {
+      "case": "access-code-4088",
+      "compared_tokens_per_run": 5,
+      "ignored_post_eos_records": 0,
+      "stable": true,
+      "differences": []
+    }
+  ]
+}
