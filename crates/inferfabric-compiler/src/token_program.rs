@@ -138,7 +138,9 @@ fn emit(
         kind,
         width,
         dtype: dtype.into(),
-        kernel: if op == "cast" {
+        kernel: if op == "expert_zero" {
+            "aclnnInplaceZero".into()
+        } else if op == "cast" {
             "aclnnCast".into()
         } else {
             op.into()
@@ -955,6 +957,7 @@ fn recipes_for_query(p: &Program, graph: &Graph, query_tokens: usize) -> Vec<ser
             "router_select" => (&["aclnnMoeGatingTopK"], "sigmoid/bias group top-k; ids remain on device", "INT32 ids + FP32 scores and normalized logits"),
             "route_quantize" => (&["aclnnMoeInitRoutingV3"], "owner-local route filtering/sorting and INT8 quantization", "INT8 [8,width], FP32 [8] scales, INT64 [32] groups, INT32 [8] inverse indices"),
             "expert_act_quantize" => (&["aclnnDequantSwigluQuant"], "packed BF16 SwiGLU and INT8 quantization", "INT8 [8,width] + FP32 [8] scales; borrowed group metadata"),
+            "expert_zero" if i.kernel == "aclnnInplaceZero" => (&["aclnnInplaceZero"], "device byte-zero of packed BF16 storage; vendor ZerosLike/ViewCopy implementation", "fresh BF16 routed rows; INT8 byte alias for zeroing; exclusive input to grouped matmul"),
             "expert_zero" => (&["aclrtMemsetAsync"], "define unselected expert rows as zero", "fresh BF16 [8,width]; exclusive input to grouped matmul"),
             "expert_gmm" => (&["aclnnGroupedMatmulV5"], "INT8 grouped matmul; quantization and zeroing are separate", "writes exclusively owned initialized output; packed weights prepared once"),
             "expert_values" => (&[], "view packed expert rows as a tensor", "alias; no copy"),

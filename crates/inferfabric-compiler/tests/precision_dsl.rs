@@ -127,6 +127,7 @@ fn decoder_composites_have_explicit_calls_and_storage_effects() {
             "expert_gmm" => {
                 let zero = &p.instructions[i.inputs[1]];
                 assert_eq!(zero.op, "expert_zero");
+                assert_eq!(zero.kernel, "aclnnInplaceZero");
                 assert_eq!(zero.inputs, vec![i.inputs[0]]);
             }
             "expert_reduce" => {
@@ -143,7 +144,11 @@ fn decoder_composites_have_explicit_calls_and_storage_effects() {
             _ => (),
         }
     }
-    for r in inferfabric_compiler::token_program::recipes(&p, &graph) {
+    for (index, r) in inferfabric_compiler::token_program::recipes(&p, &graph).into_iter().enumerate() {
+        if p.instructions[index].op == "expert_zero" {
+            assert_eq!(r["apis"], serde_json::json!(["aclnnInplaceZero"]));
+            assert!(r["materialization"].as_str().unwrap().contains("INT8 byte alias"));
+        }
         assert!(
             r["apis"].as_array().unwrap().len() <= 1 || r["granularity"] == "initialization recipe"
         );

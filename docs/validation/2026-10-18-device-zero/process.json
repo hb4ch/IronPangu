@@ -1,0 +1,11 @@
+{
+  "returncode": 0,
+  "elapsed_seconds": 63.02022645995021,
+  "command": [
+    "/data/p00603624/inferfabric/openpangu92/native-build-device-zero/program_engine_probe",
+    "/data/p00603624/inferfabric/openpangu92/device-zero4k-frozen-plan",
+    "/models/92B",
+    "/data/p00603624/inferfabric/openpangu92/prefill-profile-fixture/requests.txt"
+  ],
+  "preparation": false
+}

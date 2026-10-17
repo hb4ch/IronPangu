@@ -413,6 +413,7 @@ inline void validate_kernels(const Plan &p) {
       if (n.dtype != output_dtype) error();
       if (n.op == "concat" && p.nodes[n.inputs[0]].dtype != p.nodes[n.inputs[1]].dtype) error();
       auto expected_kernel = n.op == "add_f32" ? "add" : n.op;
+      if(n.op=="expert_zero" && n.kernel=="aclnnInplaceZero")expected_kernel=n.kernel;
       if(n.op=="head_matmul")expected_kernel="aclnnBatchMatMul";
       if(n.op=="head_to_token")expected_kernel="aclnnCast";
       if(n.op=="gather_heads")expected_kernel="HcclAllGather";

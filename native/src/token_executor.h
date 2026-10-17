@@ -37,6 +37,7 @@
 #include <aclnnop/aclnn_quant_matmul_v5.h>
 #include <aclnnop/aclnn_reduce_sum.h>
 #include <aclnnop/aclnn_rms_norm.h>
+#include <aclnnop/aclnn_zero.h>
 #include <aclnnop/aclnn_rotary_position_embedding.h>
 #include <array>
 #include <filesystem>
@@ -1089,10 +1090,18 @@ struct Decoder {
     }
     return {result(quant,ACL_INT8),result(scale,ACL_FLOAT),groups,indices};
   }
-  ExpertRows zero_expert_output(const RoutedQuantized &q,int width) {
+  ExpertRows zero_expert_output(const RoutedQuantized &q,int width,bool device_zero=false) {
     ExpertRows output;output.packed=V(size_t(8)*active_tokens*width,ACL_BF16);
     output.groups=q.groups;output.indices=q.indices;
-    execution.zero(output.packed.data(),output.packed.bytes());
+    if(device_zero) {
+      // Zero bits represent BF16 +0. Use a contiguous byte alias so this does
+      // not depend on vendor BF16 support and cannot convert/read activations.
+      View bytes_view(output.packed.data(),{int64_t(output.packed.bytes())},ACL_INT8);
+      uint64_t workspace_bytes=0;aclOpExecutor *executor=nullptr;
+      checked(prepared::query("aclnnInplaceZero",false,aclnnInplaceZeroGetWorkspaceSize,
+                             bytes_view.t,&workspace_bytes,&executor),"expert device zero prepare");
+      run(aclnnInplaceZero,workspace_bytes,executor);
+    } else execution.zero(output.packed.data(),output.packed.bytes());
     // Grouped kernels consume packed storage directly. Eager row views create
     // O(tokens * top_k) ACL descriptors even when no row operation needs them.
     output.row_width=width;

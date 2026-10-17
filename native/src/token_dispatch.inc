@@ -97,7 +97,7 @@ V execute_token() {
     } else if(n.op=="expert_pack") {
       result=pack_expert_rows(std::get<ExpertRows>(input(0)),std::get<ExpertRows>(input(1)));
     } else if(n.op=="expert_zero") {
-      result=zero_expert_output(std::get<RoutedQuantized>(input(0)),n.width);
+      result=zero_expert_output(std::get<RoutedQuantized>(input(0)),n.width,n.kernel=="aclnnInplaceZero");
     } else if(n.op=="expert_gmm") {
       result=expert_gmm(std::get<RoutedQuantized>(input(0)),std::get<ExpertRows>(input(1)),bank(weight(),n.attrs.count("paired_weight")?n.text("paired_weight"):""));
     } else if(n.op=="expert_values") {
