@@ -1,0 +1,90 @@
+[
+  {
+    "rank": 0,
+    "arena_bytes": 39572690960,
+    "frozen": true,
+    "workspace_bytes": 159221248,
+    "workspace_growth": 0,
+    "activation_host_transfers": 0,
+    "rejected": 0,
+    "execution_allocations": 0,
+    "internal_boundaries": 0
+  },
+  {
+    "rank": 1,
+    "arena_bytes": 39572690960,
+    "frozen": true,
+    "workspace_bytes": 159221248,
+    "workspace_growth": 0,
+    "activation_host_transfers": 0,
+    "rejected": 0,
+    "execution_allocations": 0,
+    "internal_boundaries": 0
+  },
+  {
+    "rank": 2,
+    "arena_bytes": 39572690960,
+    "frozen": true,
+    "workspace_bytes": 159221248,
+    "workspace_growth": 0,
+    "activation_host_transfers": 0,
+    "rejected": 0,
+    "execution_allocations": 0,
+    "internal_boundaries": 0
+  },
+  {
+    "rank": 3,
+    "arena_bytes": 39572690960,
+    "frozen": true,
+    "workspace_bytes": 159221248,
+    "workspace_growth": 0,
+    "activation_host_transfers": 0,
+    "rejected": 0,
+    "execution_allocations": 0,
+    "internal_boundaries": 0
+  },
+  {
+    "rank": 4,
+    "arena_bytes": 39572690960,
+    "frozen": true,
+    "workspace_bytes": 159221248,
+    "workspace_growth": 0,
+    "activation_host_transfers": 0,
+    "rejected": 0,
+    "execution_allocations": 0,
+    "internal_boundaries": 0
+  },
+  {
+    "rank": 5,
+    "arena_bytes": 39572690960,
+    "frozen": true,
+    "workspace_bytes": 159221248,
+    "workspace_growth": 0,
+    "activation_host_transfers": 0,
+    "rejected": 0,
+    "execution_allocations": 0,
+    "internal_boundaries": 0
+  },
+  {
+    "rank": 6,
+    "arena_bytes": 39572690960,
+    "frozen": true,
+    "workspace_bytes": 159221248,
+    "workspace_growth": 0,
+    "activation_host_transfers": 0,
+    "rejected": 0,
+    "execution_allocations": 0,
+    "internal_boundaries": 0
+  },
+  {
+    "rank": 7,
+    "arena_bytes": 39572690960,
+    "frozen": true,
+    "workspace_bytes": 159221248,
+    "workspace_growth": 0,
+    "activation_host_transfers": 0,
+    "rejected": 0,
+    "execution_allocations": 0,
+    "internal_boundaries": 0
+  }
+]
