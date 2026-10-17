@@ -31,3 +31,26 @@ page-binding tests passed and the full native engine rebuilt successfully.
 Multi-sequence learned index selection, BF16 window attention, decoder batch
 submission and frontend scheduling are still required. The production decoder
 continues to supply one sequence; this is not an end-to-end batching claim.
+
+## Learned index → attention integration
+
+The probe now also runs the shared production `resident::quant_index` function
+before C8 attention. Its INT8 keys use independent 64-token page tables, unlike
+the 32-token attention cache. Key values and FP16 scales vary by resident and
+logical token; alternating signed queries and weighted heads exercise both
+positive and negative dot products. An independent CPU score oracle checks
+causal bounds, uniqueness, Top-K cutoff (allowing ties) and padding.
+
+The index tensor feeds attention directly on device. Test-only index readback
+happens after attention completes. The analytic attention oracle then checks
+the cache values addressed by those independently verified indices.
+
+The expanded NPU run returned:
+
+```json
+{"passed":true,"attention_launches":6,"index_launches":3,"checked_values":25288704,"checked_indices":6290221}
+```
+
+The full native engine rebuilt successfully. Multi-sequence learned index is
+now kernel-qualified; BF16 window attention, decoder batch submission and
+frontend wiring remain outstanding. No full-model batching claim is made.

@@ -1,5 +1,6 @@
 #pragma once
 #include "resident_tensor.h"
+#include "resident_quant_index.h"
 #include "page_binding.h"
 #include <aclnnop/aclnn_index_copy.h>
 #include <aclnn_lightning_indexer_enhance.h>
@@ -94,13 +95,10 @@ struct IndexState {
       throw std::runtime_error("quantized sparse index operands");
     auto &context=*prepared::active;
     openpangu::DeviceTensor out({rows,1,2048},ACL_INT32,4);
-    uint64_t bytes=0;aclOpExecutor *executor=nullptr;
-    prepared::check(prepared::query("aclnnAiInfraQuantLightningIndexer",false,aclnnAiInfraQuantLightningIndexerGetWorkspaceSize,
+    quant_index(
       context.descriptor(query.data(),{rows,24,128},ACL_INT8),keys.tensor,
       context.descriptor(weights.data(),{rows,24},ACL_FLOAT16),context.descriptor(query_scale.data(),{rows,24},ACL_FLOAT16),
-      scales->tensor,context.descriptor(static_cast<int32_t *>(query_length.data)+rows-1,{1},ACL_INT32),length,table.tensor,0,0,"TND","PA_BSND",2048,3,INT64_MAX,INT64_MAX,
-      out.tensor,&bytes,&executor),"quant sparse index prepare");
-    prepared::check(aclnnAiInfraQuantLightningIndexer(context.workspace(bytes),bytes,executor,context.stream),"quant sparse index launch");
+      scales->tensor,context.descriptor(static_cast<int32_t *>(query_length.data)+rows-1,{1},ACL_INT32),length,table.tensor,out.tensor);
     return Tensor::alias(out,ACL_INT32);
   }
 };
