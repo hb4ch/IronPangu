@@ -275,6 +275,26 @@ The current C8 format is per-128 latent scales with BF16 rotary, applied to the 
 
 ### Required release target: 64K context
 
+The opt-in HTTP prefix-cache integration now passes the
+[2K–4K native gate](validation/2026-10-17-prefix-http/README.md). Configure both
+`--prefix-cache-slots` and `--prefix-cache-namespace`, with explicit
+`--max-num-seqs`; active and snapshot residents must fit the compiled capacity.
+Cache salts isolate request domains. The compiler publishes supported state-copy
+layouts, and startup rejects incomplete capability sets. The worker publishes
+only completed, aligned continuation state and restores only exact token and
+arithmetic histories; all payload copies remain on device. One last eligible
+checkpoint per request limits publication cost. Longer-context and concurrent
+cache qualification remain separate gates.
+
+The native 65,520-input plus 16-output retrieval run now completes at TP=8/EP=8
+with bounded frozen arenas and no activation host transfers. Early, middle and
+late retrieval answers match through EOS; forced post-EOS continuations still
+differ from the independent reference. Cold TTFT is approximately 235 seconds,
+with decode TPOT approximately 20.7 ms. This is evidence of executable capacity,
+not production readiness; see [the preserved 64K results](validation/2026-10-17-retrieval64/README.md).
+The HTTP concurrency, prefix restoration, pressure and soak gates below remain
+mandatory before advertising a 65,536-token serving envelope.
+
 The INT8/FP16 sparse-indexer vendor boundary now passes independent causal
 selection checks through 65,536 keys and 24 ACLGraph replays; see the
 [kernel qualification](validation/2026-10-17-quant-sparse-indexer/README.md).

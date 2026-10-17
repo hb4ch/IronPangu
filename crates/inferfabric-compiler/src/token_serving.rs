@@ -7,6 +7,19 @@ pub fn program_envelope(graph:&Graph,ranks:usize,program:&crate::token_program::
     program.validate()?;
     let (mut variants,mut states)=envelope(graph,ranks)?;
     for state in &mut states {
+        let node=&graph.nodes[state.logical_node];
+        // Mirror the native continuation-copy registry. Logical-only lowering
+        // cannot promise that an executable implements these state layouts.
+        state.checkpoint_supported=match &state.storage {
+            Storage::Slot{dtype,..} => node.op=="mome" && node.integer("taps")?==3 && dtype=="bf16",
+            Storage::Pages{page_tokens,row_bytes,encoding} => match encoding.as_str() {
+                "bf16_latent512_rotary64" => *page_tokens==16 && *row_bytes==1152,
+                "int8_latent512_tile128_f32_scales_bf16_rotary64" => *page_tokens==32 && *row_bytes==656,
+                "bf16_index_keys" => *page_tokens==64 && *row_bytes==256 && node.integer("width")?==128,
+                "int8_index_keys_f16_scales" => *page_tokens==64 && *row_bytes==130 && node.integer("width")?==128,
+                _ => false,
+            },
+        };
         if matches!(&state.storage,Storage::Pages{encoding,..} if encoding=="bf16_latent512_rotary64") {
             let windows=graph.nodes.iter().filter(|n|n.op=="latent_attention" && n.inputs.get(1)==Some(&state.logical_node))
                 .map(|n|n.integer("window")).collect::<Result<std::collections::BTreeSet<_>>>()?;

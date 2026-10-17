@@ -13,6 +13,9 @@ fn sliding_retention_is_explicit_chunk_safe_and_fail_closed() {
     s.retention=Retention::SlidingWindow{max_query_tokens:4};
     s.checkpoint_supported=false;
     m.validate().unwrap();
+    // Complete window snapshots are supported by registered native layouts.
+    m.states[0].checkpoint_supported=true;
+    m.validate().unwrap();
     for case in 0..7 {
         let mut bad=m.clone();let s=&mut bad.states[0];
         match case {
@@ -21,7 +24,7 @@ fn sliding_retention_is_explicit_chunk_safe_and_fail_closed() {
             2=>s.window_tokens=None,
             3=>s.retention=Retention::SlidingWindow{max_query_tokens:1},
             4=>s.retention=Retention::SlidingWindow{max_query_tokens:0},
-            5=>s.checkpoint_supported=true,
+            5=>s.capacity_tokens=0,
             _=>s.storage=Storage::Slot{bytes:100,dtype:"bf16".into()},
         }
         assert!(bad.validate().is_err(),"case {case}");

@@ -2,6 +2,8 @@
 mod worker;
 #[path = "program_worker.rs"]
 mod program_worker;
+#[path = "program_cached.rs"]
+mod program_cached;
 use futures::Stream;
 use std::{
     path::PathBuf,
@@ -143,6 +145,14 @@ impl Backend {
         let (residents, context, token_budget) = options.resolve(manifest.resident_sequences as usize, manifest.variants[0].max_context as usize)?;
         eprintln!("program scheduler configured max_num_seqs={residents} max_num_batched_tokens={token_budget} max_model_len={context}; compiled_prefill_tokens={chunk}, decode_tokens=1");
         let vocab = manifest.vocab_size;
+        let tokenizer_hash=if options.prefix_cache_slots.is_some() {
+            let mut bytes=Vec::new();
+            for name in ["tokenizer.json","tokenizer_config.json"] {
+                let value=std::fs::read(dir.join(name))?;
+                bytes.extend_from_slice(&(value.len() as u64).to_le_bytes());bytes.extend(value);
+            }
+            inferfabric_compiler::checkpoint::sha(&bytes)
+        } else {String::new()};
         let (tx, mut rx) = mpsc::channel::<Job>(residents * 4);
         let (ready_tx, ready_rx) = oneshot::channel();
         let (done, finished) = oneshot::channel();
@@ -152,7 +162,8 @@ impl Backend {
         let (a, s, h) = (active.clone(), stop.clone(), healthy.clone());
         std::thread::Builder::new().name("inferfabric-program".into()).spawn(move || {
             let _guard = Guard { healthy: h.clone(), finished: Some(done) };
-            match inferfabric_native::program::Engine::open(&bundle, &dir, &library) {
+            match inferfabric_native::program::Engine::open(&bundle, &dir, &library).and_then(|engine|
+                program_cached::CachedProgram::new(engine,&manifest,&options,residents,context,token_budget,tokenizer_hash)) {
                 Ok(mut engine) => {
                     h.store(true, Ordering::Release);
                     if ready_tx.send(Ok(())).is_ok() {
@@ -208,7 +219,8 @@ impl GenerationBackend for Backend {
         if !self.metadata().healthy {
             return Err(Error::Unavailable { message: "native engine is not ready".into() });
         }
-        crate::native_sampling::validate(&req)?;
+        if self.program_mode {crate::native_sampling::validate_with_cache_salt(&req,true)?;}
+        else {crate::native_sampling::validate(&req)?;}
         if self.program_mode { program_worker::validate(&req)?; }
         validate_capacity_for(&req, self.context, self.vocab)?;
         let mut active = self.active.lock().unwrap();

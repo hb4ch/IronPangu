@@ -1,0 +1,8 @@
+{
+  "prefix-bound/execution.bin": "854bf6c80b61310cb40561edc427aafdbef1d1d38606af6809844c259967c9a0",
+  "prefix-bound/serving.json": "c727b65e0eeda85c21fff51ff09da9ddcfef1ce435c1f80f9cb2065516a045a3",
+  "native-build-continuation/libinferfabric_program.so": "5035a5be7bdf04dcc3d25376dd55692daf7821ea0fcd1a57990748b531944cb8",
+  "../inferfabric-server-prefix-v3": "a4006390fd4947c17821a52942694f06b891ffb1f7042007260a92057c7f2051",
+  "batched16-long-reference.json": "57182ff20ac9142e5af9e1bf1e2b95c9a19353e8cfdbf191b18531c2d131ce49",
+  "scripts/qualify-program-http.py": "14b6ffc95ac4dc4a86537b222e816ddd23c26b15f1cf3c9e9f6e622532168996"
+}

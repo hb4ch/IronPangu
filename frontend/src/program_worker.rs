@@ -20,6 +20,10 @@ pub(super) fn validate(req: &GenerateRequest) -> vllm_llm::Result<()> {
     Ok(())
 }
 pub(super) trait ResidentEngine {
+    fn restore_prefix(&mut self,_slot:u32,_request:&GenerateRequest)->inferfabric_model::Result<u32> {Ok(0)}
+    fn prefill_limit(&self,position:u32,prompt_tokens:u32)->u32 {prompt_tokens-position}
+    fn checkpoint(&mut self,_slot:u32,_request:&GenerateRequest,_position:u32)->inferfabric_model::Result<()> {Ok(())}
+    fn clear_prefix_cache(&mut self)->inferfabric_model::Result<()> {Ok(())}
     fn prefill_capacity(&self) -> u32 {
         1
     }
@@ -89,6 +93,7 @@ struct Running {
     position: u32,
     generated: u32,
     next: Option<u32>,
+    cached_tokens: u32,
 }
 fn cancelled(job: &Job) -> bool {
     job.cancel.load(Ordering::Acquire) || job.tx.is_closed()
@@ -112,7 +117,11 @@ fn advance(
             .ok_or_else(|| inferfabric_model::invalid("missing decode input"))?
     };
     let count = if prefill {
-        engine.prefill_chunk(budget.min(prompt.len()-r.position as usize) as u32) as usize
+        let limit=engine.prefill_limit(r.position,prompt.len() as u32);
+        if limit==0 || limit as usize>prompt.len()-r.position as usize {
+            return Err(inferfabric_model::invalid("invalid prefix checkpoint boundary"));
+        }
+        engine.prefill_chunk(budget.min(limit as usize) as u32) as usize
     } else {1};
     let sample = r.position as usize + count >= prompt.len();
     let next = if count > 1 {
@@ -156,7 +165,7 @@ fn advance(
         token_ids: vec![token],
         logprobs: None,
         finish_reason: finish,
-        cached_token_count: 0,
+        cached_token_count: r.cached_tokens as usize,
         kv_transfer_params: None,
     };
     Ok((r.job.tx.try_send(Ok(output)).is_err() || terminal, count))
@@ -200,6 +209,7 @@ pub(super) fn run(
                         position: 0,
                         generated: 0,
                         next: None,
+                        cached_tokens: 0,
                     });
                     let request = &slot.as_ref().unwrap().job.req;
                     let tokens = u32::try_from(request.prompt_token_ids.len())
@@ -209,6 +219,12 @@ pub(super) fn run(
                             inferfabric_model::invalid("request reservation overflow")
                         })?;
                     engine.admit(index as u32, tokens)?;
+                    let cached=engine.restore_prefix(index as u32,request)?;
+                    if cached as usize>=request.prompt_token_ids.len() {
+                        return Err(inferfabric_model::invalid("prefix restore must leave a token for logits"));
+                    }
+                    let running=slot.as_mut().unwrap();
+                    running.position=cached;running.cached_tokens=cached;
                 }
             }
             let count = slots.iter().flatten().count();
@@ -249,6 +265,9 @@ pub(super) fn run(
                 let (finished, used) = advance(engine, r, token_budget - tokens)?;
                 tokens += used;
                 consumed += used as u64;
+                if !finished && !cancelled(&r.job) && (r.position as usize)<r.job.req.prompt_token_ids.len() {
+                    engine.checkpoint(index as u32,&r.job.req,r.position)?;
+                }
                 cursor = (index + 1) % residents;
                 if finished {
                     engine.release(index as u32)?;
@@ -278,6 +297,7 @@ pub(super) fn run(
         let _ = job.tx.try_send(Err(error(message.clone())));
     }
     active.lock().unwrap().clear();
+    if result.is_ok() {result=engine.clear_prefix_cache();}
     eprintln!(
         "program scheduler stopped max_active={max_active} mixed_ticks={mixed_ticks} consumed_tokens={consumed} token_budget={token_budget} prefill_tokens={chunk} decode_tokens=1"
     );
@@ -318,8 +338,25 @@ mod tests {
         chunk: u32,
         family: Vec<u32>,
         chunks: Vec<(usize, u32, usize, bool)>,
+        restored:u32,
+        checkpoint_at:Option<u32>,
+        checkpoints:Vec<u32>,
+        cache_cleared:bool,
     }
     impl ResidentEngine for Fake {
+        fn restore_prefix(&mut self,slot:u32,request:&GenerateRequest)->inferfabric_model::Result<u32> {
+            self.position[slot as usize]=self.restored;
+            self.sum[slot as usize]=request.prompt_token_ids[..self.restored as usize].iter().sum();
+            Ok(self.restored)
+        }
+        fn prefill_limit(&self,position:u32,prompt:u32)->u32 {
+            self.checkpoint_at.filter(|&boundary|position<boundary && boundary<prompt).unwrap_or(prompt)-position
+        }
+        fn checkpoint(&mut self,_slot:u32,_request:&GenerateRequest,position:u32)->inferfabric_model::Result<()> {
+            if self.checkpoint_at==Some(position) {self.checkpoints.push(position);}
+            Ok(())
+        }
+        fn clear_prefix_cache(&mut self)->inferfabric_model::Result<()> {self.cache_cleared=true;Ok(())}
         fn prefill_capacity(&self) -> u32 {
             self.family.last().copied().unwrap_or(self.chunk.max(1))
         }
@@ -384,6 +421,33 @@ mod tests {
             .unwrap()
             .insert(req.request_id.clone(), cancel.clone());
         (Job { req, tx, cancel }, rx)
+    }
+    #[test]
+    fn program_admission_forwards_cache_salt_without_enabling_other_features() {
+        let mut req=request("salted",vec![1;9],1);
+        req.cache_salt=Some("isolated".into());
+        assert!(crate::native_sampling::validate(&req).is_err());
+        crate::native_sampling::validate_with_cache_salt(&req,true).unwrap();
+        req.priority=1;
+        assert!(crate::native_sampling::validate_with_cache_salt(&req,true).is_err());
+    }
+    #[test]
+    fn restored_prefix_preserves_prompt_usage_and_checkpoint_boundary() {
+        let active=Arc::new(Mutex::new(Default::default()));
+        let (tx,mut rx)=mpsc::channel(2);
+        let (job,mut output)=job(request("cached",vec![1;9],1),&active);
+        tx.try_send(job).unwrap();drop(tx);
+        let mut engine=Fake{restored:4,checkpoint_at:Some(8),family:vec![4,8],..Default::default()};
+        run(&mut engine,&mut rx,&active,&Arc::new(AtomicBool::new(false)),1,8).unwrap();
+        let result=output.try_recv().unwrap().unwrap();
+        assert_eq!(result.token_ids,vec![9]);
+        assert_eq!(result.cached_token_count,4);
+        assert_eq!(result.prompt_info.unwrap().prompt_token_ids.len(),9);
+        assert_eq!(engine.trace.len(),5);
+        assert_eq!(engine.chunks,vec![(0,4,4,false)]);
+        assert_eq!(engine.checkpoints,vec![8]);
+        assert!(engine.cache_cleared);
+        assert!(active.lock().unwrap().is_empty());
     }
     #[test]
     fn interleaves_long_prefill_with_decode_and_reuses_only_finished_slot() {

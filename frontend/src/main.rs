@@ -61,8 +61,9 @@ async fn run(shutdown: CancellationToken) -> anyhow::Result<()> {
         "--program" => {
             anyhow::ensure!(args.len() >= 5, "--program requires BUNDLE CHECKPOINT LIB [PORT] [--max-model-len N] [--max-num-seqs N] [--max-num-batched-tokens N]");
             let options = program_args::ProgramArgs::parse(&args[5..])?;
+            let port=options.port;
             (native_backend::Backend::program(args[2].clone().into(), args[3].clone().into(), args[4].clone().into(), options).await?,
-                "inferfabric-program", options.port)
+                "inferfabric-program", port)
         }
         "--mock" => {
             let spec = inferfabric_dsl::parse(&std::fs::read_to_string(&args[2])?)?;
@@ -125,7 +126,7 @@ async fn run(shutdown: CancellationToken) -> anyhow::Result<()> {
         default_chat_template_kwargs: None,
         chat_template_content_format: Default::default(),
         max_logprobs: Some(0),
-        api_server_options: Default::default(),
+        api_server_options: vllm_server::ApiServerOptions {enable_prompt_tokens_details:true,..Default::default()},
         cors: Default::default(),
         tls: None,
         api_keys: vec![],

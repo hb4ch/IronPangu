@@ -37,6 +37,9 @@ pub fn defaults(dir: &std::path::Path) -> anyhow::Result<EngineCoreSamplingParam
     Ok(result)
 }
 pub fn validate(req: &GenerateRequest) -> Result<()> {
+    validate_with_cache_salt(req,false)
+}
+pub fn validate_with_cache_salt(req: &GenerateRequest, allow_cache_salt:bool) -> Result<()> {
     let p = &req.sampling_params;
     settings(p).validate().map_err(|e| Error::Unsupported {
         message: e.to_string(),
@@ -45,7 +48,7 @@ pub fn validate(req: &GenerateRequest) -> Result<()> {
         || req.lora_request.is_some()
         || req.priority != 0
         || req.data_parallel_rank.is_some()
-        || req.cache_salt.is_some()
+        || (req.cache_salt.is_some() && !allow_cache_salt)
         || req.reasoning_parser_kwargs.is_some()
         || p.thinking_token_budget.is_some()
         || p.logprobs.is_some()

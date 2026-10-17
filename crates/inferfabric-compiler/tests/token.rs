@@ -126,6 +126,8 @@ fn long_context_plans_require_implemented_cache_paths() {
         graph.max_context=context;
         let p=inferfabric_compiler::token_program::lower(&graph,None).unwrap().with_prefill_tokens(4).unwrap();
         let (_,states)=inferfabric_compiler::token_serving::program_envelope(&graph,8,&p).unwrap();
+        assert!(!states.is_empty());
+        assert!(states.iter().all(|s|s.checkpoint_supported));
         for s in states.iter().filter(|s|!s.retention.is_full()) {
             assert_eq!(s.capacity_tokens,if context==513 {528}else{544});
         }
@@ -134,6 +136,21 @@ fn long_context_plans_require_implemented_cache_paths() {
     graph.max_context=65537;assert!(graph.validate().is_err());
     let ModelDefinition::Execution{mut graph,..}=definition(include_str!("../../../examples/openpangu/92b-tp8-ep8-c8.inferfabric")).unwrap() else {panic!()};
     graph.max_context=513;assert!(graph.validate().is_err());
+}
+#[test]
+fn row_quantized_state_does_not_claim_checkpoint_copy_support() {
+    use inferfabric_ir::serving::Storage;
+    let source=include_str!("../../../examples/openpangu/92b-tp8-ep8-c8.inferfabric");
+    for dtype in ["int8","int4"] {
+        let source=source.replace("cache_dtype = int8_ds_mla",&format!("cache_dtype = {dtype}"))
+            .replace("cache_quantization = pertile128, cache_rope_dtype = bf16","cache_quantization = per_token_head_symmetric");
+        let ModelDefinition::Execution{graph,..}=definition(&source).unwrap() else {panic!()};
+        let p=inferfabric_compiler::token_program::lower(&graph,None).unwrap();
+        let (_,states)=inferfabric_compiler::token_serving::program_envelope(&graph,8,&p).unwrap();
+        let unsupported=states.iter().filter(|s|matches!(&s.storage,Storage::Slot{dtype,..} if dtype.contains("row576"))).collect::<Vec<_>>();
+        assert!(!unsupported.is_empty());
+        assert!(unsupported.iter().all(|s|!s.checkpoint_supported));
+    }
 }
 #[test]
 fn dense_attention_metadata_is_shared_only_with_matching_windows() {

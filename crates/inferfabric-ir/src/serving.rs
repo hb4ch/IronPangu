@@ -197,7 +197,7 @@ impl Manifest {
                     return Err(invalid("sliding retention requires paged state"));
                 };
                 let window=s.window_tokens.ok_or_else(||invalid("sliding retention requires a window"))?;
-                if max_query_tokens<query || s.checkpoint_supported ||
+                if max_query_tokens<query ||
                     s.capacity_tokens!=sliding_capacity(context,window,max_query_tokens,page_tokens)? {
                     return Err(invalid("invalid sliding retention capacity/variant/checkpoint contract"));
                 }

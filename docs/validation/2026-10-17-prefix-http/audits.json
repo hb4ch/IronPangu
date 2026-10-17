@@ -1,0 +1,586 @@
+[
+  {
+    "rank": 0,
+    "graphs": [
+      {
+        "name": "token_decode",
+        "replays": 174
+      },
+      {
+        "name": "packed_prefill_2",
+        "replays": 8
+      },
+      {
+        "name": "packed_prefill_4",
+        "replays": 13
+      },
+      {
+        "name": "packed_prefill_8",
+        "replays": 18
+      },
+      {
+        "name": "packed_prefill_16",
+        "replays": 1740
+      }
+    ],
+    "arena": {
+      "format": "inferfabric.frozen-arena.v1",
+      "frozen": true,
+      "backend_fingerprint": "4928227642594571944",
+      "program_fingerprint": "6092223235216938722",
+      "bytes": 12620067840
+    },
+    "workspace": {
+      "planned": true,
+      "planned_bytes": 131020288,
+      "peak_requested_bytes": 131020288,
+      "growth_allocations": 0,
+      "slot": 0
+    },
+    "transfers": {
+      "format": "inferfabric.transfer-audit.v1",
+      "activation_host_transfers": 0,
+      "rejected": 0,
+      "boundaries": [
+        {
+          "role": "control_input",
+          "h2d_calls": 24052,
+          "h2d_bytes": 68344476,
+          "d2h_calls": 0,
+          "d2h_bytes": 0
+        },
+        {
+          "role": "parameter_preparation",
+          "h2d_calls": 505,
+          "h2d_bytes": 207457084,
+          "d2h_calls": 598,
+          "d2h_bytes": 152775396
+        },
+        {
+          "role": "request_output",
+          "h2d_calls": 0,
+          "h2d_bytes": 0,
+          "d2h_calls": 820,
+          "d2h_bytes": 29520
+        }
+      ]
+    },
+    "state_copy_operations": 3960,
+    "state_copy_bytes": 812564480,
+    "step_device_allocations": 0,
+    "step_internal_fences": 0,
+    "prepared_sha256": "44c90f5a7c3c6c3bed11d9dab8d3fb739d730cbb5f01e390607616a747dae939",
+    "transfers_sha256": "135f9d471e7dc78b2cd8aebfed285daca4a4854fd8aea3811bc7eb8017502882"
+  },
+  {
+    "rank": 1,
+    "graphs": [
+      {
+        "name": "token_decode",
+        "replays": 174
+      },
+      {
+        "name": "packed_prefill_2",
+        "replays": 8
+      },
+      {
+        "name": "packed_prefill_4",
+        "replays": 13
+      },
+      {
+        "name": "packed_prefill_8",
+        "replays": 18
+      },
+      {
+        "name": "packed_prefill_16",
+        "replays": 1740
+      }
+    ],
+    "arena": {
+      "format": "inferfabric.frozen-arena.v1",
+      "frozen": true,
+      "backend_fingerprint": "4928227642594571944",
+      "program_fingerprint": "6092223235216938722",
+      "bytes": 12620067840
+    },
+    "workspace": {
+      "planned": true,
+      "planned_bytes": 131020288,
+      "peak_requested_bytes": 131020288,
+      "growth_allocations": 0,
+      "slot": 0
+    },
+    "transfers": {
+      "format": "inferfabric.transfer-audit.v1",
+      "activation_host_transfers": 0,
+      "rejected": 0,
+      "boundaries": [
+        {
+          "role": "control_input",
+          "h2d_calls": 24052,
+          "h2d_bytes": 68344476,
+          "d2h_calls": 0,
+          "d2h_bytes": 0
+        },
+        {
+          "role": "parameter_preparation",
+          "h2d_calls": 505,
+          "h2d_bytes": 207457084,
+          "d2h_calls": 598,
+          "d2h_bytes": 152775396
+        },
+        {
+          "role": "request_output",
+          "h2d_calls": 0,
+          "h2d_bytes": 0,
+          "d2h_calls": 205,
+          "d2h_bytes": 13120
+        }
+      ]
+    },
+    "state_copy_operations": 3960,
+    "state_copy_bytes": 812564480,
+    "step_device_allocations": 0,
+    "step_internal_fences": 0,
+    "prepared_sha256": "44c90f5a7c3c6c3bed11d9dab8d3fb739d730cbb5f01e390607616a747dae939",
+    "transfers_sha256": "05a7aa3f1b13c0b06970c6ca63cad50757b987e33b89895181f00d9f2055dc72"
+  },
+  {
+    "rank": 2,
+    "graphs": [
+      {
+        "name": "token_decode",
+        "replays": 174
+      },
+      {
+        "name": "packed_prefill_2",
+        "replays": 8
+      },
+      {
+        "name": "packed_prefill_4",
+        "replays": 13
+      },
+      {
+        "name": "packed_prefill_8",
+        "replays": 18
+      },
+      {
+        "name": "packed_prefill_16",
+        "replays": 1740
+      }
+    ],
+    "arena": {
+      "format": "inferfabric.frozen-arena.v1",
+      "frozen": true,
+      "backend_fingerprint": "4928227642594571944",
+      "program_fingerprint": "6092223235216938722",
+      "bytes": 12620067840
+    },
+    "workspace": {
+      "planned": true,
+      "planned_bytes": 131020288,
+      "peak_requested_bytes": 131020288,
+      "growth_allocations": 0,
+      "slot": 0
+    },
+    "transfers": {
+      "format": "inferfabric.transfer-audit.v1",
+      "activation_host_transfers": 0,
+      "rejected": 0,
+      "boundaries": [
+        {
+          "role": "control_input",
+          "h2d_calls": 24052,
+          "h2d_bytes": 68344476,
+          "d2h_calls": 0,
+          "d2h_bytes": 0
+        },
+        {
+          "role": "parameter_preparation",
+          "h2d_calls": 505,
+          "h2d_bytes": 207457084,
+          "d2h_calls": 598,
+          "d2h_bytes": 152775396
+        },
+        {
+          "role": "request_output",
+          "h2d_calls": 0,
+          "h2d_bytes": 0,
+          "d2h_calls": 205,
+          "d2h_bytes": 13120
+        }
+      ]
+    },
+    "state_copy_operations": 3960,
+    "state_copy_bytes": 812564480,
+    "step_device_allocations": 0,
+    "step_internal_fences": 0,
+    "prepared_sha256": "44c90f5a7c3c6c3bed11d9dab8d3fb739d730cbb5f01e390607616a747dae939",
+    "transfers_sha256": "05a7aa3f1b13c0b06970c6ca63cad50757b987e33b89895181f00d9f2055dc72"
+  },
+  {
+    "rank": 3,
+    "graphs": [
+      {
+        "name": "token_decode",
+        "replays": 174
+      },
+      {
+        "name": "packed_prefill_2",
+        "replays": 8
+      },
+      {
+        "name": "packed_prefill_4",
+        "replays": 13
+      },
+      {
+        "name": "packed_prefill_8",
+        "replays": 18
+      },
+      {
+        "name": "packed_prefill_16",
+        "replays": 1740
+      }
+    ],
+    "arena": {
+      "format": "inferfabric.frozen-arena.v1",
+      "frozen": true,
+      "backend_fingerprint": "4928227642594571944",
+      "program_fingerprint": "6092223235216938722",
+      "bytes": 12620067840
+    },
+    "workspace": {
+      "planned": true,
+      "planned_bytes": 131020288,
+      "peak_requested_bytes": 131020288,
+      "growth_allocations": 0,
+      "slot": 0
+    },
+    "transfers": {
+      "format": "inferfabric.transfer-audit.v1",
+      "activation_host_transfers": 0,
+      "rejected": 0,
+      "boundaries": [
+        {
+          "role": "control_input",
+          "h2d_calls": 24052,
+          "h2d_bytes": 68344476,
+          "d2h_calls": 0,
+          "d2h_bytes": 0
+        },
+        {
+          "role": "parameter_preparation",
+          "h2d_calls": 505,
+          "h2d_bytes": 207457084,
+          "d2h_calls": 598,
+          "d2h_bytes": 152775396
+        },
+        {
+          "role": "request_output",
+          "h2d_calls": 0,
+          "h2d_bytes": 0,
+          "d2h_calls": 205,
+          "d2h_bytes": 13120
+        }
+      ]
+    },
+    "state_copy_operations": 3960,
+    "state_copy_bytes": 812564480,
+    "step_device_allocations": 0,
+    "step_internal_fences": 0,
+    "prepared_sha256": "44c90f5a7c3c6c3bed11d9dab8d3fb739d730cbb5f01e390607616a747dae939",
+    "transfers_sha256": "05a7aa3f1b13c0b06970c6ca63cad50757b987e33b89895181f00d9f2055dc72"
+  },
+  {
+    "rank": 4,
+    "graphs": [
+      {
+        "name": "token_decode",
+        "replays": 174
+      },
+      {
+        "name": "packed_prefill_2",
+        "replays": 8
+      },
+      {
+        "name": "packed_prefill_4",
+        "replays": 13
+      },
+      {
+        "name": "packed_prefill_8",
+        "replays": 18
+      },
+      {
+        "name": "packed_prefill_16",
+        "replays": 1740
+      }
+    ],
+    "arena": {
+      "format": "inferfabric.frozen-arena.v1",
+      "frozen": true,
+      "backend_fingerprint": "4928227642594571944",
+      "program_fingerprint": "6092223235216938722",
+      "bytes": 12620067840
+    },
+    "workspace": {
+      "planned": true,
+      "planned_bytes": 131020288,
+      "peak_requested_bytes": 131020288,
+      "growth_allocations": 0,
+      "slot": 0
+    },
+    "transfers": {
+      "format": "inferfabric.transfer-audit.v1",
+      "activation_host_transfers": 0,
+      "rejected": 0,
+      "boundaries": [
+        {
+          "role": "control_input",
+          "h2d_calls": 24052,
+          "h2d_bytes": 68344476,
+          "d2h_calls": 0,
+          "d2h_bytes": 0
+        },
+        {
+          "role": "parameter_preparation",
+          "h2d_calls": 505,
+          "h2d_bytes": 207457084,
+          "d2h_calls": 598,
+          "d2h_bytes": 152775396
+        },
+        {
+          "role": "request_output",
+          "h2d_calls": 0,
+          "h2d_bytes": 0,
+          "d2h_calls": 205,
+          "d2h_bytes": 13120
+        }
+      ]
+    },
+    "state_copy_operations": 3960,
+    "state_copy_bytes": 812564480,
+    "step_device_allocations": 0,
+    "step_internal_fences": 0,
+    "prepared_sha256": "44c90f5a7c3c6c3bed11d9dab8d3fb739d730cbb5f01e390607616a747dae939",
+    "transfers_sha256": "05a7aa3f1b13c0b06970c6ca63cad50757b987e33b89895181f00d9f2055dc72"
+  },
+  {
+    "rank": 5,
+    "graphs": [
+      {
+        "name": "token_decode",
+        "replays": 174
+      },
+      {
+        "name": "packed_prefill_2",
+        "replays": 8
+      },
+      {
+        "name": "packed_prefill_4",
+        "replays": 13
+      },
+      {
+        "name": "packed_prefill_8",
+        "replays": 18
+      },
+      {
+        "name": "packed_prefill_16",
+        "replays": 1740
+      }
+    ],
+    "arena": {
+      "format": "inferfabric.frozen-arena.v1",
+      "frozen": true,
+      "backend_fingerprint": "4928227642594571944",
+      "program_fingerprint": "6092223235216938722",
+      "bytes": 12620067840
+    },
+    "workspace": {
+      "planned": true,
+      "planned_bytes": 131020288,
+      "peak_requested_bytes": 131020288,
+      "growth_allocations": 0,
+      "slot": 0
+    },
+    "transfers": {
+      "format": "inferfabric.transfer-audit.v1",
+      "activation_host_transfers": 0,
+      "rejected": 0,
+      "boundaries": [
+        {
+          "role": "control_input",
+          "h2d_calls": 24052,
+          "h2d_bytes": 68344476,
+          "d2h_calls": 0,
+          "d2h_bytes": 0
+        },
+        {
+          "role": "parameter_preparation",
+          "h2d_calls": 505,
+          "h2d_bytes": 207457084,
+          "d2h_calls": 598,
+          "d2h_bytes": 152775396
+        },
+        {
+          "role": "request_output",
+          "h2d_calls": 0,
+          "h2d_bytes": 0,
+          "d2h_calls": 205,
+          "d2h_bytes": 13120
+        }
+      ]
+    },
+    "state_copy_operations": 3960,
+    "state_copy_bytes": 812564480,
+    "step_device_allocations": 0,
+    "step_internal_fences": 0,
+    "prepared_sha256": "44c90f5a7c3c6c3bed11d9dab8d3fb739d730cbb5f01e390607616a747dae939",
+    "transfers_sha256": "05a7aa3f1b13c0b06970c6ca63cad50757b987e33b89895181f00d9f2055dc72"
+  },
+  {
+    "rank": 6,
+    "graphs": [
+      {
+        "name": "token_decode",
+        "replays": 174
+      },
+      {
+        "name": "packed_prefill_2",
+        "replays": 8
+      },
+      {
+        "name": "packed_prefill_4",
+        "replays": 13
+      },
+      {
+        "name": "packed_prefill_8",
+        "replays": 18
+      },
+      {
+        "name": "packed_prefill_16",
+        "replays": 1740
+      }
+    ],
+    "arena": {
+      "format": "inferfabric.frozen-arena.v1",
+      "frozen": true,
+      "backend_fingerprint": "4928227642594571944",
+      "program_fingerprint": "6092223235216938722",
+      "bytes": 12620067840
+    },
+    "workspace": {
+      "planned": true,
+      "planned_bytes": 131020288,
+      "peak_requested_bytes": 131020288,
+      "growth_allocations": 0,
+      "slot": 0
+    },
+    "transfers": {
+      "format": "inferfabric.transfer-audit.v1",
+      "activation_host_transfers": 0,
+      "rejected": 0,
+      "boundaries": [
+        {
+          "role": "control_input",
+          "h2d_calls": 24052,
+          "h2d_bytes": 68344476,
+          "d2h_calls": 0,
+          "d2h_bytes": 0
+        },
+        {
+          "role": "parameter_preparation",
+          "h2d_calls": 505,
+          "h2d_bytes": 207457084,
+          "d2h_calls": 598,
+          "d2h_bytes": 152775396
+        },
+        {
+          "role": "request_output",
+          "h2d_calls": 0,
+          "h2d_bytes": 0,
+          "d2h_calls": 205,
+          "d2h_bytes": 13120
+        }
+      ]
+    },
+    "state_copy_operations": 3960,
+    "state_copy_bytes": 812564480,
+    "step_device_allocations": 0,
+    "step_internal_fences": 0,
+    "prepared_sha256": "44c90f5a7c3c6c3bed11d9dab8d3fb739d730cbb5f01e390607616a747dae939",
+    "transfers_sha256": "05a7aa3f1b13c0b06970c6ca63cad50757b987e33b89895181f00d9f2055dc72"
+  },
+  {
+    "rank": 7,
+    "graphs": [
+      {
+        "name": "token_decode",
+        "replays": 174
+      },
+      {
+        "name": "packed_prefill_2",
+        "replays": 8
+      },
+      {
+        "name": "packed_prefill_4",
+        "replays": 13
+      },
+      {
+        "name": "packed_prefill_8",
+        "replays": 18
+      },
+      {
+        "name": "packed_prefill_16",
+        "replays": 1740
+      }
+    ],
+    "arena": {
+      "format": "inferfabric.frozen-arena.v1",
+      "frozen": true,
+      "backend_fingerprint": "4928227642594571944",
+      "program_fingerprint": "6092223235216938722",
+      "bytes": 12620067840
+    },
+    "workspace": {
+      "planned": true,
+      "planned_bytes": 131020288,
+      "peak_requested_bytes": 131020288,
+      "growth_allocations": 0,
+      "slot": 0
+    },
+    "transfers": {
+      "format": "inferfabric.transfer-audit.v1",
+      "activation_host_transfers": 0,
+      "rejected": 0,
+      "boundaries": [
+        {
+          "role": "control_input",
+          "h2d_calls": 24052,
+          "h2d_bytes": 68344476,
+          "d2h_calls": 0,
+          "d2h_bytes": 0
+        },
+        {
+          "role": "parameter_preparation",
+          "h2d_calls": 505,
+          "h2d_bytes": 207457084,
+          "d2h_calls": 598,
+          "d2h_bytes": 152775396
+        },
+        {
+          "role": "request_output",
+          "h2d_calls": 0,
+          "h2d_bytes": 0,
+          "d2h_calls": 205,
+          "d2h_bytes": 13120
+        }
+      ]
+    },
+    "state_copy_operations": 3960,
+    "state_copy_bytes": 812564480,
+    "step_device_allocations": 0,
+    "step_internal_fences": 0,
+    "prepared_sha256": "44c90f5a7c3c6c3bed11d9dab8d3fb739d730cbb5f01e390607616a747dae939",
+    "transfers_sha256": "05a7aa3f1b13c0b06970c6ca63cad50757b987e33b89895181f00d9f2055dc72"
+  }
+]

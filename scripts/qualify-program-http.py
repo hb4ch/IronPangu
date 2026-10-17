@@ -8,6 +8,7 @@ import argparse
 import concurrent.futures
 import hashlib
 import json
+import math
 import os
 import re
 from pathlib import Path
@@ -78,6 +79,7 @@ def main():
     p.add_argument('--max-num-batched-tokens', type=int)
     p.add_argument('--expect-prefill', choices=('packed','serial'), help='verify actual graph use, excluding startup warmup')
     p.add_argument('--resident-cases', type=Path, help='Test every serial oracle fixture with concurrent short decode and peer cancellation')
+    p.add_argument('--prefix-cases', type=Path, help='Enable one snapshot slot; test cold/warm outputs, salt isolation and LRU replacement for every fixture')
     p.add_argument('--check-overload', action='store_true', help='Burst long streaming requests beyond admission capacity, check 503/retry metadata and recovery')
     p.add_argument('--request-timeout-seconds', type=int, default=120, help='Socket inactivity timeout, not a whole-run deadline; raise for 64K prefill')
     p.add_argument('--respect-eos', action='store_true', help='Test normal serving through first EOS; preserve full references and report the narrower comparison scope')
@@ -85,6 +87,8 @@ def main():
     args = p.parse_args()
     if args.request_timeout_seconds < 1:
         p.error('--request-timeout-seconds must be positive')
+    if args.prefix_cases and not args.max_num_seqs:
+        p.error('--prefix-cases requires explicit --max-num-seqs and one additional compiled resident')
     if args.check_overload and (not args.resident_cases or not args.max_num_seqs):
         p.error('--check-overload requires --resident-cases and --max-num-seqs')
     args.output.mkdir(parents=True, exist_ok=False)
@@ -103,6 +107,11 @@ def main():
     for case in cases:
         expected_text(case)
     resident_cases = json.loads(args.resident_cases.read_text()) if args.resident_cases else []
+    prefix_cases = json.loads(args.prefix_cases.read_text()) if args.prefix_cases else []
+    if args.prefix_cases and not prefix_cases:
+        p.error('--prefix-cases must contain independent references')
+    for case in prefix_cases:
+        expected_text(case)
     if args.resident_cases:
         if not resident_cases:
             p.error('--resident-cases must contain at least one independent reference')
@@ -110,9 +119,11 @@ def main():
             expected_text(case)
     url = f'http://127.0.0.1:{args.port}'
 
-    def request(case, stream=False, disconnect=False, temperature=0):
+    def request(case, stream=False, disconnect=False, temperature=0, cache_salt=None):
         body = dict(model='inferfabric-program', prompt=case['input_ids'],
                     max_tokens=len(case['output_ids']), temperature=temperature, stream=stream, ignore_eos=not args.respect_eos)
+        if cache_salt is not None:
+            body['cache_salt']=cache_salt
         if stream:
             body['stream_options'] = {'include_usage': True}
         began = time.perf_counter()
@@ -152,6 +163,8 @@ def main():
                INFERFABRIC_TRANSFER_AUDIT_DIR=str((args.output/'transfers').resolve()))
     env.pop('INFERFABRIC_PREPARE_ARENA', None)
     command = [str(args.server.resolve()), '--program', str(args.plan), str(args.checkpoint), str(args.library), str(args.port)]
+    if args.prefix_cases:
+        command += ['--prefix-cache-slots','1','--prefix-cache-namespace','qualification']
     for name in ('max_num_seqs', 'max_num_batched_tokens'):
         value = getattr(args, name)
         if value is not None:
@@ -197,6 +210,27 @@ def main():
             text, _ = request(cases[0])
             if text != expected_text(cases[0]):
                 raise RuntimeError('disconnect recovery')
+            prefix_results=[]
+            if prefix_cases:
+                manifest=json.loads((args.plan/'serving.json').read_text())
+                alignment=math.lcm(*(state['storage'].get('page_tokens',1) for state in manifest['states']))
+                for case in prefix_cases:
+                    boundary=(len(case['input_ids'])-1)//alignment*alignment
+                    if not boundary:raise RuntimeError('prefix fixture has no eligible checkpoint')
+                    observations=[]
+                    # One snapshot slot: switching salt must miss and evict the
+                    # prior domain, even when its token IDs are identical.
+                    for label,salt,cached in [('cold-a','a',0),('warm-a','a',boundary),('cold-b','b',0),('warm-b','b',boundary),('evicted-a','a',0)]:
+                        text,metrics=request(case,stream=True,cache_salt=f"{case['case']}:{salt}")
+                        if text!=expected_text(case):raise RuntimeError(f'prefix {label} output mismatch')
+                        validate_usage(case,metrics,eos,args.respect_eos)
+                        details=metrics['usage'].get('prompt_tokens_details') or {}
+                        # vLLM omits the optional details object for zero hits.
+                        if details.get('cached_tokens',0)!=cached:
+                            raise RuntimeError(f'prefix {label} cached tokens {details} != {cached}')
+                        observations.append(dict(mode=label,cached_tokens=cached,**metrics))
+                    prefix_results.append(dict(case=case['case'],boundary=boundary,observations=observations))
+                    (args.output/'prefix-progress.json').write_text(json.dumps(dict(complete=False,cases=prefix_results),indent=2)+'\n')
             mixed = None
             mixed_cases = []
             for long_case in resident_cases:
@@ -298,6 +332,8 @@ def main():
                           disconnect_recovery=True, unsupported_sampling_rejected=True, results=results,
                           concurrent_requests=len(concurrent_cases), mixed_residents=mixed,
                           mixed_resident_cases=mixed_cases,
+                          prefix_cases=prefix_results,
+                          prefix_fixture_sha256=hashlib.sha256(args.prefix_cases.read_bytes()).hexdigest() if args.prefix_cases else None,
                           context_overflow_rejected=True,
                           max_num_seqs=args.max_num_seqs, max_num_batched_tokens=args.max_num_batched_tokens)
             if overload is not None: report['overload'] = overload
@@ -313,6 +349,12 @@ def main():
         if server.returncode:
             raise RuntimeError(f'frontend shutdown failed: {server.returncode}')
         report['graceful_sigterm_shutdown'] = True
+        if args.prefix_cases:
+            logs=(args.output/'server.log').read_text()
+            cached=re.search(r'prefix cache stopped hits=(\d+) restored_tokens=(\d+) published=(\d+) remaining=0',logs)
+            if not cached or int(cached[1])<2*len(prefix_cases) or int(cached[2])<2*sum(c['boundary'] for c in prefix_results):
+                raise RuntimeError('prefix cache did not confirm hits and shutdown retirement')
+            report['prefix_cache_shutdown']=dict(zip(('hits','restored_tokens','published'),map(int,cached.groups())),remaining=0)
         manifest = json.loads((args.plan/'serving.json').read_text())
         report['prefill_graph_replays'] = []
         for rank in range(len(manifest['identity']['devices'])):
