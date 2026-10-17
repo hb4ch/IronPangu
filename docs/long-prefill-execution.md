@@ -83,6 +83,24 @@ the physical plan rather than hiding it in the executor.
 The superseded graph-prefill qualification and its dependent queued runs were
 stopped on 2026-10-17. Their partial measurements are not a completed release
 gate. The current executable still has exact small-prefill shapes and cannot
-yet claim this 4K variable-tail contract. The next implementation milestone is
-the bounded uncaptured prefill envelope, allocator and kernel integration—not
-another captured-prefill shape family.
+yet claim this 4K variable-tail contract.
+
+Implemented foundations:
+
+- `IFTOKN07` separates the uncaptured 4K envelope from captured shape families;
+  serving and physical metadata explicitly forbid prefill capture. Compiler
+  tests and the Docker C++ reader tests pass, including all valid tail lengths
+  and invalid envelopes. The existing execution backend explicitly rejects the
+  new envelope until its full path is ready.
+- A bounded temporary-buffer scope can lease the smallest sufficient free slot
+  allowed by the current instruction's frozen binding. It does not change the
+  decode allocation policy, tensor extent or persistent storage. Exhaustion
+  cannot borrow another instruction's slots or allocate outside a frozen arena.
+  The scope also forbids graph capture. CPU tests inside the remote Docker cover
+  all 4,096 tail lengths, live-lease exclusion, instruction ownership, reuse and
+  exhaustion; the complete native library builds with this implementation.
+
+Still required: connect uncaptured startup preparation and dispatch, qualify the
+maximum-shape arena against actual operator allocation traces and variable tails,
+integrate the Rust scheduler/APC history, and verify full 92B NPU output and
+performance. The allocator test is not full-model memory or numerical evidence.

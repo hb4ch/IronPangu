@@ -1,6 +1,7 @@
 #pragma once
 #include <acl/acl.h>
 #include "../include/frozen_arena.h"
+#include "../include/bounded_buffers.h"
 #include <set>
 #include <aclnn/acl_meta.h>
 #include <cstdint>
@@ -73,6 +74,7 @@ class Context {
   };
   std::vector<Graph> graphs_;
   bool capturing_ = false;
+  bool bounded_buffers_ = false;
   std::vector<std::pair<void *, size_t>> uploads_;
   size_t upload_index_ = 0;
   void *workspace_ = nullptr;
@@ -92,6 +94,19 @@ class Context {
   Step before_{};
 
 public:
+  // Tail queries reuse the maximum-shape storage envelope. This changes only
+  // temporary lease selection, never tensor extents or decode graph pointers.
+  struct BoundedBuffers {
+    Context &context;
+    bool previous;
+    explicit BoundedBuffers(Context &c, bool enabled):context(c),previous(c.bounded_buffers_) {
+      if(enabled && c.capturing_)throw std::runtime_error("bounded buffers cannot enter graph capture");
+      c.bounded_buffers_=enabled;
+    }
+    ~BoundedBuffers(){context.bounded_buffers_=previous;}
+    BoundedBuffers(const BoundedBuffers &)=delete;
+    BoundedBuffers &operator=(const BoundedBuffers &)=delete;
+  };
   aclrtStream stream = nullptr;
   explicit Context(const std::string &arena_path = "", uint64_t fingerprint = 0, const std::string &workspace_path = "", uint64_t backend_fingerprint = 0) : program_fingerprint_(fingerprint), backend_fingerprint_(backend_fingerprint ? backend_fingerprint : ArenaLayout::fingerprint_file("/proc/self/exe")) {
     if (active)
@@ -159,6 +174,20 @@ public:
     require_stream(stream);
     if (!bytes)
       throw std::runtime_error("zero prepared allocation");
+    if(bounded_buffers_) {
+      auto *block=take_bounded_buffer(free_,bytes,[&](Block *candidate) {
+        if(!arena_)return true;
+        auto allowed=layout_.bindings.find(instruction_);
+        return allowed!=layout_.bindings.end() && allowed->second.count(candidate->slot);
+      });
+      if(block) {
+        record(block);
+        block->live=true;
+        ++reuse_;
+        return block->data;
+      }
+      if(arena_)throw std::runtime_error("bounded arena exhausted at instruction " + std::to_string(instruction_) + " bytes=" + std::to_string(bytes));
+    }
     auto &available = free_[bytes];
     if (!available.empty()) {
       auto *block = available.back();
@@ -343,6 +372,8 @@ public:
   }
   template <class F> aclmdlRI capture(const char *name, F enqueue) {
     require_stream(stream);
+    if(bounded_buffers_)
+      throw std::runtime_error("uncaptured variable-query execution forbids graph capture");
     if (capturing_)
       throw std::runtime_error("nested stream capture");
     // Preparation only; no global device/rank barrier and no replay fence.
