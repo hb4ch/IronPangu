@@ -241,8 +241,8 @@ V execute_token() {
                    &up = std::get<ExpertRows>(input(1));
         std::vector<V> parts;
         for (size_t j = 0; j < r.ids.size(); ++j) {
-          parts.push_back(gate.rows.at(j));
-          parts.push_back(up.rows.at(j));
+          parts.push_back(gate.row(j));
+          parts.push_back(up.row(j));
         }
         result =
             grouped_linear(resident::concat(parts), r, bank(weight()), true, &gate);

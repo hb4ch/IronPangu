@@ -933,7 +933,12 @@ struct Decoder {
   };
   struct ExpertRows {
     V packed, groups, indices;
-    std::vector<V> rows;
+    size_t row_width = 0;
+    V row(size_t index) const {
+      if(!row_width || index>=packed.size()/row_width)
+        throw std::runtime_error("expert row bounds");
+      return packed.view(index*row_width,row_width);
+    }
   };
   V project_route(const V &x, const std::string &p,
                const std::string &state_name) {
@@ -1088,7 +1093,9 @@ struct Decoder {
     ExpertRows output;output.packed=V(size_t(8)*active_tokens*width,ACL_BF16);
     output.groups=q.groups;output.indices=q.indices;
     execution.zero(output.packed.data(),output.packed.bytes());
-    for(uint32_t i=0;i<8*active_tokens;++i)output.rows.push_back(output.packed.view(size_t(i)*width,width));
+    // Grouped kernels consume packed storage directly. Eager row views create
+    // O(tokens * top_k) ACL descriptors even when no row operation needs them.
+    output.row_width=width;
     return output;
   }
   ExpertRows expert_gmm(const RoutedQuantized &q,ExpertRows output,ExpertBank &bank) {
@@ -1143,9 +1150,14 @@ struct Decoder {
   ExpertRows pack_expert_rows(const ExpertRows &a,const ExpertRows &b) {
     if(a.groups.data()!=b.groups.data() || a.indices.data()!=b.indices.data()) throw std::runtime_error("expert packing provenance");
     ExpertRows result;result.groups=a.groups;result.indices=a.indices;
-    std::vector<V> parts;for(size_t j=0;j<a.rows.size();++j){parts.push_back(a.rows[j]);parts.push_back(b.rows.at(j));}
+    if(!a.row_width || !b.row_width || a.packed.size()%a.row_width || b.packed.size()%b.row_width ||
+       a.packed.size()/a.row_width!=b.packed.size()/b.row_width)
+      throw std::runtime_error("expert packing row geometry");
+    const auto rows=a.packed.size()/a.row_width;
+    std::vector<V> parts;parts.reserve(rows*2);
+    for(size_t j=0;j<rows;++j){parts.push_back(a.packed.view(j*a.row_width,a.row_width));parts.push_back(b.packed.view(j*b.row_width,b.row_width));}
     result.packed=resident::concat(parts);
-    for(size_t j=0;j<a.rows.size();++j)result.rows.push_back(result.packed.view(j*(a.rows[j].size()+b.rows[j].size()),a.rows[j].size()+b.rows[j].size()));
+    result.row_width=a.row_width+b.row_width;
     return result;
   }
   V weighted_rows(const ExpertRows &rows, const V &scores, size_t width, const V *prepared_input=nullptr) {

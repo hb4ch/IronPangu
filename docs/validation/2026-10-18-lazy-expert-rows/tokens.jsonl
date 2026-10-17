@@ -1,0 +1,10 @@
+{"event":"sequence_batch","elapsed_us":6729598,"tokens":4088,"members":[{"request":0,"resident":0,"position":0,"tokens":4088,"sample":1}]}
+{"request":0,"resident":0,"step":0,"token":22,"batch_sequences":1,"batch_tokens":4088,"elapsed_us":6968846}
+{"event":"sequence_batch","elapsed_us":62483,"tokens":1,"members":[{"request":0,"resident":0,"position":4088,"tokens":1,"sample":1}]}
+{"request":0,"resident":0,"step":1,"token":18,"batch_sequences":1,"batch_tokens":1,"elapsed_us":62521}
+{"event":"sequence_batch","elapsed_us":23508,"tokens":1,"members":[{"request":0,"resident":0,"position":4089,"tokens":1,"sample":1}]}
+{"request":0,"resident":0,"step":2,"token":16,"batch_sequences":1,"batch_tokens":1,"elapsed_us":23524}
+{"event":"sequence_batch","elapsed_us":25026,"tokens":1,"members":[{"request":0,"resident":0,"position":4090,"tokens":1,"sample":1}]}
+{"request":0,"resident":0,"step":3,"token":24,"batch_sequences":1,"batch_tokens":1,"elapsed_us":25043}
+{"event":"sequence_batch","elapsed_us":23740,"tokens":1,"members":[{"request":0,"resident":0,"position":4091,"tokens":1,"sample":1}]}
+{"request":0,"resident":0,"step":4,"token":148902,"batch_sequences":1,"batch_tokens":1,"elapsed_us":23762}
