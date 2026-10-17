@@ -24,7 +24,7 @@ V execute_token() {
     const auto &n = program.nodes[i];
     execution.instruction(int64_t(i),
         n.op=="copy" || n.op=="repeat" || n.op=="concat" || n.op=="expert_pack" ||
-        (active_tokens>1 && (n.op=="gather" || n.op=="slice" || n.op=="query_project" || n.op=="query_rotary_extract" || n.op=="rope_bf16" || n.op=="rope_f32" || n.op=="rope" || n.op=="mla_query" || n.op=="mla_value" || n.op=="mome" || (n.op=="sparse_index" && program.nodes[n.inputs[0]].kind!=5))),
+        (active_tokens>1 && (n.op=="gather" || n.op=="slice" || n.op=="query_project" || n.op=="query_rotary_extract" || n.op=="rope_f32" || n.op=="rope" || n.op=="mla_query" || n.op=="mla_value" || n.op=="mome" || (n.op=="sparse_index" && program.nodes[n.inputs[0]].kind!=5))),
         n.op=="cache_c8_norm_rope_append" || n.op=="cache_quantize_append" || n.op=="sink_normalize" || n.op=="cache_append" || n.op=="cache_norm_rope_append" || n.op=="expert_gmm" || (n.op=="linear" && n.kernel=="paired_bf16"));
     inferfabric::profiling::Scope timing(n.op.c_str(), true);
     auto input = [&](size_t j) -> Value & {
@@ -143,7 +143,7 @@ V execute_token() {
     } else if (n.op == "column_slice") {
       result=column_slice(tensor(0),n.integer("rows")*active_tokens,n.integer("start"),n.integer("width"));
     } else if (n.op == "rope_bf16") {
-      result=row_values(n.width,[&](uint32_t row){return rope_bf16(row_tensor(0,row));});
+      result=rope_bf16(tensor(0));
     } else if (n.op == "concat_columns") {
       result=concat_columns(tensor(0),tensor(1),n.integer("rows")*active_tokens);
     } else if (n.op == "rope_f32") {

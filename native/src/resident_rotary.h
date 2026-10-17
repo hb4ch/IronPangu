@@ -19,15 +19,16 @@ inline Tensor column_slice(const Tensor &input, int64_t rows, int64_t start, int
   return Tensor::alias(out,ACL_BF16);
 }
 
-// The caller supplies a device coefficient row for the current absolute position.
+// The caller supplies one device coefficient row per absolute token position.
 // This routine cannot upload, read back, or silently convert any operand.
-inline Tensor rope_bf16(const Tensor &input, aclTensor *cosine, aclTensor *sine) {
-  if(!prepared::active || input.dtype()!=ACL_BF16 || !input.size() || input.size()%64 || !cosine || !sine)
+inline Tensor rope_bf16(const Tensor &input, aclTensor *cosine, aclTensor *sine, int64_t tokens=1) {
+  if(!prepared::active || input.dtype()!=ACL_BF16 || !input.size() || tokens<=0 ||
+      uint64_t(tokens)>input.size()/64 || input.size()%(uint64_t(tokens)*64) || !cosine || !sine)
     throw std::runtime_error("BF16 rotary contract");
   auto &context=*prepared::active;
-  int64_t heads=input.size()/64;
-  openpangu::DeviceTensor out({1,heads,1,64},ACL_BF16,2);
-  auto *view=context.descriptor(input.data(),{1,heads,1,64},ACL_BF16);
+  int64_t heads=input.size()/(tokens*64);
+  openpangu::DeviceTensor out({tokens,heads,1,64},ACL_BF16,2);
+  auto *view=context.descriptor(input.data(),{tokens,heads,1,64},ACL_BF16);
   uint64_t bytes=0;aclOpExecutor *executor=nullptr;
   prepared::check(prepared::query("aclnnRotaryPositionEmbedding",false,aclnnRotaryPositionEmbeddingGetWorkspaceSize,
       view,cosine,sine,0,out.tensor,&bytes,&executor),"BF16 rotary prepare");

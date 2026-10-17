@@ -538,8 +538,8 @@ struct Decoder {
     return resident::column_slice(input,rows,start,width);
   }
   V rope_bf16(const V &input) {
-    return resident::rope_bf16(input,control_row(*rotary_cos_bf16,{1,1,1,64}),
-        control_row(*rotary_sin_bf16,{1,1,1,64}));
+    return resident::rope_bf16(input,prefix(*rotary_cos_bf16,{active_tokens,1,1,64}),
+        prefix(*rotary_sin_bf16,{active_tokens,1,1,64}),active_tokens);
   }
   V rope(const V &input, int pos, bool fp32_output = false) {
     if (!input.size() || input.size() % 64 || pos != current_position)

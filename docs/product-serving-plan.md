@@ -115,6 +115,13 @@ fails. TTFT is 31.59–31.73 seconds and TPOT 20.22–20.28 ms, with unchanged p
 workspace and all eight frozen/residency audits passing. This is experimental
 coverage, not a production context-limit increase.
 
+[Batched BF16 rotary](validation/2026-10-17-batched-rotary/README.md) now removes
+per-query rotary invocations and output assembly. All 123 preparation/frozen
+tokens pass and all 72 previous long native outputs are unchanged. The operator
+is bit-exact across all supported chunk sizes and graph replay. Sixteen-token
+4K TTFT improves another 9.52%, to 14.24 seconds, with unchanged arena/workspace;
+HTTP/residency checks pass. Existing post-EOS reference differences remain open.
+
 ### Next contract: a prepared prefill variant family
 
 The current executable supports decode and one exact prefill size. The existing
