@@ -170,6 +170,11 @@ Use `scripts/compare-program-reference.py --tokenizer /models/92B/tokenizer.json
 with these fixtures. It requires the tokenizer, decodes only through the first
 EOS, and checks the expected answer for the reference and every native repetition.
 It still reports all forced output tokens and fails on post-EOS differences.
+For long native suites, set `qualify-program-engine.py --timeout-seconds` to an
+explicit run budget (default 1,800 seconds). Token and stderr files are written
+during execution and retained on failure/timeout; `process.json` records the
+process outcome. A completed process is not a qualification pass: output and
+resource checks must still succeed before `results.json` is written.
 
 Experimental learned-index execution now includes explicit INT8 index queries/keys
 and FP16 scales/head weights in the [physical plan](learned-index-quantization.md).

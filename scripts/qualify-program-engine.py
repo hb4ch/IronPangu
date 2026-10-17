@@ -14,6 +14,24 @@ import statistics
 import random
 import re
 import subprocess
+import time
+
+
+def run_engine(command, env, output, timeout):
+    """Persist progress even if a long qualification times out or crashes."""
+    started = time.monotonic()
+    with (output / 'stderr.log').open('w') as err, (output / 'tokens.jsonl').open('w') as out:
+        try:
+            result = subprocess.run(command, env=env, stdout=out, stderr=err, timeout=timeout)
+        except subprocess.TimeoutExpired:
+            (output / 'process.json').write_text(json.dumps(dict(completed=False, timed_out=True,
+                timeout_seconds=timeout, elapsed_seconds=time.monotonic()-started), indent=2)+'\n')
+            raise RuntimeError('native qualification timed out; partial tokens.jsonl and stderr.log retained') from None
+    (output / 'process.json').write_text(json.dumps(dict(completed=True, timed_out=False,
+        returncode=result.returncode, timeout_seconds=timeout, elapsed_seconds=time.monotonic()-started), indent=2)+'\n')
+    if result.returncode:
+        raise RuntimeError(f'native engine exited {result.returncode}; inspect tokens.jsonl and stderr.log')
+    return (output / 'tokens.jsonl').read_text()
 
 
 def main():
@@ -27,7 +45,10 @@ def main():
     p.add_argument('--packed-prefill', action='store_true', help='require the compiled packed chunk path')
     p.add_argument('--permuted-pages', action='store_true', help='qualify rank/component-specific noncontiguous device cache bindings')
     p.add_argument('--interleave', action='store_true', help='interleave resident histories token by token, including slot reuse while peers are live')
+    p.add_argument('--timeout-seconds', type=int, default=1800, help='Whole native run deadline; raise explicitly for the 64K qualification ladder')
     args = p.parse_args()
+    if args.timeout_seconds < 1:
+        p.error('--timeout-seconds must be positive')
     args.output.mkdir(parents=True, exist_ok=False)
     cases = json.loads(args.cases.read_text()) * 3
     if any(c.get('qualification', {}).get('output_is_placeholder') for c in cases):
@@ -81,12 +102,8 @@ def main():
         env['INFERFABRIC_PAGE_BINDINGS'] = str(binding_file.resolve())
     else:
         env.pop('INFERFABRIC_PAGE_BINDINGS', None)
-    with (args.output / 'stderr.log').open('w') as err:
-        result = subprocess.run([str(args.binary.resolve()), str(args.plan), str(args.checkpoint), str(requests)],
-                                env=env, stdout=subprocess.PIPE, stderr=err, text=True, timeout=1800)
-    (args.output / 'tokens.jsonl').write_text(result.stdout)
-    if result.returncode:
-        raise RuntimeError(f'native engine exited {result.returncode}; inspect stderr.log')
+    stdout = run_engine([str(args.binary.resolve()), str(args.plan), str(args.checkpoint), str(requests)],
+                        env, args.output, args.timeout_seconds)
     binding_rejections=0
     if args.check_binding_limits:
         checks=re.findall(r'binding limits: (\d+) invalid requests rejected; valid retries passed',
@@ -95,7 +112,7 @@ def main():
         if checks!=[str(expected)] or not expected:
             raise RuntimeError('binding-limit checks did not execute all expected rejections/retries')
         binding_rejections=expected
-    records = [json.loads(line) for line in result.stdout.splitlines() if line.startswith('{')]
+    records = [json.loads(line) for line in stdout.splitlines() if line.startswith('{')]
     rows = [row for row in records if 'request' in row]
     diagnostics=[row for row in records if 'top5' in row]
     if len(rows)+len(diagnostics)!=len(records) or (diagnostics and not args.output_diagnostics):
