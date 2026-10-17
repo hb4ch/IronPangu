@@ -484,3 +484,24 @@ device-residency counters and final ownership reclamation. This isolates native
 worker backpressure; HTTP socket buffering and sustained slow-client load remain
 separate qualification gates. The hardware test is ignored by ordinary local
 `cargo test` runs and must not be counted as passing until explicitly executed.
+
+### Repeated mixed-load resource qualification
+
+For an already qualified frozen bundle, add `--load-rounds 24
+--load-concurrency 4 --load-rss-growth-limit-mib 128` to the normal
+`scripts/qualify-program-http.py` invocation inside the NPU container. Supply
+independent `--cases` and long `--resident-cases`, `--respect-eos`,
+`--check-arithmetic-history`, two active sequences and a 4096-token budget.
+Each wave compares concurrent outputs and usage against the references, then
+disconnects a stream and verifies recovery. This does not require rebuilding
+or reprofiling an unchanged native library and frozen plan.
+
+The optional RSS gate reads Linux `/proc/<server-pid>/status` and `fd` after
+each wave. The native ranks are threads in that server process. Every later
+sample is compared with the first completed wave: RSS growth must stay within
+the explicitly selected limit, with no thread or FD count growth. Raw samples
+are retained in `load-progress.json`; `resource-growth.json` records the gate
+even when it fails. The limit is a qualification tolerance, not a production
+memory budget. These samples do not measure continuous RSS peaks or slow-socket
+buffer bounds; the separate per-rank audits check device allocations, workspace,
+activation transfers and final shared-page reclamation.

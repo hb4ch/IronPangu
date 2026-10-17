@@ -2,12 +2,32 @@ import importlib.util
 from pathlib import Path
 import unittest
 import copy
+import tempfile
 
 spec=importlib.util.spec_from_file_location('http_qualify',Path(__file__).parents[1]/'qualify-program-http.py')
 module=importlib.util.module_from_spec(spec)
 spec.loader.exec_module(module)
 
 class HttpReferenceScope(unittest.TestCase):
+    def test_resource_gate_detects_transient_growth_not_only_final_sample(self):
+        base=dict(rss_bytes=1024,peak_rss_bytes=4096,threads=8,file_descriptors=10)
+        self.assertTrue(module.resource_growth([base,base],0)['passed'])
+        for key in ('rss_bytes','threads','file_descriptors'):
+            high={**base,key:base[key]+1}
+            self.assertFalse(module.resource_growth([base,high,base],0)['passed'])
+        self.assertTrue(module.resource_growth([base,{**base,'rss_bytes':2048}],1)['passed'])
+        for limit in (-1,float('nan'),float('inf')):
+            with self.assertRaises(ValueError):module.resource_growth([base,base],limit)
+
+    def test_process_resources_requires_live_complete_linux_counters(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root=Path(directory);process=root/'123';process.mkdir();(process/'fd').mkdir()
+            (process/'fd'/'0').touch()
+            (process/'status').write_text('Name:\tserver\nVmRSS:\t12 kB\nVmHWM:\t30 kB\nThreads:\t8\n')
+            self.assertEqual(module.process_resources(123,root),dict(rss_bytes=12288,peak_rss_bytes=30720,threads=8,file_descriptors=1))
+            (process/'status').write_text('Threads:\t8\n')
+            with self.assertRaises(ValueError):module.process_resources(123,root)
+
     def test_prefix_boundary_matches_full_chunk_checkpoint_contract(self):
         self.assertEqual(module.prefix_boundary(8176,64,4096),4096)
         self.assertEqual(module.prefix_boundary(65520,64,4096),61440)

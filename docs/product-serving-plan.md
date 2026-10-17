@@ -46,6 +46,13 @@ passes 12 four-client waves, repeated disconnect/recovery and an explicit
 503/Retry-After burst. Longer-duration RSS stability and slow HTTP socket
 buffering remain unproven; this gate is not a production soak-test claim.
 
+The subsequent [24-wave host-resource gate](validation/2026-10-18-host-resource-growth/README.md)
+**fails**: process RSS grows by 754 MiB after the first wave, despite correct
+EOS-scoped outputs and unchanged device-memory audits. Fix and requalify this
+serving-foundation regression before secondary feature work. Thread and FD
+counts remain stable; allocator retention versus execution metadata growth is
+not yet established. Do not raise the RSS threshold to turn this into a pass.
+
 Validation proceeds from focused shape/lifetime checks to a short full-model
 HTTP regression, then longer-context qualification. Re-run costly full-model
 tests only after a concrete fix or new release gate warrants them.

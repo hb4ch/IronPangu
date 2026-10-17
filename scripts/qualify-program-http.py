@@ -19,6 +19,36 @@ import time
 import urllib.error
 import urllib.request
 
+def process_resources(pid, proc_root=Path('/proc')):
+    """Linux process-wide counters (including native rank threads), no device calls."""
+    root = proc_root / str(pid)
+    fields = {}
+    for line in (root / 'status').read_text().splitlines():
+        key, _, value = line.partition(':')
+        if key in ('VmRSS', 'VmHWM', 'Threads'):
+            parts = value.split()
+            if len(parts) != (1 if key == 'Threads' else 2) or (key != 'Threads' and parts[1] != 'kB'):
+                raise ValueError(f'invalid process status field {key}')
+            fields[key] = int(parts[0])
+    if set(fields) != {'VmRSS', 'VmHWM', 'Threads'}:
+        raise ValueError('missing live process resource counters')
+    return dict(rss_bytes=fields['VmRSS']*1024, peak_rss_bytes=fields['VmHWM']*1024,
+                threads=fields['Threads'], file_descriptors=sum(1 for _ in (root/'fd').iterdir()))
+
+
+def resource_growth(samples, rss_limit_mib):
+    """Compare every post-wave sample to the first completed wave, not startup."""
+    if len(samples) < 2 or not math.isfinite(rss_limit_mib) or rss_limit_mib < 0:
+        raise ValueError('resource gate needs two waves and a finite nonnegative RSS limit')
+    first = samples[0]
+    growth = {key: max(0, max(s[key] for s in samples)-first[key])
+              for key in ('rss_bytes', 'threads', 'file_descriptors')}
+    return dict(baseline=first, final=samples[-1], maximum_growth=growth,
+                rss_limit_bytes=int(rss_limit_mib*1024*1024),
+                passed=(growth['rss_bytes'] <= rss_limit_mib*1024*1024
+                        and growth['threads'] == 0 and growth['file_descriptors'] == 0),
+                scope='post-wave process counters; not continuous peak or device memory sampling')
+
 def expected_ids(case, eos, respect_eos):
     if case.get('qualification', {}).get('output_is_placeholder'):
         raise ValueError('placeholder outputs are not an independent reference')
@@ -116,6 +146,7 @@ def main():
     p.add_argument('--check-overload', action='store_true', help='Burst long streaming requests beyond admission capacity, check 503/retry metadata and recovery')
     p.add_argument('--load-rounds', type=int, default=0, help='Repeated concurrent reference waves with disconnect/recovery between waves')
     p.add_argument('--load-concurrency', type=int, default=4, help='Clients per repeated-load wave, within bounded admission capacity')
+    p.add_argument('--load-rss-growth-limit-mib', type=float, help='Require >=2 load waves; bound post-wave RSS growth from wave 1, with no thread/FD growth')
     p.add_argument('--request-timeout-seconds', type=int, default=120, help='Socket inactivity timeout, not a whole-run deadline; raise for 64K prefill')
     p.add_argument('--respect-eos', action='store_true', help='Test normal serving through first EOS; preserve full references and report the narrower comparison scope')
     p.add_argument('--check-arithmetic-history', action='store_true', help='Require completed per-resident invocation histories to account for all scheduler work')
@@ -124,6 +155,8 @@ def main():
         p.error('--request-timeout-seconds must be positive')
     if args.load_rounds < 0 or args.load_concurrency < 1:
         p.error('load rounds must be nonnegative and concurrency positive')
+    if args.load_rss_growth_limit_mib is not None and (args.load_rounds < 2 or not math.isfinite(args.load_rss_growth_limit_mib) or args.load_rss_growth_limit_mib < 0):
+        p.error('RSS gate requires >=2 load waves and a finite nonnegative limit')
     if args.prefix_cases and not args.max_num_seqs:
         p.error('--prefix-cases requires explicit --max-num-seqs and one additional compiled resident')
     if args.prefix_branch_cases and not args.prefix_cases:
@@ -354,10 +387,18 @@ def main():
                         if text!=expected_text(cases[0]):raise RuntimeError('load disconnect recovery output mismatch')
                         validate_usage(cases[0],metrics,eos,args.respect_eos)
                         waves.append(dict(round=round_id,requests=observations,recovery=metrics))
+                        if args.load_rss_growth_limit_mib is not None:
+                            waves[-1]['process_resources'] = process_resources(server.pid)
                         (args.output/'load-progress.json').write_text(json.dumps(dict(complete=False,rounds=waves),indent=2)+'\n')
                 load=dict(rounds=args.load_rounds,concurrency=args.load_concurrency,
                           completed_reference_requests=args.load_rounds*(args.load_concurrency+1),
                           deliberate_disconnects=args.load_rounds,elapsed_seconds=time.perf_counter()-began,waves=waves)
+                if args.load_rss_growth_limit_mib is not None:
+                    growth = resource_growth([w['process_resources'] for w in waves], args.load_rss_growth_limit_mib)
+                    (args.output/'resource-growth.json').write_text(json.dumps(growth,indent=2)+'\n')
+                    load['resource_growth'] = growth
+                    if not growth['passed']:
+                        raise RuntimeError('repeated-load process resource growth exceeded the declared gate; see resource-growth.json')
             try:
                 request(cases[0], temperature=0.7)
             except urllib.error.HTTPError as e:
