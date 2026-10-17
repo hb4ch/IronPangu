@@ -1,0 +1,35 @@
+{
+  "stage": "restart",
+  "command": [
+    "/data/p00603624/inferfabric/inferfabric-server-release-order",
+    "--program",
+    "/data/p00603624/inferfabric/openpangu92/bulk-domains8k-frozen-plan",
+    "/models/92B",
+    "/data/p00603624/inferfabric/openpangu92/native-build-bulk-domains/libinferfabric_program.so",
+    "18085",
+    "--max-num-seqs",
+    "2",
+    "--max-num-batched-tokens",
+    "4096"
+  ],
+  "baseline": {
+    "id": "cmpl-661cf1d4",
+    "object": "text_completion",
+    "created": 1792277462,
+    "model": "inferfabric-program",
+    "choices": [
+      {
+        "index": 0,
+        "text": "1 + 1 = 2",
+        "finish_reason": "stop",
+        "stop_reason": 148902
+      }
+    ],
+    "usage": {
+      "prompt_tokens": 12,
+      "total_tokens": 20,
+      "completion_tokens": 8
+    }
+  },
+  "returncode": 0
+}

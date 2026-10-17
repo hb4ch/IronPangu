@@ -62,6 +62,14 @@ now passes: 61,440-token hits, salt isolation, eviction and mixed 64K output,
 with all snapshots/pages reclaimed on shutdown. Warm TTFT in that run is
 1.25–1.26 seconds; broader soak/failure/slow-client gates remain open.
 
+[Release-error injection](validation/2026-10-18-release-failure/README.md) proves
+structured error without terminal success, unhealthy health/admission rejection
+and correct output after an explicit process restart. It also exposes an idle
+logical page lease retained when audit I/O fails after native reset. The stricter
+resource gate rejects that run; preserve the error while finishing safe host
+ownership cleanup before advancing this gate. This does not qualify hardware
+rank crashes or automatic failover.
+
 Non-greedy 92B sampling, wider prefix-cache budgets, broader quality and sustained
 production SLO evidence also remain release gates. Keep experimental long-context
 and bulk-domain qualification explicit until those applicable gates are met.

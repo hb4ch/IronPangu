@@ -1,0 +1,7 @@
+{
+  "backend_error_return_passed": true,
+  "explicit_process_restart_passed": true,
+  "logical_leases_drained": false,
+  "remaining_occupied_bytes": 15458304,
+  "strengthened_gate_rejects_saved_fault_log": true
+}

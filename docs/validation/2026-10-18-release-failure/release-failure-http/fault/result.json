@@ -1,0 +1,141 @@
+{
+  "stage": "fault",
+  "command": [
+    "/data/p00603624/inferfabric/inferfabric-server-release-order",
+    "--program",
+    "/data/p00603624/inferfabric/openpangu92/bulk-domains8k-frozen-plan",
+    "/models/92B",
+    "/data/p00603624/inferfabric/openpangu92/native-build-bulk-domains/libinferfabric_program.so",
+    "18085",
+    "--max-num-seqs",
+    "2",
+    "--max-num-batched-tokens",
+    "4096"
+  ],
+  "baseline": {
+    "id": "cmpl-bca90c54",
+    "object": "text_completion",
+    "created": 1792277357,
+    "model": "inferfabric-program",
+    "choices": [
+      {
+        "index": 0,
+        "text": "1 + 1 = 2",
+        "finish_reason": "stop",
+        "stop_reason": 148902
+      }
+    ],
+    "usage": {
+      "prompt_tokens": 12,
+      "total_tokens": 20,
+      "completion_tokens": 8
+    }
+  },
+  "failure_http_status": 200,
+  "failure_events": [
+    {
+      "id": "cmpl-b32039d6",
+      "object": "text_completion",
+      "created": 1792277357,
+      "model": "inferfabric-program",
+      "choices": [
+        {
+          "index": 0,
+          "text": "1"
+        }
+      ]
+    },
+    {
+      "id": "cmpl-b32039d6",
+      "object": "text_completion",
+      "created": 1792277357,
+      "model": "inferfabric-program",
+      "choices": [
+        {
+          "index": 0,
+          "text": " +"
+        }
+      ]
+    },
+    {
+      "id": "cmpl-b32039d6",
+      "object": "text_completion",
+      "created": 1792277357,
+      "model": "inferfabric-program",
+      "choices": [
+        {
+          "index": 0,
+          "text": " "
+        }
+      ]
+    },
+    {
+      "id": "cmpl-b32039d6",
+      "object": "text_completion",
+      "created": 1792277357,
+      "model": "inferfabric-program",
+      "choices": [
+        {
+          "index": 0,
+          "text": "1"
+        }
+      ]
+    },
+    {
+      "id": "cmpl-b32039d6",
+      "object": "text_completion",
+      "created": 1792277357,
+      "model": "inferfabric-program",
+      "choices": [
+        {
+          "index": 0,
+          "text": " ="
+        }
+      ]
+    },
+    {
+      "id": "cmpl-b32039d6",
+      "object": "text_completion",
+      "created": 1792277357,
+      "model": "inferfabric-program",
+      "choices": [
+        {
+          "index": 0,
+          "text": " "
+        }
+      ]
+    },
+    {
+      "id": "cmpl-b32039d6",
+      "object": "text_completion",
+      "created": 1792277357,
+      "model": "inferfabric-program",
+      "choices": [
+        {
+          "index": 0,
+          "text": "2"
+        }
+      ]
+    },
+    {
+      "error": {
+        "message": "generation backend: Io(\"File exists (os error 17)\")",
+        "type": "server_error",
+        "code": "server_error"
+      }
+    }
+  ],
+  "injection": "request-2.json",
+  "unhealthy_status": 503,
+  "rejected_status": 503,
+  "rejected_events": [
+    {
+      "error": {
+        "message": "failed to submit completion request: generation backend unavailable: native engine is not ready",
+        "type": "server_error",
+        "code": "backend_unavailable"
+      }
+    }
+  ],
+  "returncode": 0
+}
