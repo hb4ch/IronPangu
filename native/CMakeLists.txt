@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 3.16)
 project(inferfabric_acl LANGUAGES CXX)
 add_executable(page_binding_test probes/page_binding_test.cpp)
+add_executable(state_copy_plan_test probes/state_copy_plan_test.cpp)
+target_compile_options(state_copy_plan_test PRIVATE -Wall -Wextra -Werror)
 target_compile_options(page_binding_test PRIVATE -Wall -Wextra -Werror -UNDEBUG)
 add_executable(paged_state_contract_test probes/paged_state_contract_test.cpp)
 target_compile_features(paged_state_contract_test PRIVATE cxx_std_17)

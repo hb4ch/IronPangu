@@ -548,6 +548,19 @@ scheduler input tokens across 18 histories, including cancellation. This is an
 implemented prerequisite for S6, not an enabled cache hit or proof of device
 snapshot completeness. See [continuation ownership evidence](validation/2026-10-17-continuation-ownership/README.md).
 
+`ResidentPages::copy_plan` now produces explicit source/destination byte ranges
+for a registered state field. It requires distinct resident ownership and a
+complete page boundary, rejects insufficient reservations before copying, and
+coalesces only ranges contiguous at both ends. A wrapped window preserves ring
+ordinals; full-history fields copy the completed prefix. The same page mapping
+plans independent index-key and scale buffers, without treating scales as an
+interleaved payload. The CPU address oracle runs in the remote Docker container
+and covers fragmented C8/BF16/index fields, repeated wraps through 65,536 tokens,
+source isolation after a divergent write, coalescing and invalid reservations.
+This is address planning only. Native stream execution, all-rank publication,
+complete recurrent-state coverage, inspectable copy audits and radix-cache hits
+remain required before enabling snapshot support.
+
 The host state pool now supports immutable sealed leases for the snapshot path.
 Sealing requires every in-flight rank operation to finish. Sealed allocations
 reject write submissions; read pins can survive the original owner's retirement,

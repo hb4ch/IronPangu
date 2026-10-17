@@ -4,8 +4,15 @@
 #include <set>
 #include <stdexcept>
 #include <vector>
+#include <algorithm>
 
 namespace inferfabric::state {
+// Byte ranges within one registered device-state field. The executor must
+// validate every field before enqueueing any range, then copy on its own stream.
+// These are metadata only: planning never reads cache contents.
+struct StateCopyRange {
+  uint64_t source, destination, bytes;
+};
 // Host metadata for a stable device block table. Cache rows never visit the host.
 class PageBinding {
   uint32_t page_tokens_, logical_tokens_, physical_pages_;
@@ -96,5 +103,32 @@ public:
     return shared_?shared_pages_[slot]:slots_[slot].pages();
   }
   const std::vector<int32_t> &pages() const { return pages(active_); }
+  std::vector<StateCopyRange> copy_plan(uint32_t source, uint32_t destination,
+                                      uint32_t completed_tokens, bool windowed,
+                                      uint64_t field_bytes) const {
+    if(source==destination || !completed_tokens || completed_tokens%page_tokens_ ||
+       (!windowed && completed_tokens>logical_tokens_))
+      throw std::runtime_error("state copy requires distinct slots and a complete page boundary");
+    const auto &from=pages(source);
+    const auto &to=pages(destination);
+    const uint64_t physical_pages=uint64_t(pages_per_slot_)*slots_.size();
+    if(!field_bytes || field_bytes%physical_pages)
+      throw std::runtime_error("state copy field disagrees with physical page layout");
+    const uint64_t page_bytes=field_bytes/physical_pages;
+    const size_t count=std::min(completed_tokens/page_tokens_,pages_per_slot_);
+    if(from.size()<count || to.size()<count)
+      throw std::runtime_error("state copy exceeds reserved source/destination pages");
+    std::vector<StateCopyRange> result;
+    // Ring ordinals, not chronological order: absolute block tables reconstruct
+    // the same modulo mapping at restore. Copy all retained pages after wrap.
+    for(size_t i=0;i<count;++i) {
+      StateCopyRange next{uint64_t(from[i])*page_bytes,uint64_t(to[i])*page_bytes,page_bytes};
+      if(!result.empty() && result.back().source+result.back().bytes==next.source &&
+          result.back().destination+result.back().bytes==next.destination)
+        result.back().bytes+=page_bytes;
+      else result.push_back(next);
+    }
+    return result;
+  }
 };
 }
