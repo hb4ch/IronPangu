@@ -1,0 +1,1299 @@
+{
+  "format": "inferfabric.cann-kernel-summary.v1",
+  "iterations": 1,
+  "devices": [
+    {
+      "table": "prefill4k-profile/PROF_000001_20261018020540079_00607700MQQEBQIM/device_0/sqlite/ai_core_op_summary.db",
+      "sha256": "2bd06425d5a30d4e08e47fcc06a2a7d263af5d897fa9e3498802da0495e022eb",
+      "kernels": [
+        {
+          "type": "AiInfraKvQuantSparseFlashAttention",
+          "count_per_iteration": 16.0,
+          "summed_ms_per_iteration": 180.6296085
+        },
+        {
+          "type": "Cast",
+          "count_per_iteration": 298.0,
+          "summed_ms_per_iteration": 22.212161
+        },
+        {
+          "type": "AiInfraManifoldConstrainedHyperConnectionPre",
+          "count_per_iteration": 93.0,
+          "summed_ms_per_iteration": 21.1465015
+        },
+        {
+          "type": "MatMulV3",
+          "count_per_iteration": 143.0,
+          "summed_ms_per_iteration": 19.8433795
+        },
+        {
+          "type": "AiInfraManifoldConstrainedHyperConnectionPost",
+          "count_per_iteration": 92.0,
+          "summed_ms_per_iteration": 19.3422665
+        },
+        {
+          "type": "RmsNorm",
+          "count_per_iteration": 248.0,
+          "summed_ms_per_iteration": 13.9360825
+        },
+        {
+          "type": "DequantSwigluQuant",
+          "count_per_iteration": 44.0,
+          "summed_ms_per_iteration": 13.526311
+        },
+        {
+          "type": "GroupedMatmul",
+          "count_per_iteration": 88.0,
+          "summed_ms_per_iteration": 12.0891605
+        },
+        {
+          "type": "AiInfraFusedInferAttentionSink",
+          "count_per_iteration": 30.0,
+          "summed_ms_per_iteration": 10.523769
+        },
+        {
+          "type": "MoeInitRoutingV3",
+          "count_per_iteration": 44.0,
+          "summed_ms_per_iteration": 7.951017
+        },
+        {
+          "type": "QuantBatchMatmulV3",
+          "count_per_iteration": 98.0,
+          "summed_ms_per_iteration": 7.662871
+        },
+        {
+          "type": "AiInfraFusedCausalConv1d",
+          "count_per_iteration": 138.0,
+          "summed_ms_per_iteration": 6.583235
+        },
+        {
+          "type": "Transpose",
+          "count_per_iteration": 140.0,
+          "summed_ms_per_iteration": 5.8391775
+        },
+        {
+          "type": "AiInfraQuantLightningIndexer",
+          "count_per_iteration": 8.0,
+          "summed_ms_per_iteration": 5.6652535
+        },
+        {
+          "type": "MoeFinalizeRoutingV2",
+          "count_per_iteration": 44.0,
+          "summed_ms_per_iteration": 5.410731
+        },
+        {
+          "type": "MatMulV2",
+          "count_per_iteration": 60.0,
+          "summed_ms_per_iteration": 5.0466795
+        },
+        {
+          "type": "ScatterUpdate",
+          "count_per_iteration": 8.0,
+          "summed_ms_per_iteration": 4.289904
+        },
+        {
+          "type": "MoeGatingTopK",
+          "count_per_iteration": 44.0,
+          "summed_ms_per_iteration": 4.2021455
+        },
+        {
+          "type": "DynamicQuant",
+          "count_per_iteration": 114.0,
+          "summed_ms_per_iteration": 3.136183
+        },
+        {
+          "type": "AsStrided",
+          "count_per_iteration": 292.0,
+          "summed_ms_per_iteration": 3.109082
+        },
+        {
+          "type": "AiInfraKvRmsNormRopeCache",
+          "count_per_iteration": 46.0,
+          "summed_ms_per_iteration": 2.943422
+        },
+        {
+          "type": "ManifoldConstrainedHyperConnectionSinkhornEnhance",
+          "count_per_iteration": 92.0,
+          "summed_ms_per_iteration": 2.8208565
+        },
+        {
+          "type": "Add",
+          "count_per_iteration": 44.0,
+          "summed_ms_per_iteration": 2.792577
+        },
+        {
+          "type": "BatchMatMulV2",
+          "count_per_iteration": 92.0,
+          "summed_ms_per_iteration": 2.3128865
+        },
+        {
+          "type": "RotaryPositionEmbedding",
+          "count_per_iteration": 62.0,
+          "summed_ms_per_iteration": 1.7875735
+        },
+        {
+          "type": "Slice",
+          "count_per_iteration": 138.0,
+          "summed_ms_per_iteration": 1.721472
+        },
+        {
+          "type": "ConcatD",
+          "count_per_iteration": 110.0,
+          "summed_ms_per_iteration": 1.50431
+        },
+        {
+          "type": "SwiGlu",
+          "count_per_iteration": 46.0,
+          "summed_ms_per_iteration": 1.155463
+        },
+        {
+          "type": "packed_attention_metadata_kernel",
+          "count_per_iteration": 1.0,
+          "summed_ms_per_iteration": 0.589012
+        },
+        {
+          "type": "GatherV3",
+          "count_per_iteration": 1.0,
+          "summed_ms_per_iteration": 0.038241
+        },
+        {
+          "type": "ArgMaxV2",
+          "count_per_iteration": 1.0,
+          "summed_ms_per_iteration": 0.0186605
+        }
+      ]
+    },
+    {
+      "table": "prefill4k-profile/PROF_000001_20261018020540079_00607700MQQEBQIM/device_1/sqlite/ai_core_op_summary.db",
+      "sha256": "725f6b0440d0f1759c46f29788364070e4632be2cd20bc02616a1e9174d1cc0f",
+      "kernels": [
+        {
+          "type": "AiInfraKvQuantSparseFlashAttention",
+          "count_per_iteration": 16.0,
+          "summed_ms_per_iteration": 180.7396915
+        },
+        {
+          "type": "Cast",
+          "count_per_iteration": 298.0,
+          "summed_ms_per_iteration": 21.909662
+        },
+        {
+          "type": "AiInfraManifoldConstrainedHyperConnectionPre",
+          "count_per_iteration": 93.0,
+          "summed_ms_per_iteration": 21.0946015
+        },
+        {
+          "type": "MatMulV3",
+          "count_per_iteration": 143.0,
+          "summed_ms_per_iteration": 19.963056
+        },
+        {
+          "type": "AiInfraManifoldConstrainedHyperConnectionPost",
+          "count_per_iteration": 92.0,
+          "summed_ms_per_iteration": 19.3527245
+        },
+        {
+          "type": "RmsNorm",
+          "count_per_iteration": 248.0,
+          "summed_ms_per_iteration": 13.7088545
+        },
+        {
+          "type": "DequantSwigluQuant",
+          "count_per_iteration": 44.0,
+          "summed_ms_per_iteration": 13.5602515
+        },
+        {
+          "type": "GroupedMatmul",
+          "count_per_iteration": 88.0,
+          "summed_ms_per_iteration": 11.587433
+        },
+        {
+          "type": "AiInfraFusedInferAttentionSink",
+          "count_per_iteration": 30.0,
+          "summed_ms_per_iteration": 10.2594465
+        },
+        {
+          "type": "MoeInitRoutingV3",
+          "count_per_iteration": 44.0,
+          "summed_ms_per_iteration": 7.92786
+        },
+        {
+          "type": "QuantBatchMatmulV3",
+          "count_per_iteration": 98.0,
+          "summed_ms_per_iteration": 7.742195
+        },
+        {
+          "type": "AiInfraFusedCausalConv1d",
+          "count_per_iteration": 138.0,
+          "summed_ms_per_iteration": 6.835015
+        },
+        {
+          "type": "Transpose",
+          "count_per_iteration": 140.0,
+          "summed_ms_per_iteration": 5.854274
+        },
+        {
+          "type": "AiInfraQuantLightningIndexer",
+          "count_per_iteration": 8.0,
+          "summed_ms_per_iteration": 5.668772
+        },
+        {
+          "type": "MoeFinalizeRoutingV2",
+          "count_per_iteration": 44.0,
+          "summed_ms_per_iteration": 5.5117105
+        },
+        {
+          "type": "MatMulV2",
+          "count_per_iteration": 60.0,
+          "summed_ms_per_iteration": 5.040198
+        },
+        {
+          "type": "ScatterUpdate",
+          "count_per_iteration": 8.0,
+          "summed_ms_per_iteration": 4.310785
+        },
+        {
+          "type": "MoeGatingTopK",
+          "count_per_iteration": 44.0,
+          "summed_ms_per_iteration": 4.202244
+        },
+        {
+          "type": "DynamicQuant",
+          "count_per_iteration": 114.0,
+          "summed_ms_per_iteration": 3.164285
+        },
+        {
+          "type": "AsStrided",
+          "count_per_iteration": 292.0,
+          "summed_ms_per_iteration": 3.088245
+        },
+        {
+          "type": "AiInfraKvRmsNormRopeCache",
+          "count_per_iteration": 46.0,
+          "summed_ms_per_iteration": 2.951418
+        },
+        {
+          "type": "Add",
+          "count_per_iteration": 44.0,
+          "summed_ms_per_iteration": 2.8264355
+        },
+        {
+          "type": "ManifoldConstrainedHyperConnectionSinkhornEnhance",
+          "count_per_iteration": 92.0,
+          "summed_ms_per_iteration": 2.7225365
+        },
+        {
+          "type": "BatchMatMulV2",
+          "count_per_iteration": 92.0,
+          "summed_ms_per_iteration": 2.3492275
+        },
+        {
+          "type": "Slice",
+          "count_per_iteration": 138.0,
+          "summed_ms_per_iteration": 1.801796
+        },
+        {
+          "type": "RotaryPositionEmbedding",
+          "count_per_iteration": 62.0,
+          "summed_ms_per_iteration": 1.5533125
+        },
+        {
+          "type": "ConcatD",
+          "count_per_iteration": 110.0,
+          "summed_ms_per_iteration": 1.4653925
+        },
+        {
+          "type": "SwiGlu",
+          "count_per_iteration": 46.0,
+          "summed_ms_per_iteration": 1.181905
+        },
+        {
+          "type": "packed_attention_metadata_kernel",
+          "count_per_iteration": 1.0,
+          "summed_ms_per_iteration": 0.590632
+        },
+        {
+          "type": "GatherV3",
+          "count_per_iteration": 1.0,
+          "summed_ms_per_iteration": 0.034081
+        },
+        {
+          "type": "ArgMaxV2",
+          "count_per_iteration": 1.0,
+          "summed_ms_per_iteration": 0.0189405
+        }
+      ]
+    },
+    {
+      "table": "prefill4k-profile/PROF_000001_20261018020540079_00607700MQQEBQIM/device_2/sqlite/ai_core_op_summary.db",
+      "sha256": "c3c3a403894ac27f77081e747003b5917041d25073f3d352b43a98726787d5cc",
+      "kernels": [
+        {
+          "type": "AiInfraKvQuantSparseFlashAttention",
+          "count_per_iteration": 16.0,
+          "summed_ms_per_iteration": 180.6948315
+        },
+        {
+          "type": "Cast",
+          "count_per_iteration": 298.0,
+          "summed_ms_per_iteration": 21.9300145
+        },
+        {
+          "type": "AiInfraManifoldConstrainedHyperConnectionPre",
+          "count_per_iteration": 93.0,
+          "summed_ms_per_iteration": 21.315108
+        },
+        {
+          "type": "MatMulV3",
+          "count_per_iteration": 143.0,
+          "summed_ms_per_iteration": 20.0704215
+        },
+        {
+          "type": "AiInfraManifoldConstrainedHyperConnectionPost",
+          "count_per_iteration": 92.0,
+          "summed_ms_per_iteration": 19.4442645
+        },
+        {
+          "type": "DequantSwigluQuant",
+          "count_per_iteration": 44.0,
+          "summed_ms_per_iteration": 13.509807
+        },
+        {
+          "type": "RmsNorm",
+          "count_per_iteration": 248.0,
+          "summed_ms_per_iteration": 13.4437645
+        },
+        {
+          "type": "GroupedMatmul",
+          "count_per_iteration": 88.0,
+          "summed_ms_per_iteration": 11.6862155
+        },
+        {
+          "type": "AiInfraFusedInferAttentionSink",
+          "count_per_iteration": 30.0,
+          "summed_ms_per_iteration": 10.5990925
+        },
+        {
+          "type": "MoeInitRoutingV3",
+          "count_per_iteration": 44.0,
+          "summed_ms_per_iteration": 7.823355
+        },
+        {
+          "type": "QuantBatchMatmulV3",
+          "count_per_iteration": 98.0,
+          "summed_ms_per_iteration": 7.7911395
+        },
+        {
+          "type": "AiInfraFusedCausalConv1d",
+          "count_per_iteration": 138.0,
+          "summed_ms_per_iteration": 6.3420845
+        },
+        {
+          "type": "Transpose",
+          "count_per_iteration": 140.0,
+          "summed_ms_per_iteration": 5.8138565
+        },
+        {
+          "type": "AiInfraQuantLightningIndexer",
+          "count_per_iteration": 8.0,
+          "summed_ms_per_iteration": 5.672433
+        },
+        {
+          "type": "MoeFinalizeRoutingV2",
+          "count_per_iteration": 44.0,
+          "summed_ms_per_iteration": 5.3613065
+        },
+        {
+          "type": "MatMulV2",
+          "count_per_iteration": 60.0,
+          "summed_ms_per_iteration": 4.994319
+        },
+        {
+          "type": "ScatterUpdate",
+          "count_per_iteration": 8.0,
+          "summed_ms_per_iteration": 4.292327
+        },
+        {
+          "type": "MoeGatingTopK",
+          "count_per_iteration": 44.0,
+          "summed_ms_per_iteration": 4.2010665
+        },
+        {
+          "type": "AsStrided",
+          "count_per_iteration": 292.0,
+          "summed_ms_per_iteration": 3.163851
+        },
+        {
+          "type": "DynamicQuant",
+          "count_per_iteration": 114.0,
+          "summed_ms_per_iteration": 3.011838
+        },
+        {
+          "type": "AiInfraKvRmsNormRopeCache",
+          "count_per_iteration": 46.0,
+          "summed_ms_per_iteration": 2.983104
+        },
+        {
+          "type": "ManifoldConstrainedHyperConnectionSinkhornEnhance",
+          "count_per_iteration": 92.0,
+          "summed_ms_per_iteration": 2.869045
+        },
+        {
+          "type": "Add",
+          "count_per_iteration": 44.0,
+          "summed_ms_per_iteration": 2.7943765
+        },
+        {
+          "type": "BatchMatMulV2",
+          "count_per_iteration": 92.0,
+          "summed_ms_per_iteration": 2.332967
+        },
+        {
+          "type": "RotaryPositionEmbedding",
+          "count_per_iteration": 62.0,
+          "summed_ms_per_iteration": 1.7558555
+        },
+        {
+          "type": "Slice",
+          "count_per_iteration": 138.0,
+          "summed_ms_per_iteration": 1.6095975
+        },
+        {
+          "type": "ConcatD",
+          "count_per_iteration": 110.0,
+          "summed_ms_per_iteration": 1.4592665
+        },
+        {
+          "type": "SwiGlu",
+          "count_per_iteration": 46.0,
+          "summed_ms_per_iteration": 1.277685
+        },
+        {
+          "type": "packed_attention_metadata_kernel",
+          "count_per_iteration": 1.0,
+          "summed_ms_per_iteration": 0.590272
+        },
+        {
+          "type": "GatherV3",
+          "count_per_iteration": 1.0,
+          "summed_ms_per_iteration": 0.032281
+        },
+        {
+          "type": "ArgMaxV2",
+          "count_per_iteration": 1.0,
+          "summed_ms_per_iteration": 0.0184805
+        }
+      ]
+    },
+    {
+      "table": "prefill4k-profile/PROF_000001_20261018020540079_00607700MQQEBQIM/device_3/sqlite/ai_core_op_summary.db",
+      "sha256": "6297a0b999a74e4674cf0f77b12adea866b7a42183c03917ad6d93f167246cfd",
+      "kernels": [
+        {
+          "type": "AiInfraKvQuantSparseFlashAttention",
+          "count_per_iteration": 16.0,
+          "summed_ms_per_iteration": 180.5820295
+        },
+        {
+          "type": "Cast",
+          "count_per_iteration": 298.0,
+          "summed_ms_per_iteration": 21.992836
+        },
+        {
+          "type": "AiInfraManifoldConstrainedHyperConnectionPre",
+          "count_per_iteration": 93.0,
+          "summed_ms_per_iteration": 21.221082
+        },
+        {
+          "type": "MatMulV3",
+          "count_per_iteration": 143.0,
+          "summed_ms_per_iteration": 19.9278205
+        },
+        {
+          "type": "AiInfraManifoldConstrainedHyperConnectionPost",
+          "count_per_iteration": 92.0,
+          "summed_ms_per_iteration": 19.314732
+        },
+        {
+          "type": "RmsNorm",
+          "count_per_iteration": 248.0,
+          "summed_ms_per_iteration": 14.0657765
+        },
+        {
+          "type": "DequantSwigluQuant",
+          "count_per_iteration": 44.0,
+          "summed_ms_per_iteration": 13.524347
+        },
+        {
+          "type": "GroupedMatmul",
+          "count_per_iteration": 88.0,
+          "summed_ms_per_iteration": 11.8944985
+        },
+        {
+          "type": "AiInfraFusedInferAttentionSink",
+          "count_per_iteration": 30.0,
+          "summed_ms_per_iteration": 10.46865
+        },
+        {
+          "type": "MoeInitRoutingV3",
+          "count_per_iteration": 44.0,
+          "summed_ms_per_iteration": 8.004221
+        },
+        {
+          "type": "QuantBatchMatmulV3",
+          "count_per_iteration": 98.0,
+          "summed_ms_per_iteration": 7.7771165
+        },
+        {
+          "type": "AiInfraFusedCausalConv1d",
+          "count_per_iteration": 138.0,
+          "summed_ms_per_iteration": 6.6910125
+        },
+        {
+          "type": "Transpose",
+          "count_per_iteration": 140.0,
+          "summed_ms_per_iteration": 5.780272
+        },
+        {
+          "type": "AiInfraQuantLightningIndexer",
+          "count_per_iteration": 8.0,
+          "summed_ms_per_iteration": 5.677834
+        },
+        {
+          "type": "MoeFinalizeRoutingV2",
+          "count_per_iteration": 44.0,
+          "summed_ms_per_iteration": 5.477051
+        },
+        {
+          "type": "MatMulV2",
+          "count_per_iteration": 60.0,
+          "summed_ms_per_iteration": 5.046023
+        },
+        {
+          "type": "ScatterUpdate",
+          "count_per_iteration": 8.0,
+          "summed_ms_per_iteration": 4.2949065
+        },
+        {
+          "type": "MoeGatingTopK",
+          "count_per_iteration": 44.0,
+          "summed_ms_per_iteration": 4.204824
+        },
+        {
+          "type": "DynamicQuant",
+          "count_per_iteration": 114.0,
+          "summed_ms_per_iteration": 3.139203
+        },
+        {
+          "type": "AsStrided",
+          "count_per_iteration": 292.0,
+          "summed_ms_per_iteration": 3.128523
+        },
+        {
+          "type": "AiInfraKvRmsNormRopeCache",
+          "count_per_iteration": 46.0,
+          "summed_ms_per_iteration": 2.896877
+        },
+        {
+          "type": "Add",
+          "count_per_iteration": 44.0,
+          "summed_ms_per_iteration": 2.8043945
+        },
+        {
+          "type": "ManifoldConstrainedHyperConnectionSinkhornEnhance",
+          "count_per_iteration": 92.0,
+          "summed_ms_per_iteration": 2.782434
+        },
+        {
+          "type": "BatchMatMulV2",
+          "count_per_iteration": 92.0,
+          "summed_ms_per_iteration": 2.312907
+        },
+        {
+          "type": "RotaryPositionEmbedding",
+          "count_per_iteration": 62.0,
+          "summed_ms_per_iteration": 1.721854
+        },
+        {
+          "type": "Slice",
+          "count_per_iteration": 138.0,
+          "summed_ms_per_iteration": 1.5665115
+        },
+        {
+          "type": "ConcatD",
+          "count_per_iteration": 110.0,
+          "summed_ms_per_iteration": 1.4694905
+        },
+        {
+          "type": "SwiGlu",
+          "count_per_iteration": 46.0,
+          "summed_ms_per_iteration": 1.1647235
+        },
+        {
+          "type": "packed_attention_metadata_kernel",
+          "count_per_iteration": 1.0,
+          "summed_ms_per_iteration": 0.5774715
+        },
+        {
+          "type": "GatherV3",
+          "count_per_iteration": 1.0,
+          "summed_ms_per_iteration": 0.0321405
+        },
+        {
+          "type": "ArgMaxV2",
+          "count_per_iteration": 1.0,
+          "summed_ms_per_iteration": 0.01864
+        }
+      ]
+    },
+    {
+      "table": "prefill4k-profile/PROF_000001_20261018020540079_00607700MQQEBQIM/device_4/sqlite/ai_core_op_summary.db",
+      "sha256": "6ea48deba9decaa568250b1b18cbe5a557003f8508a63406171071fd9ce9b801",
+      "kernels": [
+        {
+          "type": "AiInfraKvQuantSparseFlashAttention",
+          "count_per_iteration": 16.0,
+          "summed_ms_per_iteration": 180.746991
+        },
+        {
+          "type": "Cast",
+          "count_per_iteration": 298.0,
+          "summed_ms_per_iteration": 22.338886
+        },
+        {
+          "type": "AiInfraManifoldConstrainedHyperConnectionPre",
+          "count_per_iteration": 93.0,
+          "summed_ms_per_iteration": 21.1498
+        },
+        {
+          "type": "MatMulV3",
+          "count_per_iteration": 143.0,
+          "summed_ms_per_iteration": 19.936722
+        },
+        {
+          "type": "AiInfraManifoldConstrainedHyperConnectionPost",
+          "count_per_iteration": 92.0,
+          "summed_ms_per_iteration": 19.3476685
+        },
+        {
+          "type": "RmsNorm",
+          "count_per_iteration": 248.0,
+          "summed_ms_per_iteration": 13.946273
+        },
+        {
+          "type": "DequantSwigluQuant",
+          "count_per_iteration": 44.0,
+          "summed_ms_per_iteration": 13.5218305
+        },
+        {
+          "type": "GroupedMatmul",
+          "count_per_iteration": 88.0,
+          "summed_ms_per_iteration": 11.889837
+        },
+        {
+          "type": "AiInfraFusedInferAttentionSink",
+          "count_per_iteration": 30.0,
+          "summed_ms_per_iteration": 10.0770005
+        },
+        {
+          "type": "MoeInitRoutingV3",
+          "count_per_iteration": 44.0,
+          "summed_ms_per_iteration": 8.109162
+        },
+        {
+          "type": "QuantBatchMatmulV3",
+          "count_per_iteration": 98.0,
+          "summed_ms_per_iteration": 7.683334
+        },
+        {
+          "type": "AiInfraFusedCausalConv1d",
+          "count_per_iteration": 138.0,
+          "summed_ms_per_iteration": 6.7091135
+        },
+        {
+          "type": "Transpose",
+          "count_per_iteration": 140.0,
+          "summed_ms_per_iteration": 5.8284215
+        },
+        {
+          "type": "AiInfraQuantLightningIndexer",
+          "count_per_iteration": 8.0,
+          "summed_ms_per_iteration": 5.676454
+        },
+        {
+          "type": "MoeFinalizeRoutingV2",
+          "count_per_iteration": 44.0,
+          "summed_ms_per_iteration": 5.51659
+        },
+        {
+          "type": "MatMulV2",
+          "count_per_iteration": 60.0,
+          "summed_ms_per_iteration": 5.041119
+        },
+        {
+          "type": "ScatterUpdate",
+          "count_per_iteration": 8.0,
+          "summed_ms_per_iteration": 4.3137065
+        },
+        {
+          "type": "MoeGatingTopK",
+          "count_per_iteration": 44.0,
+          "summed_ms_per_iteration": 4.225865
+        },
+        {
+          "type": "DynamicQuant",
+          "count_per_iteration": 114.0,
+          "summed_ms_per_iteration": 3.269487
+        },
+        {
+          "type": "AsStrided",
+          "count_per_iteration": 292.0,
+          "summed_ms_per_iteration": 3.0881775
+        },
+        {
+          "type": "AiInfraKvRmsNormRopeCache",
+          "count_per_iteration": 46.0,
+          "summed_ms_per_iteration": 2.907637
+        },
+        {
+          "type": "Add",
+          "count_per_iteration": 44.0,
+          "summed_ms_per_iteration": 2.898418
+        },
+        {
+          "type": "ManifoldConstrainedHyperConnectionSinkhornEnhance",
+          "count_per_iteration": 92.0,
+          "summed_ms_per_iteration": 2.714376
+        },
+        {
+          "type": "BatchMatMulV2",
+          "count_per_iteration": 92.0,
+          "summed_ms_per_iteration": 2.303946
+        },
+        {
+          "type": "Slice",
+          "count_per_iteration": 138.0,
+          "summed_ms_per_iteration": 1.7516545
+        },
+        {
+          "type": "RotaryPositionEmbedding",
+          "count_per_iteration": 62.0,
+          "summed_ms_per_iteration": 1.5280135
+        },
+        {
+          "type": "ConcatD",
+          "count_per_iteration": 110.0,
+          "summed_ms_per_iteration": 1.521472
+        },
+        {
+          "type": "SwiGlu",
+          "count_per_iteration": 46.0,
+          "summed_ms_per_iteration": 1.1557395
+        },
+        {
+          "type": "packed_attention_metadata_kernel",
+          "count_per_iteration": 1.0,
+          "summed_ms_per_iteration": 0.591572
+        },
+        {
+          "type": "GatherV3",
+          "count_per_iteration": 1.0,
+          "summed_ms_per_iteration": 0.032841
+        },
+        {
+          "type": "ArgMaxV2",
+          "count_per_iteration": 1.0,
+          "summed_ms_per_iteration": 0.01868
+        }
+      ]
+    },
+    {
+      "table": "prefill4k-profile/PROF_000001_20261018020540079_00607700MQQEBQIM/device_5/sqlite/ai_core_op_summary.db",
+      "sha256": "a8edaa9b5a898fd0dd3378ea945281ae1ac7249429a50cbebdf95f587ae119dc",
+      "kernels": [
+        {
+          "type": "AiInfraKvQuantSparseFlashAttention",
+          "count_per_iteration": 16.0,
+          "summed_ms_per_iteration": 180.54826
+        },
+        {
+          "type": "Cast",
+          "count_per_iteration": 298.0,
+          "summed_ms_per_iteration": 21.9994
+        },
+        {
+          "type": "AiInfraManifoldConstrainedHyperConnectionPre",
+          "count_per_iteration": 93.0,
+          "summed_ms_per_iteration": 21.1559
+        },
+        {
+          "type": "MatMulV3",
+          "count_per_iteration": 143.0,
+          "summed_ms_per_iteration": 19.94536
+        },
+        {
+          "type": "AiInfraManifoldConstrainedHyperConnectionPost",
+          "count_per_iteration": 92.0,
+          "summed_ms_per_iteration": 19.34266
+        },
+        {
+          "type": "RmsNorm",
+          "count_per_iteration": 248.0,
+          "summed_ms_per_iteration": 14.06632
+        },
+        {
+          "type": "DequantSwigluQuant",
+          "count_per_iteration": 44.0,
+          "summed_ms_per_iteration": 13.51588
+        },
+        {
+          "type": "GroupedMatmul",
+          "count_per_iteration": 88.0,
+          "summed_ms_per_iteration": 12.00762
+        },
+        {
+          "type": "AiInfraFusedInferAttentionSink",
+          "count_per_iteration": 30.0,
+          "summed_ms_per_iteration": 10.47548
+        },
+        {
+          "type": "MoeInitRoutingV3",
+          "count_per_iteration": 44.0,
+          "summed_ms_per_iteration": 8.12762
+        },
+        {
+          "type": "QuantBatchMatmulV3",
+          "count_per_iteration": 98.0,
+          "summed_ms_per_iteration": 7.79138
+        },
+        {
+          "type": "AiInfraFusedCausalConv1d",
+          "count_per_iteration": 138.0,
+          "summed_ms_per_iteration": 6.55748
+        },
+        {
+          "type": "Transpose",
+          "count_per_iteration": 140.0,
+          "summed_ms_per_iteration": 5.78326
+        },
+        {
+          "type": "AiInfraQuantLightningIndexer",
+          "count_per_iteration": 8.0,
+          "summed_ms_per_iteration": 5.67932
+        },
+        {
+          "type": "MoeFinalizeRoutingV2",
+          "count_per_iteration": 44.0,
+          "summed_ms_per_iteration": 5.59106
+        },
+        {
+          "type": "MatMulV2",
+          "count_per_iteration": 60.0,
+          "summed_ms_per_iteration": 5.06364
+        },
+        {
+          "type": "ScatterUpdate",
+          "count_per_iteration": 8.0,
+          "summed_ms_per_iteration": 4.28878
+        },
+        {
+          "type": "MoeGatingTopK",
+          "count_per_iteration": 44.0,
+          "summed_ms_per_iteration": 4.20398
+        },
+        {
+          "type": "DynamicQuant",
+          "count_per_iteration": 114.0,
+          "summed_ms_per_iteration": 3.13838
+        },
+        {
+          "type": "AsStrided",
+          "count_per_iteration": 292.0,
+          "summed_ms_per_iteration": 3.08026
+        },
+        {
+          "type": "AiInfraKvRmsNormRopeCache",
+          "count_per_iteration": 46.0,
+          "summed_ms_per_iteration": 3.00028
+        },
+        {
+          "type": "ManifoldConstrainedHyperConnectionSinkhornEnhance",
+          "count_per_iteration": 92.0,
+          "summed_ms_per_iteration": 2.82566
+        },
+        {
+          "type": "Add",
+          "count_per_iteration": 44.0,
+          "summed_ms_per_iteration": 2.81028
+        },
+        {
+          "type": "BatchMatMulV2",
+          "count_per_iteration": 92.0,
+          "summed_ms_per_iteration": 2.30484
+        },
+        {
+          "type": "RotaryPositionEmbedding",
+          "count_per_iteration": 62.0,
+          "summed_ms_per_iteration": 1.72828
+        },
+        {
+          "type": "Slice",
+          "count_per_iteration": 138.0,
+          "summed_ms_per_iteration": 1.56072
+        },
+        {
+          "type": "ConcatD",
+          "count_per_iteration": 110.0,
+          "summed_ms_per_iteration": 1.51338
+        },
+        {
+          "type": "SwiGlu",
+          "count_per_iteration": 46.0,
+          "summed_ms_per_iteration": 1.16886
+        },
+        {
+          "type": "packed_attention_metadata_kernel",
+          "count_per_iteration": 1.0,
+          "summed_ms_per_iteration": 0.57664
+        },
+        {
+          "type": "GatherV3",
+          "count_per_iteration": 1.0,
+          "summed_ms_per_iteration": 0.03238
+        },
+        {
+          "type": "ArgMaxV2",
+          "count_per_iteration": 1.0,
+          "summed_ms_per_iteration": 0.01862
+        }
+      ]
+    },
+    {
+      "table": "prefill4k-profile/PROF_000001_20261018020540079_00607700MQQEBQIM/device_6/sqlite/ai_core_op_summary.db",
+      "sha256": "916b67681a5260adef99e4820754d46a5ce3ec4b25ad2aa094b05e1fa1e12f5b",
+      "kernels": [
+        {
+          "type": "AiInfraKvQuantSparseFlashAttention",
+          "count_per_iteration": 16.0,
+          "summed_ms_per_iteration": 180.8752925
+        },
+        {
+          "type": "Cast",
+          "count_per_iteration": 298.0,
+          "summed_ms_per_iteration": 22.1970435
+        },
+        {
+          "type": "AiInfraManifoldConstrainedHyperConnectionPre",
+          "count_per_iteration": 93.0,
+          "summed_ms_per_iteration": 21.154688
+        },
+        {
+          "type": "MatMulV3",
+          "count_per_iteration": 143.0,
+          "summed_ms_per_iteration": 19.984422
+        },
+        {
+          "type": "AiInfraManifoldConstrainedHyperConnectionPost",
+          "count_per_iteration": 92.0,
+          "summed_ms_per_iteration": 19.4339525
+        },
+        {
+          "type": "DequantSwigluQuant",
+          "count_per_iteration": 44.0,
+          "summed_ms_per_iteration": 13.481719
+        },
+        {
+          "type": "RmsNorm",
+          "count_per_iteration": 248.0,
+          "summed_ms_per_iteration": 13.469238
+        },
+        {
+          "type": "GroupedMatmul",
+          "count_per_iteration": 88.0,
+          "summed_ms_per_iteration": 11.751486
+        },
+        {
+          "type": "AiInfraFusedInferAttentionSink",
+          "count_per_iteration": 30.0,
+          "summed_ms_per_iteration": 10.168846
+        },
+        {
+          "type": "MoeInitRoutingV3",
+          "count_per_iteration": 44.0,
+          "summed_ms_per_iteration": 8.176965
+        },
+        {
+          "type": "QuantBatchMatmulV3",
+          "count_per_iteration": 98.0,
+          "summed_ms_per_iteration": 7.6953905
+        },
+        {
+          "type": "AiInfraFusedCausalConv1d",
+          "count_per_iteration": 138.0,
+          "summed_ms_per_iteration": 6.3077145
+        },
+        {
+          "type": "Transpose",
+          "count_per_iteration": 140.0,
+          "summed_ms_per_iteration": 5.779872
+        },
+        {
+          "type": "AiInfraQuantLightningIndexer",
+          "count_per_iteration": 8.0,
+          "summed_ms_per_iteration": 5.674187
+        },
+        {
+          "type": "MoeFinalizeRoutingV2",
+          "count_per_iteration": 44.0,
+          "summed_ms_per_iteration": 5.571722
+        },
+        {
+          "type": "MatMulV2",
+          "count_per_iteration": 60.0,
+          "summed_ms_per_iteration": 5.0618615
+        },
+        {
+          "type": "ScatterUpdate",
+          "count_per_iteration": 8.0,
+          "summed_ms_per_iteration": 4.2981725
+        },
+        {
+          "type": "MoeGatingTopK",
+          "count_per_iteration": 44.0,
+          "summed_ms_per_iteration": 4.233732
+        },
+        {
+          "type": "AsStrided",
+          "count_per_iteration": 292.0,
+          "summed_ms_per_iteration": 3.0924845
+        },
+        {
+          "type": "AiInfraKvRmsNormRopeCache",
+          "count_per_iteration": 46.0,
+          "summed_ms_per_iteration": 3.0000035
+        },
+        {
+          "type": "ManifoldConstrainedHyperConnectionSinkhornEnhance",
+          "count_per_iteration": 92.0,
+          "summed_ms_per_iteration": 2.9374165
+        },
+        {
+          "type": "DynamicQuant",
+          "count_per_iteration": 114.0,
+          "summed_ms_per_iteration": 2.9080545
+        },
+        {
+          "type": "Add",
+          "count_per_iteration": 44.0,
+          "summed_ms_per_iteration": 2.794715
+        },
+        {
+          "type": "BatchMatMulV2",
+          "count_per_iteration": 92.0,
+          "summed_ms_per_iteration": 2.30707
+        },
+        {
+          "type": "Slice",
+          "count_per_iteration": 138.0,
+          "summed_ms_per_iteration": 1.661745
+        },
+        {
+          "type": "RotaryPositionEmbedding",
+          "count_per_iteration": 62.0,
+          "summed_ms_per_iteration": 1.578804
+        },
+        {
+          "type": "ConcatD",
+          "count_per_iteration": 110.0,
+          "summed_ms_per_iteration": 1.541064
+        },
+        {
+          "type": "SwiGlu",
+          "count_per_iteration": 46.0,
+          "summed_ms_per_iteration": 1.2095085
+        },
+        {
+          "type": "packed_attention_metadata_kernel",
+          "count_per_iteration": 1.0,
+          "summed_ms_per_iteration": 0.579023
+        },
+        {
+          "type": "GatherV3",
+          "count_per_iteration": 1.0,
+          "summed_ms_per_iteration": 0.0309615
+        },
+        {
+          "type": "ArgMaxV2",
+          "count_per_iteration": 1.0,
+          "summed_ms_per_iteration": 0.018541
+        }
+      ]
+    },
+    {
+      "table": "prefill4k-profile/PROF_000001_20261018020540079_00607700MQQEBQIM/device_7/sqlite/ai_core_op_summary.db",
+      "sha256": "c85d1f11353186d072440ad887440e127e046fae2704578f3ba6ed0a5e2a4e65",
+      "kernels": [
+        {
+          "type": "AiInfraKvQuantSparseFlashAttention",
+          "count_per_iteration": 16.0,
+          "summed_ms_per_iteration": 180.70174
+        },
+        {
+          "type": "Cast",
+          "count_per_iteration": 298.0,
+          "summed_ms_per_iteration": 22.06614
+        },
+        {
+          "type": "AiInfraManifoldConstrainedHyperConnectionPre",
+          "count_per_iteration": 93.0,
+          "summed_ms_per_iteration": 21.30644
+        },
+        {
+          "type": "MatMulV3",
+          "count_per_iteration": 143.0,
+          "summed_ms_per_iteration": 19.8298
+        },
+        {
+          "type": "AiInfraManifoldConstrainedHyperConnectionPost",
+          "count_per_iteration": 92.0,
+          "summed_ms_per_iteration": 19.38192
+        },
+        {
+          "type": "RmsNorm",
+          "count_per_iteration": 248.0,
+          "summed_ms_per_iteration": 14.1429
+        },
+        {
+          "type": "DequantSwigluQuant",
+          "count_per_iteration": 44.0,
+          "summed_ms_per_iteration": 13.53884
+        },
+        {
+          "type": "GroupedMatmul",
+          "count_per_iteration": 88.0,
+          "summed_ms_per_iteration": 11.81218
+        },
+        {
+          "type": "AiInfraFusedInferAttentionSink",
+          "count_per_iteration": 30.0,
+          "summed_ms_per_iteration": 10.85014
+        },
+        {
+          "type": "MoeInitRoutingV3",
+          "count_per_iteration": 44.0,
+          "summed_ms_per_iteration": 8.2823
+        },
+        {
+          "type": "QuantBatchMatmulV3",
+          "count_per_iteration": 98.0,
+          "summed_ms_per_iteration": 7.64268
+        },
+        {
+          "type": "AiInfraFusedCausalConv1d",
+          "count_per_iteration": 138.0,
+          "summed_ms_per_iteration": 6.63772
+        },
+        {
+          "type": "Transpose",
+          "count_per_iteration": 140.0,
+          "summed_ms_per_iteration": 5.79688
+        },
+        {
+          "type": "AiInfraQuantLightningIndexer",
+          "count_per_iteration": 8.0,
+          "summed_ms_per_iteration": 5.67596
+        },
+        {
+          "type": "MoeFinalizeRoutingV2",
+          "count_per_iteration": 44.0,
+          "summed_ms_per_iteration": 5.61074
+        },
+        {
+          "type": "MatMulV2",
+          "count_per_iteration": 60.0,
+          "summed_ms_per_iteration": 5.04088
+        },
+        {
+          "type": "ScatterUpdate",
+          "count_per_iteration": 8.0,
+          "summed_ms_per_iteration": 4.29378
+        },
+        {
+          "type": "MoeGatingTopK",
+          "count_per_iteration": 44.0,
+          "summed_ms_per_iteration": 4.22562
+        },
+        {
+          "type": "DynamicQuant",
+          "count_per_iteration": 114.0,
+          "summed_ms_per_iteration": 3.26464
+        },
+        {
+          "type": "AsStrided",
+          "count_per_iteration": 292.0,
+          "summed_ms_per_iteration": 3.15002
+        },
+        {
+          "type": "AiInfraKvRmsNormRopeCache",
+          "count_per_iteration": 46.0,
+          "summed_ms_per_iteration": 2.8719
+        },
+        {
+          "type": "Add",
+          "count_per_iteration": 44.0,
+          "summed_ms_per_iteration": 2.76492
+        },
+        {
+          "type": "ManifoldConstrainedHyperConnectionSinkhornEnhance",
+          "count_per_iteration": 92.0,
+          "summed_ms_per_iteration": 2.70422
+        },
+        {
+          "type": "BatchMatMulV2",
+          "count_per_iteration": 92.0,
+          "summed_ms_per_iteration": 2.31558
+        },
+        {
+          "type": "Slice",
+          "count_per_iteration": 138.0,
+          "summed_ms_per_iteration": 1.68076
+        },
+        {
+          "type": "RotaryPositionEmbedding",
+          "count_per_iteration": 62.0,
+          "summed_ms_per_iteration": 1.64704
+        },
+        {
+          "type": "ConcatD",
+          "count_per_iteration": 110.0,
+          "summed_ms_per_iteration": 1.4574
+        },
+        {
+          "type": "SwiGlu",
+          "count_per_iteration": 46.0,
+          "summed_ms_per_iteration": 1.16276
+        },
+        {
+          "type": "packed_attention_metadata_kernel",
+          "count_per_iteration": 1.0,
+          "summed_ms_per_iteration": 0.59008
+        },
+        {
+          "type": "GatherV3",
+          "count_per_iteration": 1.0,
+          "summed_ms_per_iteration": 0.03528
+        },
+        {
+          "type": "ArgMaxV2",
+          "count_per_iteration": 1.0,
+          "summed_ms_per_iteration": 0.01878
+        }
+      ]
+    }
+  ],
+  "caveats": [
+    "Inclusive task sums overlap across streams and are not TPOT.",
+    "Profiler overhead and cross-rank waits distort latency.",
+    "Iteration count must be established from the capture window."
+  ]
+}

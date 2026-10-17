@@ -1,6 +1,7 @@
 // Offline client of the same persistent ABI used by the Rust frontend.
 #include "program_engine.h"
 #include "token_execution_plan.h"
+#include "batch_profile.h"
 #include <chrono>
 #include <cstdlib>
 #include <iostream>
@@ -173,6 +174,7 @@ int main(int argc, char **argv) {
         live[slot].request=requests.size();
         if(admitted<requests.size())admit(slot);
       }
+      BatchProfile profile;
       if(std::getenv("INFERFABRIC_SEQUENCE_BATCH"))while(completed<requests.size()) {
         std::vector<IFProgramSequenceV1> members;std::vector<uint32_t> tokens;
         for(unsigned slot=0;slot<residents && tokens.size()<chunk;++slot) {
@@ -186,10 +188,14 @@ int main(int argc, char **argv) {
           else tokens.push_back(r.next);
         }
         std::vector<uint32_t> outputs(members.size());uint32_t count=0;
+        profile.begin(argv[1]);
         auto batch_started=std::chrono::steady_clock::now();
         check(inferfabric_program_batch(engine,members.data(),members.size(),tokens.data(),tokens.size(),outputs.data(),outputs.size(),&count));
+        const auto batch_finished=std::chrono::steady_clock::now();
+        if(profile.finish())
+          std::cout<<"{\"event\":\"profile_window\",\"batches\":1,\"tokens\":"<<tokens.size()<<",\"sequences\":"<<members.size()<<"}"<<std::endl;
         if(std::getenv("INFERFABRIC_BATCH_TRACE")) {
-          auto elapsed=std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now()-batch_started).count();
+          auto elapsed=std::chrono::duration_cast<std::chrono::microseconds>(batch_finished-batch_started).count();
           std::cout<<"{\"event\":\"sequence_batch\",\"elapsed_us\":"<<elapsed<<",\"tokens\":"<<tokens.size()<<",\"members\":[";
           for(size_t n=0;n<members.size();++n) {
             const auto &m=members[n];if(n)std::cout<<",";

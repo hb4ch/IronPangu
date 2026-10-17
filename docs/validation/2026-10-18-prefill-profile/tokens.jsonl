@@ -1,0 +1,11 @@
+{"event":"profile_window","batches":1,"tokens":4088,"sequences":1}
+{"event":"sequence_batch","elapsed_us":6808319,"tokens":4088,"members":[{"request":0,"resident":0,"position":0,"tokens":4088,"sample":1}]}
+{"request":0,"resident":0,"step":0,"token":22,"batch_sequences":1,"batch_tokens":4088,"elapsed_us":8596158}
+{"event":"sequence_batch","elapsed_us":29223,"tokens":1,"members":[{"request":0,"resident":0,"position":4088,"tokens":1,"sample":1}]}
+{"request":0,"resident":0,"step":1,"token":18,"batch_sequences":1,"batch_tokens":1,"elapsed_us":29237}
+{"event":"sequence_batch","elapsed_us":22769,"tokens":1,"members":[{"request":0,"resident":0,"position":4089,"tokens":1,"sample":1}]}
+{"request":0,"resident":0,"step":2,"token":16,"batch_sequences":1,"batch_tokens":1,"elapsed_us":22779}
+{"event":"sequence_batch","elapsed_us":22238,"tokens":1,"members":[{"request":0,"resident":0,"position":4090,"tokens":1,"sample":1}]}
+{"request":0,"resident":0,"step":3,"token":24,"batch_sequences":1,"batch_tokens":1,"elapsed_us":22246}
+{"event":"sequence_batch","elapsed_us":22417,"tokens":1,"members":[{"request":0,"resident":0,"position":4091,"tokens":1,"sample":1}]}
+{"request":0,"resident":0,"step":4,"token":148902,"batch_sequences":1,"batch_tokens":1,"elapsed_us":22425}
