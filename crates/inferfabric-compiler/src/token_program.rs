@@ -26,6 +26,9 @@ pub struct Program {
     /// Resident histories, independent of the one-token invocation batch size.
     pub resident_sequences: usize,
     pub prefill_tokens: usize,
+    /// A bounded variable-query launch envelope, never an ACLGraph family.
+    #[serde(default)]
+    pub uncaptured_prefill: bool,
     /// Explicit exact shapes. Empty preserves the legacy single-size contract.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub prefill_variants: Vec<usize>,
@@ -147,7 +150,7 @@ fn emit(
 pub fn lower(graph: &Graph, inventory: Option<&Inventory>) -> Result<Program> {
     let types = graph.validate()?;
     let mut p = Program {
-        format: "inferfabric.token-program.v2".into(), max_context: graph.max_context, resident_sequences: 1, prefill_tokens: 1, prefill_variants: vec![], shared_pages: false,
+        format: "inferfabric.token-program.v2".into(), max_context: graph.max_context, resident_sequences: 1, prefill_tokens: 1, uncaptured_prefill: false, prefill_variants: vec![], shared_pages: false,
         eos: graph.eos, output: 0, instructions: vec![], conversions_shared: 0, copies_eliminated: 0,
         limitations: vec!["Per-token vendor composites are expanded into declared API invocations, explicit casts, packing and initialization of outputs. Parameter/state preparation remains a declared initialization recipe; vendor-internal kernel launches are opaque. Hardware preparation binds fixed arena slots; this is not a cost-optimized arena packing.".into()],
     };
@@ -702,11 +705,19 @@ pub fn lower(graph: &Graph, inventory: Option<&Inventory>) -> Result<Program> {
 }
 
 impl Program {
+    pub fn with_uncaptured_prefill(mut self) -> Result<Self> {
+        self.uncaptured_prefill = true;
+        self.prefill_tokens = 4096;
+        self.prefill_variants.clear();
+        let residents = self.resident_sequences;
+        self.with_resident_sequences(residents)
+    }
     pub fn prefill_counts(&self) -> Vec<usize> {
         if !self.prefill_variants.is_empty() {self.prefill_variants.clone()}
         else if self.prefill_tokens>1 {vec![self.prefill_tokens]} else {vec![]}
     }
     pub fn with_prefill_variants(mut self, counts: Vec<usize>) -> Result<Self> {
+        self.uncaptured_prefill = false;
         self.prefill_tokens=*counts.last().ok_or_else(||invalid("empty prefill variant family"))?;
         self.prefill_variants=counts;
         let residents=self.resident_sequences;
@@ -718,6 +729,7 @@ impl Program {
         self.with_resident_sequences(count)
     }
     pub fn with_prefill_tokens(mut self, count: usize) -> Result<Self> {
+        self.uncaptured_prefill = false;
         self.prefill_tokens = count;
         self.prefill_variants.clear();
         let residents = self.resident_sequences;
@@ -725,18 +737,21 @@ impl Program {
     }
     pub fn with_resident_sequences(mut self, count: usize) -> Result<Self> {
         self.resident_sequences = count;
-        self.format = if !self.prefill_variants.is_empty() { "inferfabric.token-program.v6" } else if self.shared_pages { "inferfabric.token-program.v5" } else if self.prefill_tokens > 1 { "inferfabric.token-program.v4" } else if count == 1 { "inferfabric.token-program.v2" } else { "inferfabric.token-program.v3" }.into();
+        self.format = if self.uncaptured_prefill { "inferfabric.token-program.v7" } else if !self.prefill_variants.is_empty() { "inferfabric.token-program.v6" } else if self.shared_pages { "inferfabric.token-program.v5" } else if self.prefill_tokens > 1 { "inferfabric.token-program.v4" } else if count == 1 { "inferfabric.token-program.v2" } else { "inferfabric.token-program.v3" }.into();
         self.validate()?;
         Ok(self)
     }
     pub fn validate(&self) -> Result<()> {
-        if self.prefill_variants.len()>4 || self.prefill_variants.iter().any(|n| !matches!(n,2|4|8|16)) ||
+        if self.uncaptured_prefill && (self.prefill_tokens != 4096 || !self.prefill_variants.is_empty()) {
+            return Err(invalid("uncaptured prefill requires a 4096-token envelope without captured variants"));
+        }
+        if self.prefill_variants.len()>5 || self.prefill_variants.iter().any(|n| !matches!(n,2|4|8|16|32)) ||
             self.prefill_variants.windows(2).any(|v|v[0]>=v[1]) ||
             self.prefill_variants.last().is_some_and(|&n|n!=self.prefill_tokens) {
             return Err(invalid("invalid exact prefill variant family"));
         }
-        if self.format != if !self.prefill_variants.is_empty() { "inferfabric.token-program.v6" } else if self.shared_pages { "inferfabric.token-program.v5" } else if self.prefill_tokens > 1 { "inferfabric.token-program.v4" } else if self.resident_sequences == 1 { "inferfabric.token-program.v2" } else { "inferfabric.token-program.v3" }
-            || !matches!(self.prefill_tokens, 1 | 2 | 4 | 8 | 16)
+        if self.format != if self.uncaptured_prefill { "inferfabric.token-program.v7" } else if !self.prefill_variants.is_empty() { "inferfabric.token-program.v6" } else if self.shared_pages { "inferfabric.token-program.v5" } else if self.prefill_tokens > 1 { "inferfabric.token-program.v4" } else if self.resident_sequences == 1 { "inferfabric.token-program.v2" } else { "inferfabric.token-program.v3" }
+            || (!self.uncaptured_prefill && !matches!(self.prefill_tokens, 1 | 2 | 4 | 8 | 16 | 32))
             || self.prefill_tokens > self.max_context
             || ((self.prefill_tokens > 1 || self.shared_pages) && self.instructions.iter().any(|i| i.op == "cache_quantize_append"))
             || self.resident_sequences == 0 || self.resident_sequences > 64
@@ -796,7 +811,7 @@ impl Program {
         if self.instructions.iter().any(|i| i.kernel == "unbound") {
             return Err(invalid("cannot execute unbound kernel selection"));
         }
-        let mut b = if !self.prefill_variants.is_empty() { b"IFTOKN06" } else if self.shared_pages { b"IFTOKN05" } else if self.prefill_tokens > 1 { b"IFTOKN04" } else if self.resident_sequences == 1 { b"IFTOKN02" } else { b"IFTOKN03" }.to_vec();
+        let mut b = if self.uncaptured_prefill { b"IFTOKN07" } else if !self.prefill_variants.is_empty() { b"IFTOKN06" } else if self.shared_pages { b"IFTOKN05" } else if self.prefill_tokens > 1 { b"IFTOKN04" } else if self.resident_sequences == 1 { b"IFTOKN02" } else { b"IFTOKN03" }.to_vec();
         for n in [
             self.max_context,
             self.eos,
@@ -807,7 +822,8 @@ impl Program {
         }
         if self.resident_sequences != 1 || self.prefill_tokens > 1 || self.shared_pages { num(&mut b, self.resident_sequences); }
         if self.prefill_tokens > 1 || self.shared_pages { num(&mut b, self.prefill_tokens); }
-        if !self.prefill_variants.is_empty() {
+        if self.uncaptured_prefill { num(&mut b,usize::from(self.shared_pages)); }
+        else if !self.prefill_variants.is_empty() {
             num(&mut b,usize::from(self.shared_pages));
             num(&mut b,self.prefill_variants.len());
             for &count in &self.prefill_variants {num(&mut b,count);}
@@ -838,6 +854,14 @@ impl Program {
 /// A vendor API may enqueue several device kernels; do not label it a measured launch.
 pub fn recipes(p: &Program, graph: &Graph) -> Vec<serde_json::Value> {
     let mut result = recipes_for_query(p, graph, p.prefill_tokens);
+    for recipe in &mut result {
+        recipe["prefill_execution"] = serde_json::json!({
+            "mode": if p.uncaptured_prefill {"uncaptured"} else {"exact_graph"},
+            "max_query_tokens": p.prefill_tokens,
+            "variable_query_tokens": p.uncaptured_prefill,
+            "capture_allowed": !p.uncaptured_prefill,
+        });
+    }
     if !p.prefill_variants.is_empty() {
         for recipe in &mut result { recipe["prefill_variants"] = serde_json::json!([]); }
         for &count in &p.prefill_variants {

@@ -114,10 +114,16 @@ fn decoder_composites_have_explicit_calls_and_storage_effects() {
         .enumerate()
         .filter(|(_, i)| i.op == "attention_metadata")
         .collect();
-    assert_eq!(metadata.len(), 1);
+    let windows: std::collections::BTreeSet<_> = p.instructions.iter()
+        .filter(|i| i.op == "latent_attention").map(|i| &i.attrs["window"]).collect();
+    assert_eq!(metadata.len(), windows.len());
     for i in &p.instructions {
         match i.op.as_str() {
-            "latent_attention" => assert_eq!(i.inputs[2], metadata[0].0),
+            "latent_attention" => {
+                let producer = &p.instructions[i.inputs[2]];
+                assert_eq!(producer.op, "attention_metadata");
+                assert_eq!(producer.attrs["window"], i.attrs["window"]);
+            }
             "expert_gmm" => {
                 let zero = &p.instructions[i.inputs[1]];
                 assert_eq!(zero.op, "expert_zero");

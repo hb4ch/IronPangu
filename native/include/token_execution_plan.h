@@ -35,8 +35,10 @@ struct Plan {
   uint32_t resident_sequences = 1;
   uint32_t prefill_tokens = 1;
   bool prefill_family = false;
+  bool uncaptured_prefill = false;
   std::vector<uint32_t> prefill_variants;
   bool supports_prefill(uint32_t count) const {
+    if(uncaptured_prefill)return count>1 && count<=prefill_tokens;
     for(auto variant:prefill_variants)if(variant==count)return true;
     return false;
   }
@@ -65,9 +67,10 @@ struct Plan {
       return v;
     };
     char magic[8];
-    if (!s.read(magic, 8) || (std::memcmp(magic, "IFTOKN01", 8) && std::memcmp(magic, "IFTOKN02", 8) && std::memcmp(magic, "IFTOKN03", 8) && std::memcmp(magic, "IFTOKN04", 8) && std::memcmp(magic, "IFTOKN05", 8) && std::memcmp(magic, "IFTOKN06", 8)))
+    if (!s.read(magic, 8) || (std::memcmp(magic, "IFTOKN01", 8) && std::memcmp(magic, "IFTOKN02", 8) && std::memcmp(magic, "IFTOKN03", 8) && std::memcmp(magic, "IFTOKN04", 8) && std::memcmp(magic, "IFTOKN05", 8) && std::memcmp(magic, "IFTOKN06", 8) && std::memcmp(magic, "IFTOKN07", 8)))
       throw std::runtime_error("missing/unsupported execution plan");
     Plan p;
+    p.uncaptured_prefill = !std::memcmp(magic, "IFTOKN07", 8);
     p.prefill_family = !std::memcmp(magic, "IFTOKN06", 8);
     p.shared_pages = !std::memcmp(magic, "IFTOKN05", 8);
     p.physical = std::memcmp(magic, "IFTOKN01", 8) != 0;
@@ -75,13 +78,17 @@ struct Plan {
     p.eos = number();
     p.output = number();
     auto count = number();
-    if (!std::memcmp(magic, "IFTOKN03", 8) || !std::memcmp(magic, "IFTOKN04", 8) || p.shared_pages || p.prefill_family) p.resident_sequences = number();
-    if (!std::memcmp(magic, "IFTOKN04", 8) || p.shared_pages || p.prefill_family) p.prefill_tokens = number();
-    if (!p.prefill_tokens || p.prefill_tokens>16 || (p.prefill_tokens&(p.prefill_tokens-1)) || p.prefill_tokens>p.context)
+    if (!std::memcmp(magic, "IFTOKN03", 8) || !std::memcmp(magic, "IFTOKN04", 8) || p.shared_pages || p.prefill_family || p.uncaptured_prefill) p.resident_sequences = number();
+    if (!std::memcmp(magic, "IFTOKN04", 8) || p.shared_pages || p.prefill_family || p.uncaptured_prefill) p.prefill_tokens = number();
+    if (!p.prefill_tokens || (p.uncaptured_prefill ? p.prefill_tokens!=4096 : p.prefill_tokens>32) || (p.prefill_tokens&(p.prefill_tokens-1)) || p.prefill_tokens>p.context)
       throw std::runtime_error("prefill token capacity");
-    if(p.prefill_family) {
+    if(p.uncaptured_prefill) {
+      auto shared=number();
+      if(shared>1)throw std::runtime_error("uncaptured prefill shared-page flag");
+      p.shared_pages=shared;
+    } else if(p.prefill_family) {
       auto shared=number(), variants=number();
-      if(shared>1 || !variants || variants>4)throw std::runtime_error("prefill family header");
+      if(shared>1 || !variants || variants>5)throw std::runtime_error("prefill family header");
       p.shared_pages=shared;
       uint32_t previous=1;
       for(uint32_t i=0;i<variants;++i) {

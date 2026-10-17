@@ -6,10 +6,43 @@ use inferfabric_dsl::{authoring::ModelDefinition, definition};
 use inferfabric_ir::initialization::{DType, Instruction};
 use std::collections::BTreeMap;
 #[test]
+fn uncaptured_prefill_is_a_bounded_envelope_not_a_graph_family() {
+    let (mut graph, _, inventory) = fixture();
+    graph.max_context = 65_536;
+    let base = inferfabric_compiler::token_program::lower(&graph, Some(&inventory)).unwrap();
+    let plan = base.with_uncaptured_prefill().unwrap().with_shared_pages(true).unwrap();
+    assert!(plan.prefill_variants.is_empty());
+    let bytes = plan.encode().unwrap();
+    assert_eq!(&bytes[..8], b"IFTOKN07");
+    assert_eq!(u32::from_le_bytes(bytes[28..32].try_into().unwrap()), 4096);
+    assert_eq!(u32::from_le_bytes(bytes[32..36].try_into().unwrap()), 1);
+    assert_eq!(bytes, plan.encode().unwrap());
+    let (variants, _) = inferfabric_compiler::token_serving::program_envelope(&graph, 8, &plan).unwrap();
+    assert!(variants[0].graph_capable);
+    assert_eq!(variants.len(), 2);
+    assert_eq!(variants[1].id, "uncaptured_prefill_4096_v1");
+    assert!(!variants[1].graph_capable);
+    for recipe in inferfabric_compiler::token_program::recipes(&plan, &graph) {
+        assert_eq!(recipe["prefill_execution"]["mode"], "uncaptured");
+        assert_eq!(recipe["prefill_execution"]["capture_allowed"], false);
+        assert_eq!(recipe["prefill_execution"]["variable_query_tokens"], true);
+    }
+    let mut invalid = plan.clone();
+    invalid.prefill_tokens = 8192;
+    assert!(invalid.validate().is_err());
+    let mut invalid = plan.clone();
+    invalid.prefill_variants = vec![4096];
+    assert!(invalid.validate().is_err());
+    let exact = plan.with_prefill_tokens(16).unwrap();
+    assert!(!exact.uncaptured_prefill);
+    assert_eq!(&exact.encode().unwrap()[..8], b"IFTOKN05");
+}
+
+#[test]
 fn prefill_family_preserves_maximum_storage_and_encodes_exact_shapes() {
     let ModelDefinition::Execution {graph,..}=definition(include_str!("../../../examples/openpangu/92b-tp8-ep8-c8-learned.inferfabric")).unwrap() else {panic!()};
     let base=inferfabric_compiler::token_program::lower(&graph,None).unwrap();
-    for counts in [vec![],vec![1],vec![3],vec![4,2],vec![2,2],vec![2,32]] {
+    for counts in [vec![],vec![1],vec![3],vec![4,2],vec![2,2],vec![2,64]] {
         assert!(base.clone().with_prefill_variants(counts).is_err());
     }
     let p=base.with_prefill_variants(vec![2,4,8,16]).unwrap().with_shared_pages(true).unwrap();
@@ -39,7 +72,7 @@ fn prefill_family_preserves_maximum_storage_and_encodes_exact_shapes() {
 #[test]
 fn bf16_rotary_batches_position_rows_without_assembly() {
     let ModelDefinition::Execution {graph,..}=definition(include_str!("../../../examples/openpangu/92b-tp8-ep8-c8-learned.inferfabric")).unwrap() else {panic!()};
-    for count in [2,4,16] {
+    for count in [2,4,16,32] {
         let p=inferfabric_compiler::token_program::lower(&graph,None).unwrap().with_prefill_tokens(count).unwrap();
         let recipes=inferfabric_compiler::token_program::recipes(&p,&graph);
         let mut rotary=0;
@@ -58,7 +91,7 @@ fn bf16_rotary_batches_position_rows_without_assembly() {
 #[test]
 fn window_attention_batches_queries_with_one_metadata_buffer() {
     let ModelDefinition::Execution {graph,..}=definition(include_str!("../../../examples/openpangu/92b-tp8-ep8-c8-learned.inferfabric")).unwrap() else {panic!()};
-    for count in [2,4,16] {
+    for count in [2,4,16,32] {
         let p=inferfabric_compiler::token_program::lower(&graph,None).unwrap().with_prefill_tokens(count).unwrap();
         let recipes=inferfabric_compiler::token_program::recipes(&p,&graph);
         let mut windows=0;
@@ -79,7 +112,7 @@ fn window_attention_batches_queries_with_one_metadata_buffer() {
 fn packed_attention_is_one_causal_call_without_assembly() {
     for source in [include_str!("../../../examples/openpangu/92b-tp8-ep8-c8.inferfabric"),include_str!("../../../examples/openpangu/92b-tp8-ep8-c8-learned.inferfabric")] {
         let ModelDefinition::Execution {graph,..}=definition(source).unwrap() else {panic!()};
-        for count in [2,4,16] {
+        for count in [2,4,16,32] {
             let p=inferfabric_compiler::token_program::lower(&graph,None).unwrap().with_prefill_tokens(count).unwrap();
             let recipes=inferfabric_compiler::token_program::recipes(&p,&graph);
             let mut attentions=0;
@@ -106,7 +139,7 @@ fn packed_quantized_index_selection_has_no_row_assembly() {
     let source=include_str!("../../../examples/openpangu/92b-tp8-ep8-c8-learned.inferfabric");
     for (source, quantized) in [(source.to_string(),true),(source.replace("cache_dtype = \"int8\"","cache_dtype = \"bf16\""),false)] {
         let ModelDefinition::Execution {graph,..}=definition(&source).unwrap() else {panic!()};
-        for count in [2,4,16] {
+        for count in [2,4,16,32] {
             let p=inferfabric_compiler::token_program::lower(&graph,None).unwrap().with_prefill_tokens(count).unwrap();
             let recipes=inferfabric_compiler::token_program::recipes(&p,&graph);
             for (i,r) in p.instructions.iter().zip(&recipes).filter(|(i,_)|i.op=="sparse_index") {
@@ -569,9 +602,16 @@ fn resident_capacity_is_executable_and_inspectable_without_claiming_batching() {
 fn packed_prefill_has_versioned_bounds_and_explicit_materialization() {
     let (graph, _, inventory) = fixture();
     let serial = inferfabric_compiler::token_program::lower(&graph, Some(&inventory)).unwrap();
-    for count in [0, 3, 5, 32] {
+    for count in [0, 3, 5, 64] {
         assert!(serial.clone().with_prefill_tokens(count).is_err());
     }
+    let wide=serial.clone().with_prefill_variants(vec![2,4,8,16,32]).unwrap();
+    let wide_binary=wide.encode().unwrap();
+    assert_eq!(u32::from_le_bytes(wide_binary[28..32].try_into().unwrap()),32);
+    assert_eq!(u32::from_le_bytes(wide_binary[56..60].try_into().unwrap()),32);
+    let (variants,states)=inferfabric_compiler::token_serving::program_envelope(&graph,8,&wide).unwrap();
+    assert_eq!(variants.last().unwrap().max_query_tokens,32);
+    assert!(states.iter().filter(|s|!s.retention.is_full()).all(|s|s.capacity_tokens>=graph.max_context.min(512) as u32));
     let packed=serial.with_resident_sequences(2).unwrap().with_prefill_tokens(4).unwrap();
     let binary=packed.encode().unwrap();
     assert_eq!(&binary[..8], b"IFTOKN04");
