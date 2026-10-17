@@ -1,0 +1,97 @@
+{
+  "batches": 53,
+  "prefill_chunks": [
+    [
+      4096,
+      4096,
+      4096,
+      4096,
+      4096,
+      4096,
+      4096,
+      4096,
+      4096,
+      4096,
+      4096,
+      4096,
+      4096,
+      4096,
+      4096,
+      4080
+    ],
+    [
+      12
+    ],
+    [
+      4,
+      4094,
+      4094,
+      4094,
+      4094,
+      4083,
+      4094,
+      4094,
+      4088,
+      4095,
+      4095,
+      4095,
+      4095,
+      4096,
+      4096,
+      4096,
+      4096,
+      17
+    ],
+    [
+      12
+    ],
+    [
+      4095,
+      4095,
+      4095,
+      4095,
+      4095,
+      4084,
+      4095,
+      4095,
+      4095,
+      4095,
+      4095,
+      4095,
+      4095,
+      4096,
+      4096,
+      4096,
+      8
+    ],
+    [
+      12
+    ]
+  ],
+  "pure_decode_batch_us": [
+    25037,
+    23735,
+    23452,
+    23468
+  ],
+  "pure_decode_batches": [
+    {
+      "sequences": 1,
+      "elapsed_us": 25037
+    },
+    {
+      "sequences": 1,
+      "elapsed_us": 23735
+    },
+    {
+      "sequences": 1,
+      "elapsed_us": 23452
+    },
+    {
+      "sequences": 1,
+      "elapsed_us": 23468
+    }
+  ],
+  "completed_input_tokens": 196629,
+  "timing_scope": "completed native ABI call including sampling/consensus; pure-decode batches exclude competing prefill"
+}

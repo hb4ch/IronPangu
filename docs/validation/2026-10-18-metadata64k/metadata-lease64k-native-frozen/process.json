@@ -1,0 +1,11 @@
+{
+  "returncode": 0,
+  "elapsed_seconds": 173.5417915233411,
+  "command": [
+    "/data/p00603624/inferfabric/openpangu92/native-build-metadata-lease/program_engine_probe",
+    "/data/p00603624/inferfabric/openpangu92/metadata-lease8k-frozen-plan",
+    "/models/92B",
+    "/data/p00603624/inferfabric/openpangu92/metadata-lease64k-fixture/requests.txt"
+  ],
+  "preparation": false
+}
