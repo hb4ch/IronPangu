@@ -14,6 +14,22 @@ class BatchTrace(unittest.TestCase):
                      members=[dict(request=0, resident=0, position=p, tokens=n, sample=s)])
                 for p, n, s in [(0, 4096, 0), (4096, 4080, 1), (8176, 1, 1)]]
 
+    def test_decode_timings_are_grouped_by_request_context_and_batch_size(self):
+        events = [dict(event='sequence_batch', elapsed_us=9999, tokens=8,
+                       members=[dict(request=r, resident=r, position=0, tokens=4, sample=1) for r in range(2)])]
+        for position, us in [(4, 10), (5, 30)]:
+            events.append(dict(event='sequence_batch', elapsed_us=us, tokens=2,
+                members=[dict(request=r, resident=r, position=position, tokens=1, sample=1) for r in range(2)]))
+        events.append(dict(event='sequence_batch', elapsed_us=15, tokens=1,
+                           members=[dict(request=1, resident=1, position=6, tokens=1, sample=1)]))
+        result = module.validate(events, [(4, 3), (4, 4)])['decode_by_request']
+        self.assertEqual(result[0]['by_batch_size']['2']['mean_us'], 20)
+        self.assertEqual(result[0]['by_batch_size']['2']['p95_us'], 30)
+        self.assertEqual(result[1]['by_batch_size']['1']['samples'], 1)
+        self.assertEqual(result[1]['by_batch_size']['1']['mean_us'], 15)
+        self.assertNotIn('1', result[0]['by_batch_size'])
+        self.assertIsNone(module.duration_stats([]))
+
     def test_two_bulk_chunks_and_separate_decode_timing(self):
         result = module.validate(self.events(), [(8176, 2)])
         self.assertEqual(result['prefill_chunks'], [[4096, 4080]])

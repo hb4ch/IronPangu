@@ -9,6 +9,17 @@ module=importlib.util.module_from_spec(spec)
 spec.loader.exec_module(module)
 
 class HttpReferenceScope(unittest.TestCase):
+    def test_extended_reference_requires_correct_code_before_continuation(self):
+        case = {'qualification': {'task': 'extended-answer', 'expected_answer': '6077'}}
+        module.validate_reference_answer(case, '6077\n1,2,3,4,')
+        for wrong in ('', '60770\n1,2,3', 'wrong\n6077', '6077 1,2,3'):
+            with self.assertRaises(ValueError):
+                module.validate_reference_answer(case, wrong)
+        retrieval = {'qualification': {'expected_answer': '6077'}}
+        with self.assertRaises(ValueError):
+            module.validate_reference_answer(retrieval, '6077\n1,2,3')
+        module.validate_reference_answer(retrieval, '6077\n')
+
     def test_allocator_snapshot_rejects_dead_server_and_stale_ack(self):
         class Server:
             def __init__(self,code):self.code=code

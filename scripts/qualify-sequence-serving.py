@@ -20,6 +20,23 @@ def records(path):
             for record in [json.loads(line)] if 'request' in record]
 
 
+def compare_output(actual, reference):
+    observed = {}
+    duplicates = []
+    for row in actual:
+        key = (row['request'], row['step'])
+        if key in observed:
+            duplicates.append(dict(request=key[0], step=key[1]))
+        observed[key] = row['token']
+    first = {}
+    for key in sorted(reference.keys() | observed.keys()):
+        expected, token = reference.get(key), observed.get(key)
+        if expected != token and key[0] not in first:
+            first[key[0]] = dict(request=key[0], step=key[1], expected_token=expected, actual_token=token)
+    return dict(passed=not duplicates and not first, expected_tokens=len(reference), actual_tokens=len(actual),
+                duplicates=duplicates, first_difference_by_request=list(first.values()))
+
+
 def stage(args, name, plan, prepare, reference):
     output = Path(str(args.output_prefix) + '-' + name)
     output.mkdir()  # Never overwrite earlier evidence.
@@ -47,9 +64,10 @@ def stage(args, name, plan, prepare, reference):
     if process.returncode:
         raise RuntimeError(f'{name}: native exited {process.returncode}; inspect {output / "stderr.log"}')
     actual = records(output / 'tokens.jsonl')
-    observed = {(r['request'], r['step']): r['token'] for r in actual}
-    if len(observed) != len(actual) or observed != reference:
-        raise RuntimeError(f'{name}: missing, duplicate or differing reference output')
+    comparison = compare_output(actual, reference)
+    (output / 'output-comparison.json').write_text(json.dumps(comparison, indent=2) + '\n')
+    if not comparison['passed']:
+        raise RuntimeError(f'{name}: missing, duplicate or differing reference output; inspect output-comparison.json')
     if args.batch_trace:
         spec = importlib.util.spec_from_file_location('batch_trace', Path(__file__).with_name('check-sequence-batch-trace.py'))
         checker = importlib.util.module_from_spec(spec)

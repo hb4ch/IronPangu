@@ -8,6 +8,17 @@ spec.loader.exec_module(module)
 
 
 class LongContextCases(unittest.TestCase):
+    def test_extended_answer_keeps_exact_context_and_requires_reference(self):
+        cases = module.make_cases(lambda text: list(text.encode()), [8192, 65536], ['middle'], 128, 'extended-answer')
+        for case in cases:
+            self.assertEqual(len(case['input_ids']) + len(case['output_ids']), case['qualification']['total_context'])
+            self.assertEqual(len(case['output_ids']), 128)
+            self.assertTrue(case['qualification']['output_is_placeholder'])
+            self.assertIn(b'every integer from 1 to 100', bytes(case['input_ids']))
+            self.assertIn(case['qualification']['expected_answer'].encode(), bytes(case['input_ids']))
+        with self.assertRaises(ValueError):
+            module.make_cases(lambda text: list(text.encode()), [8192], ['middle'], 128, 'unknown')
+
     def test_exact_envelope_and_needle(self):
         contexts = [8192, 16384, 32768, 65536]
         positions = ['early', 'middle', 'late']

@@ -90,6 +90,21 @@ def expected_ids(case, eos, respect_eos):
     return ids[:ids.index(eos)+1] if respect_eos and eos in ids else list(ids)
 
 
+def validate_reference_answer(case, text):
+    qualification = case.get('qualification', {})
+    expected = qualification.get('expected_answer')
+    if expected is None:
+        return
+    if qualification.get('task', 'retrieval') == 'extended-answer':
+        # This fixture requests the code first, followed by a long continuation.
+        # Preserve the retrieval gate without treating the continuation as an error.
+        actual = text.strip().splitlines()[0] if text.strip() else ''
+    else:
+        actual = text.strip()
+    if actual != expected:
+        raise ValueError('independent reference failed its retrieval answer')
+
+
 def validate_usage(case, metrics, eos, respect_eos):
     usage = metrics.get('usage')
     prompt = len(case['input_ids'])
@@ -203,11 +218,8 @@ def main():
     eos = json.loads((args.plan/'device-program.json').read_text())['eos']
     def expected_text(case):
         ids = expected_ids(case, eos, args.respect_eos)
-        expected_answer = case.get('qualification', {}).get('expected_answer')
-        if expected_answer is not None:
-            through_eos = expected_ids(case, eos, True)
-            if tokenizer.decode(through_eos, skip_special_tokens=True).strip() != expected_answer:
-                raise ValueError('independent reference failed its retrieval answer')
+        through_eos = expected_ids(case, eos, True)
+        validate_reference_answer(case, tokenizer.decode(through_eos, skip_special_tokens=True))
         return tokenizer.decode(ids, skip_special_tokens=True)
     for case in cases:
         expected_text(case)

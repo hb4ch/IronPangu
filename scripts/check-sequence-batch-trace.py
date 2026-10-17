@@ -2,7 +2,18 @@
 """Validate completed native batch geometry without reading any activations."""
 import argparse
 import json
+import math
+import statistics
 from pathlib import Path
+
+
+def duration_stats(values):
+    if not values:
+        return None
+    ordered = sorted(values)
+    return dict(samples=len(values), mean_us=statistics.mean(values),
+                median_us=statistics.median(values), p95_us=ordered[math.ceil(.95*len(values))-1],
+                min_us=ordered[0], max_us=ordered[-1])
 
 
 def validate(events, requests, budget=4096):
@@ -11,6 +22,7 @@ def validate(events, requests, budget=4096):
     chunks = [[] for _ in requests]
     decode_us = []
     decode_batches = []
+    per_request = [[] for _ in requests]
     batches = 0
     for event in events:
         if event.get('event') != 'sequence_batch':
@@ -48,10 +60,17 @@ def validate(events, requests, budget=4096):
         if pure_decode:
             decode_us.append(event['elapsed_us'])
             decode_batches.append(dict(sequences=len(members), elapsed_us=event['elapsed_us']))
+            for member in members:
+                per_request[member['request']].append(dict(sequences=len(members), elapsed_us=event['elapsed_us']))
     if not batches or positions != [p + n - 1 for p, n in requests] or samples != [n for _, n in requests]:
         raise ValueError('incomplete batch trace')
     return dict(batches=batches, prefill_chunks=chunks, pure_decode_batch_us=decode_us,
                 pure_decode_batches=decode_batches,
+                decode_by_request=[dict(request=index, prompt_tokens=requests[index][0],
+                    output_tokens=requests[index][1],
+                    by_batch_size={str(size): duration_stats([row['elapsed_us'] for row in rows if row['sequences']==size])
+                                   for size in sorted({row['sequences'] for row in rows})})
+                    for index, rows in enumerate(per_request)],
                 completed_input_tokens=sum(positions),
                 timing_scope='completed native ABI call including sampling/consensus; pure-decode batches exclude competing prefill')
 

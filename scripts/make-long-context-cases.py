@@ -10,17 +10,22 @@ import json
 from pathlib import Path
 
 
-def make_cases(encode, contexts, positions, output_tokens=16):
+def make_cases(encode, contexts, positions, output_tokens=16, task="retrieval"):
     if output_tokens < 1 or not contexts or not positions:
         raise ValueError('nonempty context/position lists and positive output budget required')
     if len(set(contexts)) != len(contexts) or len(set(positions)) != len(positions):
         raise ValueError('duplicate context or position')
     if any(p not in ('early', 'middle', 'late') for p in positions):
         raise ValueError('unknown needle position')
+    if task not in ('retrieval', 'extended-answer'):
+        raise ValueError('unknown task')
     head = encode('<|message_start|>user\nRead the archive and retrieve the requested record.\n')
     filler = encode('Routine maintenance entry: the ventilation inspection completed without changes.\n')
-    tail = encode('\nWhat is the access code for record ORCHID? Reply with the code only.'
-                  '<|message_end|><|message_start|>assistant\n</think>')
+    question = ('What is the access code for record ORCHID? Reply with the code only.'
+                if task == 'retrieval' else
+                'First give the access code for record ORCHID. Then write every integer from 1 to 100, '
+                'in ascending order separated by commas. Do not omit any numbers or use an ellipsis.')
+    tail = encode('\n' + question + '<|message_end|><|message_start|>assistant\n</think>')
     if not head or not filler or not tail:
         raise ValueError('tokenizer produced an empty template')
     cases = []
@@ -40,9 +45,9 @@ def make_cases(encode, contexts, positions, output_tokens=16):
             ids = head + fill(before) + needle + fill(count - before) + tail
             start = len(head) + before
             assert len(ids) + output_tokens == context
-            cases.append(dict(case=f'retrieval-{context}-{position}', input_ids=ids,
+            cases.append(dict(case=f'{task}-{context}-{position}', input_ids=ids,
                               output_ids=[0] * output_tokens,
-                              qualification=dict(total_context=context, needle_position=position,
+                              qualification=dict(task=task, total_context=context, needle_position=position,
                                                  needle_token_span=[start, start + len(needle)],
                                                  expected_answer=code, output_is_placeholder=True)))
     return cases
@@ -55,11 +60,13 @@ def main():
     parser.add_argument('--contexts', type=int, nargs='+', default=[8192, 16384, 32768, 65536])
     parser.add_argument('--positions', nargs='+', choices=['early', 'middle', 'late'], default=['early', 'middle', 'late'])
     parser.add_argument('--output-tokens', type=int, default=16)
+    parser.add_argument('--task', choices=['retrieval', 'extended-answer'], default='retrieval',
+                        help='Extended answer exercises sustained decode before EOS; reference generation is still required')
     args = parser.parse_args()
     from tokenizers import Tokenizer
     tokenizer = Tokenizer.from_file(str(args.tokenizer))
     cases = make_cases(lambda text: tokenizer.encode(text, add_special_tokens=False).ids,
-                       args.contexts, args.positions, args.output_tokens)
+                       args.contexts, args.positions, args.output_tokens, args.task)
     # Do not silently replace previously pinned reference inputs.
     with args.output.open('x', encoding='utf-8') as out:
         json.dump(cases, out, ensure_ascii=False, indent=2)

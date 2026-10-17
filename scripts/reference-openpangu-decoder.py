@@ -20,6 +20,7 @@ if __name__ == '__main__':
     parser.add_argument('--max-model-len',type=int,default=512)
     parser.add_argument('--kv-cache-dtype',default='auto')
     parser.add_argument('--max-num-batched-tokens',type=int,help='Explicit chunked-prefill token budget for numerical comparison')
+    parser.add_argument('--respect-eos',action='store_true',help='Stop at first EOS instead of spending compute on post-EOS tokens')
     args=parser.parse_args()
     tokenizer=Tokenizer.from_file('/models/92B/tokenizer.json')
     prompts=['1+1=?','What is the capital of France?','请用一句话介绍北京。']
@@ -35,7 +36,7 @@ if __name__ == '__main__':
     results=[]
     for case in cases:
         ids=case['input_ids']
-        out=model.generate([{'prompt_token_ids':ids}],SamplingParams(temperature=0,max_tokens=len(case['output_ids']) if args.cases else 32,ignore_eos=bool(args.cases),logprobs=5))[0].outputs[0]
+        out=model.generate([{'prompt_token_ids':ids}],SamplingParams(temperature=0,max_tokens=len(case['output_ids']) if args.cases else 32,ignore_eos=bool(args.cases) and not args.respect_eos,logprobs=5))[0].outputs[0]
         results.append({'case':case.get('case',case.get('prompt')),'input_ids':ids,'output_ids':list(out.token_ids),'text':out.text,'logprobs':[{str(k):{'logprob':v.logprob,'rank':v.rank} for k,v in row.items()} for row in out.logprobs]})
         if 'qualification' in case:
             results[-1]['qualification'] = dict(case['qualification'], output_is_placeholder=False)

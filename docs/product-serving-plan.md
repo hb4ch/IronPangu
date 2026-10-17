@@ -1,5 +1,19 @@
 # Product serving execution and scheduling
 
+## Highest-priority open gate (2026-10-18)
+
+[Extended decode qualification](validation/2026-10-18-extended-decode/README.md)
+now exposes a 64K native/reference output divergence at the eighth generated
+token. The same 128-token native output occurs with mixed requests and alone;
+8K's 128 tokens match. Keep this correctness investigation ahead of slow-client,
+fault-injection and additional performance work. Preserve 4K uncaptured prefill,
+continuous batching and device residency while attributing the first difference.
+The 127-sample isolated decode timing is diagnostic only because output fails.
+Previous short-answer 64K passes remain valid for their narrower fixtures.
+After this gate passes, qualify extended output through the HTTP frontend, then
+resume matched performance and production-hardening gates. Do not spend more
+NPU time on repeated short-answer suites that cannot expose this failure.
+
 ## Current qualified baseline (2026-10-18)
 
 Use the [planned bulk-domain candidate](validation/2026-10-18-bulk-domains/README.md)

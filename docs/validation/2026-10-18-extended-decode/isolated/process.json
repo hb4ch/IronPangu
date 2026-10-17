@@ -1,0 +1,11 @@
+{
+  "returncode": 0,
+  "elapsed_seconds": 84.04286283673719,
+  "command": [
+    "/data/p00603624/inferfabric/openpangu92/native-build-bulk-domains/program_engine_probe",
+    "/data/p00603624/inferfabric/openpangu92/bulk-domains8k-frozen-plan",
+    "/models/92B",
+    "/data/p00603624/inferfabric/openpangu92/extended-answer64-isolated-fixture/requests.txt"
+  ],
+  "preparation": false
+}
