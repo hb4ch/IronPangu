@@ -1,0 +1,727 @@
+{
+  "batches": 145,
+  "prefill_chunks": [
+    [
+      4096,
+      3968
+    ],
+    [
+      12
+    ],
+    [
+      116,
+      4094,
+      4094,
+      4094,
+      4094,
+      4094,
+      4094,
+      4094,
+      4083,
+      4094,
+      4094,
+      4094,
+      4094,
+      4094,
+      4094,
+      4094,
+      3893
+    ],
+    [
+      12
+    ]
+  ],
+  "pure_decode_batch_us": [
+    30743,
+    26995,
+    26750,
+    27686,
+    27012,
+    26919,
+    26947,
+    26740,
+    26664,
+    27035,
+    26650,
+    27617,
+    27804,
+    26985,
+    27126,
+    26944,
+    26826,
+    26708,
+    26851,
+    26612,
+    26701,
+    26877,
+    26708,
+    26690,
+    26737,
+    26987,
+    26828,
+    26796,
+    27032,
+    26664,
+    26609,
+    26818,
+    26801,
+    26700,
+    26778,
+    26889,
+    26718,
+    26642,
+    26707,
+    27788,
+    26682,
+    26405,
+    26484,
+    26536,
+    28039,
+    27435,
+    26678,
+    26798,
+    26690,
+    26685,
+    26819,
+    26714,
+    26798,
+    26631,
+    26652,
+    26825,
+    26765,
+    26561,
+    26652,
+    26876,
+    26988,
+    26674,
+    26661,
+    26490,
+    26679,
+    26572,
+    26608,
+    26747,
+    26757,
+    26516,
+    26571,
+    26646,
+    26783,
+    26581,
+    26483,
+    27229,
+    26694,
+    26352,
+    26653,
+    26578,
+    26578,
+    26718,
+    26718,
+    27601,
+    27691,
+    27329,
+    28212,
+    27185,
+    27286,
+    26792,
+    26736,
+    26856,
+    26729,
+    26558,
+    26577,
+    26801,
+    26833,
+    26575,
+    26737,
+    26621,
+    27320,
+    26954,
+    26797,
+    26916,
+    26754,
+    26687,
+    26772,
+    26861,
+    27209,
+    26938,
+    26878,
+    23071,
+    22405,
+    22626,
+    22352,
+    22483,
+    22475,
+    22524,
+    22477,
+    22384,
+    22463,
+    22462,
+    22524,
+    22449,
+    22647,
+    22470,
+    22465
+  ],
+  "pure_decode_batches": [
+    {
+      "sequences": 2,
+      "elapsed_us": 30743
+    },
+    {
+      "sequences": 2,
+      "elapsed_us": 26995
+    },
+    {
+      "sequences": 2,
+      "elapsed_us": 26750
+    },
+    {
+      "sequences": 2,
+      "elapsed_us": 27686
+    },
+    {
+      "sequences": 2,
+      "elapsed_us": 27012
+    },
+    {
+      "sequences": 2,
+      "elapsed_us": 26919
+    },
+    {
+      "sequences": 2,
+      "elapsed_us": 26947
+    },
+    {
+      "sequences": 2,
+      "elapsed_us": 26740
+    },
+    {
+      "sequences": 2,
+      "elapsed_us": 26664
+    },
+    {
+      "sequences": 2,
+      "elapsed_us": 27035
+    },
+    {
+      "sequences": 2,
+      "elapsed_us": 26650
+    },
+    {
+      "sequences": 2,
+      "elapsed_us": 27617
+    },
+    {
+      "sequences": 2,
+      "elapsed_us": 27804
+    },
+    {
+      "sequences": 2,
+      "elapsed_us": 26985
+    },
+    {
+      "sequences": 2,
+      "elapsed_us": 27126
+    },
+    {
+      "sequences": 2,
+      "elapsed_us": 26944
+    },
+    {
+      "sequences": 2,
+      "elapsed_us": 26826
+    },
+    {
+      "sequences": 2,
+      "elapsed_us": 26708
+    },
+    {
+      "sequences": 2,
+      "elapsed_us": 26851
+    },
+    {
+      "sequences": 2,
+      "elapsed_us": 26612
+    },
+    {
+      "sequences": 2,
+      "elapsed_us": 26701
+    },
+    {
+      "sequences": 2,
+      "elapsed_us": 26877
+    },
+    {
+      "sequences": 2,
+      "elapsed_us": 26708
+    },
+    {
+      "sequences": 2,
+      "elapsed_us": 26690
+    },
+    {
+      "sequences": 2,
+      "elapsed_us": 26737
+    },
+    {
+      "sequences": 2,
+      "elapsed_us": 26987
+    },
+    {
+      "sequences": 2,
+      "elapsed_us": 26828
+    },
+    {
+      "sequences": 2,
+      "elapsed_us": 26796
+    },
+    {
+      "sequences": 2,
+      "elapsed_us": 27032
+    },
+    {
+      "sequences": 2,
+      "elapsed_us": 26664
+    },
+    {
+      "sequences": 2,
+      "elapsed_us": 26609
+    },
+    {
+      "sequences": 2,
+      "elapsed_us": 26818
+    },
+    {
+      "sequences": 2,
+      "elapsed_us": 26801
+    },
+    {
+      "sequences": 2,
+      "elapsed_us": 26700
+    },
+    {
+      "sequences": 2,
+      "elapsed_us": 26778
+    },
+    {
+      "sequences": 2,
+      "elapsed_us": 26889
+    },
+    {
+      "sequences": 2,
+      "elapsed_us": 26718
+    },
+    {
+      "sequences": 2,
+      "elapsed_us": 26642
+    },
+    {
+      "sequences": 2,
+      "elapsed_us": 26707
+    },
+    {
+      "sequences": 2,
+      "elapsed_us": 27788
+    },
+    {
+      "sequences": 2,
+      "elapsed_us": 26682
+    },
+    {
+      "sequences": 2,
+      "elapsed_us": 26405
+    },
+    {
+      "sequences": 2,
+      "elapsed_us": 26484
+    },
+    {
+      "sequences": 2,
+      "elapsed_us": 26536
+    },
+    {
+      "sequences": 2,
+      "elapsed_us": 28039
+    },
+    {
+      "sequences": 2,
+      "elapsed_us": 27435
+    },
+    {
+      "sequences": 2,
+      "elapsed_us": 26678
+    },
+    {
+      "sequences": 2,
+      "elapsed_us": 26798
+    },
+    {
+      "sequences": 2,
+      "elapsed_us": 26690
+    },
+    {
+      "sequences": 2,
+      "elapsed_us": 26685
+    },
+    {
+      "sequences": 2,
+      "elapsed_us": 26819
+    },
+    {
+      "sequences": 2,
+      "elapsed_us": 26714
+    },
+    {
+      "sequences": 2,
+      "elapsed_us": 26798
+    },
+    {
+      "sequences": 2,
+      "elapsed_us": 26631
+    },
+    {
+      "sequences": 2,
+      "elapsed_us": 26652
+    },
+    {
+      "sequences": 2,
+      "elapsed_us": 26825
+    },
+    {
+      "sequences": 2,
+      "elapsed_us": 26765
+    },
+    {
+      "sequences": 2,
+      "elapsed_us": 26561
+    },
+    {
+      "sequences": 2,
+      "elapsed_us": 26652
+    },
+    {
+      "sequences": 2,
+      "elapsed_us": 26876
+    },
+    {
+      "sequences": 2,
+      "elapsed_us": 26988
+    },
+    {
+      "sequences": 2,
+      "elapsed_us": 26674
+    },
+    {
+      "sequences": 2,
+      "elapsed_us": 26661
+    },
+    {
+      "sequences": 2,
+      "elapsed_us": 26490
+    },
+    {
+      "sequences": 2,
+      "elapsed_us": 26679
+    },
+    {
+      "sequences": 2,
+      "elapsed_us": 26572
+    },
+    {
+      "sequences": 2,
+      "elapsed_us": 26608
+    },
+    {
+      "sequences": 2,
+      "elapsed_us": 26747
+    },
+    {
+      "sequences": 2,
+      "elapsed_us": 26757
+    },
+    {
+      "sequences": 2,
+      "elapsed_us": 26516
+    },
+    {
+      "sequences": 2,
+      "elapsed_us": 26571
+    },
+    {
+      "sequences": 2,
+      "elapsed_us": 26646
+    },
+    {
+      "sequences": 2,
+      "elapsed_us": 26783
+    },
+    {
+      "sequences": 2,
+      "elapsed_us": 26581
+    },
+    {
+      "sequences": 2,
+      "elapsed_us": 26483
+    },
+    {
+      "sequences": 2,
+      "elapsed_us": 27229
+    },
+    {
+      "sequences": 2,
+      "elapsed_us": 26694
+    },
+    {
+      "sequences": 2,
+      "elapsed_us": 26352
+    },
+    {
+      "sequences": 2,
+      "elapsed_us": 26653
+    },
+    {
+      "sequences": 2,
+      "elapsed_us": 26578
+    },
+    {
+      "sequences": 2,
+      "elapsed_us": 26578
+    },
+    {
+      "sequences": 2,
+      "elapsed_us": 26718
+    },
+    {
+      "sequences": 2,
+      "elapsed_us": 26718
+    },
+    {
+      "sequences": 2,
+      "elapsed_us": 27601
+    },
+    {
+      "sequences": 2,
+      "elapsed_us": 27691
+    },
+    {
+      "sequences": 2,
+      "elapsed_us": 27329
+    },
+    {
+      "sequences": 2,
+      "elapsed_us": 28212
+    },
+    {
+      "sequences": 2,
+      "elapsed_us": 27185
+    },
+    {
+      "sequences": 2,
+      "elapsed_us": 27286
+    },
+    {
+      "sequences": 2,
+      "elapsed_us": 26792
+    },
+    {
+      "sequences": 2,
+      "elapsed_us": 26736
+    },
+    {
+      "sequences": 2,
+      "elapsed_us": 26856
+    },
+    {
+      "sequences": 2,
+      "elapsed_us": 26729
+    },
+    {
+      "sequences": 2,
+      "elapsed_us": 26558
+    },
+    {
+      "sequences": 2,
+      "elapsed_us": 26577
+    },
+    {
+      "sequences": 2,
+      "elapsed_us": 26801
+    },
+    {
+      "sequences": 2,
+      "elapsed_us": 26833
+    },
+    {
+      "sequences": 2,
+      "elapsed_us": 26575
+    },
+    {
+      "sequences": 2,
+      "elapsed_us": 26737
+    },
+    {
+      "sequences": 2,
+      "elapsed_us": 26621
+    },
+    {
+      "sequences": 2,
+      "elapsed_us": 27320
+    },
+    {
+      "sequences": 2,
+      "elapsed_us": 26954
+    },
+    {
+      "sequences": 2,
+      "elapsed_us": 26797
+    },
+    {
+      "sequences": 2,
+      "elapsed_us": 26916
+    },
+    {
+      "sequences": 2,
+      "elapsed_us": 26754
+    },
+    {
+      "sequences": 2,
+      "elapsed_us": 26687
+    },
+    {
+      "sequences": 2,
+      "elapsed_us": 26772
+    },
+    {
+      "sequences": 2,
+      "elapsed_us": 26861
+    },
+    {
+      "sequences": 2,
+      "elapsed_us": 27209
+    },
+    {
+      "sequences": 2,
+      "elapsed_us": 26938
+    },
+    {
+      "sequences": 2,
+      "elapsed_us": 26878
+    },
+    {
+      "sequences": 1,
+      "elapsed_us": 23071
+    },
+    {
+      "sequences": 1,
+      "elapsed_us": 22405
+    },
+    {
+      "sequences": 1,
+      "elapsed_us": 22626
+    },
+    {
+      "sequences": 1,
+      "elapsed_us": 22352
+    },
+    {
+      "sequences": 1,
+      "elapsed_us": 22483
+    },
+    {
+      "sequences": 1,
+      "elapsed_us": 22475
+    },
+    {
+      "sequences": 1,
+      "elapsed_us": 22524
+    },
+    {
+      "sequences": 1,
+      "elapsed_us": 22477
+    },
+    {
+      "sequences": 1,
+      "elapsed_us": 22384
+    },
+    {
+      "sequences": 1,
+      "elapsed_us": 22463
+    },
+    {
+      "sequences": 1,
+      "elapsed_us": 22462
+    },
+    {
+      "sequences": 1,
+      "elapsed_us": 22524
+    },
+    {
+      "sequences": 1,
+      "elapsed_us": 22449
+    },
+    {
+      "sequences": 1,
+      "elapsed_us": 22647
+    },
+    {
+      "sequences": 1,
+      "elapsed_us": 22470
+    },
+    {
+      "sequences": 1,
+      "elapsed_us": 22465
+    }
+  ],
+  "decode_by_request": [
+    {
+      "request": 0,
+      "prompt_tokens": 8064,
+      "output_tokens": 128,
+      "by_batch_size": {
+        "2": {
+          "samples": 111,
+          "mean_us": 26885.495495495496,
+          "median_us": 26754,
+          "p95_us": 27691,
+          "min_us": 26352,
+          "max_us": 30743
+        }
+      }
+    },
+    {
+      "request": 1,
+      "prompt_tokens": 12,
+      "output_tokens": 8,
+      "by_batch_size": {}
+    },
+    {
+      "request": 2,
+      "prompt_tokens": 65408,
+      "output_tokens": 128,
+      "by_batch_size": {
+        "1": {
+          "samples": 16,
+          "mean_us": 22517.3125,
+          "median_us": 22472.5,
+          "p95_us": 23071,
+          "min_us": 22352,
+          "max_us": 23071
+        },
+        "2": {
+          "samples": 111,
+          "mean_us": 26885.495495495496,
+          "median_us": 26754,
+          "p95_us": 27691,
+          "min_us": 26352,
+          "max_us": 30743
+        }
+      }
+    },
+    {
+      "request": 3,
+      "prompt_tokens": 12,
+      "output_tokens": 8,
+      "by_batch_size": {}
+    }
+  ],
+  "completed_input_tokens": 73764,
+  "timing_scope": "completed native ABI call including sampling/consensus; pure-decode batches exclude competing prefill"
+}

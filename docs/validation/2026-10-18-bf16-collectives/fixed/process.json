@@ -1,0 +1,11 @@
+{
+  "returncode": 0,
+  "elapsed_seconds": 81.83472299994901,
+  "command": [
+    "/data/p00603624/inferfabric/openpangu92/native-build-bulk-domains/program_engine_probe",
+    "/data/p00603624/inferfabric/openpangu92/bf16-collectives8k-bound-fixed-plan",
+    "/models/92B",
+    "/data/p00603624/inferfabric/openpangu92/bf16-collectives8k-fixture/requests.txt"
+  ],
+  "preparation": true
+}

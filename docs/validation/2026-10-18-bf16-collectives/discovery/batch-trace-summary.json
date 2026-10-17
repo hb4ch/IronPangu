@@ -1,0 +1,183 @@
+{
+  "batches": 17,
+  "prefill_chunks": [
+    [
+      4096,
+      4080
+    ],
+    [
+      12
+    ],
+    [
+      4,
+      4094,
+      4078
+    ],
+    [
+      12
+    ],
+    [
+      4094,
+      4082
+    ],
+    [
+      12
+    ]
+  ],
+  "pure_decode_batch_us": [
+    35675,
+    31835,
+    35257,
+    34432,
+    31883,
+    31726,
+    31823,
+    25054,
+    24572,
+    24504
+  ],
+  "pure_decode_batches": [
+    {
+      "sequences": 3,
+      "elapsed_us": 35675
+    },
+    {
+      "sequences": 3,
+      "elapsed_us": 31835
+    },
+    {
+      "sequences": 3,
+      "elapsed_us": 35257
+    },
+    {
+      "sequences": 3,
+      "elapsed_us": 34432
+    },
+    {
+      "sequences": 3,
+      "elapsed_us": 31883
+    },
+    {
+      "sequences": 3,
+      "elapsed_us": 31726
+    },
+    {
+      "sequences": 3,
+      "elapsed_us": 31823
+    },
+    {
+      "sequences": 1,
+      "elapsed_us": 25054
+    },
+    {
+      "sequences": 1,
+      "elapsed_us": 24572
+    },
+    {
+      "sequences": 1,
+      "elapsed_us": 24504
+    }
+  ],
+  "decode_by_request": [
+    {
+      "request": 0,
+      "prompt_tokens": 8176,
+      "output_tokens": 5,
+      "by_batch_size": {
+        "3": {
+          "samples": 2,
+          "mean_us": 33755,
+          "median_us": 33755.0,
+          "p95_us": 35675,
+          "min_us": 31835,
+          "max_us": 35675
+        }
+      }
+    },
+    {
+      "request": 1,
+      "prompt_tokens": 12,
+      "output_tokens": 8,
+      "by_batch_size": {
+        "3": {
+          "samples": 3,
+          "mean_us": 34255.666666666664,
+          "median_us": 35257,
+          "p95_us": 35675,
+          "min_us": 31835,
+          "max_us": 35675
+        }
+      }
+    },
+    {
+      "request": 2,
+      "prompt_tokens": 8176,
+      "output_tokens": 5,
+      "by_batch_size": {
+        "3": {
+          "samples": 3,
+          "mean_us": 34255.666666666664,
+          "median_us": 35257,
+          "p95_us": 35675,
+          "min_us": 31835,
+          "max_us": 35675
+        }
+      }
+    },
+    {
+      "request": 3,
+      "prompt_tokens": 12,
+      "output_tokens": 8,
+      "by_batch_size": {
+        "3": {
+          "samples": 5,
+          "mean_us": 33024.2,
+          "median_us": 31883,
+          "p95_us": 35257,
+          "min_us": 31726,
+          "max_us": 35257
+        }
+      }
+    },
+    {
+      "request": 4,
+      "prompt_tokens": 8176,
+      "output_tokens": 5,
+      "by_batch_size": {
+        "3": {
+          "samples": 4,
+          "mean_us": 32466,
+          "median_us": 31853.0,
+          "p95_us": 34432,
+          "min_us": 31726,
+          "max_us": 34432
+        }
+      }
+    },
+    {
+      "request": 5,
+      "prompt_tokens": 12,
+      "output_tokens": 8,
+      "by_batch_size": {
+        "1": {
+          "samples": 3,
+          "mean_us": 24710,
+          "median_us": 24572,
+          "p95_us": 25054,
+          "min_us": 24504,
+          "max_us": 25054
+        },
+        "3": {
+          "samples": 4,
+          "mean_us": 32466,
+          "median_us": 31853.0,
+          "p95_us": 34432,
+          "min_us": 31726,
+          "max_us": 34432
+        }
+      }
+    }
+  ],
+  "completed_input_tokens": 24597,
+  "timing_scope": "completed native ABI call including sampling/consensus; pure-decode batches exclude competing prefill"
+}

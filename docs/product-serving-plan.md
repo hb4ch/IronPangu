@@ -20,9 +20,12 @@ NPU time on repeated short-answer suites that cannot expose this failure.
 
 The authored serving-budget path now accepts and preserves multiple residents
 and 4096-token uncaptured prefill, rather than requiring single-token DSL budgets
-plus command-line overrides. The new BF16-collective serving example is a separate
-experimental candidate; it must pass numerical and arena qualification before
-replacing the current bundle.
+plus command-line overrides. The new [BF16-collective serving candidate](validation/2026-10-18-bf16-collectives/README.md)
+passes all three short/8K arena-qualification stages and the 8K 128-token answer.
+Its 64K extended output is unchanged from FP32 and still differs from the
+reference at step 7. It remains experimental and has not replaced the HTTP bundle.
+The declared arena is about 40 MiB smaller per rank; this does not close the
+correctness or matched-performance gates.
 
 ## Current qualified baseline (2026-10-18)
 

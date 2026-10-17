@@ -1,0 +1,7 @@
+{
+  "/data/p00603624/inferfabric/inferfabric-compiler-authored-budgets": "d503a5dcc648f300ae1eba4e8e9d0e92be47ba9e87c114322519ae566a759e52",
+  "/data/p00603624/inferfabric/openpangu92/native-build-bulk-domains/libinferfabric_program.so": "f71e4b259683fadf6a7887fad9885c26e154273ecfcf1cc2e575bb46288dddb1",
+  "/data/p00603624/inferfabric/openpangu92/native-build-bulk-domains/program_engine_probe": "017be3fd2e8b765e30d82577578dca5aa203d17524d9e7ea6408c2fa723a9e90",
+  "/data/p00603624/inferfabric/openpangu92/bf16-collectives8k-bound-frozen-plan/execution.bin": "a77116748987b0c878356a490f09f4f6fd0755762a518b93d18f4a8b140715dc",
+  "/data/p00603624/inferfabric/openpangu92/bf16-collectives8k-bound-frozen-plan/arena.json": "05bd958fbe4cddc6f8ae8e25d989fadf1bdc51f74c8ecacb7584edd1092a6357"
+}
