@@ -36,6 +36,12 @@ The current C8 format is per-128 latent scales with BF16 rotary, applied to the 
 
 ### Required release target: 64K context
 
+The INT8/FP16 sparse-indexer vendor boundary now passes independent causal
+selection checks through 65,536 keys and 24 ACLGraph replays; see the
+[kernel qualification](validation/2026-10-17-quant-sparse-indexer/README.md).
+This closes only that kernel-interface gate. Decoder integration, reference
+parity and the serving gates below remain required.
+
 The user explicitly requires robust **65,536-token total context** for 92B.
 `max_model_len` includes prompt plus generated tokens; a 64K benchmark reserves
 output headroom rather than accepting 65,536 prompt tokens plus extra generation.

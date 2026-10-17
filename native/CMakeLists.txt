@@ -97,6 +97,12 @@ if(EXISTS "${OMNI_TRAINING_ROOT}/op_api/include/aclnn_ai_infra_manifold_constrai
 endif()
 
 set(OMNI_INFERENCE_ROOT "/usr/local/Ascend/ascend-toolkit/vendors/omni_custom_transformer" CACHE PATH "Qualified omni-ops inference operator package")
+if(EXISTS "${OMNI_INFERENCE_ROOT}/op_api/include/aclnn_ai_infra_quant_lightning_indexer.h")
+  add_executable(quant_sparse_indexer_probe probes/quant_sparse_indexer_probe.cpp)
+  target_include_directories(quant_sparse_indexer_probe PRIVATE "${ACL_INCLUDE}" "${OMNI_INFERENCE_ROOT}/op_api/include")
+  target_link_libraries(quant_sparse_indexer_probe PRIVATE "${OMNI_INFERENCE_ROOT}/op_api/lib/libcust_opapi.so" "${ACL_LIBRARY}" "${OPAPI_LIBRARY}" "${NNOPBASE_LIBRARY}")
+  target_compile_options(quant_sparse_indexer_probe PRIVATE -Wall -Wextra -Werror)
+endif()
 if(EXISTS "${OMNI_INFERENCE_ROOT}/op_api/include/aclnn_ai_infra_fused_causal_conv1d.h")
   add_executable(openpangu_mome_probe probes/openpangu_mome_probe.cpp)
   target_include_directories(openpangu_mome_probe PRIVATE "${ACL_INCLUDE}" "${OMNI_INFERENCE_ROOT}/op_api/include")
