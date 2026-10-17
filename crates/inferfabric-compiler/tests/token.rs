@@ -6,6 +6,23 @@ use inferfabric_dsl::{authoring::ModelDefinition, definition};
 use inferfabric_ir::initialization::{DType, Instruction};
 use std::collections::BTreeMap;
 #[test]
+fn long_context_plans_require_implemented_cache_paths() {
+    let source=include_str!("../../../examples/openpangu/92b-tp8-ep8-c8-learned.inferfabric");
+    let ModelDefinition::Execution {mut graph,..}=definition(source).unwrap() else {panic!()};
+    for context in [513,2048,2049,65536] {
+        graph.max_context=context;
+        let p=inferfabric_compiler::token_program::lower(&graph,None).unwrap().with_prefill_tokens(4).unwrap();
+        let (_,states)=inferfabric_compiler::token_serving::program_envelope(&graph,8,&p).unwrap();
+        for s in states.iter().filter(|s|!s.retention.is_full()) {
+            assert_eq!(s.capacity_tokens,if context==513 {528}else{544});
+        }
+        p.validate().unwrap();
+    }
+    graph.max_context=65537;assert!(graph.validate().is_err());
+    let ModelDefinition::Execution{mut graph,..}=definition(include_str!("../../../examples/openpangu/92b-tp8-ep8-c8.inferfabric")).unwrap() else {panic!()};
+    graph.max_context=513;assert!(graph.validate().is_err());
+}
+#[test]
 fn dense_attention_metadata_is_shared_only_with_matching_windows() {
     let ModelDefinition::Execution {graph,..}=definition(include_str!("../../../examples/openpangu/92b-tp8-ep8.inferfabric")).unwrap() else {panic!()};
     let p=inferfabric_compiler::token_program::lower(&graph,None).unwrap();

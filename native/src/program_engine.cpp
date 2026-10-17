@@ -37,6 +37,9 @@ struct Engine {
   Engine(const char *path, const char *weights, bool prepare) : bundle(path), checkpoint(weights),
       program(inferfabric::execution::Plan::read(bundle + "/execution.bin")), preparation(prepare) {
     inferfabric::execution::validate_kernels(program);
+    const char *experimental=std::getenv("INFERFABRIC_EXPERIMENTAL_LONG_CONTEXT");
+    if(program.context>512 && (!experimental || std::string(experimental)!="1"))
+      throw std::runtime_error("context above 512 is unqualified; explicit INFERFABRIC_EXPERIMENTAL_LONG_CONTEXT=1 required for qualification runs");
     next_positions.resize(program.resident_sequences,0);
     if (!program.physical || program.context < 3)
       throw std::runtime_error("persistent engine requires a physical token program with context >=3");

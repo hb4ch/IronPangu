@@ -35,6 +35,9 @@ inline uint32_t route_origin(const Plan &p,uint32_t id) {
 // serialized IR independently of Rust before allocating model/device memory.
 inline void validate_kernels(const Plan &p) {
   using T = std::pair<uint32_t, uint32_t>;
+  if(p.context>512)for(const auto &n:p.nodes)
+    if(n.op=="cache_quantize_append" || n.op=="packed_latent_attention")
+      throw std::runtime_error("long context requires paged BF16 windows or learned-index packed C8");
   if(p.physical) {
     auto count=[&](const char *op){return std::count_if(p.nodes.begin(),p.nodes.end(),[&](const auto &n){return n.op==op;});};
     if((count("packed_latent_attention") || count("sparse_index") || count("indexed_packed_attention")) && count("packed_attention_metadata")!=1)
@@ -323,7 +326,7 @@ inline void validate_kernels(const Plan &p) {
       eq("scale_dim", "192");
       eq("selection", "all_causal_within_window");
       auto window = n.integer("window");
-      if ((window != 512 && window != 2048) || p.context > window)
+      if (window != 512 && window != 2048)
         error();
     } else if (n.op == "swiglu") {
       if (n.inputs.size() == 1) {

@@ -74,7 +74,7 @@ struct Plan {
       throw std::runtime_error("prefill token capacity");
     if (!p.resident_sequences || p.resident_sequences > 64)
       throw std::runtime_error("resident sequence capacity");
-    if (!p.context || p.context > 512 || p.eos >= 151552 || !count ||
+    if (!p.context || p.context > 65536 || p.eos >= 151552 || !count ||
         count > 10000 || p.output >= count)
       throw std::runtime_error("token plan bounds");
     p.uses.resize(count);

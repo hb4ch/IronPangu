@@ -726,7 +726,8 @@ impl Program {
             || self.instructions.len() > 10000
             || self.output >= self.instructions.len()
             || self.max_context == 0
-            || self.max_context > 512
+            || self.max_context > 65_536
+            || (self.max_context>512 && self.instructions.iter().any(|i|matches!(i.op.as_str(),"cache_quantize_append"|"packed_latent_attention")))
         {
             return Err(invalid("physical program bounds"));
         }

@@ -372,6 +372,9 @@ pub fn write_bundle_with_page_policy(
     serving.resident_sequences = resident_sequences as u32;
     serving.shared_pages = shared_pages;
     (serving.variants,serving.states) = crate::token_serving::program_envelope(graph,topology.devices.len(),&program)?;
+    if graph.max_context>512 {
+        serving.limitations.push("Context above 512 is experimental and unqualified. The native engine requires INFERFABRIC_EXPERIMENTAL_LONG_CONTEXT=1 for qualification runs; compilation does not grant long-context output correctness or production admission.".into());
+    }
     if prefill_tokens > 1 {
         serving.limitations.push("Packed prefill uses an exact compiled chunk width, batched tokenwise operators and ordered per-query attention/convolution. Numerical equivalence and hardware readiness require independent qualification; no prefix reuse across numerical classes is granted.".into());
     }

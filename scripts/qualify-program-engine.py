@@ -21,6 +21,7 @@ def main():
     for name in ('binary', 'plan', 'checkpoint', 'cases', 'output'):
         p.add_argument('--' + name, required=True, type=Path)
     p.add_argument('--prepare', action='store_true')
+    p.add_argument('--experimental-long-context', action='store_true', help='Explicitly opt in to unqualified context above 512 for hardware qualification')
     p.add_argument('--output-diagnostics', action='store_true', help='Record existing sampler top-five request outputs; no activation readback')
     p.add_argument('--check-binding-limits', action='store_true', help='Reject oversized bindings through both ABIs, then verify valid retries and inference')
     p.add_argument('--packed-prefill', action='store_true', help='require the compiled packed chunk path')
@@ -39,6 +40,9 @@ def main():
     env.pop('INFERFABRIC_INTERLEAVE_RESIDENTS', None)
     env.pop('INFERFABRIC_PACKED_PREFILL', None)
     env.pop('INFERFABRIC_OUTPUT_DIAGNOSTICS',None)
+    env.pop('INFERFABRIC_EXPERIMENTAL_LONG_CONTEXT',None)
+    if args.experimental_long_context:
+        env['INFERFABRIC_EXPERIMENTAL_LONG_CONTEXT']='1'
     env.pop('INFERFABRIC_TEST_BINDING_LIMITS',None)
     if args.check_binding_limits:
         if not args.permuted_pages:

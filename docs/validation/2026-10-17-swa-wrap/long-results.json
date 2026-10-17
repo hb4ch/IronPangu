@@ -1,0 +1,86 @@
+{
+  "format": "inferfabric.persistent-program-qualification.v1",
+  "requests": 9,
+  "output_tokens": 72,
+  "exact_fixture_tokens": true,
+  "fixture_sha256": "38de8f2fe5ca143e36af08eac5607b49738b29bf8f418c0f03b99ec1b6d95b6f",
+  "permuted_pages": true,
+  "binding_limit_rejections": 0,
+  "interleaved_residents": false,
+  "packed_prefill": true,
+  "scope": "one loaded TP8/EP8 group, compiled packed prefill and serial decode; no long-context claim",
+  "measurements": [
+    {
+      "request": 0,
+      "case": "access-code-529",
+      "prompt_tokens": 529,
+      "output_tokens": 8,
+      "engine_ttft_ms": 5006.351,
+      "tpot_ms": 19.763857142857145
+    },
+    {
+      "request": 1,
+      "case": "access-code-1024",
+      "prompt_tokens": 1024,
+      "output_tokens": 8,
+      "engine_ttft_ms": 9632.132,
+      "tpot_ms": 19.91557142857143
+    },
+    {
+      "request": 2,
+      "case": "access-code-2040",
+      "prompt_tokens": 2040,
+      "output_tokens": 8,
+      "engine_ttft_ms": 19312.249,
+      "tpot_ms": 19.92742857142857
+    },
+    {
+      "request": 3,
+      "case": "access-code-529",
+      "prompt_tokens": 529,
+      "output_tokens": 8,
+      "engine_ttft_ms": 4985.986,
+      "tpot_ms": 19.78814285714286
+    },
+    {
+      "request": 4,
+      "case": "access-code-1024",
+      "prompt_tokens": 1024,
+      "output_tokens": 8,
+      "engine_ttft_ms": 9640.673,
+      "tpot_ms": 19.90385714285714
+    },
+    {
+      "request": 5,
+      "case": "access-code-2040",
+      "prompt_tokens": 2040,
+      "output_tokens": 8,
+      "engine_ttft_ms": 19294.503,
+      "tpot_ms": 20.007
+    },
+    {
+      "request": 6,
+      "case": "access-code-529",
+      "prompt_tokens": 529,
+      "output_tokens": 8,
+      "engine_ttft_ms": 4974.513,
+      "tpot_ms": 19.791
+    },
+    {
+      "request": 7,
+      "case": "access-code-1024",
+      "prompt_tokens": 1024,
+      "output_tokens": 8,
+      "engine_ttft_ms": 9612.798,
+      "tpot_ms": 19.871142857142857
+    },
+    {
+      "request": 8,
+      "case": "access-code-2040",
+      "prompt_tokens": 2040,
+      "output_tokens": 8,
+      "engine_ttft_ms": 19307.245,
+      "tpot_ms": 19.977285714285713
+    }
+  ]
+}

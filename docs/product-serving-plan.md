@@ -54,6 +54,15 @@ cover 65,536 addresses and 524 scatter graph replays; the full standard 92B nati
 and HTTP regressions pass. At the still-enforced context 512 gate the model does
 not wrap, so full-model wrap output and longer-context qualification remain open.
 
+The first [full-model SWA-wrap experiment](validation/2026-10-17-swa-wrap/README.md)
+now matches all 72 independent-reference output tokens at prompt lengths 529,
+1,024 and 2,040 across three repetitions. Mean TTFT is 4.99/9.63/19.30 seconds;
+TPOT is 19.78–19.97 ms. This validates these retrieval cases, not general 2K or 64K
+serving. Compilation can represent up to 65,536 tokens on implemented cache paths;
+native admission above 512 requires the explicit experimental qualification opt-in.
+Next test selection beyond 2,048 candidates and broader output cases, while
+addressing prefill throughput and preserving the unresolved accuracy evidence.
+
 Experimental learned-index execution now includes explicit INT8 index queries/keys
 and FP16 scales/head weights in the [physical plan](learned-index-quantization.md).
 Its [C8 reference boundary comparison](validation/2026-10-17-learned-index-int8/README.md)

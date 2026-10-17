@@ -1,0 +1,92 @@
+[
+  {
+    "case": "access-code-529",
+    "prompt_tokens": 529,
+    "native_output_ids": [
+      22,
+      18,
+      16,
+      24,
+      148902,
+      148900,
+      148900,
+      1114
+    ],
+    "reference_output_ids": [
+      22,
+      18,
+      16,
+      24,
+      148902,
+      148900,
+      148900,
+      1114
+    ],
+    "exact_all_tokens": true,
+    "exact_through_reference_eos": true,
+    "repetitions": 3,
+    "ttft_ms_mean": 4988.95,
+    "tpot_ms_mean": 19.781,
+    "tpot_ms_median": 19.782
+  },
+  {
+    "case": "access-code-1024",
+    "prompt_tokens": 1024,
+    "native_output_ids": [
+      22,
+      18,
+      16,
+      24,
+      148902,
+      148900,
+      148900,
+      1114
+    ],
+    "reference_output_ids": [
+      22,
+      18,
+      16,
+      24,
+      148902,
+      148900,
+      148900,
+      1114
+    ],
+    "exact_all_tokens": true,
+    "exact_through_reference_eos": true,
+    "repetitions": 3,
+    "ttft_ms_mean": 9628.534333333333,
+    "tpot_ms_mean": 19.896857142857144,
+    "tpot_ms_median": 19.896
+  },
+  {
+    "case": "access-code-2040",
+    "prompt_tokens": 2040,
+    "native_output_ids": [
+      22,
+      18,
+      16,
+      24,
+      148902,
+      148900,
+      148900,
+      1114
+    ],
+    "reference_output_ids": [
+      22,
+      18,
+      16,
+      24,
+      148902,
+      148900,
+      148900,
+      1114
+    ],
+    "exact_all_tokens": true,
+    "exact_through_reference_eos": true,
+    "repetitions": 3,
+    "ttft_ms_mean": 19304.665666666668,
+    "tpot_ms_mean": 19.97057142857143,
+    "tpot_ms_median": 19.955
+  }
+]

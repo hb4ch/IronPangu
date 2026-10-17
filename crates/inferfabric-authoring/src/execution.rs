@@ -456,7 +456,7 @@ impl Graph {
         if self.nodes.is_empty()
             || self.nodes.len() > 10000
             || self.max_context == 0
-            || self.max_context > 512
+            || self.max_context > 65_536
             || self.eos >= 151552
             || self.name.is_empty()
             || self.name.len() > 1024
@@ -484,8 +484,12 @@ impl Graph {
             {
                 return fail(n, "tensor width bound");
             }
-            if n.op == "latent_attention" && self.max_context > n.integer("window")? {
-                return fail(n, "context exceeds exact causal attention window");
+            if n.op == "latent_attention" && self.max_context > 512 {
+                let cache=&self.nodes[n.inputs[1]];
+                let dtype=cache.attrs.get("cache_dtype").map(String::as_str).unwrap_or("bf16");
+                if dtype!="bf16" && (dtype!="int8_ds_mla" || n.attrs["selection"]!="learned_indices") {
+                    return fail(n,"long context requires paged BF16 windows or learned-index packed C8");
+                }
             }
             if n.op == "expert_swiglu_down" {
                 let routes = *n.inputs.last().unwrap();
