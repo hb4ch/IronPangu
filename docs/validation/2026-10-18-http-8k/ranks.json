@@ -1,0 +1,194 @@
+[
+  {
+    "rank": 0,
+    "frozen": true,
+    "arena_bytes": 39572690960,
+    "workspace_planned": true,
+    "workspace_growth": 0,
+    "activation_host_transfers": 0,
+    "rejected_transfers": 0,
+    "graphs": [
+      {
+        "name": "token_decode",
+        "replays": 1
+      },
+      {
+        "name": "sequence_decode_1",
+        "replays": 89
+      },
+      {
+        "name": "sequence_decode_2",
+        "replays": 41
+      }
+    ],
+    "uncaptured_prefill_forwards": 32
+  },
+  {
+    "rank": 1,
+    "frozen": true,
+    "arena_bytes": 39572690960,
+    "workspace_planned": true,
+    "workspace_growth": 0,
+    "activation_host_transfers": 0,
+    "rejected_transfers": 0,
+    "graphs": [
+      {
+        "name": "token_decode",
+        "replays": 1
+      },
+      {
+        "name": "sequence_decode_1",
+        "replays": 89
+      },
+      {
+        "name": "sequence_decode_2",
+        "replays": 41
+      }
+    ],
+    "uncaptured_prefill_forwards": 32
+  },
+  {
+    "rank": 2,
+    "frozen": true,
+    "arena_bytes": 39572690960,
+    "workspace_planned": true,
+    "workspace_growth": 0,
+    "activation_host_transfers": 0,
+    "rejected_transfers": 0,
+    "graphs": [
+      {
+        "name": "token_decode",
+        "replays": 1
+      },
+      {
+        "name": "sequence_decode_1",
+        "replays": 89
+      },
+      {
+        "name": "sequence_decode_2",
+        "replays": 41
+      }
+    ],
+    "uncaptured_prefill_forwards": 32
+  },
+  {
+    "rank": 3,
+    "frozen": true,
+    "arena_bytes": 39572690960,
+    "workspace_planned": true,
+    "workspace_growth": 0,
+    "activation_host_transfers": 0,
+    "rejected_transfers": 0,
+    "graphs": [
+      {
+        "name": "token_decode",
+        "replays": 1
+      },
+      {
+        "name": "sequence_decode_1",
+        "replays": 89
+      },
+      {
+        "name": "sequence_decode_2",
+        "replays": 41
+      }
+    ],
+    "uncaptured_prefill_forwards": 32
+  },
+  {
+    "rank": 4,
+    "frozen": true,
+    "arena_bytes": 39572690960,
+    "workspace_planned": true,
+    "workspace_growth": 0,
+    "activation_host_transfers": 0,
+    "rejected_transfers": 0,
+    "graphs": [
+      {
+        "name": "token_decode",
+        "replays": 1
+      },
+      {
+        "name": "sequence_decode_1",
+        "replays": 89
+      },
+      {
+        "name": "sequence_decode_2",
+        "replays": 41
+      }
+    ],
+    "uncaptured_prefill_forwards": 32
+  },
+  {
+    "rank": 5,
+    "frozen": true,
+    "arena_bytes": 39572690960,
+    "workspace_planned": true,
+    "workspace_growth": 0,
+    "activation_host_transfers": 0,
+    "rejected_transfers": 0,
+    "graphs": [
+      {
+        "name": "token_decode",
+        "replays": 1
+      },
+      {
+        "name": "sequence_decode_1",
+        "replays": 89
+      },
+      {
+        "name": "sequence_decode_2",
+        "replays": 41
+      }
+    ],
+    "uncaptured_prefill_forwards": 32
+  },
+  {
+    "rank": 6,
+    "frozen": true,
+    "arena_bytes": 39572690960,
+    "workspace_planned": true,
+    "workspace_growth": 0,
+    "activation_host_transfers": 0,
+    "rejected_transfers": 0,
+    "graphs": [
+      {
+        "name": "token_decode",
+        "replays": 1
+      },
+      {
+        "name": "sequence_decode_1",
+        "replays": 89
+      },
+      {
+        "name": "sequence_decode_2",
+        "replays": 41
+      }
+    ],
+    "uncaptured_prefill_forwards": 32
+  },
+  {
+    "rank": 7,
+    "frozen": true,
+    "arena_bytes": 39572690960,
+    "workspace_planned": true,
+    "workspace_growth": 0,
+    "activation_host_transfers": 0,
+    "rejected_transfers": 0,
+    "graphs": [
+      {
+        "name": "token_decode",
+        "replays": 1
+      },
+      {
+        "name": "sequence_decode_1",
+        "replays": 89
+      },
+      {
+        "name": "sequence_decode_2",
+        "replays": 41
+      }
+    ],
+    "uncaptured_prefill_forwards": 32
+  }
+]
