@@ -1,0 +1,4135 @@
+{
+  "version": 1,
+  "identity": {
+    "program_sha256": "569146f167164d042280c78a5c29cc22849dedc198d93a83d523ae368ba31ba7",
+    "checkpoint_metadata_sha256": "e6ab8e354f31f844671a0d6013d686e86b4ebc2ba8f3e893d509c2c170d015d8",
+    "backend_revision": "0a7f14eae379db6cd44b28d25a461838a3f07be2574d7d0c7d683fd6732a4921",
+    "devices": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7
+    ]
+  },
+  "vocab_size": 151552,
+  "eos": 148902,
+  "variants": [
+    {
+      "id": "serial_token_v1",
+      "phase": "decode",
+      "max_sequences": 1,
+      "max_tokens": 1,
+      "max_query_tokens": 1,
+      "max_context": 512,
+      "numerical_class": "ascend_serial_token_v1",
+      "graph_capable": true,
+      "packed": false
+    }
+  ],
+  "states": [
+    {
+      "id": "hidden.i0.block.attention.qc",
+      "logical_node": 7,
+      "ranks": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "storage": {
+        "kind": "slot",
+        "bytes": 4096,
+        "dtype": "bf16"
+      },
+      "capacity_tokens": 512,
+      "window_tokens": null,
+      "checkpoint_supported": false
+    },
+    {
+      "id": "hidden.i0.block.attention.kc",
+      "logical_node": 13,
+      "ranks": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "storage": {
+        "kind": "slot",
+        "bytes": 2048,
+        "dtype": "bf16"
+      },
+      "capacity_tokens": 512,
+      "window_tokens": null,
+      "checkpoint_supported": false
+    },
+    {
+      "id": "hidden.i0.block.attention.cache",
+      "logical_node": 15,
+      "ranks": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "storage": {
+        "kind": "pages",
+        "page_tokens": 32,
+        "row_bytes": 656,
+        "encoding": "int8_latent512_tile128_f32_scales_bf16_rotary64"
+      },
+      "capacity_tokens": 512,
+      "window_tokens": 2048,
+      "checkpoint_supported": false
+    },
+    {
+      "id": "hidden.i0.block.attention.oc",
+      "logical_node": 19,
+      "ranks": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "storage": {
+        "kind": "slot",
+        "bytes": 3072,
+        "dtype": "bf16"
+      },
+      "capacity_tokens": 512,
+      "window_tokens": null,
+      "checkpoint_supported": false
+    },
+    {
+      "id": "hidden.i1.block.attention.qc",
+      "logical_node": 40,
+      "ranks": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "storage": {
+        "kind": "slot",
+        "bytes": 4096,
+        "dtype": "bf16"
+      },
+      "capacity_tokens": 512,
+      "window_tokens": null,
+      "checkpoint_supported": false
+    },
+    {
+      "id": "hidden.i1.block.attention.kc",
+      "logical_node": 46,
+      "ranks": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "storage": {
+        "kind": "slot",
+        "bytes": 2048,
+        "dtype": "bf16"
+      },
+      "capacity_tokens": 512,
+      "window_tokens": null,
+      "checkpoint_supported": false
+    },
+    {
+      "id": "hidden.i1.block.attention.cache",
+      "logical_node": 48,
+      "ranks": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "storage": {
+        "kind": "pages",
+        "page_tokens": 16,
+        "row_bytes": 1152,
+        "encoding": "bf16_latent512_rotary64"
+      },
+      "capacity_tokens": 512,
+      "window_tokens": 512,
+      "checkpoint_supported": false
+    },
+    {
+      "id": "hidden.i1.block.attention.oc",
+      "logical_node": 52,
+      "ranks": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "storage": {
+        "kind": "slot",
+        "bytes": 3072,
+        "dtype": "bf16"
+      },
+      "capacity_tokens": 512,
+      "window_tokens": null,
+      "checkpoint_supported": false
+    },
+    {
+      "id": "hidden.i2.block.attention.qc",
+      "logical_node": 73,
+      "ranks": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "storage": {
+        "kind": "slot",
+        "bytes": 4096,
+        "dtype": "bf16"
+      },
+      "capacity_tokens": 512,
+      "window_tokens": null,
+      "checkpoint_supported": false
+    },
+    {
+      "id": "hidden.i2.block.attention.kc",
+      "logical_node": 79,
+      "ranks": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "storage": {
+        "kind": "slot",
+        "bytes": 2048,
+        "dtype": "bf16"
+      },
+      "capacity_tokens": 512,
+      "window_tokens": null,
+      "checkpoint_supported": false
+    },
+    {
+      "id": "hidden.i2.block.attention.cache",
+      "logical_node": 81,
+      "ranks": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "storage": {
+        "kind": "pages",
+        "page_tokens": 16,
+        "row_bytes": 1152,
+        "encoding": "bf16_latent512_rotary64"
+      },
+      "capacity_tokens": 512,
+      "window_tokens": 512,
+      "checkpoint_supported": false
+    },
+    {
+      "id": "hidden.i2.block.attention.oc",
+      "logical_node": 85,
+      "ranks": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "storage": {
+        "kind": "slot",
+        "bytes": 3072,
+        "dtype": "bf16"
+      },
+      "capacity_tokens": 512,
+      "window_tokens": null,
+      "checkpoint_supported": false
+    },
+    {
+      "id": "hidden.i3.block.attention.qc",
+      "logical_node": 110,
+      "ranks": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "storage": {
+        "kind": "slot",
+        "bytes": 4096,
+        "dtype": "bf16"
+      },
+      "capacity_tokens": 512,
+      "window_tokens": null,
+      "checkpoint_supported": false
+    },
+    {
+      "id": "hidden.i3.block.attention.kc",
+      "logical_node": 116,
+      "ranks": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "storage": {
+        "kind": "slot",
+        "bytes": 2048,
+        "dtype": "bf16"
+      },
+      "capacity_tokens": 512,
+      "window_tokens": null,
+      "checkpoint_supported": false
+    },
+    {
+      "id": "hidden.i3.block.attention.cache",
+      "logical_node": 118,
+      "ranks": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "storage": {
+        "kind": "pages",
+        "page_tokens": 32,
+        "row_bytes": 656,
+        "encoding": "int8_latent512_tile128_f32_scales_bf16_rotary64"
+      },
+      "capacity_tokens": 512,
+      "window_tokens": 2048,
+      "checkpoint_supported": false
+    },
+    {
+      "id": "hidden.i3.block.attention.oc",
+      "logical_node": 122,
+      "ranks": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "storage": {
+        "kind": "slot",
+        "bytes": 3072,
+        "dtype": "bf16"
+      },
+      "capacity_tokens": 512,
+      "window_tokens": null,
+      "checkpoint_supported": false
+    },
+    {
+      "id": "hidden.i4.block.attention.qc",
+      "logical_node": 147,
+      "ranks": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "storage": {
+        "kind": "slot",
+        "bytes": 4096,
+        "dtype": "bf16"
+      },
+      "capacity_tokens": 512,
+      "window_tokens": null,
+      "checkpoint_supported": false
+    },
+    {
+      "id": "hidden.i4.block.attention.kc",
+      "logical_node": 153,
+      "ranks": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "storage": {
+        "kind": "slot",
+        "bytes": 2048,
+        "dtype": "bf16"
+      },
+      "capacity_tokens": 512,
+      "window_tokens": null,
+      "checkpoint_supported": false
+    },
+    {
+      "id": "hidden.i4.block.attention.cache",
+      "logical_node": 155,
+      "ranks": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "storage": {
+        "kind": "pages",
+        "page_tokens": 16,
+        "row_bytes": 1152,
+        "encoding": "bf16_latent512_rotary64"
+      },
+      "capacity_tokens": 512,
+      "window_tokens": 512,
+      "checkpoint_supported": false
+    },
+    {
+      "id": "hidden.i4.block.attention.oc",
+      "logical_node": 159,
+      "ranks": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "storage": {
+        "kind": "slot",
+        "bytes": 3072,
+        "dtype": "bf16"
+      },
+      "capacity_tokens": 512,
+      "window_tokens": null,
+      "checkpoint_supported": false
+    },
+    {
+      "id": "hidden.i5.block.attention.qc",
+      "logical_node": 184,
+      "ranks": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "storage": {
+        "kind": "slot",
+        "bytes": 4096,
+        "dtype": "bf16"
+      },
+      "capacity_tokens": 512,
+      "window_tokens": null,
+      "checkpoint_supported": false
+    },
+    {
+      "id": "hidden.i5.block.attention.kc",
+      "logical_node": 190,
+      "ranks": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "storage": {
+        "kind": "slot",
+        "bytes": 2048,
+        "dtype": "bf16"
+      },
+      "capacity_tokens": 512,
+      "window_tokens": null,
+      "checkpoint_supported": false
+    },
+    {
+      "id": "hidden.i5.block.attention.cache",
+      "logical_node": 192,
+      "ranks": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "storage": {
+        "kind": "pages",
+        "page_tokens": 16,
+        "row_bytes": 1152,
+        "encoding": "bf16_latent512_rotary64"
+      },
+      "capacity_tokens": 512,
+      "window_tokens": 512,
+      "checkpoint_supported": false
+    },
+    {
+      "id": "hidden.i5.block.attention.oc",
+      "logical_node": 196,
+      "ranks": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "storage": {
+        "kind": "slot",
+        "bytes": 3072,
+        "dtype": "bf16"
+      },
+      "capacity_tokens": 512,
+      "window_tokens": null,
+      "checkpoint_supported": false
+    },
+    {
+      "id": "hidden.i6.block.attention.qc",
+      "logical_node": 221,
+      "ranks": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "storage": {
+        "kind": "slot",
+        "bytes": 4096,
+        "dtype": "bf16"
+      },
+      "capacity_tokens": 512,
+      "window_tokens": null,
+      "checkpoint_supported": false
+    },
+    {
+      "id": "hidden.i6.block.attention.kc",
+      "logical_node": 227,
+      "ranks": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "storage": {
+        "kind": "slot",
+        "bytes": 2048,
+        "dtype": "bf16"
+      },
+      "capacity_tokens": 512,
+      "window_tokens": null,
+      "checkpoint_supported": false
+    },
+    {
+      "id": "hidden.i6.block.attention.cache",
+      "logical_node": 229,
+      "ranks": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "storage": {
+        "kind": "pages",
+        "page_tokens": 32,
+        "row_bytes": 656,
+        "encoding": "int8_latent512_tile128_f32_scales_bf16_rotary64"
+      },
+      "capacity_tokens": 512,
+      "window_tokens": 2048,
+      "checkpoint_supported": false
+    },
+    {
+      "id": "hidden.i6.block.attention.oc",
+      "logical_node": 233,
+      "ranks": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "storage": {
+        "kind": "slot",
+        "bytes": 3072,
+        "dtype": "bf16"
+      },
+      "capacity_tokens": 512,
+      "window_tokens": null,
+      "checkpoint_supported": false
+    },
+    {
+      "id": "hidden.i7.block.attention.qc",
+      "logical_node": 258,
+      "ranks": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "storage": {
+        "kind": "slot",
+        "bytes": 4096,
+        "dtype": "bf16"
+      },
+      "capacity_tokens": 512,
+      "window_tokens": null,
+      "checkpoint_supported": false
+    },
+    {
+      "id": "hidden.i7.block.attention.kc",
+      "logical_node": 264,
+      "ranks": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "storage": {
+        "kind": "slot",
+        "bytes": 2048,
+        "dtype": "bf16"
+      },
+      "capacity_tokens": 512,
+      "window_tokens": null,
+      "checkpoint_supported": false
+    },
+    {
+      "id": "hidden.i7.block.attention.cache",
+      "logical_node": 266,
+      "ranks": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "storage": {
+        "kind": "pages",
+        "page_tokens": 16,
+        "row_bytes": 1152,
+        "encoding": "bf16_latent512_rotary64"
+      },
+      "capacity_tokens": 512,
+      "window_tokens": 512,
+      "checkpoint_supported": false
+    },
+    {
+      "id": "hidden.i7.block.attention.oc",
+      "logical_node": 270,
+      "ranks": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "storage": {
+        "kind": "slot",
+        "bytes": 3072,
+        "dtype": "bf16"
+      },
+      "capacity_tokens": 512,
+      "window_tokens": null,
+      "checkpoint_supported": false
+    },
+    {
+      "id": "hidden.i8.block.attention.qc",
+      "logical_node": 295,
+      "ranks": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "storage": {
+        "kind": "slot",
+        "bytes": 4096,
+        "dtype": "bf16"
+      },
+      "capacity_tokens": 512,
+      "window_tokens": null,
+      "checkpoint_supported": false
+    },
+    {
+      "id": "hidden.i8.block.attention.kc",
+      "logical_node": 301,
+      "ranks": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "storage": {
+        "kind": "slot",
+        "bytes": 2048,
+        "dtype": "bf16"
+      },
+      "capacity_tokens": 512,
+      "window_tokens": null,
+      "checkpoint_supported": false
+    },
+    {
+      "id": "hidden.i8.block.attention.cache",
+      "logical_node": 303,
+      "ranks": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "storage": {
+        "kind": "pages",
+        "page_tokens": 16,
+        "row_bytes": 1152,
+        "encoding": "bf16_latent512_rotary64"
+      },
+      "capacity_tokens": 512,
+      "window_tokens": 512,
+      "checkpoint_supported": false
+    },
+    {
+      "id": "hidden.i8.block.attention.oc",
+      "logical_node": 307,
+      "ranks": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "storage": {
+        "kind": "slot",
+        "bytes": 3072,
+        "dtype": "bf16"
+      },
+      "capacity_tokens": 512,
+      "window_tokens": null,
+      "checkpoint_supported": false
+    },
+    {
+      "id": "hidden.i9.block.attention.qc",
+      "logical_node": 332,
+      "ranks": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "storage": {
+        "kind": "slot",
+        "bytes": 4096,
+        "dtype": "bf16"
+      },
+      "capacity_tokens": 512,
+      "window_tokens": null,
+      "checkpoint_supported": false
+    },
+    {
+      "id": "hidden.i9.block.attention.kc",
+      "logical_node": 338,
+      "ranks": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "storage": {
+        "kind": "slot",
+        "bytes": 2048,
+        "dtype": "bf16"
+      },
+      "capacity_tokens": 512,
+      "window_tokens": null,
+      "checkpoint_supported": false
+    },
+    {
+      "id": "hidden.i9.block.attention.cache",
+      "logical_node": 340,
+      "ranks": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "storage": {
+        "kind": "pages",
+        "page_tokens": 32,
+        "row_bytes": 656,
+        "encoding": "int8_latent512_tile128_f32_scales_bf16_rotary64"
+      },
+      "capacity_tokens": 512,
+      "window_tokens": 2048,
+      "checkpoint_supported": false
+    },
+    {
+      "id": "hidden.i9.block.attention.oc",
+      "logical_node": 344,
+      "ranks": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "storage": {
+        "kind": "slot",
+        "bytes": 3072,
+        "dtype": "bf16"
+      },
+      "capacity_tokens": 512,
+      "window_tokens": null,
+      "checkpoint_supported": false
+    },
+    {
+      "id": "hidden.i10.block.attention.qc",
+      "logical_node": 369,
+      "ranks": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "storage": {
+        "kind": "slot",
+        "bytes": 4096,
+        "dtype": "bf16"
+      },
+      "capacity_tokens": 512,
+      "window_tokens": null,
+      "checkpoint_supported": false
+    },
+    {
+      "id": "hidden.i10.block.attention.kc",
+      "logical_node": 375,
+      "ranks": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "storage": {
+        "kind": "slot",
+        "bytes": 2048,
+        "dtype": "bf16"
+      },
+      "capacity_tokens": 512,
+      "window_tokens": null,
+      "checkpoint_supported": false
+    },
+    {
+      "id": "hidden.i10.block.attention.cache",
+      "logical_node": 377,
+      "ranks": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "storage": {
+        "kind": "pages",
+        "page_tokens": 16,
+        "row_bytes": 1152,
+        "encoding": "bf16_latent512_rotary64"
+      },
+      "capacity_tokens": 512,
+      "window_tokens": 512,
+      "checkpoint_supported": false
+    },
+    {
+      "id": "hidden.i10.block.attention.oc",
+      "logical_node": 381,
+      "ranks": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "storage": {
+        "kind": "slot",
+        "bytes": 3072,
+        "dtype": "bf16"
+      },
+      "capacity_tokens": 512,
+      "window_tokens": null,
+      "checkpoint_supported": false
+    },
+    {
+      "id": "hidden.i11.block.attention.qc",
+      "logical_node": 406,
+      "ranks": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "storage": {
+        "kind": "slot",
+        "bytes": 4096,
+        "dtype": "bf16"
+      },
+      "capacity_tokens": 512,
+      "window_tokens": null,
+      "checkpoint_supported": false
+    },
+    {
+      "id": "hidden.i11.block.attention.kc",
+      "logical_node": 412,
+      "ranks": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "storage": {
+        "kind": "slot",
+        "bytes": 2048,
+        "dtype": "bf16"
+      },
+      "capacity_tokens": 512,
+      "window_tokens": null,
+      "checkpoint_supported": false
+    },
+    {
+      "id": "hidden.i11.block.attention.cache",
+      "logical_node": 414,
+      "ranks": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "storage": {
+        "kind": "pages",
+        "page_tokens": 16,
+        "row_bytes": 1152,
+        "encoding": "bf16_latent512_rotary64"
+      },
+      "capacity_tokens": 512,
+      "window_tokens": 512,
+      "checkpoint_supported": false
+    },
+    {
+      "id": "hidden.i11.block.attention.oc",
+      "logical_node": 418,
+      "ranks": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "storage": {
+        "kind": "slot",
+        "bytes": 3072,
+        "dtype": "bf16"
+      },
+      "capacity_tokens": 512,
+      "window_tokens": null,
+      "checkpoint_supported": false
+    },
+    {
+      "id": "hidden.i12.block.attention.qc",
+      "logical_node": 443,
+      "ranks": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "storage": {
+        "kind": "slot",
+        "bytes": 4096,
+        "dtype": "bf16"
+      },
+      "capacity_tokens": 512,
+      "window_tokens": null,
+      "checkpoint_supported": false
+    },
+    {
+      "id": "hidden.i12.block.attention.kc",
+      "logical_node": 449,
+      "ranks": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "storage": {
+        "kind": "slot",
+        "bytes": 2048,
+        "dtype": "bf16"
+      },
+      "capacity_tokens": 512,
+      "window_tokens": null,
+      "checkpoint_supported": false
+    },
+    {
+      "id": "hidden.i12.block.attention.cache",
+      "logical_node": 451,
+      "ranks": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "storage": {
+        "kind": "pages",
+        "page_tokens": 32,
+        "row_bytes": 656,
+        "encoding": "int8_latent512_tile128_f32_scales_bf16_rotary64"
+      },
+      "capacity_tokens": 512,
+      "window_tokens": 2048,
+      "checkpoint_supported": false
+    },
+    {
+      "id": "hidden.i12.block.attention.oc",
+      "logical_node": 455,
+      "ranks": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "storage": {
+        "kind": "slot",
+        "bytes": 3072,
+        "dtype": "bf16"
+      },
+      "capacity_tokens": 512,
+      "window_tokens": null,
+      "checkpoint_supported": false
+    },
+    {
+      "id": "hidden.i13.block.attention.qc",
+      "logical_node": 480,
+      "ranks": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "storage": {
+        "kind": "slot",
+        "bytes": 4096,
+        "dtype": "bf16"
+      },
+      "capacity_tokens": 512,
+      "window_tokens": null,
+      "checkpoint_supported": false
+    },
+    {
+      "id": "hidden.i13.block.attention.kc",
+      "logical_node": 486,
+      "ranks": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "storage": {
+        "kind": "slot",
+        "bytes": 2048,
+        "dtype": "bf16"
+      },
+      "capacity_tokens": 512,
+      "window_tokens": null,
+      "checkpoint_supported": false
+    },
+    {
+      "id": "hidden.i13.block.attention.cache",
+      "logical_node": 488,
+      "ranks": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "storage": {
+        "kind": "pages",
+        "page_tokens": 16,
+        "row_bytes": 1152,
+        "encoding": "bf16_latent512_rotary64"
+      },
+      "capacity_tokens": 512,
+      "window_tokens": 512,
+      "checkpoint_supported": false
+    },
+    {
+      "id": "hidden.i13.block.attention.oc",
+      "logical_node": 492,
+      "ranks": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "storage": {
+        "kind": "slot",
+        "bytes": 3072,
+        "dtype": "bf16"
+      },
+      "capacity_tokens": 512,
+      "window_tokens": null,
+      "checkpoint_supported": false
+    },
+    {
+      "id": "hidden.i14.block.attention.qc",
+      "logical_node": 517,
+      "ranks": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "storage": {
+        "kind": "slot",
+        "bytes": 4096,
+        "dtype": "bf16"
+      },
+      "capacity_tokens": 512,
+      "window_tokens": null,
+      "checkpoint_supported": false
+    },
+    {
+      "id": "hidden.i14.block.attention.kc",
+      "logical_node": 523,
+      "ranks": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "storage": {
+        "kind": "slot",
+        "bytes": 2048,
+        "dtype": "bf16"
+      },
+      "capacity_tokens": 512,
+      "window_tokens": null,
+      "checkpoint_supported": false
+    },
+    {
+      "id": "hidden.i14.block.attention.cache",
+      "logical_node": 525,
+      "ranks": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "storage": {
+        "kind": "pages",
+        "page_tokens": 16,
+        "row_bytes": 1152,
+        "encoding": "bf16_latent512_rotary64"
+      },
+      "capacity_tokens": 512,
+      "window_tokens": 512,
+      "checkpoint_supported": false
+    },
+    {
+      "id": "hidden.i14.block.attention.oc",
+      "logical_node": 529,
+      "ranks": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "storage": {
+        "kind": "slot",
+        "bytes": 3072,
+        "dtype": "bf16"
+      },
+      "capacity_tokens": 512,
+      "window_tokens": null,
+      "checkpoint_supported": false
+    },
+    {
+      "id": "hidden.i15.block.attention.qc",
+      "logical_node": 554,
+      "ranks": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "storage": {
+        "kind": "slot",
+        "bytes": 4096,
+        "dtype": "bf16"
+      },
+      "capacity_tokens": 512,
+      "window_tokens": null,
+      "checkpoint_supported": false
+    },
+    {
+      "id": "hidden.i15.block.attention.kc",
+      "logical_node": 560,
+      "ranks": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "storage": {
+        "kind": "slot",
+        "bytes": 2048,
+        "dtype": "bf16"
+      },
+      "capacity_tokens": 512,
+      "window_tokens": null,
+      "checkpoint_supported": false
+    },
+    {
+      "id": "hidden.i15.block.attention.cache",
+      "logical_node": 562,
+      "ranks": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "storage": {
+        "kind": "pages",
+        "page_tokens": 32,
+        "row_bytes": 656,
+        "encoding": "int8_latent512_tile128_f32_scales_bf16_rotary64"
+      },
+      "capacity_tokens": 512,
+      "window_tokens": 2048,
+      "checkpoint_supported": false
+    },
+    {
+      "id": "hidden.i15.block.attention.oc",
+      "logical_node": 566,
+      "ranks": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "storage": {
+        "kind": "slot",
+        "bytes": 3072,
+        "dtype": "bf16"
+      },
+      "capacity_tokens": 512,
+      "window_tokens": null,
+      "checkpoint_supported": false
+    },
+    {
+      "id": "hidden.i16.block.attention.qc",
+      "logical_node": 591,
+      "ranks": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "storage": {
+        "kind": "slot",
+        "bytes": 4096,
+        "dtype": "bf16"
+      },
+      "capacity_tokens": 512,
+      "window_tokens": null,
+      "checkpoint_supported": false
+    },
+    {
+      "id": "hidden.i16.block.attention.kc",
+      "logical_node": 597,
+      "ranks": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "storage": {
+        "kind": "slot",
+        "bytes": 2048,
+        "dtype": "bf16"
+      },
+      "capacity_tokens": 512,
+      "window_tokens": null,
+      "checkpoint_supported": false
+    },
+    {
+      "id": "hidden.i16.block.attention.cache",
+      "logical_node": 599,
+      "ranks": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "storage": {
+        "kind": "pages",
+        "page_tokens": 16,
+        "row_bytes": 1152,
+        "encoding": "bf16_latent512_rotary64"
+      },
+      "capacity_tokens": 512,
+      "window_tokens": 512,
+      "checkpoint_supported": false
+    },
+    {
+      "id": "hidden.i16.block.attention.oc",
+      "logical_node": 603,
+      "ranks": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "storage": {
+        "kind": "slot",
+        "bytes": 3072,
+        "dtype": "bf16"
+      },
+      "capacity_tokens": 512,
+      "window_tokens": null,
+      "checkpoint_supported": false
+    },
+    {
+      "id": "hidden.i17.block.attention.qc",
+      "logical_node": 628,
+      "ranks": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "storage": {
+        "kind": "slot",
+        "bytes": 4096,
+        "dtype": "bf16"
+      },
+      "capacity_tokens": 512,
+      "window_tokens": null,
+      "checkpoint_supported": false
+    },
+    {
+      "id": "hidden.i17.block.attention.kc",
+      "logical_node": 634,
+      "ranks": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "storage": {
+        "kind": "slot",
+        "bytes": 2048,
+        "dtype": "bf16"
+      },
+      "capacity_tokens": 512,
+      "window_tokens": null,
+      "checkpoint_supported": false
+    },
+    {
+      "id": "hidden.i17.block.attention.cache",
+      "logical_node": 636,
+      "ranks": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "storage": {
+        "kind": "pages",
+        "page_tokens": 16,
+        "row_bytes": 1152,
+        "encoding": "bf16_latent512_rotary64"
+      },
+      "capacity_tokens": 512,
+      "window_tokens": 512,
+      "checkpoint_supported": false
+    },
+    {
+      "id": "hidden.i17.block.attention.oc",
+      "logical_node": 640,
+      "ranks": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "storage": {
+        "kind": "slot",
+        "bytes": 3072,
+        "dtype": "bf16"
+      },
+      "capacity_tokens": 512,
+      "window_tokens": null,
+      "checkpoint_supported": false
+    },
+    {
+      "id": "hidden.i18.block.attention.qc",
+      "logical_node": 665,
+      "ranks": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "storage": {
+        "kind": "slot",
+        "bytes": 4096,
+        "dtype": "bf16"
+      },
+      "capacity_tokens": 512,
+      "window_tokens": null,
+      "checkpoint_supported": false
+    },
+    {
+      "id": "hidden.i18.block.attention.kc",
+      "logical_node": 671,
+      "ranks": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "storage": {
+        "kind": "slot",
+        "bytes": 2048,
+        "dtype": "bf16"
+      },
+      "capacity_tokens": 512,
+      "window_tokens": null,
+      "checkpoint_supported": false
+    },
+    {
+      "id": "hidden.i18.block.attention.cache",
+      "logical_node": 673,
+      "ranks": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "storage": {
+        "kind": "pages",
+        "page_tokens": 32,
+        "row_bytes": 656,
+        "encoding": "int8_latent512_tile128_f32_scales_bf16_rotary64"
+      },
+      "capacity_tokens": 512,
+      "window_tokens": 2048,
+      "checkpoint_supported": false
+    },
+    {
+      "id": "hidden.i18.block.attention.oc",
+      "logical_node": 677,
+      "ranks": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "storage": {
+        "kind": "slot",
+        "bytes": 3072,
+        "dtype": "bf16"
+      },
+      "capacity_tokens": 512,
+      "window_tokens": null,
+      "checkpoint_supported": false
+    },
+    {
+      "id": "hidden.i19.block.attention.qc",
+      "logical_node": 702,
+      "ranks": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "storage": {
+        "kind": "slot",
+        "bytes": 4096,
+        "dtype": "bf16"
+      },
+      "capacity_tokens": 512,
+      "window_tokens": null,
+      "checkpoint_supported": false
+    },
+    {
+      "id": "hidden.i19.block.attention.kc",
+      "logical_node": 708,
+      "ranks": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "storage": {
+        "kind": "slot",
+        "bytes": 2048,
+        "dtype": "bf16"
+      },
+      "capacity_tokens": 512,
+      "window_tokens": null,
+      "checkpoint_supported": false
+    },
+    {
+      "id": "hidden.i19.block.attention.cache",
+      "logical_node": 710,
+      "ranks": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "storage": {
+        "kind": "pages",
+        "page_tokens": 16,
+        "row_bytes": 1152,
+        "encoding": "bf16_latent512_rotary64"
+      },
+      "capacity_tokens": 512,
+      "window_tokens": 512,
+      "checkpoint_supported": false
+    },
+    {
+      "id": "hidden.i19.block.attention.oc",
+      "logical_node": 714,
+      "ranks": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "storage": {
+        "kind": "slot",
+        "bytes": 3072,
+        "dtype": "bf16"
+      },
+      "capacity_tokens": 512,
+      "window_tokens": null,
+      "checkpoint_supported": false
+    },
+    {
+      "id": "hidden.i20.block.attention.qc",
+      "logical_node": 739,
+      "ranks": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "storage": {
+        "kind": "slot",
+        "bytes": 4096,
+        "dtype": "bf16"
+      },
+      "capacity_tokens": 512,
+      "window_tokens": null,
+      "checkpoint_supported": false
+    },
+    {
+      "id": "hidden.i20.block.attention.kc",
+      "logical_node": 745,
+      "ranks": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "storage": {
+        "kind": "slot",
+        "bytes": 2048,
+        "dtype": "bf16"
+      },
+      "capacity_tokens": 512,
+      "window_tokens": null,
+      "checkpoint_supported": false
+    },
+    {
+      "id": "hidden.i20.block.attention.cache",
+      "logical_node": 747,
+      "ranks": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "storage": {
+        "kind": "pages",
+        "page_tokens": 16,
+        "row_bytes": 1152,
+        "encoding": "bf16_latent512_rotary64"
+      },
+      "capacity_tokens": 512,
+      "window_tokens": 512,
+      "checkpoint_supported": false
+    },
+    {
+      "id": "hidden.i20.block.attention.oc",
+      "logical_node": 751,
+      "ranks": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "storage": {
+        "kind": "slot",
+        "bytes": 3072,
+        "dtype": "bf16"
+      },
+      "capacity_tokens": 512,
+      "window_tokens": null,
+      "checkpoint_supported": false
+    },
+    {
+      "id": "hidden.i21.block.attention.qc",
+      "logical_node": 776,
+      "ranks": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "storage": {
+        "kind": "slot",
+        "bytes": 4096,
+        "dtype": "bf16"
+      },
+      "capacity_tokens": 512,
+      "window_tokens": null,
+      "checkpoint_supported": false
+    },
+    {
+      "id": "hidden.i21.block.attention.kc",
+      "logical_node": 782,
+      "ranks": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "storage": {
+        "kind": "slot",
+        "bytes": 2048,
+        "dtype": "bf16"
+      },
+      "capacity_tokens": 512,
+      "window_tokens": null,
+      "checkpoint_supported": false
+    },
+    {
+      "id": "hidden.i21.block.attention.cache",
+      "logical_node": 784,
+      "ranks": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "storage": {
+        "kind": "pages",
+        "page_tokens": 32,
+        "row_bytes": 656,
+        "encoding": "int8_latent512_tile128_f32_scales_bf16_rotary64"
+      },
+      "capacity_tokens": 512,
+      "window_tokens": 2048,
+      "checkpoint_supported": false
+    },
+    {
+      "id": "hidden.i21.block.attention.oc",
+      "logical_node": 788,
+      "ranks": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "storage": {
+        "kind": "slot",
+        "bytes": 3072,
+        "dtype": "bf16"
+      },
+      "capacity_tokens": 512,
+      "window_tokens": null,
+      "checkpoint_supported": false
+    },
+    {
+      "id": "hidden.i22.block.attention.qc",
+      "logical_node": 813,
+      "ranks": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "storage": {
+        "kind": "slot",
+        "bytes": 4096,
+        "dtype": "bf16"
+      },
+      "capacity_tokens": 512,
+      "window_tokens": null,
+      "checkpoint_supported": false
+    },
+    {
+      "id": "hidden.i22.block.attention.kc",
+      "logical_node": 819,
+      "ranks": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "storage": {
+        "kind": "slot",
+        "bytes": 2048,
+        "dtype": "bf16"
+      },
+      "capacity_tokens": 512,
+      "window_tokens": null,
+      "checkpoint_supported": false
+    },
+    {
+      "id": "hidden.i22.block.attention.cache",
+      "logical_node": 821,
+      "ranks": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "storage": {
+        "kind": "pages",
+        "page_tokens": 16,
+        "row_bytes": 1152,
+        "encoding": "bf16_latent512_rotary64"
+      },
+      "capacity_tokens": 512,
+      "window_tokens": 512,
+      "checkpoint_supported": false
+    },
+    {
+      "id": "hidden.i22.block.attention.oc",
+      "logical_node": 825,
+      "ranks": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "storage": {
+        "kind": "slot",
+        "bytes": 3072,
+        "dtype": "bf16"
+      },
+      "capacity_tokens": 512,
+      "window_tokens": null,
+      "checkpoint_supported": false
+    },
+    {
+      "id": "hidden.i23.block.attention.qc",
+      "logical_node": 850,
+      "ranks": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "storage": {
+        "kind": "slot",
+        "bytes": 4096,
+        "dtype": "bf16"
+      },
+      "capacity_tokens": 512,
+      "window_tokens": null,
+      "checkpoint_supported": false
+    },
+    {
+      "id": "hidden.i23.block.attention.kc",
+      "logical_node": 856,
+      "ranks": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "storage": {
+        "kind": "slot",
+        "bytes": 2048,
+        "dtype": "bf16"
+      },
+      "capacity_tokens": 512,
+      "window_tokens": null,
+      "checkpoint_supported": false
+    },
+    {
+      "id": "hidden.i23.block.attention.cache",
+      "logical_node": 858,
+      "ranks": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "storage": {
+        "kind": "pages",
+        "page_tokens": 16,
+        "row_bytes": 1152,
+        "encoding": "bf16_latent512_rotary64"
+      },
+      "capacity_tokens": 512,
+      "window_tokens": 512,
+      "checkpoint_supported": false
+    },
+    {
+      "id": "hidden.i23.block.attention.oc",
+      "logical_node": 862,
+      "ranks": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "storage": {
+        "kind": "slot",
+        "bytes": 3072,
+        "dtype": "bf16"
+      },
+      "capacity_tokens": 512,
+      "window_tokens": null,
+      "checkpoint_supported": false
+    },
+    {
+      "id": "hidden.i24.block.attention.qc",
+      "logical_node": 887,
+      "ranks": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "storage": {
+        "kind": "slot",
+        "bytes": 4096,
+        "dtype": "bf16"
+      },
+      "capacity_tokens": 512,
+      "window_tokens": null,
+      "checkpoint_supported": false
+    },
+    {
+      "id": "hidden.i24.block.attention.kc",
+      "logical_node": 893,
+      "ranks": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "storage": {
+        "kind": "slot",
+        "bytes": 2048,
+        "dtype": "bf16"
+      },
+      "capacity_tokens": 512,
+      "window_tokens": null,
+      "checkpoint_supported": false
+    },
+    {
+      "id": "hidden.i24.block.attention.cache",
+      "logical_node": 895,
+      "ranks": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "storage": {
+        "kind": "pages",
+        "page_tokens": 32,
+        "row_bytes": 656,
+        "encoding": "int8_latent512_tile128_f32_scales_bf16_rotary64"
+      },
+      "capacity_tokens": 512,
+      "window_tokens": 2048,
+      "checkpoint_supported": false
+    },
+    {
+      "id": "hidden.i24.block.attention.oc",
+      "logical_node": 899,
+      "ranks": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "storage": {
+        "kind": "slot",
+        "bytes": 3072,
+        "dtype": "bf16"
+      },
+      "capacity_tokens": 512,
+      "window_tokens": null,
+      "checkpoint_supported": false
+    },
+    {
+      "id": "hidden.i25.block.attention.qc",
+      "logical_node": 924,
+      "ranks": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "storage": {
+        "kind": "slot",
+        "bytes": 4096,
+        "dtype": "bf16"
+      },
+      "capacity_tokens": 512,
+      "window_tokens": null,
+      "checkpoint_supported": false
+    },
+    {
+      "id": "hidden.i25.block.attention.kc",
+      "logical_node": 930,
+      "ranks": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "storage": {
+        "kind": "slot",
+        "bytes": 2048,
+        "dtype": "bf16"
+      },
+      "capacity_tokens": 512,
+      "window_tokens": null,
+      "checkpoint_supported": false
+    },
+    {
+      "id": "hidden.i25.block.attention.cache",
+      "logical_node": 932,
+      "ranks": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "storage": {
+        "kind": "pages",
+        "page_tokens": 16,
+        "row_bytes": 1152,
+        "encoding": "bf16_latent512_rotary64"
+      },
+      "capacity_tokens": 512,
+      "window_tokens": 512,
+      "checkpoint_supported": false
+    },
+    {
+      "id": "hidden.i25.block.attention.oc",
+      "logical_node": 936,
+      "ranks": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "storage": {
+        "kind": "slot",
+        "bytes": 3072,
+        "dtype": "bf16"
+      },
+      "capacity_tokens": 512,
+      "window_tokens": null,
+      "checkpoint_supported": false
+    },
+    {
+      "id": "hidden.i26.block.attention.qc",
+      "logical_node": 961,
+      "ranks": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "storage": {
+        "kind": "slot",
+        "bytes": 4096,
+        "dtype": "bf16"
+      },
+      "capacity_tokens": 512,
+      "window_tokens": null,
+      "checkpoint_supported": false
+    },
+    {
+      "id": "hidden.i26.block.attention.kc",
+      "logical_node": 967,
+      "ranks": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "storage": {
+        "kind": "slot",
+        "bytes": 2048,
+        "dtype": "bf16"
+      },
+      "capacity_tokens": 512,
+      "window_tokens": null,
+      "checkpoint_supported": false
+    },
+    {
+      "id": "hidden.i26.block.attention.cache",
+      "logical_node": 969,
+      "ranks": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "storage": {
+        "kind": "pages",
+        "page_tokens": 16,
+        "row_bytes": 1152,
+        "encoding": "bf16_latent512_rotary64"
+      },
+      "capacity_tokens": 512,
+      "window_tokens": 512,
+      "checkpoint_supported": false
+    },
+    {
+      "id": "hidden.i26.block.attention.oc",
+      "logical_node": 973,
+      "ranks": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "storage": {
+        "kind": "slot",
+        "bytes": 3072,
+        "dtype": "bf16"
+      },
+      "capacity_tokens": 512,
+      "window_tokens": null,
+      "checkpoint_supported": false
+    },
+    {
+      "id": "hidden.i27.block.attention.qc",
+      "logical_node": 998,
+      "ranks": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "storage": {
+        "kind": "slot",
+        "bytes": 4096,
+        "dtype": "bf16"
+      },
+      "capacity_tokens": 512,
+      "window_tokens": null,
+      "checkpoint_supported": false
+    },
+    {
+      "id": "hidden.i27.block.attention.kc",
+      "logical_node": 1004,
+      "ranks": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "storage": {
+        "kind": "slot",
+        "bytes": 2048,
+        "dtype": "bf16"
+      },
+      "capacity_tokens": 512,
+      "window_tokens": null,
+      "checkpoint_supported": false
+    },
+    {
+      "id": "hidden.i27.block.attention.cache",
+      "logical_node": 1006,
+      "ranks": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "storage": {
+        "kind": "pages",
+        "page_tokens": 32,
+        "row_bytes": 656,
+        "encoding": "int8_latent512_tile128_f32_scales_bf16_rotary64"
+      },
+      "capacity_tokens": 512,
+      "window_tokens": 2048,
+      "checkpoint_supported": false
+    },
+    {
+      "id": "hidden.i27.block.attention.oc",
+      "logical_node": 1010,
+      "ranks": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "storage": {
+        "kind": "slot",
+        "bytes": 3072,
+        "dtype": "bf16"
+      },
+      "capacity_tokens": 512,
+      "window_tokens": null,
+      "checkpoint_supported": false
+    },
+    {
+      "id": "hidden.i28.block.attention.qc",
+      "logical_node": 1035,
+      "ranks": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "storage": {
+        "kind": "slot",
+        "bytes": 4096,
+        "dtype": "bf16"
+      },
+      "capacity_tokens": 512,
+      "window_tokens": null,
+      "checkpoint_supported": false
+    },
+    {
+      "id": "hidden.i28.block.attention.kc",
+      "logical_node": 1041,
+      "ranks": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "storage": {
+        "kind": "slot",
+        "bytes": 2048,
+        "dtype": "bf16"
+      },
+      "capacity_tokens": 512,
+      "window_tokens": null,
+      "checkpoint_supported": false
+    },
+    {
+      "id": "hidden.i28.block.attention.cache",
+      "logical_node": 1043,
+      "ranks": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "storage": {
+        "kind": "pages",
+        "page_tokens": 16,
+        "row_bytes": 1152,
+        "encoding": "bf16_latent512_rotary64"
+      },
+      "capacity_tokens": 512,
+      "window_tokens": 512,
+      "checkpoint_supported": false
+    },
+    {
+      "id": "hidden.i28.block.attention.oc",
+      "logical_node": 1047,
+      "ranks": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "storage": {
+        "kind": "slot",
+        "bytes": 3072,
+        "dtype": "bf16"
+      },
+      "capacity_tokens": 512,
+      "window_tokens": null,
+      "checkpoint_supported": false
+    },
+    {
+      "id": "hidden.i29.block.attention.qc",
+      "logical_node": 1072,
+      "ranks": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "storage": {
+        "kind": "slot",
+        "bytes": 4096,
+        "dtype": "bf16"
+      },
+      "capacity_tokens": 512,
+      "window_tokens": null,
+      "checkpoint_supported": false
+    },
+    {
+      "id": "hidden.i29.block.attention.kc",
+      "logical_node": 1078,
+      "ranks": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "storage": {
+        "kind": "slot",
+        "bytes": 2048,
+        "dtype": "bf16"
+      },
+      "capacity_tokens": 512,
+      "window_tokens": null,
+      "checkpoint_supported": false
+    },
+    {
+      "id": "hidden.i29.block.attention.cache",
+      "logical_node": 1080,
+      "ranks": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "storage": {
+        "kind": "pages",
+        "page_tokens": 16,
+        "row_bytes": 1152,
+        "encoding": "bf16_latent512_rotary64"
+      },
+      "capacity_tokens": 512,
+      "window_tokens": 512,
+      "checkpoint_supported": false
+    },
+    {
+      "id": "hidden.i29.block.attention.oc",
+      "logical_node": 1084,
+      "ranks": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "storage": {
+        "kind": "slot",
+        "bytes": 3072,
+        "dtype": "bf16"
+      },
+      "capacity_tokens": 512,
+      "window_tokens": null,
+      "checkpoint_supported": false
+    },
+    {
+      "id": "hidden.i30.block.attention.qc",
+      "logical_node": 1109,
+      "ranks": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "storage": {
+        "kind": "slot",
+        "bytes": 4096,
+        "dtype": "bf16"
+      },
+      "capacity_tokens": 512,
+      "window_tokens": null,
+      "checkpoint_supported": false
+    },
+    {
+      "id": "hidden.i30.block.attention.kc",
+      "logical_node": 1115,
+      "ranks": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "storage": {
+        "kind": "slot",
+        "bytes": 2048,
+        "dtype": "bf16"
+      },
+      "capacity_tokens": 512,
+      "window_tokens": null,
+      "checkpoint_supported": false
+    },
+    {
+      "id": "hidden.i30.block.attention.cache",
+      "logical_node": 1117,
+      "ranks": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "storage": {
+        "kind": "pages",
+        "page_tokens": 32,
+        "row_bytes": 656,
+        "encoding": "int8_latent512_tile128_f32_scales_bf16_rotary64"
+      },
+      "capacity_tokens": 512,
+      "window_tokens": 2048,
+      "checkpoint_supported": false
+    },
+    {
+      "id": "hidden.i30.block.attention.oc",
+      "logical_node": 1121,
+      "ranks": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "storage": {
+        "kind": "slot",
+        "bytes": 3072,
+        "dtype": "bf16"
+      },
+      "capacity_tokens": 512,
+      "window_tokens": null,
+      "checkpoint_supported": false
+    },
+    {
+      "id": "hidden.i31.block.attention.qc",
+      "logical_node": 1146,
+      "ranks": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "storage": {
+        "kind": "slot",
+        "bytes": 4096,
+        "dtype": "bf16"
+      },
+      "capacity_tokens": 512,
+      "window_tokens": null,
+      "checkpoint_supported": false
+    },
+    {
+      "id": "hidden.i31.block.attention.kc",
+      "logical_node": 1152,
+      "ranks": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "storage": {
+        "kind": "slot",
+        "bytes": 2048,
+        "dtype": "bf16"
+      },
+      "capacity_tokens": 512,
+      "window_tokens": null,
+      "checkpoint_supported": false
+    },
+    {
+      "id": "hidden.i31.block.attention.cache",
+      "logical_node": 1154,
+      "ranks": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "storage": {
+        "kind": "pages",
+        "page_tokens": 16,
+        "row_bytes": 1152,
+        "encoding": "bf16_latent512_rotary64"
+      },
+      "capacity_tokens": 512,
+      "window_tokens": 512,
+      "checkpoint_supported": false
+    },
+    {
+      "id": "hidden.i31.block.attention.oc",
+      "logical_node": 1158,
+      "ranks": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "storage": {
+        "kind": "slot",
+        "bytes": 3072,
+        "dtype": "bf16"
+      },
+      "capacity_tokens": 512,
+      "window_tokens": null,
+      "checkpoint_supported": false
+    },
+    {
+      "id": "hidden.i32.block.attention.qc",
+      "logical_node": 1183,
+      "ranks": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "storage": {
+        "kind": "slot",
+        "bytes": 4096,
+        "dtype": "bf16"
+      },
+      "capacity_tokens": 512,
+      "window_tokens": null,
+      "checkpoint_supported": false
+    },
+    {
+      "id": "hidden.i32.block.attention.kc",
+      "logical_node": 1189,
+      "ranks": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "storage": {
+        "kind": "slot",
+        "bytes": 2048,
+        "dtype": "bf16"
+      },
+      "capacity_tokens": 512,
+      "window_tokens": null,
+      "checkpoint_supported": false
+    },
+    {
+      "id": "hidden.i32.block.attention.cache",
+      "logical_node": 1191,
+      "ranks": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "storage": {
+        "kind": "pages",
+        "page_tokens": 16,
+        "row_bytes": 1152,
+        "encoding": "bf16_latent512_rotary64"
+      },
+      "capacity_tokens": 512,
+      "window_tokens": 512,
+      "checkpoint_supported": false
+    },
+    {
+      "id": "hidden.i32.block.attention.oc",
+      "logical_node": 1195,
+      "ranks": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "storage": {
+        "kind": "slot",
+        "bytes": 3072,
+        "dtype": "bf16"
+      },
+      "capacity_tokens": 512,
+      "window_tokens": null,
+      "checkpoint_supported": false
+    },
+    {
+      "id": "hidden.i33.block.attention.qc",
+      "logical_node": 1220,
+      "ranks": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "storage": {
+        "kind": "slot",
+        "bytes": 4096,
+        "dtype": "bf16"
+      },
+      "capacity_tokens": 512,
+      "window_tokens": null,
+      "checkpoint_supported": false
+    },
+    {
+      "id": "hidden.i33.block.attention.kc",
+      "logical_node": 1226,
+      "ranks": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "storage": {
+        "kind": "slot",
+        "bytes": 2048,
+        "dtype": "bf16"
+      },
+      "capacity_tokens": 512,
+      "window_tokens": null,
+      "checkpoint_supported": false
+    },
+    {
+      "id": "hidden.i33.block.attention.cache",
+      "logical_node": 1228,
+      "ranks": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "storage": {
+        "kind": "pages",
+        "page_tokens": 32,
+        "row_bytes": 656,
+        "encoding": "int8_latent512_tile128_f32_scales_bf16_rotary64"
+      },
+      "capacity_tokens": 512,
+      "window_tokens": 2048,
+      "checkpoint_supported": false
+    },
+    {
+      "id": "hidden.i33.block.attention.oc",
+      "logical_node": 1232,
+      "ranks": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "storage": {
+        "kind": "slot",
+        "bytes": 3072,
+        "dtype": "bf16"
+      },
+      "capacity_tokens": 512,
+      "window_tokens": null,
+      "checkpoint_supported": false
+    },
+    {
+      "id": "hidden.i34.block.attention.qc",
+      "logical_node": 1257,
+      "ranks": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "storage": {
+        "kind": "slot",
+        "bytes": 4096,
+        "dtype": "bf16"
+      },
+      "capacity_tokens": 512,
+      "window_tokens": null,
+      "checkpoint_supported": false
+    },
+    {
+      "id": "hidden.i34.block.attention.kc",
+      "logical_node": 1263,
+      "ranks": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "storage": {
+        "kind": "slot",
+        "bytes": 2048,
+        "dtype": "bf16"
+      },
+      "capacity_tokens": 512,
+      "window_tokens": null,
+      "checkpoint_supported": false
+    },
+    {
+      "id": "hidden.i34.block.attention.cache",
+      "logical_node": 1265,
+      "ranks": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "storage": {
+        "kind": "pages",
+        "page_tokens": 16,
+        "row_bytes": 1152,
+        "encoding": "bf16_latent512_rotary64"
+      },
+      "capacity_tokens": 512,
+      "window_tokens": 512,
+      "checkpoint_supported": false
+    },
+    {
+      "id": "hidden.i34.block.attention.oc",
+      "logical_node": 1269,
+      "ranks": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "storage": {
+        "kind": "slot",
+        "bytes": 3072,
+        "dtype": "bf16"
+      },
+      "capacity_tokens": 512,
+      "window_tokens": null,
+      "checkpoint_supported": false
+    },
+    {
+      "id": "hidden.i35.block.attention.qc",
+      "logical_node": 1294,
+      "ranks": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "storage": {
+        "kind": "slot",
+        "bytes": 4096,
+        "dtype": "bf16"
+      },
+      "capacity_tokens": 512,
+      "window_tokens": null,
+      "checkpoint_supported": false
+    },
+    {
+      "id": "hidden.i35.block.attention.kc",
+      "logical_node": 1300,
+      "ranks": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "storage": {
+        "kind": "slot",
+        "bytes": 2048,
+        "dtype": "bf16"
+      },
+      "capacity_tokens": 512,
+      "window_tokens": null,
+      "checkpoint_supported": false
+    },
+    {
+      "id": "hidden.i35.block.attention.cache",
+      "logical_node": 1302,
+      "ranks": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "storage": {
+        "kind": "pages",
+        "page_tokens": 16,
+        "row_bytes": 1152,
+        "encoding": "bf16_latent512_rotary64"
+      },
+      "capacity_tokens": 512,
+      "window_tokens": 512,
+      "checkpoint_supported": false
+    },
+    {
+      "id": "hidden.i35.block.attention.oc",
+      "logical_node": 1306,
+      "ranks": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "storage": {
+        "kind": "slot",
+        "bytes": 3072,
+        "dtype": "bf16"
+      },
+      "capacity_tokens": 512,
+      "window_tokens": null,
+      "checkpoint_supported": false
+    },
+    {
+      "id": "hidden.i36.block.attention.qc",
+      "logical_node": 1331,
+      "ranks": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "storage": {
+        "kind": "slot",
+        "bytes": 4096,
+        "dtype": "bf16"
+      },
+      "capacity_tokens": 512,
+      "window_tokens": null,
+      "checkpoint_supported": false
+    },
+    {
+      "id": "hidden.i36.block.attention.kc",
+      "logical_node": 1337,
+      "ranks": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "storage": {
+        "kind": "slot",
+        "bytes": 2048,
+        "dtype": "bf16"
+      },
+      "capacity_tokens": 512,
+      "window_tokens": null,
+      "checkpoint_supported": false
+    },
+    {
+      "id": "hidden.i36.block.attention.cache",
+      "logical_node": 1339,
+      "ranks": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "storage": {
+        "kind": "pages",
+        "page_tokens": 32,
+        "row_bytes": 656,
+        "encoding": "int8_latent512_tile128_f32_scales_bf16_rotary64"
+      },
+      "capacity_tokens": 512,
+      "window_tokens": 2048,
+      "checkpoint_supported": false
+    },
+    {
+      "id": "hidden.i36.block.attention.oc",
+      "logical_node": 1343,
+      "ranks": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "storage": {
+        "kind": "slot",
+        "bytes": 3072,
+        "dtype": "bf16"
+      },
+      "capacity_tokens": 512,
+      "window_tokens": null,
+      "checkpoint_supported": false
+    },
+    {
+      "id": "hidden.i37.block.attention.qc",
+      "logical_node": 1368,
+      "ranks": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "storage": {
+        "kind": "slot",
+        "bytes": 4096,
+        "dtype": "bf16"
+      },
+      "capacity_tokens": 512,
+      "window_tokens": null,
+      "checkpoint_supported": false
+    },
+    {
+      "id": "hidden.i37.block.attention.kc",
+      "logical_node": 1374,
+      "ranks": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "storage": {
+        "kind": "slot",
+        "bytes": 2048,
+        "dtype": "bf16"
+      },
+      "capacity_tokens": 512,
+      "window_tokens": null,
+      "checkpoint_supported": false
+    },
+    {
+      "id": "hidden.i37.block.attention.cache",
+      "logical_node": 1376,
+      "ranks": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "storage": {
+        "kind": "pages",
+        "page_tokens": 16,
+        "row_bytes": 1152,
+        "encoding": "bf16_latent512_rotary64"
+      },
+      "capacity_tokens": 512,
+      "window_tokens": 512,
+      "checkpoint_supported": false
+    },
+    {
+      "id": "hidden.i37.block.attention.oc",
+      "logical_node": 1380,
+      "ranks": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "storage": {
+        "kind": "slot",
+        "bytes": 3072,
+        "dtype": "bf16"
+      },
+      "capacity_tokens": 512,
+      "window_tokens": null,
+      "checkpoint_supported": false
+    },
+    {
+      "id": "hidden.i38.block.attention.qc",
+      "logical_node": 1405,
+      "ranks": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "storage": {
+        "kind": "slot",
+        "bytes": 4096,
+        "dtype": "bf16"
+      },
+      "capacity_tokens": 512,
+      "window_tokens": null,
+      "checkpoint_supported": false
+    },
+    {
+      "id": "hidden.i38.block.attention.kc",
+      "logical_node": 1411,
+      "ranks": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "storage": {
+        "kind": "slot",
+        "bytes": 2048,
+        "dtype": "bf16"
+      },
+      "capacity_tokens": 512,
+      "window_tokens": null,
+      "checkpoint_supported": false
+    },
+    {
+      "id": "hidden.i38.block.attention.cache",
+      "logical_node": 1413,
+      "ranks": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "storage": {
+        "kind": "pages",
+        "page_tokens": 16,
+        "row_bytes": 1152,
+        "encoding": "bf16_latent512_rotary64"
+      },
+      "capacity_tokens": 512,
+      "window_tokens": 512,
+      "checkpoint_supported": false
+    },
+    {
+      "id": "hidden.i38.block.attention.oc",
+      "logical_node": 1417,
+      "ranks": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "storage": {
+        "kind": "slot",
+        "bytes": 3072,
+        "dtype": "bf16"
+      },
+      "capacity_tokens": 512,
+      "window_tokens": null,
+      "checkpoint_supported": false
+    },
+    {
+      "id": "hidden.i39.block.attention.qc",
+      "logical_node": 1442,
+      "ranks": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "storage": {
+        "kind": "slot",
+        "bytes": 4096,
+        "dtype": "bf16"
+      },
+      "capacity_tokens": 512,
+      "window_tokens": null,
+      "checkpoint_supported": false
+    },
+    {
+      "id": "hidden.i39.block.attention.kc",
+      "logical_node": 1448,
+      "ranks": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "storage": {
+        "kind": "slot",
+        "bytes": 2048,
+        "dtype": "bf16"
+      },
+      "capacity_tokens": 512,
+      "window_tokens": null,
+      "checkpoint_supported": false
+    },
+    {
+      "id": "hidden.i39.block.attention.cache",
+      "logical_node": 1450,
+      "ranks": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "storage": {
+        "kind": "pages",
+        "page_tokens": 32,
+        "row_bytes": 656,
+        "encoding": "int8_latent512_tile128_f32_scales_bf16_rotary64"
+      },
+      "capacity_tokens": 512,
+      "window_tokens": 2048,
+      "checkpoint_supported": false
+    },
+    {
+      "id": "hidden.i39.block.attention.oc",
+      "logical_node": 1454,
+      "ranks": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "storage": {
+        "kind": "slot",
+        "bytes": 3072,
+        "dtype": "bf16"
+      },
+      "capacity_tokens": 512,
+      "window_tokens": null,
+      "checkpoint_supported": false
+    },
+    {
+      "id": "hidden.i40.block.attention.qc",
+      "logical_node": 1479,
+      "ranks": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "storage": {
+        "kind": "slot",
+        "bytes": 4096,
+        "dtype": "bf16"
+      },
+      "capacity_tokens": 512,
+      "window_tokens": null,
+      "checkpoint_supported": false
+    },
+    {
+      "id": "hidden.i40.block.attention.kc",
+      "logical_node": 1485,
+      "ranks": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "storage": {
+        "kind": "slot",
+        "bytes": 2048,
+        "dtype": "bf16"
+      },
+      "capacity_tokens": 512,
+      "window_tokens": null,
+      "checkpoint_supported": false
+    },
+    {
+      "id": "hidden.i40.block.attention.cache",
+      "logical_node": 1487,
+      "ranks": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "storage": {
+        "kind": "pages",
+        "page_tokens": 16,
+        "row_bytes": 1152,
+        "encoding": "bf16_latent512_rotary64"
+      },
+      "capacity_tokens": 512,
+      "window_tokens": 512,
+      "checkpoint_supported": false
+    },
+    {
+      "id": "hidden.i40.block.attention.oc",
+      "logical_node": 1491,
+      "ranks": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "storage": {
+        "kind": "slot",
+        "bytes": 3072,
+        "dtype": "bf16"
+      },
+      "capacity_tokens": 512,
+      "window_tokens": null,
+      "checkpoint_supported": false
+    },
+    {
+      "id": "hidden.i41.block.attention.qc",
+      "logical_node": 1516,
+      "ranks": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "storage": {
+        "kind": "slot",
+        "bytes": 4096,
+        "dtype": "bf16"
+      },
+      "capacity_tokens": 512,
+      "window_tokens": null,
+      "checkpoint_supported": false
+    },
+    {
+      "id": "hidden.i41.block.attention.kc",
+      "logical_node": 1522,
+      "ranks": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "storage": {
+        "kind": "slot",
+        "bytes": 2048,
+        "dtype": "bf16"
+      },
+      "capacity_tokens": 512,
+      "window_tokens": null,
+      "checkpoint_supported": false
+    },
+    {
+      "id": "hidden.i41.block.attention.cache",
+      "logical_node": 1524,
+      "ranks": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "storage": {
+        "kind": "pages",
+        "page_tokens": 16,
+        "row_bytes": 1152,
+        "encoding": "bf16_latent512_rotary64"
+      },
+      "capacity_tokens": 512,
+      "window_tokens": 512,
+      "checkpoint_supported": false
+    },
+    {
+      "id": "hidden.i41.block.attention.oc",
+      "logical_node": 1528,
+      "ranks": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "storage": {
+        "kind": "slot",
+        "bytes": 3072,
+        "dtype": "bf16"
+      },
+      "capacity_tokens": 512,
+      "window_tokens": null,
+      "checkpoint_supported": false
+    },
+    {
+      "id": "hidden.i42.block.attention.qc",
+      "logical_node": 1553,
+      "ranks": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "storage": {
+        "kind": "slot",
+        "bytes": 4096,
+        "dtype": "bf16"
+      },
+      "capacity_tokens": 512,
+      "window_tokens": null,
+      "checkpoint_supported": false
+    },
+    {
+      "id": "hidden.i42.block.attention.kc",
+      "logical_node": 1559,
+      "ranks": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "storage": {
+        "kind": "slot",
+        "bytes": 2048,
+        "dtype": "bf16"
+      },
+      "capacity_tokens": 512,
+      "window_tokens": null,
+      "checkpoint_supported": false
+    },
+    {
+      "id": "hidden.i42.block.attention.cache",
+      "logical_node": 1561,
+      "ranks": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "storage": {
+        "kind": "pages",
+        "page_tokens": 32,
+        "row_bytes": 656,
+        "encoding": "int8_latent512_tile128_f32_scales_bf16_rotary64"
+      },
+      "capacity_tokens": 512,
+      "window_tokens": 2048,
+      "checkpoint_supported": false
+    },
+    {
+      "id": "hidden.i42.block.attention.oc",
+      "logical_node": 1565,
+      "ranks": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "storage": {
+        "kind": "slot",
+        "bytes": 3072,
+        "dtype": "bf16"
+      },
+      "capacity_tokens": 512,
+      "window_tokens": null,
+      "checkpoint_supported": false
+    },
+    {
+      "id": "hidden.i43.block.attention.qc",
+      "logical_node": 1590,
+      "ranks": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "storage": {
+        "kind": "slot",
+        "bytes": 4096,
+        "dtype": "bf16"
+      },
+      "capacity_tokens": 512,
+      "window_tokens": null,
+      "checkpoint_supported": false
+    },
+    {
+      "id": "hidden.i43.block.attention.kc",
+      "logical_node": 1596,
+      "ranks": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "storage": {
+        "kind": "slot",
+        "bytes": 2048,
+        "dtype": "bf16"
+      },
+      "capacity_tokens": 512,
+      "window_tokens": null,
+      "checkpoint_supported": false
+    },
+    {
+      "id": "hidden.i43.block.attention.cache",
+      "logical_node": 1598,
+      "ranks": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "storage": {
+        "kind": "pages",
+        "page_tokens": 16,
+        "row_bytes": 1152,
+        "encoding": "bf16_latent512_rotary64"
+      },
+      "capacity_tokens": 512,
+      "window_tokens": 512,
+      "checkpoint_supported": false
+    },
+    {
+      "id": "hidden.i43.block.attention.oc",
+      "logical_node": 1602,
+      "ranks": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "storage": {
+        "kind": "slot",
+        "bytes": 3072,
+        "dtype": "bf16"
+      },
+      "capacity_tokens": 512,
+      "window_tokens": null,
+      "checkpoint_supported": false
+    },
+    {
+      "id": "hidden.i44.block.attention.qc",
+      "logical_node": 1627,
+      "ranks": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "storage": {
+        "kind": "slot",
+        "bytes": 4096,
+        "dtype": "bf16"
+      },
+      "capacity_tokens": 512,
+      "window_tokens": null,
+      "checkpoint_supported": false
+    },
+    {
+      "id": "hidden.i44.block.attention.kc",
+      "logical_node": 1633,
+      "ranks": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "storage": {
+        "kind": "slot",
+        "bytes": 2048,
+        "dtype": "bf16"
+      },
+      "capacity_tokens": 512,
+      "window_tokens": null,
+      "checkpoint_supported": false
+    },
+    {
+      "id": "hidden.i44.block.attention.cache",
+      "logical_node": 1635,
+      "ranks": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "storage": {
+        "kind": "pages",
+        "page_tokens": 16,
+        "row_bytes": 1152,
+        "encoding": "bf16_latent512_rotary64"
+      },
+      "capacity_tokens": 512,
+      "window_tokens": 512,
+      "checkpoint_supported": false
+    },
+    {
+      "id": "hidden.i44.block.attention.oc",
+      "logical_node": 1639,
+      "ranks": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "storage": {
+        "kind": "slot",
+        "bytes": 3072,
+        "dtype": "bf16"
+      },
+      "capacity_tokens": 512,
+      "window_tokens": null,
+      "checkpoint_supported": false
+    },
+    {
+      "id": "hidden.i45.block.attention.qc",
+      "logical_node": 1664,
+      "ranks": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "storage": {
+        "kind": "slot",
+        "bytes": 4096,
+        "dtype": "bf16"
+      },
+      "capacity_tokens": 512,
+      "window_tokens": null,
+      "checkpoint_supported": false
+    },
+    {
+      "id": "hidden.i45.block.attention.kc",
+      "logical_node": 1670,
+      "ranks": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "storage": {
+        "kind": "slot",
+        "bytes": 2048,
+        "dtype": "bf16"
+      },
+      "capacity_tokens": 512,
+      "window_tokens": null,
+      "checkpoint_supported": false
+    },
+    {
+      "id": "hidden.i45.block.attention.cache",
+      "logical_node": 1672,
+      "ranks": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "storage": {
+        "kind": "pages",
+        "page_tokens": 32,
+        "row_bytes": 656,
+        "encoding": "int8_latent512_tile128_f32_scales_bf16_rotary64"
+      },
+      "capacity_tokens": 512,
+      "window_tokens": 2048,
+      "checkpoint_supported": false
+    },
+    {
+      "id": "hidden.i45.block.attention.oc",
+      "logical_node": 1676,
+      "ranks": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "storage": {
+        "kind": "slot",
+        "bytes": 3072,
+        "dtype": "bf16"
+      },
+      "capacity_tokens": 512,
+      "window_tokens": null,
+      "checkpoint_supported": false
+    }
+  ],
+  "qualification": null,
+  "limitations": [
+    "Single sequence and one input token per invocation; prompt processing is serial, not packed prefill",
+    "State is request-private; pooled pages, checkpoint restore and prefix reuse are not implemented",
+    "Compiler contract only: startup must verify native binary, frozen resources and hardware qualification before readiness"
+  ]
+}

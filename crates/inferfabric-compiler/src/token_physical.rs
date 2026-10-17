@@ -19,6 +19,8 @@ pub fn lower(graph: &Graph, devices: &[u32]) -> Result<Plan> {
     let logical_digest = digest(&serde_json::to_vec(graph).map_err(|e| invalid(e.to_string()))?);
     let mut source = Vec::new();
     source.extend_from_slice(include_bytes!("../../../native/src/openpangu_decode.cpp"));
+    source.extend_from_slice(include_bytes!("../../../native/src/token_executor.h"));
+    source.extend_from_slice(include_bytes!("../../../native/src/program_engine.cpp"));
     source.extend_from_slice(include_bytes!("../../../native/src/token_dispatch.inc"));
     source.extend_from_slice(include_bytes!(
         "../../../native/include/ascend_token_contract.h"

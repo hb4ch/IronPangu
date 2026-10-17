@@ -46,6 +46,7 @@ class Context {
   void *arena_ = nullptr;
   ArenaLayout layout_;
   uint64_t program_fingerprint_ = 0;
+  uint64_t backend_fingerprint_ = 0;
   int64_t instruction_ = -1;
   bool copies_allowed_=true, initialization_copies_allowed_=false;
   std::map<int64_t,std::set<size_t>> instruction_slots_;
@@ -91,11 +92,11 @@ class Context {
 
 public:
   aclrtStream stream = nullptr;
-  explicit Context(const std::string &arena_path = "", uint64_t fingerprint = 0, const std::string &workspace_path = "") : program_fingerprint_(fingerprint) {
+  explicit Context(const std::string &arena_path = "", uint64_t fingerprint = 0, const std::string &workspace_path = "", uint64_t backend_fingerprint = 0) : program_fingerprint_(fingerprint), backend_fingerprint_(backend_fingerprint ? backend_fingerprint : ArenaLayout::fingerprint_file("/proc/self/exe")) {
     if (active)
       throw std::runtime_error("nested prepared execution context");
     if(!workspace_path.empty()) {
-      planned_workspace_bytes_=WorkspacePlan::read(workspace_path,fingerprint,ArenaLayout::fingerprint_file("/proc/self/exe")).bytes;
+      planned_workspace_bytes_=WorkspacePlan::read(workspace_path,fingerprint,backend_fingerprint_).bytes;
       workspace_planned_=true;
     }
     if(!arena_path.empty() && !workspace_planned_)
@@ -106,7 +107,7 @@ public:
     if (!one_)
       throw std::runtime_error("prepared scalar");
     if(!arena_path.empty()) {
-      layout_=ArenaLayout::read(arena_path,fingerprint,ArenaLayout::fingerprint_file("/proc/self/exe"));
+      layout_=ArenaLayout::read(arena_path,fingerprint,backend_fingerprint_);
       check(aclrtMalloc(&arena_,layout_.bytes,ACL_MEM_MALLOC_HUGE_FIRST),"frozen arena reservation");
       ++allocations_;allocated_bytes_=layout_.bytes;
       for(size_t i=0;i<layout_.slots.size();++i) {
@@ -388,6 +389,7 @@ public:
   void begin_step(int position) {
     before_ = {position, allocations_, reuse_, boundaries_};
   }
+  void clear_step_history() { steps_.clear(); }
   void end_step() {
     steps_.push_back({before_.position, allocations_ - before_.allocations,
                       reuse_ - before_.reuses,
@@ -467,7 +469,7 @@ public:
     out<<",\"instruction_requests\":{";
     first=true;for(const auto &[id,bytes]:workspace_requests_) {if(!first)out<<',';first=false;out<<'"'<<id<<"\":"<<bytes;}
     out<<"}},\"arena\":{\"format\":\"inferfabric.frozen-arena.v1\",\"frozen\":" << (arena_?"true":"false")
-        << ",\"backend_fingerprint\":\"" << ArenaLayout::fingerprint_file("/proc/self/exe") << "\""
+        << ",\"backend_fingerprint\":\"" << backend_fingerprint_ << "\""
         << ",\"program_fingerprint\":\"" << program_fingerprint_ << "\",\"slots\":[";
     uint64_t offset=0;
     for(size_t i=0;i<blocks_.size();++i) {

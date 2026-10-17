@@ -4,6 +4,7 @@ mod ffi;
 mod memory;
 pub use memory::{MemoryProfile, StartupOptions};
 mod parallel;
+pub mod program;
 mod sampling;
 use ffi::{Api, Session, SessionPtr};
 use inferfabric_compiler::{

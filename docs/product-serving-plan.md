@@ -219,3 +219,27 @@ These additions preserve the implementation sequence. We retain the generic phys
 2026-10-17: compiler bundles now emit `serving.json` with program/checkpoint/backend identities, executable variant limits and operator-derived continuation components. The viewer exposes those limits and state layouts. The 92B C8 example identifies 138 convolution-history components, 16 packed C8 caches and 30 BF16 caches; restore remains explicitly unsupported. Versioned Rust batch validation rejects invalid spans, duplicate request IDs, stale zero generations, unknown variants, token/context overflow and unsupported sampling rows. Prefix identity includes the numerical execution class, tenant, template/tokenizer and adapter identity.
 
 This is S0's metadata/validation foundation, not S1 serving readiness. Local IR/compiler suites and full-model metadata checks pass; the compiler cross-build passes. Strict IR Clippy passes. Compiler-wide strict Clippy also encounters existing `token_program.rs` findings (test-module placement, argument count and collapsible condition), outside this change. Device execution instructions remain unchanged; new persistent-engine NPU qualification is still required.
+
+### Implementation record: persistent serial serving (S1)
+
+2026-10-17: the physical token executor is shared by the diagnostic client and a
+persistent C ABI library. The vLLM 0.25.1 Rust frontend opens that library once on
+an owning worker, exposes HTTP/SSE, validates the bundle/checkpoint and capability
+envelope, bounds its queue, and resets continuation state between requests on
+device. Shutdown uses synchronous Unix signal consumption before runtime threads
+are created, avoiding conflicting native signal handlers. Frozen plans identify
+the library independently of the client executable.
+
+[NPU qualification](validation/2026-10-17-persistent-serving/README.md): nine
+alternating full 92B requests match all 99 expected C8 tokens; HTTP/SSE, queued
+isolation, disconnect recovery and graceful SIGTERM shutdown pass. Workspace
+growth and activation host transfers remain zero. Short-prompt engine TPOT is
+17.82–18.42 ms. Local frontend tests and ARM64 cross-build pass.
+
+This baseline permits one active greedy request plus four queued requests within
+the compiled 512-token context. Unsupported stochastic sampling fails explicitly.
+S2–S7 remain open: the queue does not constitute continuous batching, serial token
+prompt processing is not packed prefill, and these measurements do not qualify
+long-context correctness or production throughput. The next hardware gate is
+S2's shared device-state pools, noncontiguous page tables and multi-sequence
+decode; retain this persistent serial backend as its output oracle.

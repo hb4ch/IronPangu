@@ -1,0 +1,202 @@
+#include "token_executor.h"
+#include "../include/program_engine.h"
+#include <condition_variable>
+#include <mutex>
+#include <atomic>
+
+namespace {
+thread_local std::string last_error;
+std::atomic<bool> owned{false};
+enum class Command { Reset, Token, Stop };
+struct Engine {
+  std::string bundle, checkpoint;
+  inferfabric::execution::Plan program;
+  std::vector<inferfabric::initialization::Plan> loads;
+  HcclRootInfo root{};
+  std::mutex mutex;
+  std::condition_variable changed;
+  std::vector<std::thread> workers;
+  size_t ready = 0, finished = 0;
+  uint64_t generation = 0;
+  Command command = Command::Reset;
+  uint32_t input = 0, position = 0, sample = 0, output = 0;
+  uint32_t next_position = 0;
+  uint32_t vocabulary = 0;
+  bool preparation;
+  bool stopping = false, acl_initialized = false;
+  std::string failure;
+
+  Engine(const char *path, const char *weights, bool prepare) : bundle(path), checkpoint(weights),
+      program(inferfabric::execution::Plan::read(bundle + "/execution.bin")), preparation(prepare) {
+    inferfabric::execution::validate_kernels(program);
+    if (!program.physical || program.context < 3)
+      throw std::runtime_error("persistent engine requires a physical token program with context >=3");
+    if (!std::getenv("INFERFABRIC_DECODE_GRAPH"))
+      throw std::runtime_error("persistent token engine requires explicitly enabled graph execution");
+    for (const auto &n : program.nodes) if (n.op == "embedding") vocabulary = n.integer("vocab");
+    if (!vocabulary) throw std::runtime_error("missing vocabulary contract");
+    std::set<uint32_t> devices;
+    for (uint32_t rank = 0; rank < 8; ++rank) {
+      auto plan = inferfabric::initialization::Plan::read(bundle + "/rank-" + std::to_string(rank) + ".bin");
+      if (plan.rank != rank || !devices.insert(plan.device).second)
+        throw std::runtime_error("invalid rank/device bindings");
+      inferfabric::execution::validate_bindings(program, plan);
+      if (!preparation && (!std::filesystem::exists(sidecar("arena", rank)) || !std::filesystem::exists(sidecar("workspace", rank))))
+        throw std::runtime_error("persistent engine requires complete frozen arena and workspace plans");
+      loads.push_back(std::move(plan));
+    }
+  }
+  std::string sidecar(const char *name, uint32_t rank) const {
+    return bundle + "/" + name + "-rank-" + std::to_string(rank) + ".txt";
+  }
+  void start() {
+    openpangu::checked(aclInit(nullptr), "engine ACL init");
+    acl_initialized = true;
+    openpangu::checked(aclrtSetDevice(loads[0].device), "engine bootstrap");
+    openpangu::checked(HcclGetRootInfo(&root), "engine HCCL root");
+    for (size_t rank = 0; rank < loads.size(); ++rank)
+      workers.emplace_back([this, rank] { worker(rank); });
+    std::unique_lock<std::mutex> lock(mutex);
+    changed.wait(lock, [&] { return ready == loads.size() || !failure.empty(); });
+    if (!failure.empty()) throw std::runtime_error(failure);
+  }
+  void worker(size_t rank) noexcept {
+    try {
+      openpangu::checked(aclrtSetDevice(loads[rank].device), "engine rank device");
+      {
+        size_t free_before = 0, total_before = 0;
+        openpangu::checked(aclrtGetMemInfo(ACL_HBM_MEM, &free_before, &total_before), "engine memory baseline");
+        Dl_info library{};
+        if (!dladdr(reinterpret_cast<void *>(&inferfabric_program_abi_version), &library) || !library.dli_fname)
+          throw std::runtime_error("native backend identity unavailable");
+        auto present = [&](const char *kind) { auto p = sidecar(kind, rank); return std::filesystem::exists(p) ? p : std::string{}; };
+        inferfabric::token::Decoder decoder(loads[rank], checkpoint, root, program,
+            present("arena"), inferfabric::prepared::ArenaLayout::fingerprint_file(bundle + "/execution.bin"),
+            present("workspace"), inferfabric::prepared::ArenaLayout::fingerprint_file(library.dli_fname));
+        // Same preparation order as the qualified diagnostic client. Warmup
+        // constructs all parameter views, graph addresses and output invocations.
+        auto warm = decoder.token(0, 0, false);
+        warm = decoder.token(0, 1, false);
+        warm = decoder.token(0, 2, true);
+        decoder.emit(warm, 0, false);
+        warm = {};
+        if (const char *dir = std::getenv("INFERFABRIC_PREPARED_AUDIT_DIR")) {
+          std::filesystem::create_directories(dir);
+          std::ofstream audit(std::filesystem::path(dir) / ("rank-" + std::to_string(rank) + ".json"));
+          decoder.execution.write(audit);
+          if (!audit) throw std::runtime_error("preparation audit write");
+        }
+        decoder.reset_request();
+        uint64_t seen = 0;
+        {
+          std::lock_guard<std::mutex> lock(mutex);
+          ++ready;
+          changed.notify_all();
+        }
+        for (;;) {
+          Command cmd;
+          uint32_t token, pos, want;
+          {
+            std::unique_lock<std::mutex> lock(mutex);
+            changed.wait(lock, [&] { return generation != seen || stopping; });
+            if (stopping) break;
+            seen = generation; cmd = command; token = input; pos = position; want = sample;
+          }
+          uint32_t next = 0;
+          if (cmd == Command::Reset) decoder.reset_request();
+          else if (cmd == Command::Token) {
+            auto logits = decoder.token(int(token), int(pos), true);
+            if (want) next = uint32_t(decoder.emit(logits, int(pos), false));
+            else decoder.execution.complete();
+          }
+          {
+            std::lock_guard<std::mutex> lock(mutex);
+            if (rank == 0) output = next;
+            ++finished;
+            changed.notify_all();
+          }
+        }
+        if (const char *dir = std::getenv("INFERFABRIC_PREPARED_AUDIT_DIR")) {
+          std::ofstream audit(std::filesystem::path(dir) / ("rank-" + std::to_string(rank) + ".json"));
+          decoder.execution.write(audit);
+          size_t free_after = 0, total_after = 0;
+          openpangu::checked(aclrtGetMemInfo(ACL_HBM_MEM, &free_after, &total_after), "engine memory final");
+          std::ofstream memory(std::filesystem::path(dir) / ("memory-rank-" + std::to_string(rank) + ".json"));
+          memory << "{\"rank\":" << rank << ",\"hbm_used_bytes\":" << total_after - free_after
+                 << ",\"hbm_growth_bytes\":" << int64_t(free_before)-int64_t(free_after) << "}\n";
+          if (!audit || !memory) throw std::runtime_error("engine final audit write");
+        }
+        if (const char *dir = std::getenv("INFERFABRIC_TRANSFER_AUDIT_DIR")) {
+          std::filesystem::create_directories(dir);
+          std::ofstream audit(std::filesystem::path(dir) / ("rank-" + std::to_string(rank) + ".json"));
+          inferfabric::resident::transfers.write(audit);
+          if (!audit) throw std::runtime_error("engine transfer audit write");
+        }
+      }
+      openpangu::checked(aclrtResetDevice(loads[rank].device), "engine rank reset");
+    } catch (const std::exception &e) {
+      std::lock_guard<std::mutex> lock(mutex);
+      if (failure.empty()) failure = "rank " + std::to_string(rank) + ": " + e.what();
+      stopping = true;
+      changed.notify_all();
+    } catch (...) {
+      std::lock_guard<std::mutex> lock(mutex);
+      failure = "native rank failure"; stopping = true; changed.notify_all();
+    }
+  }
+  uint32_t submit(Command cmd, uint32_t token = 0, uint32_t pos = 0, uint32_t want = 0) {
+    std::unique_lock<std::mutex> lock(mutex);
+    if (stopping || !failure.empty()) throw std::runtime_error("worker group unavailable: " + failure);
+    command = cmd; input = token; position = pos; sample = want; finished = 0;
+    ++generation; changed.notify_all();
+    changed.wait(lock, [&] { return finished == loads.size() || !failure.empty(); });
+    if (!failure.empty()) throw std::runtime_error(failure);
+    return output;
+  }
+  ~Engine() {
+    { std::lock_guard<std::mutex> lock(mutex); stopping = true; changed.notify_all(); }
+    for (auto &w : workers) if (w.joinable()) w.join();
+    if (acl_initialized) aclFinalize();
+  }
+};
+template<class F> int call(F f) noexcept {
+  try { f(); last_error.clear(); return 0; }
+  catch (const std::exception &e) { last_error = e.what(); return -1; }
+  catch (...) { last_error = "native program engine failure"; return -1; }
+}
+Engine &engine(void *p) {
+  if (!p) throw std::runtime_error("null engine");
+  return *static_cast<Engine *>(p);
+}
+}
+extern "C" uint32_t inferfabric_program_abi_version() { return 1; }
+extern "C" const char *inferfabric_program_error() { return last_error.c_str(); }
+extern "C" int inferfabric_program_open(const char *bundle, const char *checkpoint, uint32_t preparation, void **out) {
+  return call([&] {
+    if (!bundle || !checkpoint || !out || preparation > 1) throw std::runtime_error("invalid engine arguments");
+    *out = nullptr;
+    if (owned.exchange(true)) throw std::runtime_error("only one ACL program group per process");
+    try {
+      auto e = std::make_unique<Engine>(bundle, checkpoint, preparation != 0);
+      e->start(); *out = e.release();
+    } catch (...) { owned = false; throw; }
+  });
+}
+extern "C" int inferfabric_program_reset(void *p) {
+  return call([&] { auto &e = engine(p); e.submit(Command::Reset); e.next_position = 0; });
+}
+extern "C" int inferfabric_program_info(void *p, uint32_t *context, uint32_t *vocabulary, uint32_t *eos) {
+  return call([&] { auto &e = engine(p); if (!context || !vocabulary || !eos) throw std::runtime_error("null info output");
+    *context = e.program.context; *vocabulary = e.vocabulary; *eos = e.program.eos; });
+}
+extern "C" int inferfabric_program_token(void *p, uint32_t token, uint32_t position, uint32_t sample, uint32_t *output) {
+  return call([&] {
+    auto &e = engine(p);
+    if (!output || sample > 1 || position != e.next_position || position >= e.program.context || token >= e.vocabulary)
+      throw std::runtime_error("invalid program token/position/output");
+    *output = e.submit(Command::Token, token, position, sample); ++e.next_position;
+  });
+}
+extern "C" int inferfabric_program_close(void *p) {
+  return call([&] { if (!p) throw std::runtime_error("null engine"); delete static_cast<Engine *>(p); owned = false; });
+}

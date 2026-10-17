@@ -1,0 +1,4 @@
+vLLM Rust frontend 0.25.1; inferfabric-program; loopback only
+shutdown signal 15 received; draining frontend
+frontend stopped; closing native workers
+native workers closed

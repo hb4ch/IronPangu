@@ -12,3 +12,5 @@ inferfabric-compiler.workspace = true
 libloading = "0.8.9"
 serde.workspace = true
 serde_json.workspace = true
+inferfabric-ir.workspace = true
+sha2.workspace = true

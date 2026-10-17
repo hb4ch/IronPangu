@@ -1,0 +1,82 @@
+{
+  "format": "inferfabric.persistent-program-qualification.v1",
+  "requests": 9,
+  "output_tokens": 99,
+  "exact_fixture_tokens": true,
+  "fixture_sha256": "d543d78afd600b46215ed0a45fccede9a267cfec7f3170a5dc5c28421dd511a4",
+  "scope": "one loaded TP8/EP8 group, serial token graph; no packed prefill or long-context claim",
+  "measurements": [
+    {
+      "request": 0,
+      "case": "arithmetic",
+      "prompt_tokens": 12,
+      "output_tokens": 8,
+      "engine_ttft_ms": 244.589,
+      "tpot_ms": 17.918142857142858
+    },
+    {
+      "request": 1,
+      "case": "geography",
+      "prompt_tokens": 15,
+      "output_tokens": 8,
+      "engine_ttft_ms": 281.391,
+      "tpot_ms": 17.905857142857144
+    },
+    {
+      "request": 2,
+      "case": "chinese",
+      "prompt_tokens": 14,
+      "output_tokens": 17,
+      "engine_ttft_ms": 263.962,
+      "tpot_ms": 17.9440625
+    },
+    {
+      "request": 3,
+      "case": "arithmetic",
+      "prompt_tokens": 12,
+      "output_tokens": 8,
+      "engine_ttft_ms": 229.909,
+      "tpot_ms": 17.89442857142857
+    },
+    {
+      "request": 4,
+      "case": "geography",
+      "prompt_tokens": 15,
+      "output_tokens": 8,
+      "engine_ttft_ms": 281.823,
+      "tpot_ms": 17.88714285714286
+    },
+    {
+      "request": 5,
+      "case": "chinese",
+      "prompt_tokens": 14,
+      "output_tokens": 17,
+      "engine_ttft_ms": 267.138,
+      "tpot_ms": 17.8544375
+    },
+    {
+      "request": 6,
+      "case": "arithmetic",
+      "prompt_tokens": 12,
+      "output_tokens": 8,
+      "engine_ttft_ms": 230.802,
+      "tpot_ms": 17.824428571428573
+    },
+    {
+      "request": 7,
+      "case": "geography",
+      "prompt_tokens": 15,
+      "output_tokens": 8,
+      "engine_ttft_ms": 283.07,
+      "tpot_ms": 18.417857142857144
+    },
+    {
+      "request": 8,
+      "case": "chinese",
+      "prompt_tokens": 14,
+      "output_tokens": 17,
+      "engine_ttft_ms": 267.424,
+      "tpot_ms": 17.885625
+    }
+  ]
+}

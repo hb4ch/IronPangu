@@ -5,13 +5,18 @@ mod native_backend;
 mod native_sampling;
 mod native_smoke;
 mod smoke;
+mod shutdown;
 use std::sync::Arc;
 use std::time::Duration;
 use tokio_util::sync::CancellationToken;
 use vllm_server::{Config, HttpListenerMode};
 
-#[tokio::main]
-async fn main() -> anyhow::Result<()> {
+fn main() -> anyhow::Result<()> {
+    // Before Tokio, native runtime or tokenizer threads inherit signal masks.
+    let shutdown = shutdown::install()?;
+    tokio::runtime::Builder::new_multi_thread().enable_all().build()?.block_on(run(shutdown))
+}
+async fn run(shutdown: CancellationToken) -> anyhow::Result<()> {
     let args: Vec<_> = std::env::args().collect();
     if args.get(1).is_some_and(|s| s == "--batching-smoke-test") {
         return batching_smoke::run(
@@ -47,11 +52,16 @@ async fn main() -> anyhow::Result<()> {
     }
     anyhow::ensure!(
         args.len() >= 4,
-        "usage: --mock DSL TOKENIZER [PORT] | --native DSL CHECKPOINT LIB DEVICE [PORT] [--max-model-len N] [--gpu-memory-utilization F] [--memory-profile FILE] [--profile-only] [--max-num-seqs N] [--max-num-batched-tokens N]"
+        "usage: --program BUNDLE CHECKPOINT LIB [PORT] | --mock DSL TOKENIZER [PORT] | --native DSL CHECKPOINT LIB DEVICE [PORT] [--max-model-len N] [--gpu-memory-utilization F] [--memory-profile FILE] [--profile-only] [--max-num-seqs N] [--max-num-batched-tokens N]"
     );
     let (engine, name, port): (Arc<dyn vllm_llm::GenerationBackend>, &str, u16) = match args[1]
         .as_str()
     {
+        "--program" => {
+            anyhow::ensure!(args.len() == 5 || args.len() == 6, "--program requires BUNDLE CHECKPOINT LIB [PORT]");
+            (native_backend::Backend::program(args[2].clone().into(), args[3].clone().into(), args[4].clone().into()).await?,
+                "inferfabric-program", args.get(5).map(|s| s.parse()).transpose()?.unwrap_or(18081))
+        }
         "--mock" => {
             let spec = inferfabric_dsl::parse(&std::fs::read_to_string(&args[2])?)?;
             let artifact = inferfabric_compiler::compile(&spec, &inferfabric_ir::Target::mock())?;
@@ -91,14 +101,8 @@ async fn main() -> anyhow::Result<()> {
             }
             (engine, "inferfabric-qwen35", native_args.port)
         }
-        _ => anyhow::bail!("select --mock or --native"),
+        _ => anyhow::bail!("select --mock, --native or --program"),
     };
-    let shutdown = CancellationToken::new();
-    let signal = shutdown.clone();
-    tokio::spawn(async move {
-        let _ = tokio::signal::ctrl_c().await;
-        signal.cancel();
-    });
     let config = Config {
         transport_mode: vllm_engine_core_client::EngineCoreClientConfig::new_single(
             "unused-in-process",
@@ -136,6 +140,8 @@ async fn main() -> anyhow::Result<()> {
         engine.clone() as Arc<dyn vllm_llm::GenerationBackend>,
     )
     .await;
+    eprintln!("frontend stopped; closing native workers");
     vllm_llm::GenerationBackend::shutdown(engine.as_ref()).await?;
+    eprintln!("native workers closed");
     result
 }

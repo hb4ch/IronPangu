@@ -1,0 +1,210 @@
+[
+  {
+    "rank": 0,
+    "audit_sha256": "3781c251f557cbd1e1398c0eb3d4e2eb570ef960620e8e4ff697ffbfcdea77df",
+    "device_allocations": 1,
+    "device_bytes": 12408071232,
+    "graph": [
+      {
+        "name": "token_decode",
+        "replays": 214
+      }
+    ],
+    "frozen": true,
+    "backend_fingerprint": "7627718869225011495",
+    "program_fingerprint": "4375308788952250288",
+    "workspace_planned": true,
+    "workspace_bytes": 130916352,
+    "workspace_growth_allocations": 0,
+    "retained_step_count": 30,
+    "steps_with_allocations": 0,
+    "steps_with_internal_fences": 0,
+    "hbm": {
+      "rank": 0,
+      "hbm_used_bytes": 33785843712,
+      "hbm_growth_bytes": 33352007680
+    }
+  },
+  {
+    "rank": 1,
+    "audit_sha256": "3781c251f557cbd1e1398c0eb3d4e2eb570ef960620e8e4ff697ffbfcdea77df",
+    "device_allocations": 1,
+    "device_bytes": 12408071232,
+    "graph": [
+      {
+        "name": "token_decode",
+        "replays": 214
+      }
+    ],
+    "frozen": true,
+    "backend_fingerprint": "7627718869225011495",
+    "program_fingerprint": "4375308788952250288",
+    "workspace_planned": true,
+    "workspace_bytes": 130916352,
+    "workspace_growth_allocations": 0,
+    "retained_step_count": 30,
+    "steps_with_allocations": 0,
+    "steps_with_internal_fences": 0,
+    "hbm": {
+      "rank": 1,
+      "hbm_used_bytes": 33527648256,
+      "hbm_growth_bytes": 33346502656
+    }
+  },
+  {
+    "rank": 2,
+    "audit_sha256": "3781c251f557cbd1e1398c0eb3d4e2eb570ef960620e8e4ff697ffbfcdea77df",
+    "device_allocations": 1,
+    "device_bytes": 12408071232,
+    "graph": [
+      {
+        "name": "token_decode",
+        "replays": 214
+      }
+    ],
+    "frozen": true,
+    "backend_fingerprint": "7627718869225011495",
+    "program_fingerprint": "4375308788952250288",
+    "workspace_planned": true,
+    "workspace_bytes": 130916352,
+    "workspace_growth_allocations": 0,
+    "retained_step_count": 30,
+    "steps_with_allocations": 0,
+    "steps_with_internal_fences": 0,
+    "hbm": {
+      "rank": 2,
+      "hbm_used_bytes": 33787215872,
+      "hbm_growth_bytes": 33353043968
+    }
+  },
+  {
+    "rank": 3,
+    "audit_sha256": "3781c251f557cbd1e1398c0eb3d4e2eb570ef960620e8e4ff697ffbfcdea77df",
+    "device_allocations": 1,
+    "device_bytes": 12408071232,
+    "graph": [
+      {
+        "name": "token_decode",
+        "replays": 214
+      }
+    ],
+    "frozen": true,
+    "backend_fingerprint": "7627718869225011495",
+    "program_fingerprint": "4375308788952250288",
+    "workspace_planned": true,
+    "workspace_bytes": 130916352,
+    "workspace_growth_allocations": 0,
+    "retained_step_count": 30,
+    "steps_with_allocations": 0,
+    "steps_with_internal_fences": 0,
+    "hbm": {
+      "rank": 3,
+      "hbm_used_bytes": 33528950784,
+      "hbm_growth_bytes": 33347002368
+    }
+  },
+  {
+    "rank": 4,
+    "audit_sha256": "3781c251f557cbd1e1398c0eb3d4e2eb570ef960620e8e4ff697ffbfcdea77df",
+    "device_allocations": 1,
+    "device_bytes": 12408071232,
+    "graph": [
+      {
+        "name": "token_decode",
+        "replays": 214
+      }
+    ],
+    "frozen": true,
+    "backend_fingerprint": "7627718869225011495",
+    "program_fingerprint": "4375308788952250288",
+    "workspace_planned": true,
+    "workspace_bytes": 130916352,
+    "workspace_growth_allocations": 0,
+    "retained_step_count": 30,
+    "steps_with_allocations": 0,
+    "steps_with_internal_fences": 0,
+    "hbm": {
+      "rank": 4,
+      "hbm_used_bytes": 33792921600,
+      "hbm_growth_bytes": 33353306112
+    }
+  },
+  {
+    "rank": 5,
+    "audit_sha256": "3781c251f557cbd1e1398c0eb3d4e2eb570ef960620e8e4ff697ffbfcdea77df",
+    "device_allocations": 1,
+    "device_bytes": 12408071232,
+    "graph": [
+      {
+        "name": "token_decode",
+        "replays": 214
+      }
+    ],
+    "frozen": true,
+    "backend_fingerprint": "7627718869225011495",
+    "program_fingerprint": "4375308788952250288",
+    "workspace_planned": true,
+    "workspace_bytes": 130916352,
+    "workspace_growth_allocations": 0,
+    "retained_step_count": 30,
+    "steps_with_allocations": 0,
+    "steps_with_internal_fences": 0,
+    "hbm": {
+      "rank": 5,
+      "hbm_used_bytes": 33513988096,
+      "hbm_growth_bytes": 33344864256
+    }
+  },
+  {
+    "rank": 6,
+    "audit_sha256": "3781c251f557cbd1e1398c0eb3d4e2eb570ef960620e8e4ff697ffbfcdea77df",
+    "device_allocations": 1,
+    "device_bytes": 12408071232,
+    "graph": [
+      {
+        "name": "token_decode",
+        "replays": 214
+      }
+    ],
+    "frozen": true,
+    "backend_fingerprint": "7627718869225011495",
+    "program_fingerprint": "4375308788952250288",
+    "workspace_planned": true,
+    "workspace_bytes": 130916352,
+    "workspace_growth_allocations": 0,
+    "retained_step_count": 30,
+    "steps_with_allocations": 0,
+    "steps_with_internal_fences": 0,
+    "hbm": {
+      "rank": 6,
+      "hbm_used_bytes": 33777455104,
+      "hbm_growth_bytes": 33351704576
+    }
+  },
+  {
+    "rank": 7,
+    "audit_sha256": "3781c251f557cbd1e1398c0eb3d4e2eb570ef960620e8e4ff697ffbfcdea77df",
+    "device_allocations": 1,
+    "device_bytes": 12408071232,
+    "graph": [
+      {
+        "name": "token_decode",
+        "replays": 214
+      }
+    ],
+    "frozen": true,
+    "backend_fingerprint": "7627718869225011495",
+    "program_fingerprint": "4375308788952250288",
+    "workspace_planned": true,
+    "workspace_bytes": 130916352,
+    "workspace_growth_allocations": 0,
+    "retained_step_count": 30,
+    "steps_with_allocations": 0,
+    "steps_with_internal_fences": 0,
+    "hbm": {
+      "rank": 7,
+      "hbm_used_bytes": 33528094720,
+      "hbm_growth_bytes": 33346334720
+    }
+  }
+]

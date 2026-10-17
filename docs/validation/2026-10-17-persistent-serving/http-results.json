@@ -1,0 +1,111 @@
+{
+  "frontend": "vLLM Rust 0.25.1",
+  "mode": "persistent serial program",
+  "full_fixture_text": true,
+  "sse_agreement": true,
+  "queued_isolation": true,
+  "disconnect_recovery": true,
+  "unsupported_sampling_rejected": true,
+  "results": [
+    {
+      "case": "arithmetic",
+      "text": "1 + 1 = 2",
+      "collected": {
+        "total_ms": 366.8480021879077,
+        "usage": {
+          "prompt_tokens": 12,
+          "total_tokens": 20,
+          "completion_tokens": 8
+        }
+      },
+      "streaming": {
+        "ttft_ms": 231.25414503738284,
+        "text_chunks": 7,
+        "chunk_intervals_ms": [
+          17.624089028686285,
+          17.768019810318947,
+          17.980242148041725,
+          17.852770164608955,
+          21.935208700597286,
+          13.824252877384424
+        ],
+        "total_ms": 356.20944993570447,
+        "usage": {
+          "prompt_tokens": 12,
+          "total_tokens": 20,
+          "completion_tokens": 8
+        }
+      }
+    },
+    {
+      "case": "geography",
+      "text": "The capital of France is Paris.",
+      "collected": {
+        "total_ms": 407.3542356491089,
+        "usage": {
+          "prompt_tokens": 15,
+          "total_tokens": 23,
+          "completion_tokens": 8
+        }
+      },
+      "streaming": {
+        "ttft_ms": 282.2999102063477,
+        "text_chunks": 7,
+        "chunk_intervals_ms": [
+          17.60884001851082,
+          17.80786970630288,
+          17.82095106318593,
+          17.88675133138895,
+          17.82040996477008,
+          17.799230758100748
+        ],
+        "total_ms": 407.08512533456087,
+        "usage": {
+          "prompt_tokens": 15,
+          "total_tokens": 23,
+          "completion_tokens": 8
+        }
+      }
+    },
+    {
+      "case": "chinese",
+      "text": "北京是中国的首都，拥有悠久的历史、丰富的文化遗产和现代化的城市风貌。",
+      "collected": {
+        "total_ms": 550.972867757082,
+        "usage": {
+          "prompt_tokens": 14,
+          "total_tokens": 31,
+          "completion_tokens": 17
+        }
+      },
+      "streaming": {
+        "ttft_ms": 263.90793500468135,
+        "text_chunks": 16,
+        "chunk_intervals_ms": [
+          17.6581097766757,
+          17.834729980677366,
+          17.839930951595306,
+          17.874501179903746,
+          17.83715095371008,
+          17.841420136392117,
+          17.891671042889357,
+          17.85423094406724,
+          17.863920889794827,
+          17.905300948768854,
+          17.871230840682983,
+          17.833951395004988,
+          17.821629997342825,
+          17.866650596261024,
+          17.86027103662491
+        ],
+        "total_ms": 549.5553077198565,
+        "usage": {
+          "prompt_tokens": 14,
+          "total_tokens": 31,
+          "completion_tokens": 17
+        }
+      }
+    }
+  ],
+  "graceful_sigterm_shutdown": true
+}

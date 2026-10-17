@@ -27,3 +27,4 @@ reqwest = { version = "0.12", default-features = false, features = ["json"] }
 inferfabric-native = { path = "../crates/inferfabric-native" }
 
 rand = "0.9"
+libc = "0.2"

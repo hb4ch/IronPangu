@@ -1,5 +1,7 @@
 #[path = "native_worker.rs"]
 mod worker;
+#[path = "program_worker.rs"]
+mod program_worker;
 use futures::Stream;
 use std::{
     path::PathBuf,
@@ -27,6 +29,9 @@ struct Job {
     cancel: Arc<AtomicBool>,
 }
 type Active = Arc<Mutex<std::collections::BTreeMap<String, Arc<AtomicBool>>>>;
+fn program_defaults() -> anyhow::Result<vllm_engine_core_client::protocol::sampling::EngineCoreSamplingParams> {
+    Ok(serde_json::from_value(serde_json::json!({"temperature":0.0,"top_p":1.0,"top_k":0,"min_p":0.0,"presence_penalty":0.0,"frequency_penalty":0.0,"repetition_penalty":1.0}))?)
+}
 pub struct Backend {
     tx: mpsc::Sender<Job>,
     active: Active,
@@ -34,6 +39,8 @@ pub struct Backend {
     healthy: Arc<AtomicBool>,
     finished: tokio::sync::Mutex<Option<oneshot::Receiver<()>>>,
     context: usize,
+    vocab: u32,
+    program_mode: bool,
     defaults: vllm_engine_core_client::protocol::sampling::EngineCoreSamplingParams,
 }
 struct Guard {
@@ -119,8 +126,41 @@ impl Backend {
             healthy,
             finished: tokio::sync::Mutex::new(Some(finished)),
             context,
+            vocab: 248320,
+            program_mode: false,
             defaults,
         }))
+    }
+
+    pub async fn program(bundle: PathBuf, dir: PathBuf, library: PathBuf) -> anyhow::Result<Arc<Self>> {
+        let defaults = program_defaults()?;
+        let manifest = inferfabric_native::program::manifest(&bundle)?;
+        let context = manifest.variants[0].max_context as usize;
+        let vocab = manifest.vocab_size;
+        let (tx, mut rx) = mpsc::channel::<Job>(4);
+        let (ready_tx, ready_rx) = oneshot::channel();
+        let (done, finished) = oneshot::channel();
+        let active: Active = Arc::new(Mutex::new(std::collections::BTreeMap::new()));
+        let stop = Arc::new(AtomicBool::new(false));
+        let healthy = Arc::new(AtomicBool::new(false));
+        let (a, s, h) = (active.clone(), stop.clone(), healthy.clone());
+        std::thread::Builder::new().name("inferfabric-program".into()).spawn(move || {
+            let _guard = Guard { healthy: h.clone(), finished: Some(done) };
+            match inferfabric_native::program::Engine::open(&bundle, &dir, &library) {
+                Ok(mut engine) => {
+                    h.store(true, Ordering::Release);
+                    if ready_tx.send(Ok(())).is_ok() {
+                        if let Err(e) = program_worker::run(&mut engine, &mut rx, &a, &s) {
+                            eprintln!("program worker failed: {e}");
+                        }
+                        h.store(false, Ordering::Release);
+                    }
+                }
+                Err(e) => { let _ = ready_tx.send(Err(e.to_string())); }
+            }
+        })?;
+        ready_rx.await.map_err(|_| anyhow::anyhow!("program startup thread stopped"))?.map_err(anyhow::Error::msg)?;
+        Ok(Arc::new(Self { tx, active, stop, healthy, finished: tokio::sync::Mutex::new(Some(finished)), context, vocab, program_mode: true, defaults }))
     }
 }
 struct Output {
@@ -154,7 +194,7 @@ impl GenerationBackend for Backend {
         BackendMetadata {
             max_model_len: self.context as u32,
             model_dtype: ModelDtype::BFloat16,
-            version: "0.25.1 / InferFabric native continuous batching".into(),
+            version: if self.program_mode { "0.25.1 / InferFabric persistent program; serial greedy qualification" } else { "0.25.1 / InferFabric native continuous batching" }.into(),
             healthy: self.healthy.load(Ordering::Acquire) && !self.stop.load(Ordering::Acquire),
         }
     }
@@ -163,7 +203,8 @@ impl GenerationBackend for Backend {
             return Err(error("native engine is not ready"));
         }
         crate::native_sampling::validate(&req)?;
-        validate_capacity(&req, self.context)?;
+        if self.program_mode { program_worker::validate(&req)?; }
+        validate_capacity_for(&req, self.context, self.vocab)?;
         let mut active = self.active.lock().unwrap();
         if active.contains_key(&req.request_id) {
             return Err(error("duplicate active request id"));
@@ -199,9 +240,14 @@ impl GenerationBackend for Backend {
         Ok(())
     }
 }
+#[cfg(test)]
 fn validate_capacity(req: &GenerateRequest, context: usize) -> Result<()> {
+    validate_capacity_for(req, context, 248320)
+}
+fn validate_capacity_for(req: &GenerateRequest, context: usize, vocab: u32) -> Result<()> {
     if req.prompt_token_ids.is_empty()
-        || req.prompt_token_ids.iter().any(|&id| id >= 248320)
+        || req.prompt_token_ids.iter().any(|&id| id >= vocab)
+        || req.sampling_params.stop_token_ids.iter().chain(req.sampling_params.eos_token_id.iter()).any(|&id| id >= vocab)
         || req.sampling_params.max_tokens == 0
         || req
             .prompt_token_ids
@@ -221,6 +267,13 @@ fn validate_capacity(req: &GenerateRequest, context: usize) -> Result<()> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn program_defaults_match_unsigned_protocol() {
+        let defaults = program_defaults().unwrap();
+        assert_eq!(defaults.temperature, 0.);
+        assert_eq!(defaults.top_k, 0);
+        assert_eq!(defaults.repetition_penalty, 1.);
+    }
     #[test]
     fn admission_rejects_invalid_ids_and_capacity_without_device_work() {
         let mut req = GenerateRequest {
