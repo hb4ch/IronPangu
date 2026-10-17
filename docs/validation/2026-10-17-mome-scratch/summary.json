@@ -1,0 +1,331 @@
+{
+  "status": "passed_normal_eos_and_repeatability",
+  "scope": "Discovery with two zero-input 4096-query warmups and 12/15/14/529-token prompts repeated three times. Not frozen or long-context qualification.",
+  "process": {
+    "completed": true,
+    "timed_out": false,
+    "returncode": 0,
+    "timeout_seconds": 1800,
+    "elapsed_seconds": 482.1273331302218
+  },
+  "results": {
+    "format": "inferfabric.persistent-program-qualification.v1",
+    "requests": 12,
+    "output_tokens": 114,
+    "exact_fixture_tokens": false,
+    "exact_scoped_tokens": true,
+    "reference_comparison_scope": "through_first_eos",
+    "reference_output_tokens": 123,
+    "fixture_sha256": "3a05e7ac9bb3a2e4432dc71717262771d35cd817b8d506d303f3d4b0777b926d",
+    "permuted_pages": true,
+    "binding_limit_rejections": 0,
+    "interleaved_residents": false,
+    "packed_prefill": true,
+    "copied_prefix_tokens": null,
+    "scope": "one loaded TP8/EP8 group, compiled packed prefill and serial decode; no long-context claim",
+    "measurements": [
+      {
+        "request": 0,
+        "case": "arithmetic",
+        "prompt_tokens": 12,
+        "output_tokens": 8,
+        "tpot_ms": 23.609142857142857,
+        "engine_ttft_ms": 1539.788
+      },
+      {
+        "request": 1,
+        "case": "geography",
+        "prompt_tokens": 15,
+        "output_tokens": 8,
+        "tpot_ms": 23.801142857142857,
+        "engine_ttft_ms": 1371.291
+      },
+      {
+        "request": 2,
+        "case": "chinese",
+        "prompt_tokens": 14,
+        "output_tokens": 17,
+        "tpot_ms": 23.4980625,
+        "engine_ttft_ms": 1193.375
+      },
+      {
+        "request": 3,
+        "case": "access-code-529",
+        "prompt_tokens": 529,
+        "output_tokens": 5,
+        "tpot_ms": 24.85075,
+        "engine_ttft_ms": 30046.948
+      },
+      {
+        "request": 4,
+        "case": "arithmetic",
+        "prompt_tokens": 12,
+        "output_tokens": 8,
+        "tpot_ms": 23.68857142857143,
+        "engine_ttft_ms": 809.587
+      },
+      {
+        "request": 5,
+        "case": "geography",
+        "prompt_tokens": 15,
+        "output_tokens": 8,
+        "tpot_ms": 23.826857142857143,
+        "engine_ttft_ms": 861.014
+      },
+      {
+        "request": 6,
+        "case": "chinese",
+        "prompt_tokens": 14,
+        "output_tokens": 17,
+        "tpot_ms": 23.4249375,
+        "engine_ttft_ms": 799.866
+      },
+      {
+        "request": 7,
+        "case": "access-code-529",
+        "prompt_tokens": 529,
+        "output_tokens": 5,
+        "tpot_ms": 24.74125,
+        "engine_ttft_ms": 22127.37
+      },
+      {
+        "request": 8,
+        "case": "arithmetic",
+        "prompt_tokens": 12,
+        "output_tokens": 8,
+        "tpot_ms": 23.664428571428573,
+        "engine_ttft_ms": 732.233
+      },
+      {
+        "request": 9,
+        "case": "geography",
+        "prompt_tokens": 15,
+        "output_tokens": 8,
+        "tpot_ms": 23.554,
+        "engine_ttft_ms": 784.082
+      },
+      {
+        "request": 10,
+        "case": "chinese",
+        "prompt_tokens": 14,
+        "output_tokens": 17,
+        "tpot_ms": 22.9399375,
+        "engine_ttft_ms": 754.866
+      },
+      {
+        "request": 11,
+        "case": "access-code-529",
+        "prompt_tokens": 529,
+        "output_tokens": 5,
+        "tpot_ms": 24.68075,
+        "engine_ttft_ms": 7207.605
+      }
+    ]
+  },
+  "repeatability": {
+    "format": "inferfabric.sampler-repeatability.v1",
+    "passed": true,
+    "scope": "through_first_eos",
+    "criterion": "exact sampled token, logit and top-five diagnostics across repeated requests",
+    "reference_sha256": "3a05e7ac9bb3a2e4432dc71717262771d35cd817b8d506d303f3d4b0777b926d",
+    "diagnostics_sha256": "6ac6f66fd51540e17bb0fc5f1c2bd0a1784ef69d2dccc29fbd037b72e8963abb",
+    "cases": [
+      {
+        "case": "arithmetic",
+        "compared_tokens_per_run": 8,
+        "ignored_post_eos_records": 0,
+        "stable": true,
+        "differences": []
+      },
+      {
+        "case": "geography",
+        "compared_tokens_per_run": 8,
+        "ignored_post_eos_records": 0,
+        "stable": true,
+        "differences": []
+      },
+      {
+        "case": "chinese",
+        "compared_tokens_per_run": 17,
+        "ignored_post_eos_records": 0,
+        "stable": true,
+        "differences": []
+      },
+      {
+        "case": "access-code-529",
+        "compared_tokens_per_run": 5,
+        "ignored_post_eos_records": 0,
+        "stable": true,
+        "differences": []
+      }
+    ]
+  },
+  "artifacts": {
+    "native-build-mome-scratch/libinferfabric_program.so": "1e21f7fcafb1dfd5dadef7a2af2b23efa32040629c31447e30a0874d08e32670",
+    "native-build-mome-scratch/program_engine_probe": "487f36b24db68bda15215db843c489ed8c8e21b1d5876613b34accf6a4e7973c",
+    "uncaptured4k-mome-scratch-source/execution.bin": "b16edec8f5a21bfb1f696c9f9f17f9bc7d299106eca8e3255c0e31581d60bb8e",
+    "batched16-preparation-reference.json": "3a05e7ac9bb3a2e4432dc71717262771d35cd817b8d506d303f3d4b0777b926d"
+  },
+  "ranks": [
+    {
+      "rank": 0,
+      "arena_bytes": 38253633536,
+      "frozen": false,
+      "workspace_peak_bytes": 159221248,
+      "graphs": [
+        {
+          "name": "token_decode",
+          "replays": 103
+        }
+      ],
+      "uncaptured_prefill_forwards": 14,
+      "uncaptured_prefill_tokens": 9902,
+      "activation_host_transfers": 0,
+      "memory": {
+        "rank": 0,
+        "hbm_used_bytes": 61227225088,
+        "hbm_growth_bytes": 60795641856
+      }
+    },
+    {
+      "rank": 1,
+      "arena_bytes": 38253633536,
+      "frozen": false,
+      "workspace_peak_bytes": 159221248,
+      "graphs": [
+        {
+          "name": "token_decode",
+          "replays": 103
+        }
+      ],
+      "uncaptured_prefill_forwards": 14,
+      "uncaptured_prefill_tokens": 9902,
+      "activation_host_transfers": 0,
+      "memory": {
+        "rank": 1,
+        "hbm_used_bytes": 60964519936,
+        "hbm_growth_bytes": 60786667520
+      }
+    },
+    {
+      "rank": 2,
+      "arena_bytes": 38253633536,
+      "frozen": false,
+      "workspace_peak_bytes": 159221248,
+      "graphs": [
+        {
+          "name": "token_decode",
+          "replays": 103
+        }
+      ],
+      "uncaptured_prefill_forwards": 14,
+      "uncaptured_prefill_tokens": 9902,
+      "activation_host_transfers": 0,
+      "memory": {
+        "rank": 2,
+        "hbm_used_bytes": 61224271872,
+        "hbm_growth_bytes": 60792025088
+      }
+    },
+    {
+      "rank": 3,
+      "arena_bytes": 38253633536,
+      "frozen": false,
+      "workspace_peak_bytes": 159221248,
+      "graphs": [
+        {
+          "name": "token_decode",
+          "replays": 103
+        }
+      ],
+      "uncaptured_prefill_forwards": 14,
+      "uncaptured_prefill_tokens": 9902,
+      "activation_host_transfers": 0,
+      "memory": {
+        "rank": 3,
+        "hbm_used_bytes": 60967395328,
+        "hbm_growth_bytes": 60787232768
+      }
+    },
+    {
+      "rank": 4,
+      "arena_bytes": 38253633536,
+      "frozen": false,
+      "workspace_peak_bytes": 159221248,
+      "graphs": [
+        {
+          "name": "token_decode",
+          "replays": 103
+        }
+      ],
+      "uncaptured_prefill_forwards": 14,
+      "uncaptured_prefill_tokens": 9902,
+      "activation_host_transfers": 0,
+      "memory": {
+        "rank": 4,
+        "hbm_used_bytes": 61238009856,
+        "hbm_growth_bytes": 60794007552
+      }
+    },
+    {
+      "rank": 5,
+      "arena_bytes": 38253633536,
+      "frozen": false,
+      "workspace_peak_bytes": 159221248,
+      "graphs": [
+        {
+          "name": "token_decode",
+          "replays": 103
+        }
+      ],
+      "uncaptured_prefill_forwards": 14,
+      "uncaptured_prefill_tokens": 9902,
+      "activation_host_transfers": 0,
+      "memory": {
+        "rank": 5,
+        "hbm_used_bytes": 60951588864,
+        "hbm_growth_bytes": 60786540544
+      }
+    },
+    {
+      "rank": 6,
+      "arena_bytes": 38253633536,
+      "frozen": false,
+      "workspace_peak_bytes": 159221248,
+      "graphs": [
+        {
+          "name": "token_decode",
+          "replays": 103
+        }
+      ],
+      "uncaptured_prefill_forwards": 14,
+      "uncaptured_prefill_tokens": 9902,
+      "activation_host_transfers": 0,
+      "memory": {
+        "rank": 6,
+        "hbm_used_bytes": 61218611200,
+        "hbm_growth_bytes": 60794400768
+      }
+    },
+    {
+      "rank": 7,
+      "arena_bytes": 38253633536,
+      "frozen": false,
+      "workspace_peak_bytes": 159221248,
+      "graphs": [
+        {
+          "name": "token_decode",
+          "replays": 103
+        }
+      ],
+      "uncaptured_prefill_forwards": 14,
+      "uncaptured_prefill_tokens": 9902,
+      "activation_host_transfers": 0,
+      "memory": {
+        "rank": 7,
+        "hbm_used_bytes": 60966920192,
+        "hbm_growth_bytes": 60785766400
+      }
+    }
+  ]
+}

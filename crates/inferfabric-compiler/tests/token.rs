@@ -30,6 +30,9 @@ fn uncaptured_prefill_is_a_bounded_envelope_not_a_graph_family() {
             assert_eq!(recipe["packed_prefill"]["api_repetitions"],1);
             assert_eq!(recipe["packed_prefill"]["assembly_copies"],0);
             assert!(recipe["value_fields"].as_array().unwrap().iter().any(|f|f["name"]=="mome_query_starts" && f["shape"]==serde_json::json!([2])));
+            let scratch=recipe["value_fields"].as_array().unwrap().iter().find(|f|f["name"]=="mome_y_scratch").unwrap();
+            assert_eq!(scratch["shape"],serde_json::json!([4096,instruction.width]));
+            assert_eq!(scratch["aliases_input"],false);
         }
     }
     let mut invalid = plan.clone();

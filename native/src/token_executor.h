@@ -457,6 +457,12 @@ struct Decoder {
     auto &s = *ptr;
     if (!inplace) to_device(s.input, x);
     View input_view(inplace ? x.data() : s.input.data, {queries, int64_t(channels)}, ACL_BF16);
+    // The vendor kernel writes yOut before its cross-core barrier and then
+    // copies yOut back to x in inplace mode. Aliasing these buffers races with
+    // other cores reading the preceding input tokens of a sequence.
+    std::unique_ptr<DeviceTensor> sequence_scratch;
+    if(queries>1)
+      sequence_scratch=std::make_unique<DeviceTensor>(std::vector<int64_t>{queries,int64_t(channels)},ACL_BF16,2);
     if (position != current_position)
       throw std::runtime_error("position input mismatch");
     uint64_t bytes = 0;
@@ -466,7 +472,7 @@ struct Decoder {
                             input_view.t, s.weight.tensor, s.state.tensor,
                             queries>1 ? mome_query_starts->tensor : s.starts.tensor, resident_index->tensor, nullptr, nullptr,
                             nullptr, control_row(*position_index), nullptr, nullptr,
-                            nullptr, 0, -1, 0, queries, 1, 128, 1, true, queries>1 ? input_view.t : s.out.tensor,
+                            nullptr, 0, -1, 0, queries, 1, 128, 1, true, sequence_scratch ? sequence_scratch->tensor : s.out.tensor,
                             &bytes, &e),
             "MoME prepare");
     run(aclnnAiInfraFusedCausalConv1d, bytes, e);

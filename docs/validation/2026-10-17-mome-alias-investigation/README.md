@@ -1,5 +1,9 @@
 # Repeated-request drift: MoME output scratch aliases input
 
+Follow-up: the [isolated scratch fix passed normal-EOS and repeated-logit
+qualification](../2026-10-17-mome-scratch/README.md). The failure evidence below
+describes the earlier aliasing implementation.
+
 The completion-scoped executor candidate failed normal-EOS output qualification:
 the third Chinese request diverged at generated token index 5, before EOS. The
 process exited normally in 485.92 seconds. Temporary executors were released and

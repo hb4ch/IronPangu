@@ -1022,6 +1022,7 @@ fn recipes_for_query(p: &Program, graph: &Graph, query_tokens: usize) -> Vec<ser
         }
         if matches!(i.op.as_str(), "mome" | "mome_inplace") {
             fields.push(serde_json::json!({"name":"recurrent_history","dtype":"bf16","shape":[p.resident_sequences,2,i.width],"binding":"shared device resident-slot control selects one history; other slots remain untouched"}));
+            fields.push(serde_json::json!({"name":"mome_y_scratch","dtype":"bf16","shape":[if p.uncaptured_prefill && i.op=="mome_inplace" {query_tokens} else {1},i.width],"role":"device_scratch","aliases_input":false,"binding":"distinct yOut; vendor writes this buffer before its cross-core barrier, then copies it back to x for inplace execution; lease remains ordered on the owning stream"}));
             if p.uncaptured_prefill && i.op=="mome_inplace" {
                 fields.push(serde_json::json!({"name":"mome_query_starts","dtype":"int32","shape":[2],"role":"shared_control_input","values":"[0, actual_query_tokens]","binding":"one packed sequence, num_computed_tokens is its absolute start position"}));
             }
