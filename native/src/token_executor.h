@@ -3,6 +3,7 @@
 #include "sequence_batch.h"
 #include "resident_convolution.h"
 #include "resident_packed_attention.h"
+#include "resident_window_attention.h"
 // Device-resident execution of a validated generic token program.
 // No activation or routing value has a host representation.
 #include "ascend_token_contract.h"
@@ -820,17 +821,10 @@ struct Decoder {
     if (metadata_enqueued.count(window)) return;
     auto &metadata=*attention_metadata.at(window);
     if(!cleared) execution.zero(metadata.data, metadata.bytes);
-    char layout[] = "TND", cache_layout[] = "BnBsH";
-    uint64_t bytes = 0;
-    aclOpExecutor *e = nullptr;
-    checked(prepared::query("attention_metadata", false,
-        aclnnAiInfraFusedInferAttentionSinkMetadataGetWorkspaceSize,
+    resident::window_metadata(
         prefix(*query_length64,{1},(active_tokens-1)*sizeof(int64_t)),
         prefix(*sequence_length64,{1},(active_tokens-1)*sizeof(int64_t)),
-        6, 1, 512, 512, 1, 4, int64_t(window) - 1, 0,
-        layout, cache_layout, 0, 128, 64, 16, cube_cores, vector_cores,
-        metadata.tensor, &bytes, &e), "attention metadata prepare");
-    run(aclnnAiInfraFusedInferAttentionSinkMetadata, bytes, e);
+        window,cube_cores,vector_cores,metadata.tensor);
     metadata_enqueued.insert(window);
   }
   V attend(const V &queries, const std::string &state_name, uint32_t window, const V *decoded=nullptr) {
@@ -874,22 +868,11 @@ struct Decoder {
         static_cast<uint16_t *>(state.sink.data) + 512, 128 * 576 - 512,
         {128, 1, 64}, {576, 576, 1}, ACL_BF16);
     DeviceTensor output({active_tokens, 6, 512}, ACL_BF16,2);
-    char layout[] = "TND";
-    uint64_t bytes = 0;
-    aclOpExecutor *e = nullptr;
-    checked(prepared::query("aclnnAiInfraFusedInferAttentionSink", false,
-        aclnnAiInfraFusedInferAttentionSinkGetWorkspaceSize,
-        q, keys.value, values.value,
-        nullptr, attention_mask->tensor,prefix(*query_length64,{1},(active_tokens-1)*sizeof(int64_t)),
+    resident::window_attention(q,keys.value,values.value,attention_mask->tensor,
+        prefix(*query_length64,{1},(active_tokens-1)*sizeof(int64_t)),
         prefix(*sequence_length64,{1},(active_tokens-1)*sizeof(int64_t)),
-        nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr,
-        state.table.tensor, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr,
-        qr, rope_cache.get(), nullptr, nullptr, attention_metadata.at(window)->tensor,
-        sink, sink_rope, sink,
-        6, 1 / std::sqrt(192.0), int64_t(window) - 1, 0, layout,
-        1, 4, 0, 16, 0, false, 0, 0, 0, 0,
-        output.tensor, nullptr, &bytes, &e), "dense sink attention prepare");
-    run(aclnnAiInfraFusedInferAttentionSink, bytes, e);
+        state.table.tensor,qr,rope_cache.get(),attention_metadata.at(window)->tensor,
+        sink,sink_rope,window,output.tensor);
     return result(output);
   }
   V activate(const V &gate, const V &up) {
