@@ -1,0 +1,21 @@
+{
+  "scope": "through_first_eos",
+  "page_permutation_seed": 1729,
+  "sources": [
+    {
+      "name": "retrieval-32k-reference.json",
+      "sha256": "464336e24fae2dccc21d3456e31128fde2ba35ca9f905b5b321d1ea832d5b4bd"
+    },
+    {
+      "name": "batched16-preparation-reference.json",
+      "sha256": "3a05e7ac9bb3a2e4432dc71717262771d35cd817b8d506d303f3d4b0777b926d"
+    }
+  ],
+  "plan_sha256": "08143577e07d2054e190d632c118a0e60bbe8d8f27ef8ce21c0102d7846a56c9",
+  "files_sha256": {
+    "requests.txt": "1b3fdf568159471000ceeb4ecad5457254a3e32397b9502c434cf828a260ecd1",
+    "reference.jsonl": "461fbd200f6d3a7b2d89c879f9a3bebc6044b2afd87842cf516ddeade494de08",
+    "page-bindings.txt": "00a3531ccb4e87a6fc6a4be6b1b653aeb2767558541b56794d51bc3941aa5791",
+    "cases.json": "3d2fab04c1b33a6d7e501b60e69cde807edb361856793494a43da07a2269f6f2"
+  }
+}
