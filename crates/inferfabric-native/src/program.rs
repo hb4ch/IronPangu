@@ -459,7 +459,9 @@ impl Engine {
             }
             return Err(e);
         }
-        self.audit_history(slot as usize)?;
+        // The native reset has completed: audit I/O must not strand its idle pages.
+        // Preserve the audit error, but finish host ownership cleanup before returning it.
+        let audit_result = self.audit_history(slot as usize);
         *self.histories.get_mut(slot as usize).ok_or_else(||invalid("resident history bounds"))?=ArithmeticHistory::default();
         self.imported_tokens[slot as usize]=0;
         if let Some(shared) = &mut self.shared
@@ -471,7 +473,7 @@ impl Engine {
         {
             shared.pool.retire(1, lease)?;
         }
-        Ok(())
+        audit_result
     }
     pub fn prepare_resident(&mut self, slot: u32, tokens: u32) -> Result<()> {
         self.reset_resident(slot)?;

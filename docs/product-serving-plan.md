@@ -70,6 +70,14 @@ resource gate rejects that run; preserve the error while finishing safe host
 ownership cleanup before advancing this gate. This does not qualify hardware
 rank crashes or automatic failover.
 
+[Safe cleanup after audit failure](validation/2026-10-18-release-cleanup/README.md)
+now passes the strengthened full-model test. A successful native reset is followed
+by idle host lease retirement even when audit writing fails; the original error
+still reaches the client and marks the backend unavailable. Logical occupancy is
+zero at fault teardown and after explicit process restart, and reference output
+recovers. Native reset errors retain their poison/early-return path. Hardware
+rank failures, concurrent failure broadcast and automatic recovery remain open.
+
 Non-greedy 92B sampling, wider prefix-cache budgets, broader quality and sustained
 production SLO evidence also remain release gates. Keep experimental long-context
 and bulk-domain qualification explicit until those applicable gates are met.
