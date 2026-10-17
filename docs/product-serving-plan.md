@@ -41,6 +41,11 @@ still rejects unsupported non-greedy sampling; it must not silently claim the
 capabilities of other native backends. The experimental long-context opt-in
 remains until the release gates are met.
 
+The [short repeated-load and overload gate](validation/2026-10-18-repeated-http-load/README.md)
+passes 12 four-client waves, repeated disconnect/recovery and an explicit
+503/Retry-After burst. Longer-duration RSS stability and slow HTTP socket
+buffering remain unproven; this gate is not a production soak-test claim.
+
 Validation proceeds from focused shape/lifetime checks to a short full-model
 HTTP regression, then longer-context qualification. Re-run costly full-model
 tests only after a concrete fix or new release gate warrants them.

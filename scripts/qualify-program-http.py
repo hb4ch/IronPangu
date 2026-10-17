@@ -114,12 +114,16 @@ def main():
     p.add_argument('--prefix-cases', type=Path, help='Enable one snapshot slot; test cold/warm outputs, salt isolation and LRU replacement for every fixture')
     p.add_argument('--prefix-branch-cases', type=Path, help='Two independent references sharing a chunk prefix but different suffixes; requires --prefix-cases')
     p.add_argument('--check-overload', action='store_true', help='Burst long streaming requests beyond admission capacity, check 503/retry metadata and recovery')
+    p.add_argument('--load-rounds', type=int, default=0, help='Repeated concurrent reference waves with disconnect/recovery between waves')
+    p.add_argument('--load-concurrency', type=int, default=4, help='Clients per repeated-load wave, within bounded admission capacity')
     p.add_argument('--request-timeout-seconds', type=int, default=120, help='Socket inactivity timeout, not a whole-run deadline; raise for 64K prefill')
     p.add_argument('--respect-eos', action='store_true', help='Test normal serving through first EOS; preserve full references and report the narrower comparison scope')
     p.add_argument('--check-arithmetic-history', action='store_true', help='Require completed per-resident invocation histories to account for all scheduler work')
     args = p.parse_args()
     if args.request_timeout_seconds < 1:
         p.error('--request-timeout-seconds must be positive')
+    if args.load_rounds < 0 or args.load_concurrency < 1:
+        p.error('load rounds must be nonnegative and concurrency positive')
     if args.prefix_cases and not args.max_num_seqs:
         p.error('--prefix-cases requires explicit --max-num-seqs and one additional compiled resident')
     if args.prefix_branch_cases and not args.prefix_cases:
@@ -329,6 +333,31 @@ def main():
             if mixed_cases:
                 # Retain the legacy largest-case summary for evidence readers.
                 mixed = max(mixed_cases, key=lambda c: c['long_prompt_tokens'])
+            load = None
+            if args.load_rounds:
+                if args.load_concurrency > 4*residents:
+                    raise RuntimeError('load concurrency exceeds conservative queue bound; use --check-overload separately')
+                began=time.perf_counter();waves=[]
+                with concurrent.futures.ThreadPoolExecutor(max_workers=args.load_concurrency) as pool:
+                    for round_id in range(args.load_rounds):
+                        wave=[cases[(round_id+i)%len(cases)] for i in range(args.load_concurrency)]
+                        if resident_cases:wave[0]=resident_cases[round_id%len(resident_cases)]
+                        pending=[pool.submit(request,case,True) for case in wave]
+                        observations=[]
+                        for case,future in zip(wave,pending):
+                            text,metrics=future.result()
+                            if text!=expected_text(case):raise RuntimeError(f'load round {round_id} output mismatch')
+                            validate_usage(case,metrics,eos,args.respect_eos)
+                            observations.append(dict(case=case['case'],**metrics))
+                        request(cases[0],stream=True,disconnect=True)
+                        text,metrics=request(cases[0],stream=True)
+                        if text!=expected_text(cases[0]):raise RuntimeError('load disconnect recovery output mismatch')
+                        validate_usage(cases[0],metrics,eos,args.respect_eos)
+                        waves.append(dict(round=round_id,requests=observations,recovery=metrics))
+                        (args.output/'load-progress.json').write_text(json.dumps(dict(complete=False,rounds=waves),indent=2)+'\n')
+                load=dict(rounds=args.load_rounds,concurrency=args.load_concurrency,
+                          completed_reference_requests=args.load_rounds*(args.load_concurrency+1),
+                          deliberate_disconnects=args.load_rounds,elapsed_seconds=time.perf_counter()-began,waves=waves)
             try:
                 request(cases[0], temperature=0.7)
             except urllib.error.HTTPError as e:
@@ -350,7 +379,7 @@ def main():
                 count = args.max_num_seqs * 8
                 start = threading.Barrier(count)
                 body = json.dumps(dict(model='inferfabric-program', prompt=long_case['input_ids'],
-                    max_tokens=len(long_case['output_ids']), temperature=0, stream=True, ignore_eos=True)).encode()
+                    max_tokens=len(expected_ids(long_case,eos,args.respect_eos)), temperature=0, stream=True, ignore_eos=not args.respect_eos)).encode()
                 def submit_burst(_):
                     start.wait(timeout=30)
                     req = urllib.request.Request(url+'/v1/completions', data=body, headers={'Content-Type':'application/json'})
@@ -408,6 +437,7 @@ def main():
                           context_overflow_rejected=True,
                           max_num_seqs=args.max_num_seqs, max_num_batched_tokens=args.max_num_batched_tokens)
             if overload is not None: report['overload'] = overload
+            if load is not None: report['repeated_load'] = load
         finally:
             if server.poll() is None:
                 server.send_signal(signal.SIGTERM)
