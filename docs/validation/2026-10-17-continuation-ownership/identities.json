@@ -1,0 +1,9 @@
+{
+  "sha256": {
+    "../inferfabric-server-history": "d6c41b784b9e34dc82eab8cfebf3ddf01d4df8b2177708f446c497fa02635760",
+    "native-build-prefill-family/libinferfabric_program.so": "575ee1f742b05b208fcf5fd5e9b7dac5bb2b038924201b2b32b3f3e472f73312",
+    "family-bound/execution.bin": "854bf6c80b61310cb40561edc427aafdbef1d1d38606af6809844c259967c9a0"
+  },
+  "timing_isolated": false,
+  "timing_note": "Independent 64K reference on devices 8-15 overlapped this HTTP correctness and lifecycle test. Do not use its timings as isolated performance evidence."
+}

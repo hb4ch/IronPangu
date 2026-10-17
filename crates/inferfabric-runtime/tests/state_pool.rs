@@ -3,6 +3,35 @@ use inferfabric_runtime::state_pool::StatePool;
 use std::collections::BTreeMap;
 
 #[test]
+fn sealed_continuation_survives_owner_retirement_but_never_becomes_writable() {
+    let mut p=pool();let baseline=p.usage();
+    let lease=p.reserve(7,1,32).unwrap();
+    let copy=p.submit(7,&[lease],&[]).unwrap();
+    assert!(p.seal(7,lease).is_err());
+    p.complete(7,copy,0).unwrap();
+    assert!(p.seal(7,lease).is_err()); // every rank must complete
+    p.complete(7,copy,1).unwrap();
+    let sealed=p.seal(7,lease).unwrap();
+    assert!(p.usage().iter().all(|u|u.sealed_bytes==u.occupied_bytes && u.sealed_bytes>0));
+    let cache_pin=p.borrow_sealed(7,sealed).unwrap();
+    assert!(p.submit(7,&[lease],&[]).is_err());
+    p.retire(7,lease).unwrap();
+    let reader=p.borrow_sealed(7,sealed).unwrap();
+    let restore=p.submit(7,&[],&[reader]).unwrap();
+    p.release(7,cache_pin).unwrap();
+    p.release(7,reader).unwrap();
+    p.complete(7,restore,1).unwrap();
+    assert!(p.usage().iter().any(|u|u.occupied_bytes>0));
+    p.complete(7,restore,0).unwrap();
+    assert_eq!(p.usage(),baseline);
+    assert!(p.borrow_sealed(7,sealed).is_err());
+    let replacement=p.reserve(7,2,32).unwrap();
+    assert!(p.borrow_sealed(7,sealed).is_err()); // physical IDs may repeat; generation does not
+    assert!(p.borrow_sealed(8,sealed).is_err());
+    assert!(p.submit(7,&[replacement],&[]).is_ok());
+}
+
+#[test]
 fn bounded_swa_ring_preserves_full_history_peers_and_rank_retirement() {
     let mut m=manifest();m.identity.devices=(0..8).collect();
     m.variants[0].max_context=65536;

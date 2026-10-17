@@ -27,6 +27,31 @@ def expected_ids(case, eos, respect_eos):
     return ids[:ids.index(eos)+1] if respect_eos and eos in ids else list(ids)
 
 
+def validate_histories(records, manifest, consumed):
+    allowed={(v['numerical_class'],v['max_query_tokens']) for v in manifest['variants'] if v['max_sequences']==1 and v['max_tokens']==v['max_query_tokens']}
+    context=max(v['max_context'] for v in manifest['variants'])
+    sequences=set()
+    total=0
+    for record in records:
+        sequence=record['sequence']
+        if record['format']!='inferfabric.completed-arithmetic.v1' or sequence in sequences or not isinstance(sequence,int) or sequence<1:
+            raise ValueError('invalid completed arithmetic identity')
+        sequences.add(sequence)
+        if not 0<=record['resident']<manifest['resident_sequences'] or record['history']['version']!=1:
+            raise ValueError('invalid arithmetic resident/version')
+        end=0
+        for span in record['history']['spans']:
+            count=span['query_tokens']
+            if (span['numerical_class'],count) not in allowed or count<=0 or span['start']!=end or not end<span['end']<=context or (span['end']-end)%count:
+                raise ValueError('arithmetic history is not a complete declared invocation sequence')
+            end=span['end']
+        if not end:raise ValueError('empty completed arithmetic record')
+        total+=end
+    if not records or sequences!=set(range(1,len(records)+1)) or total!=consumed:
+        raise ValueError('completed arithmetic does not account for scheduler work')
+    return dict(request_histories=len(records),completed_input_tokens=total,all_scheduler_tokens_accounted=True)
+
+
 def main():
     p = argparse.ArgumentParser(description=__doc__)
     for key in ('server', 'plan', 'checkpoint', 'library', 'cases', 'output'):
@@ -39,6 +64,7 @@ def main():
     p.add_argument('--check-overload', action='store_true', help='Burst long streaming requests beyond admission capacity, check 503/retry metadata and recovery')
     p.add_argument('--request-timeout-seconds', type=int, default=120, help='Socket inactivity timeout, not a whole-run deadline; raise for 64K prefill')
     p.add_argument('--respect-eos', action='store_true', help='Test normal serving through first EOS; preserve full references and report the narrower comparison scope')
+    p.add_argument('--check-arithmetic-history', action='store_true', help='Require completed per-resident invocation histories to account for all scheduler work')
     args = p.parse_args()
     if args.request_timeout_seconds < 1:
         p.error('--request-timeout-seconds must be positive')
@@ -101,6 +127,7 @@ def main():
                                     'total_ms': (time.perf_counter()-began)*1000, 'usage': usage}
 
     env = dict(os.environ, INFERFABRIC_DECODE_GRAPH='1',
+               INFERFABRIC_ARITHMETIC_AUDIT_DIR=str((args.output/'arithmetic').resolve()),
                INFERFABRIC_PREPARED_AUDIT_DIR=str((args.output/'prepared').resolve()),
                INFERFABRIC_TRANSFER_AUDIT_DIR=str((args.output/'transfers').resolve()))
     env.pop('INFERFABRIC_PREPARE_ARENA', None)
@@ -288,6 +315,12 @@ def main():
             if not pool or not int(pool[1]) or not int(pool[2]) or int(pool[4]):
                 raise RuntimeError('shared pages were not exercised across partitions or were not fully reclaimed')
             report['shared_pool']=dict(zip(('admissions','cross_partition_bindings','peak_occupied_bytes','remaining_occupied_bytes'),map(int,pool.groups())))
+        if args.check_arithmetic_history:
+            logs=(args.output/'server.log').read_text()
+            stats=re.search(r'program scheduler stopped .*consumed_tokens=(\d+)',logs)
+            if not stats:raise RuntimeError('missing scheduler completion count')
+            records=[json.loads(path.read_text()) for path in (args.output/'arithmetic').glob('request-*.json')]
+            report['arithmetic_history']=validate_histories(records,manifest,int(stats[1]))
         (args.output / 'results.json').write_text(json.dumps(report, ensure_ascii=False, indent=2)+'\n')
         print(json.dumps(report, ensure_ascii=False))
 

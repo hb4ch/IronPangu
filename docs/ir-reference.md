@@ -189,3 +189,37 @@ API repetition and assembly-copy counts. Persistent state/control shapes and
 offsets stay sized for the family maximum. Every graph, retained output and output
 invocation participates in workspace discovery and frozen-arena preparation before
 readiness. The executor rejects missing graphs after preparation is sealed.
+
+## Completed arithmetic history
+
+`inferfabric_ir::arithmetic_history::ArithmeticHistory` records completed input
+positions as canonical intervals `{start, end, query_tokens, numerical_class}`,
+with `version: 1`. Adjacent identical shapes/classes coalesce. This preserves
+invocation boundaries without one record per token: 4,096 consecutive T=16
+invocations cover 64K in one interval. Prefix extraction rejects a boundary
+inside a packed invocation, a boundary beyond completed work, and incompatible
+interval histories even when the last numerical class matches.
+
+The Rust native adapter tracks one history per resident, preflights contiguity
+before dispatch, appends only after every rank's owning stream completed, and
+clears history on successful state reset. Its accessor exposes completed metadata;
+it does not grant device checkpoint readiness or cross-class numerical equivalence.
+Future prefix lookup must compare this history together with `PrefixIdentity`,
+exact tokens, state completeness, alignment, ownership and completion epoch.
+
+`INFERFABRIC_ARITHMETIC_AUDIT_DIR` optionally writes
+`inferfabric.completed-arithmetic.v1` records when resident histories are released.
+Records contain resident/sequence IDs and arithmetic intervals, never prompt token
+IDs or tensor payloads. Exclusive file creation refuses to overwrite older runs.
+The HTTP qualifier's `--check-arithmetic-history` verifies declared shapes/classes,
+contiguous complete intervals, unique records and equality between their token sum
+and the scheduler's consumed-token count, including cancelled requests.
+
+`inferfabric_runtime::state_pool::SealedLease` is an opaque immutable allocation
+identity. `seal` rejects incomplete rank work; `submit` rejects writes to sealed
+state, and `borrow_sealed` retains read-only ownership after the original owner
+retires. There is no unseal operation. Reclamation requires all readers and rank
+completions; a later allocation has a fresh generation even when page IDs repeat.
+The `sealed_bytes` usage counter is a subset of occupied bytes. This token proves
+ownership/completion constraints, not that the device holds a complete model
+checkpoint. Native snapshot and restore operations remain a separate contract.

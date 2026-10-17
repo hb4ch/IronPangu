@@ -191,7 +191,8 @@ It must not be used to erase the separate forced-continuation mismatch evidence.
 Both modes reject placeholder references and independently check declared
 retrieval answers before starting the server. Local tests cover EOS truncation,
 usage count including EOS, unchanged source data, no-EOS outputs and invalid
-references; full NPU verification of this new HTTP mode remains a separate gate.
+references. [Full NPU HTTP verification](validation/2026-10-17-continuation-ownership/README.md)
+passes at 4K with normal EOS stopping; 64K HTTP qualification remains open.
 
 The offline reference launcher loads both Omni custom-op vendor environments
 itself. A 64K startup attempt without them failed on a missing mHC PreV2 symbol;
@@ -523,6 +524,26 @@ Follow-on work after these gates: optimized EP all-to-all/AGRS alternatives with
 Source reviewed: TensorFold commit [6ee828c24bf802cdd73507d6fc60bb27a82c0d66](https://github.com/ashhart/TensorFold/tree/6ee828c24bf802cdd73507d6fc60bb27a82c0d66). This is source inspection, not a reproduced performance result. The following refinements are requirements for the milestones above.
 
 ### Numerical identity of continuation state (S0, S3, S6)
+
+The Rust native adapter now records each resident's completed arithmetic intervals
+using the exact compiled numerical class and query width. Same final variant is
+insufficient: T=16 throughout and T=8 followed by T=16 remain incompatible histories.
+Contiguous equal intervals coalesce, and extracting a prefix cannot split a packed
+invocation. Optional metadata audits account for all scheduler input tokens.
+Local tests cover 64K coalescing, mixed histories, alignment, failed preflight and
+out-of-order positions. Full native HTTP qualification accounts for all 4,462
+scheduler input tokens across 18 histories, including cancellation. This is an
+implemented prerequisite for S6, not an enabled cache hit or proof of device
+snapshot completeness. See [continuation ownership evidence](validation/2026-10-17-continuation-ownership/README.md).
+
+The host state pool now supports immutable sealed leases for the snapshot path.
+Sealing requires every in-flight rank operation to finish. Sealed allocations
+reject write submissions; read pins can survive the original owner's retirement,
+and reclamation waits for every pin and rank completion. Reusing physical IDs
+does not revive a stale sealed handle. `sealed_bytes` overlaps occupied bytes and
+must not be added to it. This supplies ownership protection only: a future native
+copy/restore executor must still prove that every continuation component was
+captured at the same boundary before the radix cache publishes a checkpoint.
 
 A token match plus equal storage format is necessary but insufficient. TensorFold's `core/cache_modes.zig` records decoded arithmetic intervals, and `core/prompt_cache.zig` restricts some snapshots to compatible chunk boundaries. Our serving manifest assigns every variant a numerical execution class. Cross-variant state reuse is denied unless a qualification artifact establishes compatibility for the exact backend/program and shape envelope. The initial token executor has one serial-token class and no claim of packed/chunked equivalence.
 

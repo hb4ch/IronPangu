@@ -25,6 +25,13 @@ pub struct Ticket {
     id: u64,
 }
 
+/// Immutable allocation identity. Sealing proves ownership/completion only;
+/// the snapshot executor must separately prove complete continuation contents.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct SealedLease {
+    lease: Lease,
+}
+
 /// Physical IDs index stable, preallocated storage; they are not device pointers.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Binding {
@@ -48,6 +55,7 @@ pub struct Usage {
     pub occupied_bytes: u64,
     pub retiring_bytes: u64,
     pub borrowed_bytes: u64,
+    pub sealed_bytes: u64,
 }
 struct Pool {
     key: Key,
@@ -63,6 +71,7 @@ struct Allocation {
     token_limit: u32,
     bindings: Vec<Binding>,
     retired: bool,
+    sealed: bool,
     borrowers: BTreeSet<u64>,
     pending: BTreeSet<u64>,
 }
@@ -243,6 +252,7 @@ impl StatePool {
                 token_limit: tokens,
                 bindings,
                 retired: false,
+                sealed: false,
                 borrowers: BTreeSet::new(),
                 pending: BTreeSet::new(),
             },
@@ -296,6 +306,25 @@ impl StatePool {
     /// This is ownership only; it does not certify immutable/complete state.
     pub fn borrow(&mut self, epoch: u64, lease: Lease) -> Result<Borrow> {
         self.bindings(epoch, lease)?;
+        self.pin(lease)
+    }
+    /// After all copy streams complete, prohibit any further write submission.
+    /// There is no unseal: retirement and a fresh generation are required to write.
+    pub fn seal(&mut self, epoch:u64, lease:Lease) -> Result<SealedLease> {
+        self.bindings(epoch,lease)?;
+        let allocation=self.allocations.get_mut(&lease).unwrap();
+        if !allocation.pending.is_empty() {return Err(invalid("cannot seal state with incomplete rank work"));}
+        allocation.sealed=true;
+        Ok(SealedLease {lease})
+    }
+    /// A cache-owned pin can outlive the original owner's retirement. Further
+    /// readers may pin only while the sealed allocation still exists.
+    pub fn borrow_sealed(&mut self, epoch:u64, sealed:SealedLease) -> Result<Borrow> {
+        self.live(epoch)?;
+        if !self.allocations.get(&sealed.lease).is_some_and(|a|a.sealed) {return Err(Error::Stale);}
+        self.pin(sealed.lease)
+    }
+    fn pin(&mut self, lease:Lease) -> Result<Borrow> {
         let id = self.serial()?;
         self.allocations
             .get_mut(&lease)
@@ -331,6 +360,7 @@ impl StatePool {
         let mut all = BTreeSet::new();
         for &lease in leases {
             self.bindings(epoch, lease)?;
+            if self.allocations[&lease].sealed {return Err(invalid("write submission targets sealed continuation state"));}
             all.insert(lease);
         }
         for &read in reads {
@@ -411,7 +441,7 @@ impl StatePool {
     pub fn poison(&mut self) {
         self.poisoned = true;
     }
-    /// Borrowed/retiring counters overlap occupied bytes; never sum those columns.
+    /// Borrowed/retiring/sealed counters overlap occupied bytes; never sum them.
     pub fn usage(&self) -> Vec<Usage> {
         self.pools
             .iter()
@@ -431,6 +461,7 @@ impl StatePool {
                     occupied_bytes: u64::from(p.capacity - p.free.len() as u32) * p.unit_bytes,
                     retiring_bytes: bytes(|a| a.retired),
                     borrowed_bytes: bytes(|a| !a.borrowers.is_empty()),
+                    sealed_bytes: bytes(|a| a.sealed),
                 }
             })
             .collect()

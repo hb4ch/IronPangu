@@ -1,0 +1,193 @@
+{
+  "frontend": "vLLM Rust 0.25.1",
+  "mode": "resident request scheduler; compiled prefill and serial decode",
+  "full_fixture_text": false,
+  "sse_agreement": true,
+  "queued_isolation": true,
+  "reference_comparison_scope": "through_first_eos",
+  "fixture_sha256": "d543d78afd600b46215ed0a45fccede9a267cfec7f3170a5dc5c28421dd511a4",
+  "resident_fixture_sha256": "57182ff20ac9142e5af9e1bf1e2b95c9a19353e8cfdbf191b18531c2d131ce49",
+  "request_socket_timeout_seconds": 900,
+  "disconnect_recovery": true,
+  "unsupported_sampling_rejected": true,
+  "results": [
+    {
+      "case": "arithmetic",
+      "text": "1 + 1 = 2",
+      "collected": {
+        "total_ms": 262.4266520142555,
+        "usage": {
+          "prompt_tokens": 12,
+          "total_tokens": 20,
+          "completion_tokens": 8
+        }
+      },
+      "streaming": {
+        "ttft_ms": 138.69168888777494,
+        "text_chunks": 7,
+        "chunk_intervals_ms": [
+          19.283854868263006,
+          19.477656111121178,
+          19.55422619357705,
+          19.35521513223648,
+          19.437645561993122,
+          19.517616368830204
+        ],
+        "total_ms": 274.8740501701832,
+        "usage": {
+          "prompt_tokens": 12,
+          "total_tokens": 20,
+          "completion_tokens": 8
+        }
+      }
+    },
+    {
+      "case": "geography",
+      "text": "The capital of France is Paris.",
+      "collected": {
+        "total_ms": 313.9881817623973,
+        "usage": {
+          "prompt_tokens": 15,
+          "total_tokens": 23,
+          "completion_tokens": 8
+        }
+      },
+      "streaming": {
+        "ttft_ms": 178.78429824486375,
+        "text_chunks": 7,
+        "chunk_intervals_ms": [
+          19.373534712940454,
+          19.593047443777323,
+          19.456795882433653,
+          19.500945694744587,
+          19.475166220217943,
+          19.545125775039196
+        ],
+        "total_ms": 315.37205213680863,
+        "usage": {
+          "prompt_tokens": 15,
+          "total_tokens": 23,
+          "completion_tokens": 8
+        }
+      }
+    },
+    {
+      "case": "chinese",
+      "text": "北京是中国的首都，拥有悠久的历史、丰富的文化遗产和现代化的城市风貌。",
+      "collected": {
+        "total_ms": 474.0398800931871,
+        "usage": {
+          "prompt_tokens": 14,
+          "total_tokens": 31,
+          "completion_tokens": 17
+        }
+      },
+      "streaming": {
+        "ttft_ms": 164.69984035938978,
+        "text_chunks": 16,
+        "chunk_intervals_ms": [
+          19.375724717974663,
+          19.8886189609766,
+          19.47712618857622,
+          19.4006459787488,
+          19.46650492027402,
+          19.487526267766953,
+          19.430145621299744,
+          19.47748614475131,
+          19.668676890432835,
+          19.555626902729273,
+          19.450866151601076,
+          19.51190596446395,
+          19.464956130832434,
+          19.51095601543784,
+          19.480255898088217
+        ],
+        "total_ms": 476.95353999733925,
+        "usage": {
+          "prompt_tokens": 14,
+          "total_tokens": 31,
+          "completion_tokens": 17
+        }
+      }
+    }
+  ],
+  "concurrent_requests": 6,
+  "mixed_residents": {
+    "long_prompt_tokens": 4088,
+    "short_finished_before_long": true,
+    "cancellation_during_peer_prefill": true,
+    "short": {
+      "ttft_ms": 260.37050783634186,
+      "text_chunks": 7,
+      "chunk_intervals_ms": [
+        76.0570322163403,
+        75.53379703313112,
+        75.30464604496956,
+        75.06468379870057,
+        76.00439991801977,
+        75.57048834860325
+      ],
+      "total_ms": 790.2543079108,
+      "usage": {
+        "prompt_tokens": 12,
+        "total_tokens": 20,
+        "completion_tokens": 8
+      }
+    },
+    "long": {
+      "ttft_ms": 14692.426315043122,
+      "text_chunks": 4,
+      "chunk_intervals_ms": [
+        20.133041311055422,
+        20.586353726685047,
+        20.404992159456015
+      ],
+      "total_ms": 14774.057245347649,
+      "usage": {
+        "prompt_tokens": 4088,
+        "total_tokens": 4093,
+        "completion_tokens": 5
+      }
+    }
+  },
+  "context_overflow_rejected": true,
+  "max_num_seqs": 2,
+  "max_num_batched_tokens": 32,
+  "overload": {
+    "submitted": 16,
+    "accepted": 8,
+    "rejected": 8,
+    "status": 503,
+    "error_code": "server_overloaded",
+    "retry_after_seconds": 1,
+    "recovery_output_correct": true
+  },
+  "graceful_sigterm_shutdown": true,
+  "prefill_graph_replays": [
+    304,
+    304,
+    304,
+    304,
+    304,
+    304,
+    304,
+    304
+  ],
+  "scheduler": {
+    "max_active": 2,
+    "mixed_ticks": 19,
+    "consumed_tokens": 4462,
+    "token_budget": 32
+  },
+  "shared_pool": {
+    "admissions": 18,
+    "cross_partition_bindings": 1296,
+    "peak_occupied_bytes": 547266560,
+    "remaining_occupied_bytes": 0
+  },
+  "arithmetic_history": {
+    "request_histories": 18,
+    "completed_input_tokens": 4462,
+    "all_scheduler_tokens_accounted": true
+  }
+}

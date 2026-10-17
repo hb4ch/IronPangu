@@ -1,6 +1,7 @@
 //! Persistent executable-program ABI. The handle stays on its owning worker.
 use inferfabric_ir::serving::Storage;
 use inferfabric_ir::serving::{Manifest, Phase};
+use inferfabric_ir::{arithmetic_history::ArithmeticHistory, serving::Variant};
 use inferfabric_model::{Result, invalid};
 use inferfabric_runtime::state_pool::{Lease, StatePool, Ticket};
 use libloading::Library;
@@ -140,6 +141,9 @@ pub struct Engine {
     prefill_fn: Option<Prefill>,
     prefill_tokens: u32,
     prefill_variants: Vec<u32>,
+    variants: Vec<Variant>,
+    histories: Vec<ArithmeticHistory>,
+    history_audit_sequence: u64,
     error: Error,
     bind_pages_fn: Option<BindPages>,
     select_resident_fn: Option<Resident>,
@@ -192,6 +196,9 @@ impl Engine {
                     .map(|f| *f),
                 prefill_tokens: prefill_capacity(&contract)?,
                 prefill_variants: contract.variants.iter().skip(1).map(|v|v.max_tokens).collect(),
+                variants: contract.variants.clone(),
+                histories: vec![ArithmeticHistory::default();contract.resident_sequences as usize],
+                history_audit_sequence: 0,
                 bind_state_fn: lib
                     .get::<BindState>(b"inferfabric_program_bind_state\0")
                     .ok()
@@ -300,7 +307,26 @@ impl Engine {
             }
             return self.select_resident(0);
         }
-        self.check(unsafe { (self.reset_fn)(self.ptr) })
+        self.check(unsafe { (self.reset_fn)(self.ptr) })?;
+        for slot in 0..self.histories.len() {self.audit_history(slot)?;}
+        self.histories.fill(ArithmeticHistory::default());
+        self.selected=0;
+        Ok(())
+    }
+    fn audit_history(&mut self, slot:usize) -> Result<()> {
+        let Some(directory)=std::env::var_os("INFERFABRIC_ARITHMETIC_AUDIT_DIR") else {return Ok(());};
+        let history=self.histories.get(slot).ok_or_else(||invalid("resident history bounds"))?;
+        if history.tokens()==0 {return Ok(());}
+        let sequence=self.history_audit_sequence.checked_add(1).ok_or_else(||invalid("arithmetic audit sequence overflow"))?;
+        let directory=std::path::PathBuf::from(directory);
+        std::fs::create_dir_all(&directory)?;
+        let value=serde_json::json!({"format":"inferfabric.completed-arithmetic.v1","sequence":sequence,"resident":slot,"history":history});
+        // Exclusive files prevent accidental replacement of evidence from another run.
+        use std::io::Write;
+        let mut file=std::fs::OpenOptions::new().write(true).create_new(true).open(directory.join(format!("request-{sequence}.json")))?;
+        file.write_all(&serde_json::to_vec_pretty(&value).map_err(|e|invalid(e.to_string()))?)?;
+        self.history_audit_sequence=sequence;
+        Ok(())
     }
     pub fn select_resident(&mut self, slot: u32) -> Result<()> {
         if slot == 0 && self.select_resident_fn.is_none() {
@@ -326,6 +352,8 @@ impl Engine {
             }
             return Err(e);
         }
+        self.audit_history(slot as usize)?;
+        *self.histories.get_mut(slot as usize).ok_or_else(||invalid("resident history bounds"))?=ArithmeticHistory::default();
         if let Some(shared) = &mut self.shared
             && let Some(lease) = shared
                 .leases
@@ -445,12 +473,17 @@ impl Engine {
         self.check(unsafe { bind(self.ptr, rank, component.as_ptr(), pages.as_ptr(), count) })
     }
     pub fn token(&mut self, token: u32, position: u32, sample: bool) -> Result<Option<u32>> {
+        self.histories[self.selected].check_append(&self.variants[0],position,1)?;
         let mut output = 0;
         let ticket = self.begin_invocation(position, 1)?;
         let status =
             unsafe { (self.token_fn)(self.ptr, token, position, sample.into(), &mut output) };
         self.finish_invocation(ticket, status)?;
+        self.histories[self.selected].append_completed(&self.variants[0],position,1)?;
         Ok(sample.then_some(output))
+    }
+    pub fn arithmetic_history(&self, slot:u32) -> Result<&ArithmeticHistory> {
+        self.histories.get(slot as usize).ok_or_else(||invalid("resident history bounds"))
     }
     pub fn prefill_capacity(&self) -> u32 {
         self.prefill_tokens
@@ -463,6 +496,8 @@ impl Engine {
         if !self.prefill_variants.contains(&count) {
             return Err(invalid("prefill must match the compiled chunk width"));
         }
+        let variant=self.variants.iter().position(|v|v.max_tokens==count).ok_or_else(||invalid("missing arithmetic variant"))?;
+        self.histories[self.selected].check_append(&self.variants[variant],position,count)?;
         let prefill = self
             .prefill_fn
             .ok_or_else(|| invalid("backend has no packed prefill entry point"))?;
@@ -479,6 +514,7 @@ impl Engine {
             )
         };
         self.finish_invocation(ticket, status)?;
+        self.histories[self.selected].append_completed(&self.variants[variant],position,count)?;
         Ok(sample.then_some(output))
     }
 }

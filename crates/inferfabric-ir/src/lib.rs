@@ -1,6 +1,7 @@
 //! Serializable logical rank programs. Operations are contracts, not implemented math.
 pub mod initialization;
 pub mod serving;
+pub mod arithmetic_history;
 use inferfabric_model::{Role, Spec};
 use serde::{Deserialize, Serialize};
 

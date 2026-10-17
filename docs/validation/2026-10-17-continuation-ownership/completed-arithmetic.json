@@ -1,0 +1,560 @@
+[
+  {
+    "format": "inferfabric.completed-arithmetic.v1",
+    "sequence": 1,
+    "resident": 0,
+    "history": {
+      "version": 1,
+      "spans": [
+        {
+          "start": 0,
+          "end": 8,
+          "query_tokens": 8,
+          "numerical_class": "packed_prefill_8_v1"
+        },
+        {
+          "start": 8,
+          "end": 12,
+          "query_tokens": 4,
+          "numerical_class": "packed_prefill_4_v1"
+        },
+        {
+          "start": 12,
+          "end": 19,
+          "query_tokens": 1,
+          "numerical_class": "ascend_serial_token_v1"
+        }
+      ]
+    }
+  },
+  {
+    "format": "inferfabric.completed-arithmetic.v1",
+    "sequence": 2,
+    "resident": 0,
+    "history": {
+      "version": 1,
+      "spans": [
+        {
+          "start": 0,
+          "end": 8,
+          "query_tokens": 8,
+          "numerical_class": "packed_prefill_8_v1"
+        },
+        {
+          "start": 8,
+          "end": 12,
+          "query_tokens": 4,
+          "numerical_class": "packed_prefill_4_v1"
+        },
+        {
+          "start": 12,
+          "end": 19,
+          "query_tokens": 1,
+          "numerical_class": "ascend_serial_token_v1"
+        }
+      ]
+    }
+  },
+  {
+    "format": "inferfabric.completed-arithmetic.v1",
+    "sequence": 3,
+    "resident": 0,
+    "history": {
+      "version": 1,
+      "spans": [
+        {
+          "start": 0,
+          "end": 8,
+          "query_tokens": 8,
+          "numerical_class": "packed_prefill_8_v1"
+        },
+        {
+          "start": 8,
+          "end": 12,
+          "query_tokens": 4,
+          "numerical_class": "packed_prefill_4_v1"
+        },
+        {
+          "start": 12,
+          "end": 14,
+          "query_tokens": 2,
+          "numerical_class": "packed_prefill_2_v1"
+        },
+        {
+          "start": 14,
+          "end": 22,
+          "query_tokens": 1,
+          "numerical_class": "ascend_serial_token_v1"
+        }
+      ]
+    }
+  },
+  {
+    "format": "inferfabric.completed-arithmetic.v1",
+    "sequence": 4,
+    "resident": 0,
+    "history": {
+      "version": 1,
+      "spans": [
+        {
+          "start": 0,
+          "end": 8,
+          "query_tokens": 8,
+          "numerical_class": "packed_prefill_8_v1"
+        },
+        {
+          "start": 8,
+          "end": 12,
+          "query_tokens": 4,
+          "numerical_class": "packed_prefill_4_v1"
+        },
+        {
+          "start": 12,
+          "end": 14,
+          "query_tokens": 2,
+          "numerical_class": "packed_prefill_2_v1"
+        },
+        {
+          "start": 14,
+          "end": 22,
+          "query_tokens": 1,
+          "numerical_class": "ascend_serial_token_v1"
+        }
+      ]
+    }
+  },
+  {
+    "format": "inferfabric.completed-arithmetic.v1",
+    "sequence": 5,
+    "resident": 0,
+    "history": {
+      "version": 1,
+      "spans": [
+        {
+          "start": 0,
+          "end": 8,
+          "query_tokens": 8,
+          "numerical_class": "packed_prefill_8_v1"
+        },
+        {
+          "start": 8,
+          "end": 12,
+          "query_tokens": 4,
+          "numerical_class": "packed_prefill_4_v1"
+        },
+        {
+          "start": 12,
+          "end": 14,
+          "query_tokens": 2,
+          "numerical_class": "packed_prefill_2_v1"
+        },
+        {
+          "start": 14,
+          "end": 30,
+          "query_tokens": 1,
+          "numerical_class": "ascend_serial_token_v1"
+        }
+      ]
+    }
+  },
+  {
+    "format": "inferfabric.completed-arithmetic.v1",
+    "sequence": 6,
+    "resident": 0,
+    "history": {
+      "version": 1,
+      "spans": [
+        {
+          "start": 0,
+          "end": 8,
+          "query_tokens": 8,
+          "numerical_class": "packed_prefill_8_v1"
+        },
+        {
+          "start": 8,
+          "end": 12,
+          "query_tokens": 4,
+          "numerical_class": "packed_prefill_4_v1"
+        },
+        {
+          "start": 12,
+          "end": 14,
+          "query_tokens": 2,
+          "numerical_class": "packed_prefill_2_v1"
+        },
+        {
+          "start": 14,
+          "end": 30,
+          "query_tokens": 1,
+          "numerical_class": "ascend_serial_token_v1"
+        }
+      ]
+    }
+  },
+  {
+    "format": "inferfabric.completed-arithmetic.v1",
+    "sequence": 7,
+    "resident": 0,
+    "history": {
+      "version": 1,
+      "spans": [
+        {
+          "start": 0,
+          "end": 8,
+          "query_tokens": 8,
+          "numerical_class": "packed_prefill_8_v1"
+        },
+        {
+          "start": 8,
+          "end": 12,
+          "query_tokens": 4,
+          "numerical_class": "packed_prefill_4_v1"
+        },
+        {
+          "start": 12,
+          "end": 19,
+          "query_tokens": 1,
+          "numerical_class": "ascend_serial_token_v1"
+        }
+      ]
+    }
+  },
+  {
+    "format": "inferfabric.completed-arithmetic.v1",
+    "sequence": 8,
+    "resident": 1,
+    "history": {
+      "version": 1,
+      "spans": [
+        {
+          "start": 0,
+          "end": 8,
+          "query_tokens": 8,
+          "numerical_class": "packed_prefill_8_v1"
+        },
+        {
+          "start": 8,
+          "end": 12,
+          "query_tokens": 4,
+          "numerical_class": "packed_prefill_4_v1"
+        },
+        {
+          "start": 12,
+          "end": 14,
+          "query_tokens": 2,
+          "numerical_class": "packed_prefill_2_v1"
+        },
+        {
+          "start": 14,
+          "end": 22,
+          "query_tokens": 1,
+          "numerical_class": "ascend_serial_token_v1"
+        }
+      ]
+    }
+  },
+  {
+    "format": "inferfabric.completed-arithmetic.v1",
+    "sequence": 9,
+    "resident": 1,
+    "history": {
+      "version": 1,
+      "spans": [
+        {
+          "start": 0,
+          "end": 8,
+          "query_tokens": 8,
+          "numerical_class": "packed_prefill_8_v1"
+        },
+        {
+          "start": 8,
+          "end": 12,
+          "query_tokens": 4,
+          "numerical_class": "packed_prefill_4_v1"
+        },
+        {
+          "start": 12,
+          "end": 19,
+          "query_tokens": 1,
+          "numerical_class": "ascend_serial_token_v1"
+        }
+      ]
+    }
+  },
+  {
+    "format": "inferfabric.completed-arithmetic.v1",
+    "sequence": 10,
+    "resident": 0,
+    "history": {
+      "version": 1,
+      "spans": [
+        {
+          "start": 0,
+          "end": 8,
+          "query_tokens": 8,
+          "numerical_class": "packed_prefill_8_v1"
+        },
+        {
+          "start": 8,
+          "end": 12,
+          "query_tokens": 4,
+          "numerical_class": "packed_prefill_4_v1"
+        },
+        {
+          "start": 12,
+          "end": 14,
+          "query_tokens": 2,
+          "numerical_class": "packed_prefill_2_v1"
+        },
+        {
+          "start": 14,
+          "end": 30,
+          "query_tokens": 1,
+          "numerical_class": "ascend_serial_token_v1"
+        }
+      ]
+    }
+  },
+  {
+    "format": "inferfabric.completed-arithmetic.v1",
+    "sequence": 11,
+    "resident": 1,
+    "history": {
+      "version": 1,
+      "spans": [
+        {
+          "start": 0,
+          "end": 8,
+          "query_tokens": 8,
+          "numerical_class": "packed_prefill_8_v1"
+        },
+        {
+          "start": 8,
+          "end": 12,
+          "query_tokens": 4,
+          "numerical_class": "packed_prefill_4_v1"
+        },
+        {
+          "start": 12,
+          "end": 14,
+          "query_tokens": 2,
+          "numerical_class": "packed_prefill_2_v1"
+        },
+        {
+          "start": 14,
+          "end": 22,
+          "query_tokens": 1,
+          "numerical_class": "ascend_serial_token_v1"
+        }
+      ]
+    }
+  },
+  {
+    "format": "inferfabric.completed-arithmetic.v1",
+    "sequence": 12,
+    "resident": 0,
+    "history": {
+      "version": 1,
+      "spans": [
+        {
+          "start": 0,
+          "end": 8,
+          "query_tokens": 8,
+          "numerical_class": "packed_prefill_8_v1"
+        },
+        {
+          "start": 8,
+          "end": 12,
+          "query_tokens": 4,
+          "numerical_class": "packed_prefill_4_v1"
+        },
+        {
+          "start": 12,
+          "end": 14,
+          "query_tokens": 2,
+          "numerical_class": "packed_prefill_2_v1"
+        },
+        {
+          "start": 14,
+          "end": 30,
+          "query_tokens": 1,
+          "numerical_class": "ascend_serial_token_v1"
+        }
+      ]
+    }
+  },
+  {
+    "format": "inferfabric.completed-arithmetic.v1",
+    "sequence": 13,
+    "resident": 0,
+    "history": {
+      "version": 1,
+      "spans": [
+        {
+          "start": 0,
+          "end": 8,
+          "query_tokens": 8,
+          "numerical_class": "packed_prefill_8_v1"
+        },
+        {
+          "start": 8,
+          "end": 12,
+          "query_tokens": 4,
+          "numerical_class": "packed_prefill_4_v1"
+        },
+        {
+          "start": 12,
+          "end": 14,
+          "query_tokens": 2,
+          "numerical_class": "packed_prefill_2_v1"
+        },
+        {
+          "start": 14,
+          "end": 15,
+          "query_tokens": 1,
+          "numerical_class": "ascend_serial_token_v1"
+        }
+      ]
+    }
+  },
+  {
+    "format": "inferfabric.completed-arithmetic.v1",
+    "sequence": 14,
+    "resident": 0,
+    "history": {
+      "version": 1,
+      "spans": [
+        {
+          "start": 0,
+          "end": 8,
+          "query_tokens": 8,
+          "numerical_class": "packed_prefill_8_v1"
+        },
+        {
+          "start": 8,
+          "end": 12,
+          "query_tokens": 4,
+          "numerical_class": "packed_prefill_4_v1"
+        },
+        {
+          "start": 12,
+          "end": 19,
+          "query_tokens": 1,
+          "numerical_class": "ascend_serial_token_v1"
+        }
+      ]
+    }
+  },
+  {
+    "format": "inferfabric.completed-arithmetic.v1",
+    "sequence": 15,
+    "resident": 1,
+    "history": {
+      "version": 1,
+      "spans": [
+        {
+          "start": 0,
+          "end": 8,
+          "query_tokens": 8,
+          "numerical_class": "packed_prefill_8_v1"
+        },
+        {
+          "start": 8,
+          "end": 12,
+          "query_tokens": 4,
+          "numerical_class": "packed_prefill_4_v1"
+        },
+        {
+          "start": 12,
+          "end": 14,
+          "query_tokens": 2,
+          "numerical_class": "packed_prefill_2_v1"
+        }
+      ]
+    }
+  },
+  {
+    "format": "inferfabric.completed-arithmetic.v1",
+    "sequence": 16,
+    "resident": 1,
+    "history": {
+      "version": 1,
+      "spans": [
+        {
+          "start": 0,
+          "end": 8,
+          "query_tokens": 8,
+          "numerical_class": "packed_prefill_8_v1"
+        },
+        {
+          "start": 8,
+          "end": 12,
+          "query_tokens": 4,
+          "numerical_class": "packed_prefill_4_v1"
+        },
+        {
+          "start": 12,
+          "end": 19,
+          "query_tokens": 1,
+          "numerical_class": "ascend_serial_token_v1"
+        }
+      ]
+    }
+  },
+  {
+    "format": "inferfabric.completed-arithmetic.v1",
+    "sequence": 17,
+    "resident": 0,
+    "history": {
+      "version": 1,
+      "spans": [
+        {
+          "start": 0,
+          "end": 4080,
+          "query_tokens": 16,
+          "numerical_class": "packed_prefill_16_v1"
+        },
+        {
+          "start": 4080,
+          "end": 4088,
+          "query_tokens": 8,
+          "numerical_class": "packed_prefill_8_v1"
+        },
+        {
+          "start": 4088,
+          "end": 4092,
+          "query_tokens": 1,
+          "numerical_class": "ascend_serial_token_v1"
+        }
+      ]
+    }
+  },
+  {
+    "format": "inferfabric.completed-arithmetic.v1",
+    "sequence": 18,
+    "resident": 0,
+    "history": {
+      "version": 1,
+      "spans": [
+        {
+          "start": 0,
+          "end": 8,
+          "query_tokens": 8,
+          "numerical_class": "packed_prefill_8_v1"
+        },
+        {
+          "start": 8,
+          "end": 12,
+          "query_tokens": 4,
+          "numerical_class": "packed_prefill_4_v1"
+        },
+        {
+          "start": 12,
+          "end": 19,
+          "query_tokens": 1,
+          "numerical_class": "ascend_serial_token_v1"
+        }
+      ]
+    }
+  }
+]
