@@ -860,6 +860,7 @@ pub fn recipes(p: &Program, graph: &Graph) -> Vec<serde_json::Value> {
             "max_query_tokens": p.prefill_tokens,
             "variable_query_tokens": p.uncaptured_prefill,
             "capture_allowed": !p.uncaptured_prefill,
+            "invocation_lifetime": if p.uncaptured_prefill {"until_owning_stream_completion"} else {"prepared_or_graph_owned"},
         });
     }
     if !p.prefill_variants.is_empty() {

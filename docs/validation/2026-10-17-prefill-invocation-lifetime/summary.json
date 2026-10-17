@@ -1,0 +1,432 @@
+{
+  "status": "passed_normal_eos_and_repeatability",
+  "scope": "Unfrozen discovery; seven fixtures (12 to 4088 prompt tokens) repeated three times. No multi-chunk, 64K, HTTP or frozen-arena qualification.",
+  "process": {
+    "completed": true,
+    "timed_out": false,
+    "returncode": 0,
+    "timeout_seconds": 3600,
+    "elapsed_seconds": 1221.701022785157
+  },
+  "results": {
+    "format": "inferfabric.persistent-program-qualification.v1",
+    "requests": 21,
+    "output_tokens": 159,
+    "exact_fixture_tokens": false,
+    "exact_scoped_tokens": true,
+    "reference_comparison_scope": "through_first_eos",
+    "reference_output_tokens": 195,
+    "fixture_sha256": "4ea7d9427651a4c510e5162a7cc9ee78ac5c417e33077f1e23c0b7a1463517a3",
+    "permuted_pages": true,
+    "binding_limit_rejections": 0,
+    "interleaved_residents": false,
+    "packed_prefill": true,
+    "copied_prefix_tokens": null,
+    "scope": "one loaded TP8/EP8 group, compiled packed prefill and serial decode; no long-context claim",
+    "measurements": [
+      {
+        "request": 0,
+        "case": "arithmetic",
+        "prompt_tokens": 12,
+        "output_tokens": 8,
+        "tpot_ms": 23.31757142857143,
+        "engine_ttft_ms": 1449.419
+      },
+      {
+        "request": 1,
+        "case": "geography",
+        "prompt_tokens": 15,
+        "output_tokens": 8,
+        "tpot_ms": 23.355571428571427,
+        "engine_ttft_ms": 912.97
+      },
+      {
+        "request": 2,
+        "case": "chinese",
+        "prompt_tokens": 14,
+        "output_tokens": 17,
+        "tpot_ms": 23.2358125,
+        "engine_ttft_ms": 926.634
+      },
+      {
+        "request": 3,
+        "case": "access-code-529",
+        "prompt_tokens": 529,
+        "output_tokens": 5,
+        "tpot_ms": 68.913,
+        "engine_ttft_ms": 11902.404
+      },
+      {
+        "request": 4,
+        "case": "access-code-2049",
+        "prompt_tokens": 2049,
+        "output_tokens": 5,
+        "tpot_ms": 205.31924999999998,
+        "engine_ttft_ms": 50153.431
+      },
+      {
+        "request": 5,
+        "case": "access-code-3072",
+        "prompt_tokens": 3072,
+        "output_tokens": 5,
+        "tpot_ms": 232.01175,
+        "engine_ttft_ms": 73571.709
+      },
+      {
+        "request": 6,
+        "case": "access-code-4088",
+        "prompt_tokens": 4088,
+        "output_tokens": 5,
+        "tpot_ms": 391.83975,
+        "engine_ttft_ms": 113891.184
+      },
+      {
+        "request": 7,
+        "case": "arithmetic",
+        "prompt_tokens": 12,
+        "output_tokens": 8,
+        "tpot_ms": 24.071857142857144,
+        "engine_ttft_ms": 799.987
+      },
+      {
+        "request": 8,
+        "case": "geography",
+        "prompt_tokens": 15,
+        "output_tokens": 8,
+        "tpot_ms": 24.359857142857145,
+        "engine_ttft_ms": 828.418
+      },
+      {
+        "request": 9,
+        "case": "chinese",
+        "prompt_tokens": 14,
+        "output_tokens": 17,
+        "tpot_ms": 24.6719375,
+        "engine_ttft_ms": 792.804
+      },
+      {
+        "request": 10,
+        "case": "access-code-529",
+        "prompt_tokens": 529,
+        "output_tokens": 5,
+        "tpot_ms": 54.813,
+        "engine_ttft_ms": 10980.139
+      },
+      {
+        "request": 11,
+        "case": "access-code-2049",
+        "prompt_tokens": 2049,
+        "output_tokens": 5,
+        "tpot_ms": 146.881,
+        "engine_ttft_ms": 41239.277
+      },
+      {
+        "request": 12,
+        "case": "access-code-3072",
+        "prompt_tokens": 3072,
+        "output_tokens": 5,
+        "tpot_ms": 209.571,
+        "engine_ttft_ms": 69036.072
+      },
+      {
+        "request": 13,
+        "case": "access-code-4088",
+        "prompt_tokens": 4088,
+        "output_tokens": 5,
+        "tpot_ms": 318.18325,
+        "engine_ttft_ms": 107500.45
+      },
+      {
+        "request": 14,
+        "case": "arithmetic",
+        "prompt_tokens": 12,
+        "output_tokens": 8,
+        "tpot_ms": 24.390714285714285,
+        "engine_ttft_ms": 840.441
+      },
+      {
+        "request": 15,
+        "case": "geography",
+        "prompt_tokens": 15,
+        "output_tokens": 8,
+        "tpot_ms": 25.543142857142858,
+        "engine_ttft_ms": 889.957
+      },
+      {
+        "request": 16,
+        "case": "chinese",
+        "prompt_tokens": 14,
+        "output_tokens": 17,
+        "tpot_ms": 23.3346875,
+        "engine_ttft_ms": 839.964
+      },
+      {
+        "request": 17,
+        "case": "access-code-529",
+        "prompt_tokens": 529,
+        "output_tokens": 5,
+        "tpot_ms": 72.97800000000001,
+        "engine_ttft_ms": 11080.516
+      },
+      {
+        "request": 18,
+        "case": "access-code-2049",
+        "prompt_tokens": 2049,
+        "output_tokens": 5,
+        "tpot_ms": 190.21625,
+        "engine_ttft_ms": 40857.861
+      },
+      {
+        "request": 19,
+        "case": "access-code-3072",
+        "prompt_tokens": 3072,
+        "output_tokens": 5,
+        "tpot_ms": 359.33875,
+        "engine_ttft_ms": 70652.892
+      },
+      {
+        "request": 20,
+        "case": "access-code-4088",
+        "prompt_tokens": 4088,
+        "output_tokens": 5,
+        "tpot_ms": 357.8665,
+        "engine_ttft_ms": 114810.454
+      }
+    ]
+  },
+  "repeatability": {
+    "format": "inferfabric.sampler-repeatability.v1",
+    "passed": true,
+    "scope": "through_first_eos",
+    "criterion": "exact sampled token, logit and top-five diagnostics across repeated requests",
+    "reference_sha256": "4ea7d9427651a4c510e5162a7cc9ee78ac5c417e33077f1e23c0b7a1463517a3",
+    "diagnostics_sha256": "57e6a3e9e3f5d1fb41ba6bf277f3978236614c14e7cee0b1907a6eac08f869c1",
+    "cases": [
+      {
+        "case": "arithmetic",
+        "compared_tokens_per_run": 8,
+        "ignored_post_eos_records": 0,
+        "stable": true,
+        "differences": []
+      },
+      {
+        "case": "geography",
+        "compared_tokens_per_run": 8,
+        "ignored_post_eos_records": 0,
+        "stable": true,
+        "differences": []
+      },
+      {
+        "case": "chinese",
+        "compared_tokens_per_run": 17,
+        "ignored_post_eos_records": 0,
+        "stable": true,
+        "differences": []
+      },
+      {
+        "case": "access-code-529",
+        "compared_tokens_per_run": 5,
+        "ignored_post_eos_records": 0,
+        "stable": true,
+        "differences": []
+      },
+      {
+        "case": "access-code-2049",
+        "compared_tokens_per_run": 5,
+        "ignored_post_eos_records": 0,
+        "stable": true,
+        "differences": []
+      },
+      {
+        "case": "access-code-3072",
+        "compared_tokens_per_run": 5,
+        "ignored_post_eos_records": 0,
+        "stable": true,
+        "differences": []
+      },
+      {
+        "case": "access-code-4088",
+        "compared_tokens_per_run": 5,
+        "ignored_post_eos_records": 0,
+        "stable": true,
+        "differences": []
+      }
+    ]
+  },
+  "artifacts": [
+    {
+      "path": "native-build-prefill-lifetime-fixed/program_engine_probe",
+      "sha256": "0dd0c941e272bb7dd779e2cb63e86730b6273e7544353b91e57416eee34523e5"
+    },
+    {
+      "path": "native-build-prefill-lifetime-fixed/libinferfabric_program.so",
+      "sha256": "36b49ea0905335e3620da447a992efdd896caba4b1d02edd0bf8fcaafcefc16d"
+    },
+    {
+      "path": "uncaptured4k-lifetime-fixed-source/execution.bin",
+      "sha256": "b16edec8f5a21bfb1f696c9f9f17f9bc7d299106eca8e3255c0e31581d60bb8e"
+    },
+    {
+      "path": "mixed-short-long-reference.json",
+      "sha256": "4ea7d9427651a4c510e5162a7cc9ee78ac5c417e33077f1e23c0b7a1463517a3"
+    },
+    {
+      "path": "lifetime-fixed-long-discovery/output-diagnostics.json",
+      "sha256": "57e6a3e9e3f5d1fb41ba6bf277f3978236614c14e7cee0b1907a6eac08f869c1"
+    }
+  ],
+  "ranks": [
+    {
+      "rank": 0,
+      "arena_bytes": 38253633536,
+      "frozen": false,
+      "workspace_peak_bytes": 159221248,
+      "graphs": [
+        {
+          "name": "token_decode",
+          "replays": 139
+        }
+      ],
+      "uncaptured_prefill_forwards": 23,
+      "uncaptured_prefill_tokens": 37529,
+      "transient_invocation_preparations": 3456622,
+      "peak_transient_invocations": 377008,
+      "retained_invocations": 486,
+      "transient_invocations": 0,
+      "activation_host_transfers": 0
+    },
+    {
+      "rank": 1,
+      "arena_bytes": 38253633536,
+      "frozen": false,
+      "workspace_peak_bytes": 159221248,
+      "graphs": [
+        {
+          "name": "token_decode",
+          "replays": 139
+        }
+      ],
+      "uncaptured_prefill_forwards": 23,
+      "uncaptured_prefill_tokens": 37529,
+      "transient_invocation_preparations": 3456622,
+      "peak_transient_invocations": 377008,
+      "retained_invocations": 486,
+      "transient_invocations": 0,
+      "activation_host_transfers": 0
+    },
+    {
+      "rank": 2,
+      "arena_bytes": 38253633536,
+      "frozen": false,
+      "workspace_peak_bytes": 159221248,
+      "graphs": [
+        {
+          "name": "token_decode",
+          "replays": 139
+        }
+      ],
+      "uncaptured_prefill_forwards": 23,
+      "uncaptured_prefill_tokens": 37529,
+      "transient_invocation_preparations": 3456622,
+      "peak_transient_invocations": 377008,
+      "retained_invocations": 486,
+      "transient_invocations": 0,
+      "activation_host_transfers": 0
+    },
+    {
+      "rank": 3,
+      "arena_bytes": 38253633536,
+      "frozen": false,
+      "workspace_peak_bytes": 159221248,
+      "graphs": [
+        {
+          "name": "token_decode",
+          "replays": 139
+        }
+      ],
+      "uncaptured_prefill_forwards": 23,
+      "uncaptured_prefill_tokens": 37529,
+      "transient_invocation_preparations": 3456622,
+      "peak_transient_invocations": 377008,
+      "retained_invocations": 486,
+      "transient_invocations": 0,
+      "activation_host_transfers": 0
+    },
+    {
+      "rank": 4,
+      "arena_bytes": 38253633536,
+      "frozen": false,
+      "workspace_peak_bytes": 159221248,
+      "graphs": [
+        {
+          "name": "token_decode",
+          "replays": 139
+        }
+      ],
+      "uncaptured_prefill_forwards": 23,
+      "uncaptured_prefill_tokens": 37529,
+      "transient_invocation_preparations": 3456622,
+      "peak_transient_invocations": 377008,
+      "retained_invocations": 486,
+      "transient_invocations": 0,
+      "activation_host_transfers": 0
+    },
+    {
+      "rank": 5,
+      "arena_bytes": 38253633536,
+      "frozen": false,
+      "workspace_peak_bytes": 159221248,
+      "graphs": [
+        {
+          "name": "token_decode",
+          "replays": 139
+        }
+      ],
+      "uncaptured_prefill_forwards": 23,
+      "uncaptured_prefill_tokens": 37529,
+      "transient_invocation_preparations": 3456622,
+      "peak_transient_invocations": 377008,
+      "retained_invocations": 486,
+      "transient_invocations": 0,
+      "activation_host_transfers": 0
+    },
+    {
+      "rank": 6,
+      "arena_bytes": 38253633536,
+      "frozen": false,
+      "workspace_peak_bytes": 159221248,
+      "graphs": [
+        {
+          "name": "token_decode",
+          "replays": 139
+        }
+      ],
+      "uncaptured_prefill_forwards": 23,
+      "uncaptured_prefill_tokens": 37529,
+      "transient_invocation_preparations": 3456622,
+      "peak_transient_invocations": 377008,
+      "retained_invocations": 486,
+      "transient_invocations": 0,
+      "activation_host_transfers": 0
+    },
+    {
+      "rank": 7,
+      "arena_bytes": 38253633536,
+      "frozen": false,
+      "workspace_peak_bytes": 159221248,
+      "graphs": [
+        {
+          "name": "token_decode",
+          "replays": 139
+        }
+      ],
+      "uncaptured_prefill_forwards": 23,
+      "uncaptured_prefill_tokens": 37529,
+      "transient_invocation_preparations": 3456622,
+      "peak_transient_invocations": 377008,
+      "retained_invocations": 486,
+      "transient_invocations": 0,
+      "activation_host_transfers": 0
+    }
+  ]
+}

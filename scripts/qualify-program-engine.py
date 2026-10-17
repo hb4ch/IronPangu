@@ -41,20 +41,37 @@ def validate_uncaptured_prefill(program, prepared, cases, copy_boundary=None):
     if len(graphs) != 1 or graphs[0]['name'] != 'token_decode' or graphs[0]['replays'] < 1:
         raise RuntimeError('uncaptured prefill must preserve decode graph and forbid all prefill graphs')
     # The engine explicitly prepares the maximum shape twice without capture.
-    forwards, tokens = 2, 8192
+    preparation_forwards, preparation_tokens = 2, 8192
+    forwards, tokens = preparation_forwards, preparation_tokens
+    request_segments = []
     for case in cases:
         segments = [len(case['input_ids'])] if copy_boundary is None else [copy_boundary] + [len(case['input_ids']) - copy_boundary] * 2
+        request_segments.append([])
         for remaining in segments:
             if remaining < 1:
                 raise RuntimeError('invalid uncaptured prefill segment')
+            chunks = []
             while remaining:
                 query = min(4096, remaining)
+                chunks.append(query)
                 if query > 1:  # Single-row tails use the ordinary token entry.
                     forwards += 1
                     tokens += query
                 remaining -= query
+            request_segments[-1].append(chunks)
     if prepared.get('uncaptured_prefill_forwards') != forwards or prepared.get('uncaptured_prefill_tokens') != tokens:
         raise RuntimeError('uncaptured model forward/token count mismatch')
+    fields = ('transient_invocations', 'peak_transient_invocations',
+              'transient_invocation_preparations', 'retained_invocations')
+    if any(type(prepared.get(key)) is not int or prepared[key] < 0 for key in fields):
+        raise RuntimeError('missing or invalid uncaptured invocation lifetime audit')
+    if prepared['transient_invocations'] or prepared['peak_transient_invocations'] > prepared['transient_invocation_preparations']:
+        raise RuntimeError('uncaptured invocations escaped completion lifetime')
+    return dict(observed_total_forwards=forwards, observed_total_tokens=tokens,
+                preparation_forwards=preparation_forwards, preparation_tokens=preparation_tokens,
+                request_forwards=forwards-preparation_forwards, request_tokens=tokens-preparation_tokens,
+                expected_request_segments=request_segments,
+                scope='per rank; uncaptured counts exclude one-token tails executed by the token entry; segment chunk lists are expected schedules, not a per-request runtime trace')
 
 
 def scoped_cases(cases, eos, respect_eos):
@@ -185,13 +202,15 @@ def main():
                          output_tokens=len(actual), tpot_ms=statistics.mean(r['elapsed_us']/1000 for r in actual[1:]) if len(actual)>1 else None)
         measurement['restored_suffix_ttft_ms' if args.copy_boundary is not None else 'engine_ttft_ms']=actual[0]['elapsed_us']/1000
         measurements.append(measurement)
+    prefill_forward_audits = []
     for rank in range(8):
         audit = json.loads((args.output / 'transfers' / f'rank-{rank}.json').read_text())
         if audit['activation_host_transfers'] or audit['rejected']:
             raise RuntimeError('residency violation')
         prepared = json.loads((args.output / 'prepared' / f'rank-{rank}.json').read_text())
         if args.packed_prefill and json.loads((args.plan / 'device-program.json').read_text()).get('uncaptured_prefill'):
-            validate_uncaptured_prefill(json.loads((args.plan / 'device-program.json').read_text()), prepared, cases, args.copy_boundary)
+            forward_audit = validate_uncaptured_prefill(json.loads((args.plan / 'device-program.json').read_text()), prepared, cases, args.copy_boundary)
+            prefill_forward_audits.append(dict(rank=rank, **forward_audit))
         elif args.packed_prefill:
             program = json.loads((args.plan / 'device-program.json').read_text())
             family = program.get('prefill_variants', [])
@@ -234,6 +253,7 @@ def main():
                   interleaved_residents=args.interleave,
                   packed_prefill=args.packed_prefill,
                   copied_prefix_tokens=args.copy_boundary,
+                  uncaptured_prefill_audits=prefill_forward_audits,
                   scope='one loaded TP8/EP8 group, ' + ('compiled packed prefill and serial decode' if args.packed_prefill else 'serial token graph') + '; no long-context claim',
                   measurements=measurements)
     (args.output / 'results.json').write_text(json.dumps(report, indent=2) + '\n')

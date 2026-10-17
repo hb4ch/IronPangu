@@ -66,6 +66,7 @@ class Context {
   std::map<std::string, aclTensor *> descriptors_;
   std::map<std::string, aclTensor *> strided_descriptors_;
   std::map<std::string, Invocation> invocations_;
+  std::map<std::string, Invocation> transient_invocations_;
   std::map<std::string, Counts> counts_;
   struct Graph {
     aclmdlRI handle;
@@ -76,6 +77,7 @@ class Context {
   bool capturing_ = false;
   bool bounded_buffers_ = false;
   uint64_t uncaptured_prefill_forwards_ = 0, uncaptured_prefill_tokens_ = 0;
+  uint64_t transient_invocation_preparations_ = 0, peak_transient_invocations_ = 0;
   std::vector<std::pair<void *, size_t>> uploads_;
   size_t upload_index_ = 0;
   void *workspace_ = nullptr;
@@ -152,6 +154,7 @@ public:
     // A stream-local teardown boundary, never aclrtSynchronizeDevice.
     aclrtSynchronizeStream(stream);
     release_graphs();
+    release_completed_invocations();
     active = nullptr;
     for (auto &[key, invocation] : invocations_)
       aclDestroyAclOpExecutor(invocation.executor);
@@ -370,8 +373,16 @@ public:
   }
   void complete() {
     check(aclrtSynchronizeStream(stream), "prepared request-output completion");
+    release_completed_invocations();
     ++boundaries_;
     upload_index_ = 0;
+  }
+  void release_completed_invocations() {
+    // Called only after the existing owning-stream completion boundary. Never
+    // evict graph/decode invocations or add a fence to reclaim prefill metadata.
+    for(auto &[key, invocation]:transient_invocations_)
+      aclDestroyAclOpExecutor(invocation.executor);
+    transient_invocations_.clear();
   }
   template <class F> aclmdlRI capture(const char *name, F enqueue) {
     require_stream(stream);
@@ -459,7 +470,10 @@ public:
     auto *bytes = std::get<sizeof...(I)>(args);
     auto **executor = std::get<sizeof...(I) + 1>(args);
     auto &counts = counts_[name];
-    counts.repeatable = repeatable;
+    // Keep the qualified repeatable invocation semantics, but scope variable
+    // prefill entries to the next owning-stream completion. Decode/graph entries
+    // remain permanent and are never borrowed by this transient cache.
+    counts.repeatable = counts.repeatable || repeatable;
     if (!repeatable) {
       ++counts.preparations;
       return std::apply(function, args);
@@ -467,8 +481,9 @@ public:
     std::string key(name);
     key_part(key, function);
     (key_part(key, std::get<I>(args)), ...);
-    auto found = invocations_.find(key);
-    if (found != invocations_.end()) {
+    auto &cache = bounded_buffers_ ? transient_invocations_ : invocations_;
+    auto found = cache.find(key);
+    if (found != cache.end()) {
       *bytes = found->second.bytes;
       *executor = found->second.executor;
       ++counts.replays;
@@ -478,7 +493,11 @@ public:
     if (status)
       return status;
     check(aclSetAclOpExecutorRepeatable(*executor), name);
-    invocations_.emplace(std::move(key), Invocation{*executor, *bytes});
+    cache.emplace(std::move(key), Invocation{*executor, *bytes});
+    if(bounded_buffers_) {
+      ++transient_invocation_preparations_;
+      peak_transient_invocations_=std::max<uint64_t>(peak_transient_invocations_,cache.size());
+    }
     ++counts.preparations;
     return 0;
   }
@@ -490,6 +509,10 @@ public:
         << ",\"buffer_reuses\":" << reuse_
         << ",\"uncaptured_prefill_forwards\":" << uncaptured_prefill_forwards_
         << ",\"uncaptured_prefill_tokens\":" << uncaptured_prefill_tokens_
+        << ",\"transient_invocation_preparations\":" << transient_invocation_preparations_
+        << ",\"transient_invocations\":" << transient_invocations_.size()
+        << ",\"peak_transient_invocations\":" << peak_transient_invocations_
+        << ",\"retained_invocations\":" << invocations_.size()
         << ",\"state_copy_operations\":" << state_copy_operations_
         << ",\"state_copy_bytes\":" << state_copy_bytes_
         << ",\"descriptors\":" << descriptors_.size()

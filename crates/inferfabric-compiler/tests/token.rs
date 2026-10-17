@@ -26,6 +26,7 @@ fn uncaptured_prefill_is_a_bounded_envelope_not_a_graph_family() {
         assert_eq!(recipe["prefill_execution"]["mode"], "uncaptured");
         assert_eq!(recipe["prefill_execution"]["capture_allowed"], false);
         assert_eq!(recipe["prefill_execution"]["variable_query_tokens"], true);
+        assert_eq!(recipe["prefill_execution"]["invocation_lifetime"], "until_owning_stream_completion");
         if instruction.op=="mome_inplace" {
             assert_eq!(recipe["packed_prefill"]["api_repetitions"],1);
             assert_eq!(recipe["packed_prefill"]["assembly_copies"],0);

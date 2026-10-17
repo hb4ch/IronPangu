@@ -109,6 +109,9 @@ int main() {
       // No intermediate fences. Every source vector and tensor lease is gone
       // before device completion; subsequent iterations recycle the same slots.
       for (int i = 0; i < 128; ++i) {
+        // Alternate completion-scoped prefill with permanent cached calls.
+        // No extra completion boundary is permitted between these invocations.
+        prepared::Context::BoundedBuffers uncaptured(context, i % 2 == 1);
         context.begin_step(i);
         openpangu::DeviceTensor input({4}, ACL_FLOAT, 4),
             output({4}, ACL_BF16, 2);
@@ -204,7 +207,11 @@ int main() {
         throw std::runtime_error("double release accepted");
       std::ostringstream audit;
       context.write(audit);
-      if (audit.str().find("\"replays\":127") == std::string::npos)
+      if (audit.str().find("\"replays\":126") == std::string::npos ||
+          audit.str().find("\"transient_invocation_preparations\":1,") == std::string::npos ||
+          audit.str().find("\"transient_invocations\":0,") == std::string::npos ||
+          audit.str().find("\"peak_transient_invocations\":1,") == std::string::npos ||
+          audit.str().find("\"retained_invocations\":1,") == std::string::npos)
         throw std::runtime_error("invocation cache missed stable operands");
       std::cout << audit.str();
     }

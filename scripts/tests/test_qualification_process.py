@@ -28,11 +28,19 @@ class QualificationProcess(unittest.TestCase):
     def test_uncaptured_forward_audit_rejects_graphs_missing_counts_and_fragmentation(self):
         program = dict(uncaptured_prefill=True, prefill_tokens=4096, prefill_variants=[])
         audit = dict(graphs=[dict(name='token_decode', replays=2)],
-                     uncaptured_prefill_forwards=18, uncaptured_prefill_tokens=8192+65536)
+                     uncaptured_prefill_forwards=18, uncaptured_prefill_tokens=8192+65536,
+                     transient_invocations=0, peak_transient_invocations=8,
+                     transient_invocation_preparations=144, retained_invocations=4)
         cases = [dict(input_ids=[0]*65536)]
-        module.validate_uncaptured_prefill(program, audit, cases)
+        report = module.validate_uncaptured_prefill(program, audit, cases)
+        self.assertEqual(report['preparation_forwards'], 2)
+        self.assertEqual(report['request_forwards'], 16)
+        self.assertEqual(report['request_tokens'], 65536)
+        self.assertEqual(report['expected_request_segments'], [[[4096]*16]])
         for key, value in [('uncaptured_prefill_forwards', 19), ('uncaptured_prefill_tokens', 8192+65535),
                            ('graphs', [dict(name='packed_prefill', replays=16)]),
+                           ('transient_invocations', 1), ('retained_invocations', None),
+                           ('peak_transient_invocations', 145),
                            ('graphs', [dict(name='token_decode', replays=1),dict(name='packed_prefill', replays=0)])]:
             with self.assertRaises(RuntimeError):
                 module.validate_uncaptured_prefill(program, dict(audit, **{key:value}), cases)
@@ -40,7 +48,13 @@ class QualificationProcess(unittest.TestCase):
         with self.assertRaises(RuntimeError):
             module.validate_uncaptured_prefill(program, missing, cases)
         tail = dict(audit, uncaptured_prefill_forwards=3, uncaptured_prefill_tokens=8192+4096)
-        module.validate_uncaptured_prefill(program, tail, [dict(input_ids=[0]*4097)])
+        report = module.validate_uncaptured_prefill(program, tail, [dict(input_ids=[0]*4097)])
+        self.assertEqual(report['request_forwards'], 1)
+        self.assertEqual(report['expected_request_segments'], [[[4096, 1]]])
+        copied = dict(audit, uncaptured_prefill_forwards=5, uncaptured_prefill_tokens=8192+3*4096)
+        report = module.validate_uncaptured_prefill(program, copied,
+            [dict(input_ids=[0]*8192)], copy_boundary=4096)
+        self.assertEqual(report['expected_request_segments'], [[[4096], [4096], [4096]]])
 
     def test_success(self):
         with tempfile.TemporaryDirectory() as directory:
