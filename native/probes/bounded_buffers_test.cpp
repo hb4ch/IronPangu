@@ -31,6 +31,19 @@ int main() {
     require(inferfabric::prepared::take_bounded_buffer(free,1,only_large)==&blocks[4],"foreign instruction slot consumed");
     require(free[64].size()==1 && free[4096].size()==1,"skipped slots lost");
 
+    // A previous tail can occupy the sampled address. The frozen plan must
+    // permit an equivalent free slot, while the allocator still excludes the
+    // live lease and does not invent storage or borrow another capacity class.
+    Block sampled{10,25165824}, equivalent{11,25165824}, larger{12,33554432};
+    Free changed_order{{equivalent.bytes,{&equivalent}}, {larger.bytes,{&larger}}};
+    auto sampled_only=[](Block *p){return p->slot==10;};
+    auto capacity_class=[](Block *p){return p->slot==10 || p->slot==11;};
+    require(!inferfabric::prepared::take_bounded_buffer(changed_order,15728640,sampled_only),"sampled binding unexpectedly usable");
+    require(inferfabric::prepared::take_bounded_buffer(changed_order,15728640,capacity_class)==&equivalent,"equivalent planned slot not reused");
+    require(!inferfabric::prepared::take_bounded_buffer(changed_order,15728640,capacity_class),"live or foreign slot borrowed");
+    changed_order[sampled.bytes].push_back(&sampled);
+    require(inferfabric::prepared::take_bounded_buffer(changed_order,15728640,capacity_class)==&sampled,"released sampled slot unavailable");
+
     // Every valid query tail fits a maximum-query temporary. Other instructions'
     // buffers and live persistent/decode-output leases must remain unavailable.
     for(size_t queries=1;queries<=4096;++queries) {

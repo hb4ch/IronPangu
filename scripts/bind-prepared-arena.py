@@ -19,6 +19,29 @@ def fingerprint(data):
     return str(value)
 
 
+def capacity_bindings(arena, workspace_slot):
+    """Freeze capacity classes, not incidental addresses from a sampled run.
+
+    Slots remain disjoint and the executor leases only free slots on its owning
+    stream. Equal-capacity storage is interchangeable; a tail must not fail just
+    because its sampled slot is live while an equivalent slot is free. Never
+    broaden a binding to a different capacity or the permanent workspace.
+    """
+    classes = {}
+    for slot in arena['slots']:
+        if slot['id'] != workspace_slot:
+            classes.setdefault(slot['bytes'], set()).add(slot['id'])
+    capacities = {slot['id']: slot['bytes'] for slot in arena['slots']}
+    result = {}
+    for instruction, slots in arena['instruction_slots'].items():
+        eligible = set(slots)
+        for slot in slots:
+            if slot != workspace_slot:
+                eligible.update(classes[capacities[slot]])
+        result[instruction] = sorted(eligible)
+    return result
+
+
 def bind(plan, audits, output):
     program = (plan / "execution.bin").read_bytes()
     expected = fingerprint(program)
@@ -63,6 +86,8 @@ def bind(plan, audits, output):
             end = slot["offset"] + slot["bytes"]
         if not end or end != arena["bytes"] or end > 1 << 40:
             raise ValueError("invalid arena extent")
+        arena['observed_instruction_slots'] = arena['instruction_slots']
+        arena['instruction_slots'] = capacity_bindings(arena, workspace['slot'])
         arenas.append(arena)
     if len({a["backend_fingerprint"] for a in arenas}) != 1:
         raise ValueError("inconsistent backend binary")
@@ -81,7 +106,7 @@ def bind(plan, audits, output):
     metadata = {
         "format": "inferfabric.bound-arena.v1",
         "execution_sha256": hashlib.sha256(program).hexdigest(),
-        "policy": "fixed disjoint slots on owning stream; instruction-bound eligible leases; exact-size LIFO for captured execution, smallest sufficient capacity (LIFO ties) for uncaptured prefill; fail on exhaustion",
+        "policy": "fixed disjoint slots on owning stream; instruction-bound capacity classes with interchangeable equal-capacity free slots, permanent workspace excluded; exact-size LIFO for captured execution, smallest sufficient capacity (LIFO ties) for uncaptured prefill; fail on exhaustion",
         "scope": "prepared tensors and vendor workspace; checkpoint allocations separate",
         "ranks": arenas,
     }

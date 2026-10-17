@@ -1,0 +1,250 @@
+[
+  {
+    "rank": 0,
+    "arena_bytes": 38116810768,
+    "frozen": true,
+    "workspace": {
+      "planned": true,
+      "planned_bytes": 159221248,
+      "peak_requested_bytes": 159221248,
+      "growth_allocations": 0,
+      "slot": 0
+    },
+    "graphs": [
+      {
+        "name": "token_decode",
+        "replays": 1
+      },
+      {
+        "name": "sequence_decode_1",
+        "replays": 103
+      },
+      {
+        "name": "sequence_decode_2",
+        "replays": 35
+      }
+    ],
+    "uncaptured_prefill_forwards": 28,
+    "activation_host_transfers": 0,
+    "rejected_transfers": 0,
+    "step_device_allocations": 0,
+    "step_internal_fences": 0
+  },
+  {
+    "rank": 1,
+    "arena_bytes": 38116810768,
+    "frozen": true,
+    "workspace": {
+      "planned": true,
+      "planned_bytes": 159221248,
+      "peak_requested_bytes": 159221248,
+      "growth_allocations": 0,
+      "slot": 0
+    },
+    "graphs": [
+      {
+        "name": "token_decode",
+        "replays": 1
+      },
+      {
+        "name": "sequence_decode_1",
+        "replays": 103
+      },
+      {
+        "name": "sequence_decode_2",
+        "replays": 35
+      }
+    ],
+    "uncaptured_prefill_forwards": 28,
+    "activation_host_transfers": 0,
+    "rejected_transfers": 0,
+    "step_device_allocations": 0,
+    "step_internal_fences": 0
+  },
+  {
+    "rank": 2,
+    "arena_bytes": 38116810768,
+    "frozen": true,
+    "workspace": {
+      "planned": true,
+      "planned_bytes": 159221248,
+      "peak_requested_bytes": 159221248,
+      "growth_allocations": 0,
+      "slot": 0
+    },
+    "graphs": [
+      {
+        "name": "token_decode",
+        "replays": 1
+      },
+      {
+        "name": "sequence_decode_1",
+        "replays": 103
+      },
+      {
+        "name": "sequence_decode_2",
+        "replays": 35
+      }
+    ],
+    "uncaptured_prefill_forwards": 28,
+    "activation_host_transfers": 0,
+    "rejected_transfers": 0,
+    "step_device_allocations": 0,
+    "step_internal_fences": 0
+  },
+  {
+    "rank": 3,
+    "arena_bytes": 38116810768,
+    "frozen": true,
+    "workspace": {
+      "planned": true,
+      "planned_bytes": 159221248,
+      "peak_requested_bytes": 159221248,
+      "growth_allocations": 0,
+      "slot": 0
+    },
+    "graphs": [
+      {
+        "name": "token_decode",
+        "replays": 1
+      },
+      {
+        "name": "sequence_decode_1",
+        "replays": 103
+      },
+      {
+        "name": "sequence_decode_2",
+        "replays": 35
+      }
+    ],
+    "uncaptured_prefill_forwards": 28,
+    "activation_host_transfers": 0,
+    "rejected_transfers": 0,
+    "step_device_allocations": 0,
+    "step_internal_fences": 0
+  },
+  {
+    "rank": 4,
+    "arena_bytes": 38116810768,
+    "frozen": true,
+    "workspace": {
+      "planned": true,
+      "planned_bytes": 159221248,
+      "peak_requested_bytes": 159221248,
+      "growth_allocations": 0,
+      "slot": 0
+    },
+    "graphs": [
+      {
+        "name": "token_decode",
+        "replays": 1
+      },
+      {
+        "name": "sequence_decode_1",
+        "replays": 103
+      },
+      {
+        "name": "sequence_decode_2",
+        "replays": 35
+      }
+    ],
+    "uncaptured_prefill_forwards": 28,
+    "activation_host_transfers": 0,
+    "rejected_transfers": 0,
+    "step_device_allocations": 0,
+    "step_internal_fences": 0
+  },
+  {
+    "rank": 5,
+    "arena_bytes": 38116810768,
+    "frozen": true,
+    "workspace": {
+      "planned": true,
+      "planned_bytes": 159221248,
+      "peak_requested_bytes": 159221248,
+      "growth_allocations": 0,
+      "slot": 0
+    },
+    "graphs": [
+      {
+        "name": "token_decode",
+        "replays": 1
+      },
+      {
+        "name": "sequence_decode_1",
+        "replays": 103
+      },
+      {
+        "name": "sequence_decode_2",
+        "replays": 35
+      }
+    ],
+    "uncaptured_prefill_forwards": 28,
+    "activation_host_transfers": 0,
+    "rejected_transfers": 0,
+    "step_device_allocations": 0,
+    "step_internal_fences": 0
+  },
+  {
+    "rank": 6,
+    "arena_bytes": 38116810768,
+    "frozen": true,
+    "workspace": {
+      "planned": true,
+      "planned_bytes": 159221248,
+      "peak_requested_bytes": 159221248,
+      "growth_allocations": 0,
+      "slot": 0
+    },
+    "graphs": [
+      {
+        "name": "token_decode",
+        "replays": 1
+      },
+      {
+        "name": "sequence_decode_1",
+        "replays": 103
+      },
+      {
+        "name": "sequence_decode_2",
+        "replays": 35
+      }
+    ],
+    "uncaptured_prefill_forwards": 28,
+    "activation_host_transfers": 0,
+    "rejected_transfers": 0,
+    "step_device_allocations": 0,
+    "step_internal_fences": 0
+  },
+  {
+    "rank": 7,
+    "arena_bytes": 38116810768,
+    "frozen": true,
+    "workspace": {
+      "planned": true,
+      "planned_bytes": 159221248,
+      "peak_requested_bytes": 159221248,
+      "growth_allocations": 0,
+      "slot": 0
+    },
+    "graphs": [
+      {
+        "name": "token_decode",
+        "replays": 1
+      },
+      {
+        "name": "sequence_decode_1",
+        "replays": 103
+      },
+      {
+        "name": "sequence_decode_2",
+        "replays": 35
+      }
+    ],
+    "uncaptured_prefill_forwards": 28,
+    "activation_host_transfers": 0,
+    "rejected_transfers": 0,
+    "step_device_allocations": 0,
+    "step_internal_fences": 0
+  }
+]

@@ -40,7 +40,22 @@ def validate_usage(case, metrics, eos, respect_eos):
 
 
 def validate_histories(records, manifest, consumed):
-    allowed={(v['numerical_class'],v['max_query_tokens']) for v in manifest['variants'] if v['max_sequences']==1 and v['max_tokens']==v['max_query_tokens']}
+    def allowed(numerical_class, count):
+        match = re.fullmatch(r'(.+):sequence-batch-v1:([0-9a-f]{64}):member=([0-9]+)', numerical_class)
+        base = match[1] if match else numerical_class
+        if match and int(match[3]) >= manifest['resident_sequences']:
+            return False
+        for variant in manifest['variants']:
+            if variant['max_sequences'] != 1 or variant['numerical_class'] != base:
+                continue
+            variable = variant.get('phase') == 'prefill' and variant.get('packed') and not variant.get('graph_capable', True)
+            if match and not variable:
+                continue
+            if variable and 0 < count <= min(variant['max_tokens'], variant['max_query_tokens']):
+                return True
+            if not variable and count == variant['max_tokens'] == variant['max_query_tokens']:
+                return True
+        return False
     context=max(v['max_context'] for v in manifest['variants'])
     sequences=set()
     total=0
@@ -54,7 +69,7 @@ def validate_histories(records, manifest, consumed):
         end=0
         for span in record['history']['spans']:
             count=span['query_tokens']
-            if (span['numerical_class'],count) not in allowed or count<=0 or span['start']!=end or not end<span['end']<=context or (span['end']-end)%count:
+            if not allowed(span['numerical_class'],count) or count<=0 or span['start']!=end or not end<span['end']<=context or (span['end']-end)%count:
                 raise ValueError('arithmetic history is not a complete declared invocation sequence')
             end=span['end']
         if not end:raise ValueError('empty completed arithmetic record')
@@ -121,7 +136,7 @@ def main():
 
     def request(case, stream=False, disconnect=False, temperature=0, cache_salt=None):
         body = dict(model='inferfabric-program', prompt=case['input_ids'],
-                    max_tokens=len(case['output_ids']), temperature=temperature, stream=stream, ignore_eos=not args.respect_eos)
+                    max_tokens=len(expected_ids(case,eos,args.respect_eos)), temperature=temperature, stream=stream, ignore_eos=not args.respect_eos)
         if cache_salt is not None:
             body['cache_salt']=cache_salt
         if stream:
@@ -239,7 +254,13 @@ def main():
                     time.sleep(0.25)
                     request(cases[-1], stream=True, disconnect=True)
                     short_text, short_metrics = request(cases[0], stream=True)
-                    if long.done():
+                    short_first=not long.done()
+                    # A single real 4K forward is not preemptible. Completion
+                    # order also depends on output length; it cannot certify
+                    # fairness for a one-chunk prompt. Require early short
+                    # completion only when the peer spans multiple full chunks.
+                    compiled_chunk=json.loads((args.plan/'device-program.json').read_text())['prefill_tokens']
+                    if len(long_case['input_ids'])>2*compiled_chunk and not short_first:
                         raise RuntimeError('long prefill blocked short request: no independent resident progress')
                     if short_text != expected_text(cases[0]):
                         raise RuntimeError('resident cancellation/reset corrupted short request')
@@ -249,7 +270,7 @@ def main():
                     validate_usage(cases[0], short_metrics, eos, args.respect_eos)
                     validate_usage(long_case, long_metrics, eos, args.respect_eos)
                     record = dict(case=long_case['case'], long_prompt_tokens=len(long_case['input_ids']),
-                                  short_finished_before_long=True, cancellation_during_peer_prefill=True,
+                                  short_finished_before_long=short_first, cancellation_during_peer_prefill=True,
                                   short=short_metrics, long=long_metrics)
                     mixed_cases.append(record)
                     # Preserve completed cases if a subsequent long run fails.
@@ -361,14 +382,17 @@ def main():
             audit = json.loads((args.output/'prepared'/f'rank-{rank}.json').read_text())
             transfers = json.loads((args.output/'transfers'/f'rank-{rank}.json').read_text())
             program = json.loads((args.plan/'device-program.json').read_text())
-            names = {f'packed_prefill_{n}' for n in program.get('prefill_variants', [])} or ({'packed_prefill'} if program['prefill_tokens']>1 else set())
+            uncaptured=program.get('uncaptured_prefill',False)
+            names = set() if uncaptured else ({f'packed_prefill_{n}' for n in program.get('prefill_variants', [])} or ({'packed_prefill'} if program['prefill_tokens']>1 else set()))
             packed = [g for g in audit['graphs'] if g['name'].startswith('packed_prefill')]
             if len(packed)!=len(names) or {g['name'] for g in packed} != names:
                 raise RuntimeError('HTTP prepared graphs differ from the declared family')
             replays = sum(g['replays'] for g in packed)
-            if args.expect_prefill=='packed' and replays<=len(names):
+            executed=audit.get('uncaptured_prefill_forwards',0) if uncaptured else replays
+            warmup=2+int(min(manifest['resident_sequences'],program['prefill_tokens'])>1) if uncaptured else len(names)
+            if args.expect_prefill=='packed' and executed<=warmup:
                 raise RuntimeError('HTTP did not exercise packed prefill beyond warmup')
-            if args.expect_prefill=='serial' and replays>len(names):
+            if args.expect_prefill=='serial' and executed>warmup:
                 raise RuntimeError('HTTP exceeded serial-only prefill budget')
             report['prefill_graph_replays'].append(replays)
             if not audit['arena']['frozen'] or not audit['workspace']['planned'] or audit['workspace']['growth_allocations']:

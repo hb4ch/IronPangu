@@ -8,6 +8,18 @@ module=importlib.util.module_from_spec(spec)
 spec.loader.exec_module(module)
 
 class HttpReferenceScope(unittest.TestCase):
+    def test_batch_history_keeps_exact_identity_and_accepts_actual_tail(self):
+        manifest={'resident_sequences':2,'variants':[{'numerical_class':'extend','max_query_tokens':4096,'max_tokens':4096,
+            'max_sequences':1,'max_context':65536,'phase':'prefill','packed':True,'graph_capable':False}]}
+        identity='extend:sequence-batch-v1:'+'a'*64+':member=1'
+        record={'format':'inferfabric.completed-arithmetic.v1','sequence':1,'resident':0,
+            'history':{'version':1,'spans':[{'start':0,'end':17,'query_tokens':17,'numerical_class':identity}]}}
+        self.assertTrue(module.validate_histories([record],manifest,17)['all_scheduler_tokens_accounted'])
+        for bad_class in [identity.replace('member=1','member=2'),identity.replace('a'*64,'x'*64),identity.replace('extend:','unknown:')]:
+            bad=copy.deepcopy(record);bad['history']['spans'][0]['numerical_class']=bad_class
+            with self.assertRaises(ValueError):module.validate_histories([bad],manifest,17)
+        bad=copy.deepcopy(record);bad['history']['spans'][0].update(query_tokens=4097,end=4097)
+        with self.assertRaises(ValueError):module.validate_histories([bad],manifest,4097)
     def test_long_context_usage_cannot_hide_truncation_or_missing_sse_usage(self):
         case={'input_ids':[1]*65520,'output_ids':[2,3,99]+[4]*13}
         usage={'prompt_tokens':65520,'completion_tokens':3,'total_tokens':65523}
