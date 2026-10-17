@@ -18,6 +18,48 @@ This is the next implementation plan for OpenPangu V2 92B, followed by independe
 
 The current C8 format is per-128 latent scales with BF16 rotary, applied to the 16 DSL-selected DSA layers; 30 SWA layers use BF16. Paging must preserve these semantics. The existing causal candidate path is qualified at context 512, below index_topk=2048. Learned DSA selection and index-cache state are a separate correctness gate for longer contexts. Increasing allocator capacity does not qualify longer context.
 
+### Required release target: 64K context
+
+The user explicitly requires robust **65,536-token total context** for 92B.
+`max_model_len` includes prompt plus generated tokens; a 64K benchmark reserves
+output headroom rather than accepting 65,536 prompt tokens plus extra generation.
+This is a release requirement, not a currently advertised capability. Keep the
+admission limit at the qualified envelope until every relevant gate below passes.
+
+- **S2:** size page tables from the compiled context and pool budget, removing the
+  fixed 32-entry table assumption. Keep absolute positions distinct from physical
+  cache rows. Recycle SWA pages only after their window, borrowers and device events
+  permit it. Page/slot capacity must cover every rank before admitting a request.
+- **S3/S4:** real packed, chunked prefill with bounded workspace and scheduler token
+  budgets. Avoid allocating a context-squared 64K attention mask. Preserve causal
+  attention, MoME history, rotary positions and state transitions across arbitrary
+  legal chunk boundaries. Long prompts must not indefinitely stall active decodes.
+- **S5:** implement learned DSA index projections, index-cache layout, layer sharing
+  rules and top-k selection from the checkpoint architecture. The current exact
+  causal-candidate shortcut is invalid above its declared range. Validate logits
+  and continuation against a pinned reference at 2K boundaries and 4K, 8K, 16K,
+  32K and 64K total lengths, with early/middle/late retrieval probes and repeated
+  SWA wraps. Matching two layouts of our own executor is insufficient evidence.
+- **S6:** prefix restore at long boundaries includes the complete MoME/index/SWA
+  continuation state. Test shared prefixes, divergent branches, full-hit logit
+  recomputation, eviction and cancellation without premature reuse or host offload.
+- **S7:** measure cold/warm-prefix TTFT, TPOT/ITL distributions, throughput, queue
+  delay and peak/steady HBM across those lengths and mixed short/long concurrent
+  workloads. Compare the same checkpoint, cache dtype and TP/EP settings against
+  OmniInfer. Exercise constrained pools, full admission queues, slow/disconnected
+  clients, rank failure, repeated request churn and graceful shutdown; require
+  bounded memory and no stale state leakage. Record actual supported concurrency
+  at 64K from the tightest rank's measured memory budget, not a guessed constant.
+
+At the current cache formats, the 16 full-history C8 layers alone require
+687,865,856 bytes per rank for one 65,536-token history. Thirty retained 512-token
+BF16 windows add 17,694,720 bytes before page slack. These are payload estimates,
+not a fit claim: learned index state, recurrent/prefix snapshots, graph storage,
+metadata, weights, routing and scratch must also be planned and measured. Reserve
+the maximum shared workspace before arena binding for every qualified batch/chunk
+variant. Larger lengths or new variants require requalification, never implicit
+fallback or live scratch growth.
+
 Evidence: [batching](npu-continuous-batching.md), [frontend](vllm-frontend.md), [packed cache](packed-mla-cache.md), [workspace](shared-workspace-planning.md), [latest 92B measurements](validation/2026-10-17-shared-workspace/README.md).
 
 ## 2. Architecture and ownership
