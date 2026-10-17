@@ -39,6 +39,16 @@ def validate_usage(case, metrics, eos, respect_eos):
         raise ValueError('HTTP token usage does not match independent reference')
 
 
+def validate_mixed_progress(prompt_tokens, chunk_tokens, long, short):
+    progress = short['first_text_ms_since_run'] < long['first_text_ms_since_run']
+    if prompt_tokens > 2 * chunk_tokens:
+        if short['request_started_ms_since_run'] >= long['first_text_ms_since_run']:
+            raise ValueError('mixed fixture did not submit the short request during long prefill')
+        if not progress:
+            raise ValueError('multi-chunk prefill blocked short first-output progress')
+    return progress
+
+
 def validate_histories(records, manifest, consumed):
     def allowed(numerical_class, count):
         match = re.fullmatch(r'(.+):sequence-batch-v1:([0-9a-f]{64}):member=([0-9]+)', numerical_class)
@@ -133,6 +143,7 @@ def main():
         for case in resident_cases:
             expected_text(case)
     url = f'http://127.0.0.1:{args.port}'
+    clock_origin = time.perf_counter()
 
     def request(case, stream=False, disconnect=False, temperature=0, cache_salt=None):
         body = dict(model='inferfabric-program', prompt=case['input_ids'],
@@ -168,6 +179,8 @@ def main():
             if not finished or not receipts:
                 raise RuntimeError('incomplete SSE response')
             return ''.join(chunks), {'ttft_ms': (receipts[0]-began)*1000,
+                                    'request_started_ms_since_run': (began-clock_origin)*1000,
+                                    'first_text_ms_since_run': (receipts[0]-clock_origin)*1000,
                                     'text_chunks': len(receipts),
                                     'chunk_intervals_ms': [(b-a)*1000 for a,b in zip(receipts,receipts[1:])],
                                     'total_ms': (time.perf_counter()-began)*1000, 'usage': usage}
@@ -255,22 +268,20 @@ def main():
                     request(cases[-1], stream=True, disconnect=True)
                     short_text, short_metrics = request(cases[0], stream=True)
                     short_first=not long.done()
-                    # A single real 4K forward is not preemptible. Completion
-                    # order also depends on output length; it cannot certify
-                    # fairness for a one-chunk prompt. Require early short
-                    # completion only when the peer spans multiple full chunks.
+                    # Completion order depends on requested output lengths.
+                    # Check first-output progress during multi-chunk prefill.
                     compiled_chunk=json.loads((args.plan/'device-program.json').read_text())['prefill_tokens']
-                    if len(long_case['input_ids'])>2*compiled_chunk and not short_first:
-                        raise RuntimeError('long prefill blocked short request: no independent resident progress')
                     if short_text != expected_text(cases[0]):
                         raise RuntimeError('resident cancellation/reset corrupted short request')
                     long_text, long_metrics = long.result()
+                    short_prefill_progress = validate_mixed_progress(len(long_case['input_ids']), compiled_chunk, long_metrics, short_metrics)
                     if long_text != expected_text(long_case):
                         raise RuntimeError('resident cancellation/reset corrupted long peer')
                     validate_usage(cases[0], short_metrics, eos, args.respect_eos)
                     validate_usage(long_case, long_metrics, eos, args.respect_eos)
                     record = dict(case=long_case['case'], long_prompt_tokens=len(long_case['input_ids']),
                                   short_finished_before_long=short_first, cancellation_during_peer_prefill=True,
+                                  short_first_output_before_long=short_prefill_progress,
                                   short=short_metrics, long=long_metrics)
                     mixed_cases.append(record)
                     # Preserve completed cases if a subsequent long run fails.
@@ -344,7 +355,7 @@ def main():
                 if text!=expected_text(cases[0]):
                     raise RuntimeError('output changed after overload/disconnect recovery')
                 overload['recovery_output_correct'] = True
-            report = dict(frontend='vLLM Rust 0.25.1', mode='resident request scheduler; compiled prefill and serial decode',
+            report = dict(frontend='vLLM Rust 0.25.1', mode='resident request scheduler; compiled prefill and native decode',
                           full_fixture_text=not args.respect_eos, sse_agreement=True, queued_isolation=True,
                           reference_comparison_scope='through_first_eos' if args.respect_eos else 'full_forced_continuation',
                           fixture_sha256=hashlib.sha256(args.cases.read_bytes()).hexdigest(),

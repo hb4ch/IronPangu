@@ -8,6 +8,16 @@ module=importlib.util.module_from_spec(spec)
 spec.loader.exec_module(module)
 
 class HttpReferenceScope(unittest.TestCase):
+    def test_mixed_progress_uses_first_output_not_completion_order(self):
+        long=dict(first_text_ms_since_run=20000)
+        short=dict(request_started_ms_since_run=500, first_text_ms_since_run=7000, total_ms=30000)
+        self.assertTrue(module.validate_mixed_progress(16368,4096,long,short))
+        with self.assertRaises(ValueError):
+            module.validate_mixed_progress(16368,4096,long,{**short,'first_text_ms_since_run':21000})
+        with self.assertRaises(ValueError):
+            module.validate_mixed_progress(16368,4096,long,{**short,'request_started_ms_since_run':21000})
+        self.assertFalse(module.validate_mixed_progress(4088,4096,long,{**short,'first_text_ms_since_run':21000}))
+
     def test_batch_history_keeps_exact_identity_and_accepts_actual_tail(self):
         manifest={'resident_sequences':2,'variants':[{'numerical_class':'extend','max_query_tokens':4096,'max_tokens':4096,
             'max_sequences':1,'max_context':65536,'phase':'prefill','packed':True,'graph_capable':False}]}
