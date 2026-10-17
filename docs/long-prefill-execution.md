@@ -86,6 +86,13 @@ requesting only the reference outputs through that token. Its report labels this
 full forced-continuation parity. The default remains full comparison for diagnosis.
 Answer mismatches before EOS and every resource/graph audit remain hard failures.
 
+For repeated fixtures, also run `scripts/check-program-repeatability.py --cases
+CASES.json --diagnostics RUN/output-diagnostics.json --output RUN/repeatability.json
+--eos EOS_ID`. It compares sampled tokens, logits and top-five diagnostics through
+EOS, independently of the reference/resource qualifier. It catches numerical
+drift hidden by identical sampled tokens. The recorded row-wise baseline passes
+this check; the unsafe sequence-MoME aliasing run fails it despite its token match.
+
 ## Implementation status
 
 The superseded graph-prefill qualification and its dependent queued runs were
