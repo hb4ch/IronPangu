@@ -8,6 +8,15 @@ module=importlib.util.module_from_spec(spec)
 spec.loader.exec_module(module)
 
 class HttpReferenceScope(unittest.TestCase):
+    def test_prefix_boundary_matches_full_chunk_checkpoint_contract(self):
+        self.assertEqual(module.prefix_boundary(8176,64,4096),4096)
+        self.assertEqual(module.prefix_boundary(65520,64,4096),61440)
+        self.assertEqual(module.prefix_boundary(4096,64,4096),0)
+        self.assertEqual(module.prefix_boundary(4097,64,2048),4096)
+        self.assertEqual(module.prefix_boundary(8176,64),8128)
+        for args in [(0,64,4096),(12,0,4096),(12,64,0)]:
+            with self.assertRaises(ValueError):module.prefix_boundary(*args)
+
     def test_mixed_progress_uses_first_output_not_completion_order(self):
         long=dict(first_text_ms_since_run=20000)
         short=dict(request_started_ms_since_run=500, first_text_ms_since_run=7000, total_ms=30000)

@@ -156,16 +156,21 @@ impl ResidentEngine for CachedProgram {
         // Exact prospective arithmetic; dynamic token-budget differences may
         // reduce hits, but never grant compatibility from final shape alone.
         let mut history = ArithmeticHistory::default();
+        let batched = self.engine.batch_capacity()? > 0;
         while history.tokens() < boundary {
             let count = self
                 .engine
                 .prefill_chunk((boundary - history.tokens()).min(self.budget));
-            let variant = self
-                .variants
-                .iter()
-                .find(|v| v.accepts_query_tokens(count))
-                .ok_or_else(|| invalid("prefix arithmetic variant missing"))?;
-            history.append_completed(variant, history.tokens(), count)?;
+            let variant = if batched {
+                let start=history.tokens() as usize;
+                inferfabric_native::program::prospective_single_batch_variant(
+                    &self.variants, &request.prompt_token_ids[start..start+count as usize],
+                    history.tokens(), self.engine.prefill_capacity())?
+            } else {
+                self.variants.iter().find(|v| v.accepts_query_tokens(count)).cloned()
+                    .ok_or_else(|| invalid("prefix arithmetic variant missing"))?
+            };
+            history.append_completed(&variant, history.tokens(), count)?;
         }
         let restored = self.cache.as_mut().unwrap().restore(
             &mut self.engine,

@@ -48,6 +48,26 @@ fn pack_batch(inputs:&[BatchInput],residents:usize,budget:u32)->Result<(Vec<Nati
     let digest=hash.finalize().iter().map(|b|format!("{b:02x}")).collect();
     Ok((descriptors,tokens,digest))
 }
+
+fn batch_base_variant(variants:&[Variant],tokens:u32)->Result<&Variant> {
+    variants.iter().find(|v|v.phase==Phase::Prefill && !v.graph_capable && v.accepts_query_tokens(tokens))
+        .ok_or_else(||invalid("batch requires uncaptured packed variant"))
+}
+fn batch_variant(base:&Variant,digest:&str,member:usize)->Variant {
+    let mut variant=base.clone();
+    variant.numerical_class=format!("{}:sequence-batch-v1:{digest}:member={member}",base.numerical_class);
+    variant
+}
+/// Prospective identity for an isolated chunk. Physical slot assignment does
+/// not affect arithmetic; peer content and batch geometry still do. This must
+/// never grant compatibility to a snapshot produced in a different batch.
+pub fn prospective_single_batch_variant(variants:&[Variant],tokens:&[u32],position:u32,budget:u32)->Result<Variant> {
+    let inputs=[BatchInput{resident:0,position,tokens:tokens.to_vec(),sample:false}];
+    let (_,packed,digest)=pack_batch(&inputs,1,budget)?;
+    let base=batch_base_variant(variants,packed.len() as u32)?;
+    if position+packed.len() as u32>base.max_context {return Err(invalid("prospective batch exceeds context"));}
+    Ok(batch_variant(base,&digest,0))
+}
 type Error = unsafe extern "C" fn() -> *const c_char;
 type BindPages = unsafe extern "C" fn(*mut c_void, u32, *const c_char, *const i32, u32) -> i32;
 type Resident = unsafe extern "C" fn(*mut c_void, u32) -> i32;
@@ -651,12 +671,10 @@ impl Engine {
     pub fn batch(&mut self,inputs:&[BatchInput])->Result<Vec<Option<u32>>> {
         let call=self.batch_fn.ok_or_else(||invalid("native batch ABI unavailable"))?;
         let (descriptors,tokens,digest)=pack_batch(inputs,self.histories.len(),self.prefill_tokens)?;
-        let base=self.variants.iter().find(|v|v.phase==Phase::Prefill && !v.graph_capable && v.accepts_query_tokens(tokens.len() as u32))
-            .ok_or_else(||invalid("batch requires uncaptured packed variant"))?;
+        let base=batch_base_variant(&self.variants,tokens.len() as u32)?;
         let mut variants=Vec::new();
         for (index,input) in inputs.iter().enumerate() {
-            let mut variant=base.clone();
-            variant.numerical_class=format!("{}:sequence-batch-v1:{digest}:member={index}",base.numerical_class);
+            let variant=batch_variant(base,&digest,index);
             self.histories[input.resident as usize].check_append(&variant,input.position,input.tokens.len() as u32)?;
             if self.sealed[input.resident as usize].is_some(){return Err(invalid("batch cannot mutate sealed resident"));}
             variants.push(variant);
@@ -755,6 +773,36 @@ impl Drop for Engine {
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn prospective_single_chunks_match_completed_batches_without_relaxing_peer_identity() {
+        let m:Manifest=serde_json::from_str(include_str!("../../../docs/validation/2026-10-17-persistent-serving/serving.json")).unwrap();
+        let mut base=m.variants[0].clone();
+        base.phase=Phase::Prefill;base.packed=true;base.graph_capable=false;
+        base.max_tokens=4;base.max_query_tokens=4;base.max_context=32;
+        let variants=vec![base.clone()];let prompt=[1,2,3,4,5,6,7,8];
+        let mut prospective=ArithmeticHistory::default();let mut completed=ArithmeticHistory::default();
+        for position in [0u32,4] {
+            let tokens=&prompt[position as usize..position as usize+4];
+            let predicted=prospective_single_batch_variant(&variants,tokens,position,4).unwrap();
+            let actual=[BatchInput{resident:2,position,tokens:tokens.to_vec(),sample:true}];
+            let (_,_,digest)=pack_batch(&actual,3,4).unwrap();
+            prospective.append_completed(&predicted,position,4).unwrap();
+            completed.append_completed(&batch_variant(&base,&digest,0),position,4).unwrap();
+        }
+        assert_eq!(prospective,completed);
+        let isolated=prospective_single_batch_variant(&variants,&prompt[..2],0,4).unwrap();
+        let peers=[BatchInput{resident:0,position:0,tokens:prompt[..2].to_vec(),sample:false},
+            BatchInput{resident:1,position:0,tokens:vec![9,10],sample:false}];
+        let (_,_,digest)=pack_batch(&peers,2,4).unwrap();
+        assert_ne!(isolated.numerical_class,batch_variant(&base,&digest,0).numerical_class);
+        assert_ne!(isolated.numerical_class,prospective_single_batch_variant(&variants,&[1,3],0,4).unwrap().numerical_class);
+        assert_ne!(isolated.numerical_class,prospective_single_batch_variant(&variants,&prompt[..2],1,4).unwrap().numerical_class);
+        for (tokens,position,budget) in [(&prompt[..0],0,4),(&prompt[..4],0,3),(&prompt[..4],31,4),(&prompt[..4],u32::MAX,4)] {
+            assert!(prospective_single_batch_variant(&variants,tokens,position,budget).is_err());
+        }
+        base.graph_capable=true;
+        assert!(prospective_single_batch_variant(&[base],&prompt[..2],0,4).is_err());
+    }
     #[test]
     fn packed_batch_preserves_members_and_rejects_aliasing() {
         let inputs=vec![BatchInput{resident:2,position:63,tokens:vec![9],sample:true},

@@ -49,6 +49,13 @@ def validate_mixed_progress(prompt_tokens, chunk_tokens, long, short):
     return progress
 
 
+def prefix_boundary(prompt_tokens, page_alignment, chunk_tokens=None):
+    if prompt_tokens <= 0 or page_alignment <= 0 or (chunk_tokens is not None and chunk_tokens <= 0):
+        raise ValueError('invalid prefix boundary inputs')
+    quantum = math.lcm(page_alignment, chunk_tokens) if chunk_tokens is not None else page_alignment
+    return (prompt_tokens - 1) // quantum * quantum
+
+
 def validate_histories(records, manifest, consumed):
     def allowed(numerical_class, count):
         match = re.fullmatch(r'(.+):sequence-batch-v1:([0-9a-f]{64}):member=([0-9]+)', numerical_class)
@@ -105,6 +112,7 @@ def main():
     p.add_argument('--expect-prefill', choices=('packed','serial'), help='verify actual graph use, excluding startup warmup')
     p.add_argument('--resident-cases', type=Path, help='Test every serial oracle fixture with concurrent short decode and peer cancellation')
     p.add_argument('--prefix-cases', type=Path, help='Enable one snapshot slot; test cold/warm outputs, salt isolation and LRU replacement for every fixture')
+    p.add_argument('--prefix-branch-cases', type=Path, help='Two independent references sharing a chunk prefix but different suffixes; requires --prefix-cases')
     p.add_argument('--check-overload', action='store_true', help='Burst long streaming requests beyond admission capacity, check 503/retry metadata and recovery')
     p.add_argument('--request-timeout-seconds', type=int, default=120, help='Socket inactivity timeout, not a whole-run deadline; raise for 64K prefill')
     p.add_argument('--respect-eos', action='store_true', help='Test normal serving through first EOS; preserve full references and report the narrower comparison scope')
@@ -114,6 +122,8 @@ def main():
         p.error('--request-timeout-seconds must be positive')
     if args.prefix_cases and not args.max_num_seqs:
         p.error('--prefix-cases requires explicit --max-num-seqs and one additional compiled resident')
+    if args.prefix_branch_cases and not args.prefix_cases:
+        p.error('--prefix-branch-cases requires --prefix-cases')
     if args.check_overload and (not args.resident_cases or not args.max_num_seqs):
         p.error('--check-overload requires --resident-cases and --max-num-seqs')
     args.output.mkdir(parents=True, exist_ok=False)
@@ -136,6 +146,11 @@ def main():
     if args.prefix_cases and not prefix_cases:
         p.error('--prefix-cases must contain independent references')
     for case in prefix_cases:
+        expected_text(case)
+    branch_cases = json.loads(args.prefix_branch_cases.read_text()) if args.prefix_branch_cases else []
+    if args.prefix_branch_cases and (len(branch_cases) != 2 or branch_cases[0]['input_ids'] == branch_cases[1]['input_ids']):
+        p.error('--prefix-branch-cases requires two distinct prompts')
+    for case in branch_cases:
         expected_text(case)
     if args.resident_cases:
         if not resident_cases:
@@ -193,6 +208,7 @@ def main():
     command = [str(args.server.resolve()), '--program', str(args.plan), str(args.checkpoint), str(args.library), str(args.port)]
     if args.prefix_cases:
         command += ['--prefix-cache-slots','1','--prefix-cache-namespace','qualification']
+        env['INFERFABRIC_STATE_COPY_AUDIT_DIR']=str((args.output/'state-copies').resolve())
     for name in ('max_num_seqs', 'max_num_batched_tokens'):
         value = getattr(args, name)
         if value is not None:
@@ -239,11 +255,14 @@ def main():
             if text != expected_text(cases[0]):
                 raise RuntimeError('disconnect recovery')
             prefix_results=[]
+            prefix_branch=None
             if prefix_cases:
                 manifest=json.loads((args.plan/'serving.json').read_text())
                 alignment=math.lcm(*(state['storage'].get('page_tokens',1) for state in manifest['states']))
+                program=json.loads((args.plan/'device-program.json').read_text())
+                quantum=min(program['prefill_tokens'],args.max_num_batched_tokens or program['prefill_tokens']) if program.get('uncaptured_prefill') else None
                 for case in prefix_cases:
-                    boundary=(len(case['input_ids'])-1)//alignment*alignment
+                    boundary=prefix_boundary(len(case['input_ids']),alignment,quantum)
                     if not boundary:raise RuntimeError('prefix fixture has no eligible checkpoint')
                     observations=[]
                     # One snapshot slot: switching salt must miss and evict the
@@ -259,6 +278,24 @@ def main():
                         observations.append(dict(mode=label,cached_tokens=cached,**metrics))
                     prefix_results.append(dict(case=case['case'],boundary=boundary,observations=observations))
                     (args.output/'prefix-progress.json').write_text(json.dumps(dict(complete=False,cases=prefix_results),indent=2)+'\n')
+                if branch_cases:
+                    source, target = branch_cases
+                    shared = 0
+                    for left, right in zip(source['input_ids'], target['input_ids']):
+                        if left != right: break
+                        shared += 1
+                    boundary = prefix_boundary(len(source['input_ids']),alignment,quantum)
+                    if not boundary or shared < boundary or boundary >= len(target['input_ids']):
+                        raise RuntimeError('branch fixture must share the complete published prefix and have an uncached suffix')
+                    observations=[]
+                    for label,case,cached_tokens in [('source-cold',source,0),('different-suffix',target,boundary)]:
+                        text,metrics=request(case,stream=True,cache_salt='qualification-distinct-suffix')
+                        if text!=expected_text(case):raise RuntimeError(f'prefix branch {label} output mismatch')
+                        validate_usage(case,metrics,eos,args.respect_eos)
+                        actual=(metrics['usage'].get('prompt_tokens_details') or {}).get('cached_tokens',0)
+                        if actual!=cached_tokens:raise RuntimeError(f'prefix branch {label} cached {actual} != {cached_tokens}')
+                        observations.append(dict(mode=label,case=case['case'],cached_tokens=actual,**metrics))
+                    prefix_branch=dict(shared_tokens=shared,published_boundary=boundary,observations=observations)
             mixed = None
             mixed_cases = []
             for long_case in resident_cases:
@@ -365,6 +402,8 @@ def main():
                           concurrent_requests=len(concurrent_cases), mixed_residents=mixed,
                           mixed_resident_cases=mixed_cases,
                           prefix_cases=prefix_results,
+                          prefix_branch=prefix_branch,
+                          prefix_branch_fixture_sha256=hashlib.sha256(args.prefix_branch_cases.read_bytes()).hexdigest() if args.prefix_branch_cases else None,
                           prefix_fixture_sha256=hashlib.sha256(args.prefix_cases.read_bytes()).hexdigest() if args.prefix_cases else None,
                           context_overflow_rejected=True,
                           max_num_seqs=args.max_num_seqs, max_num_batched_tokens=args.max_num_batched_tokens)
@@ -389,9 +428,15 @@ def main():
             report['prefix_cache_shutdown']=dict(zip(('hits','restored_tokens','published'),map(int,cached.groups())),remaining=0)
         manifest = json.loads((args.plan/'serving.json').read_text())
         report['prefill_graph_replays'] = []
+        if args.prefix_cases: report['state_copy_totals'] = []
         for rank in range(len(manifest['identity']['devices'])):
             audit = json.loads((args.output/'prepared'/f'rank-{rank}.json').read_text())
             transfers = json.loads((args.output/'transfers'/f'rank-{rank}.json').read_text())
+            if args.prefix_cases:
+                copies=json.loads((args.output/'state-copies'/f'rank-{rank}.json').read_text())
+                if not copies['operations'] or any(op['primitive']!='D2D' for op in copies['operations']) or audit.get('state_copy_operations',0)<=0:
+                    raise RuntimeError('prefix state copy lacks device-only execution evidence')
+                report['state_copy_totals'].append(dict(rank=rank,operations=audit['state_copy_operations'],bytes=audit['state_copy_bytes']))
             program = json.loads((args.plan/'device-program.json').read_text())
             uncaptured=program.get('uncaptured_prefill',False)
             names = set() if uncaptured else ({f'packed_prefill_{n}' for n in program.get('prefill_variants', [])} or ({'packed_prefill'} if program['prefill_tokens']>1 else set()))
