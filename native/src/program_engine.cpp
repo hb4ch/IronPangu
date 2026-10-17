@@ -124,6 +124,34 @@ struct Engine {
             decoder.emit(logits,int(count)-1,false);
           }
         }
+        if(program.uncaptured_prefill) {
+          // Instantiate each exact decode batch before sealing. Extend remains
+          // uncaptured, including long prompts and maximum-query warmup.
+          const auto max_sequences=std::min(program.resident_sequences,program.prefill_tokens);
+          for(uint32_t count=1;count<=max_sequences;++count) {
+            if(rank==0)std::cerr<<"program preparation rank=0 phase=sequence_decode sequences="<<count<<'\n';
+            decoder.reset_request();
+            std::vector<uint32_t> tokens(count,0),rows(count);
+            std::iota(rows.begin(),rows.end(),0);
+            for(uint32_t pass=0;pass<3;++pass) {
+              std::vector<inferfabric::execution::SequenceSlice> members;
+              for(uint32_t slot=0;slot<count;++slot)members.push_back({slot,pass,1,true});
+              auto logits=decoder.sequence_batch(tokens,members,pass==2);
+              decoder.emit_rows(logits,rows);
+            }
+          }
+          if(max_sequences>1) {
+            // Bound control tables and extend temporaries with all resident
+            // rows present, without ever capturing an extend graph.
+            decoder.reset_request();
+            std::vector<uint32_t> tokens(program.prefill_tokens,0);
+            std::vector<inferfabric::execution::SequenceSlice> members;
+            for(uint32_t slot=0;slot<max_sequences;++slot)
+              members.push_back({slot,0,slot==0?program.prefill_tokens-max_sequences+1:1,false});
+            auto logits=decoder.sequence_batch(tokens,members,false);
+            decoder.execution.complete();
+          }
+        }
         decoder.seal_graphs();
         if(rank==0)std::cerr<<"program preparation rank=0 phase=complete\n";
         if (const char *dir = std::getenv("INFERFABRIC_PREPARED_AUDIT_DIR")) {

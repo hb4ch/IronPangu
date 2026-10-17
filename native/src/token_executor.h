@@ -115,6 +115,7 @@ struct Decoder {
     std::vector<std::unique_ptr<inferfabric::PreparedKernel>> kernels;
   };
   std::map<uint32_t,PrefillGraph> prefill_graphs;
+  std::map<uint32_t,PrefillGraph> sequence_decode_graphs;
   bool graphs_sealed=false;
   V graph_output;
   std::vector<std::unique_ptr<inferfabric::PreparedKernel>> graph_kernels;
@@ -1330,7 +1331,7 @@ struct Decoder {
   // One packed forward, not a loop over resident forwards. Caller validates
   // continuation positions and owns completion before reclaiming any state.
   V sequence_batch(const std::vector<uint32_t> &tokens,
-                   const std::vector<inferfabric::execution::SequenceSlice> &sequences) {
+                   const std::vector<inferfabric::execution::SequenceSlice> &sequences,bool replay=true) {
     if(!program.uncaptured_prefill)throw std::runtime_error("sequence batch requires uncaptured packed plan");
     auto batch=inferfabric::execution::SequenceBatch::make(sequences,
         program.resident_sequences,program.prefill_tokens,program.context);
@@ -1344,7 +1345,8 @@ struct Decoder {
     for(const auto &entry:cache_control_offsets)
       if(!attention_states.count(entry.first) && !index_states.count(entry.first))
         throw std::runtime_error("sequence batch state not prepared");
-    prepared::Context::BoundedBuffers bounded(execution,true);
+    const bool decode=std::all_of(sequences.begin(),sequences.end(),[](const auto &s){return s.tokens==1;});
+    prepared::Context::BoundedBuffers bounded(execution,!decode);
     auto ensure=[&](std::unique_ptr<DeviceTensor> &tensor,aclDataType dtype,uint32_t count){
       if(!tensor)tensor=std::make_unique<DeviceTensor>(std::vector<int64_t>{count},dtype,resident::element_bytes(dtype));
     };
@@ -1369,8 +1371,19 @@ struct Decoder {
     batch_sequences=sequences.size();
     struct Restore {Decoder &d;~Restore(){d.batch_sequences=0;}} restore{*this};
     set_input_rows(tokens,batch,batch.positions.front());
-    execution.begin_step(batch.positions.front(),tokens.size(),true);
-    auto output=execute_token();execution.end_step();return output;
+    execution.begin_step(batch.positions.front(),tokens.size(),!decode);
+    V output;
+    if(decode && replay) {
+      auto &variant=sequence_decode_graphs[batch_sequences];
+      if(!variant.handle) {
+        if(graphs_sealed)throw std::runtime_error("unprepared sequence decode graph");
+        const auto name="sequence_decode_"+std::to_string(batch_sequences);
+        variant.handle=execution.capture(name.c_str(),[&]{pending_kernels.clear();variant.output=execute_token();});
+        variant.kernels=std::move(pending_kernels);
+      }
+      execution.replay(variant.handle);output=variant.output;
+    } else output=execute_token();
+    execution.end_step();return output;
   }
 
   V token(int id, int pos, bool decode = false) {
@@ -1417,6 +1430,9 @@ struct Decoder {
     if(std::getenv("INFERFABRIC_DECODE_GRAPH") && !decode_graph)throw std::runtime_error("decode graph preparation missing");
     for(auto count:program.prefill_variants)
       if(!prefill_graphs.count(count) || !prefill_graphs.at(count).handle)throw std::runtime_error("prefill family preparation missing");
+    if(program.uncaptured_prefill)for(uint32_t count=1;count<=std::min(program.resident_sequences,program.prefill_tokens);++count)
+      if(!sequence_decode_graphs.count(count) || !sequence_decode_graphs.at(count).handle)
+        throw std::runtime_error("sequence decode family preparation missing");
     graphs_sealed=true;
   }
   template<class F> void each_row(F f) {

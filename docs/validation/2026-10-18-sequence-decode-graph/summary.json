@@ -1,0 +1,132 @@
+{
+  "passed": true,
+  "requests": 21,
+  "exact_tokens_through_first_eos": 159,
+  "graphs_by_rank": [
+    [
+      {
+        "name": "token_decode",
+        "replays": 1
+      },
+      {
+        "name": "sequence_decode_1",
+        "replays": 4
+      },
+      {
+        "name": "sequence_decode_2",
+        "replays": 60
+      }
+    ],
+    [
+      {
+        "name": "token_decode",
+        "replays": 1
+      },
+      {
+        "name": "sequence_decode_1",
+        "replays": 4
+      },
+      {
+        "name": "sequence_decode_2",
+        "replays": 60
+      }
+    ],
+    [
+      {
+        "name": "token_decode",
+        "replays": 1
+      },
+      {
+        "name": "sequence_decode_1",
+        "replays": 4
+      },
+      {
+        "name": "sequence_decode_2",
+        "replays": 60
+      }
+    ],
+    [
+      {
+        "name": "token_decode",
+        "replays": 1
+      },
+      {
+        "name": "sequence_decode_1",
+        "replays": 4
+      },
+      {
+        "name": "sequence_decode_2",
+        "replays": 60
+      }
+    ],
+    [
+      {
+        "name": "token_decode",
+        "replays": 1
+      },
+      {
+        "name": "sequence_decode_1",
+        "replays": 4
+      },
+      {
+        "name": "sequence_decode_2",
+        "replays": 60
+      }
+    ],
+    [
+      {
+        "name": "token_decode",
+        "replays": 1
+      },
+      {
+        "name": "sequence_decode_1",
+        "replays": 4
+      },
+      {
+        "name": "sequence_decode_2",
+        "replays": 60
+      }
+    ],
+    [
+      {
+        "name": "token_decode",
+        "replays": 1
+      },
+      {
+        "name": "sequence_decode_1",
+        "replays": 4
+      },
+      {
+        "name": "sequence_decode_2",
+        "replays": 60
+      }
+    ],
+    [
+      {
+        "name": "token_decode",
+        "replays": 1
+      },
+      {
+        "name": "sequence_decode_1",
+        "replays": 4
+      },
+      {
+        "name": "sequence_decode_2",
+        "replays": 60
+      }
+    ]
+  ],
+  "activation_host_transfers": [
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0
+  ],
+  "two_sequence_decode_intertoken_samples": 118,
+  "two_sequence_decode_intertoken_median_ms": 29.052500000000002,
+  "scope": "native mixed workload; latency includes scheduler waiting, not HTTP or isolated kernel time"
+}
