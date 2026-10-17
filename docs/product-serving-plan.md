@@ -107,6 +107,14 @@ post-EOS difference remains, so the long fixture still fails. Concurrent 4K HTTP
 passes its unchanged reference; short-peer TTFT improves to 1.08 seconds but is
 still delayed by fixed-size chunks. All rank resource/residency audits pass.
 
+The [8K positional retrieval experiment](validation/2026-10-17-retrieval8/README.md)
+now retrieves all early/middle/late answers correctly across nine full-model
+requests at 8,176 input plus sixteen output tokens. All outputs match through
+EOS, but middle/late forced continuations differ after EOS; full parity still
+fails. TTFT is 31.59–31.73 seconds and TPOT 20.22–20.28 ms, with unchanged planned
+workspace and all eight frozen/residency audits passing. This is experimental
+coverage, not a production context-limit increase.
+
 ### Next contract: a prepared prefill variant family
 
 The current executable supports decode and one exact prefill size. The existing

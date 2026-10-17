@@ -1,0 +1,139 @@
+language inferfabric 1;
+
+// C8 matches checkpoint DSA layers 0,3,...,45; SWA layers remain BF16.
+// Experimental learned-index path; full-model reference parity remains open.
+// DSL modules expand into the inspectable primitive execution graph.
+// Shared-page TP8/EP8 backend; the qualified serving envelope remains <=512.
+module TPLinear(x, w, width) {
+    let local = linear(x, weight = w, width = div(width, 8), placement = "tp_rows");
+    let output = gather(local);
+    yield output;
+}
+
+module PlacedLinear(x, w, width, parallel) {
+    let output = choose(parallel, linear(x, weight = w, width = div(width, 8), placement = "tp_rows"),
+                 linear(x, weight = w, width = width, placement = "replicated"));
+    yield output;
+}
+
+module DenseFFN(x, w, intermediate, parallel) {
+    let activated = choose(parallel,
+        swiglu(PlacedLinear(x, w.gate_proj, intermediate, true),
+               PlacedLinear(x, w.up_proj, intermediate, true)),
+        swiglu(linear(x, weight = w.gate_proj, paired_weight = w.up_proj,
+                      width = intermediate, paired_width = intermediate, placement = "replicated")));
+    let output = choose(parallel,
+        allreduce(linear(activated, weight = w.down_proj, width = 2560, placement = "tp_columns")),
+        linear(activated, weight = w.down_proj, width = 2560, placement = "replicated"));
+    yield output;
+}
+
+module RoutedMoE(x, w) {
+    let routes = router(x, weight = w, experts = 256, topk = 8,
+                        scoring = "sigmoid_bias_group_topk", scale = 2.5);
+    let expert = child(w.experts, "{expert}");
+    let gate_up = expert_linear(x, routes, weight = expert.gate_proj,
+                               paired_weight = expert.up_proj, width = 1024);
+    let down = expert_swiglu_down(gate_up, routes, weight = expert.down_proj, width = 2560);
+    let local = expert_reduce(down, routes);
+    let routed = allreduce(local);
+    let shared = DenseFFN(x, w.shared_experts, 1024, false);
+    let output = add(routed, shared);
+    yield output;
+}
+
+module LearnedIndex(x, qr, w) {
+    let q = linear(qr, weight = w.wq_b, width = 3072, placement = "replicated");
+    let k = linear(x, weight = w.wk, width = 128, placement = "replicated");
+    let kn = norm(k, weight = w.k_norm, eps = 1e-5);
+    let query = rotary_prefix(q, heads = 24, head_dim = 128, rotary_dim = 64, theta = 6400000);
+    let key = rotary_prefix(kn, heads = 1, head_dim = 128, rotary_dim = 64, theta = 6400000);
+    let weights = linear(x, weight = w.weights_proj, width = 24, placement = "replicated");
+    let cache = index_cache_append(key, width = 128, page_tokens = 64, cache_dtype = "int8");
+    let indices = sparse_index(query, weights, cache, heads = 24, head_dim = 128, topk = 2048, scoring = "weighted_relu");
+    yield indices;
+}
+
+module MLAAttention(x, w, window, c8, full_indexer, previous_indices) {
+    let qkv = linear(x, weight = w.q_a_proj, paired_weight = w.kv_a_proj_with_mqa,
+                     width = 1024, paired_width = 576, placement = "replicated");
+    let qa = slice(qkv, start = 0, width = 1024);
+    let qc = mome(qa, weight = w.qa_conv, taps = 3);
+    let qn = norm(qc, weight = w.q_a_layernorm, eps = 1e-5);
+    let q = linear(qn, weight = w.q_b_proj, width = 1152, placement = "tp_rows");
+
+    let kv = slice(qkv, start = 1024, width = 576);
+    let latent = slice(kv, start = 0, width = 512);
+    let kr = slice(kv, start = 512, width = 64);
+    let kc = mome(latent, weight = w.compresskv_conv, taps = 3);
+
+    let sinks = sink_normalize(weight = w, norm = w.kv_a_layernorm,
+                               count = 128, latent = 512, rope = 64, eps = 1e-5);
+    let cache = choose(c8,
+        cache_norm_rope_append(kc, kr, sinks, weight = w.kv_a_layernorm,
+            eps = 1e-5, theta = 6400000, cache_dtype = int8_ds_mla,
+            cache_scale_dtype = f32, cache_quantization = pertile128, cache_rope_dtype = bf16),
+        cache_norm_rope_append(kc, kr, sinks, weight = w.kv_a_layernorm,
+            eps = 1e-5, theta = 6400000));
+    let query = mla_query(q, weight = w.kv_b_proj, theta = 6400000,
+                          heads = 48, nope = 128, rope = 64, latent = 512, input_layout = "rank_local", rotary_dtype = "bf16");
+    let indices = choose(c8, choose(full_indexer, LearnedIndex(x, qn, w.indexer), previous_indices), previous_indices);
+    let attended = choose(c8,
+        latent_attention(query, cache, indices, scale_dim = 192, window = window, selection = "learned_indices"),
+        latent_attention(query, cache, scale_dim = 192, window = window, selection = "all_causal_within_window"));
+    let value = mla_value(attended, weight = w.kv_b_proj, heads = 48, latent = 512, value = 128);
+    let oc = mome(value, weight = w.o_conv, taps = 3, placement = "tp_channels");
+    let partial = linear(oc, weight = w.o_proj, width = 2560, placement = "tp_columns");
+    let output = allreduce(partial);
+    let result = record(hidden = output, indices = indices);
+    yield result;
+}
+
+module DecoderBlock(x, w, index, window) {
+    let attn_hc = mhc_pre(x.hidden, weight = w.attn_mhc_module, streams = 4, sinkhorn = 20, eps = 1e-6);
+    let attn_input = mhc_input(attn_hc);
+    let attn_norm = norm(attn_input, weight = w.input_layernorm, eps = 1e-5);
+    let attention = MLAAttention(attn_norm, w.self_attn, window, eq(mod(index, 3), 0), eq(mod(index, 6), 0), x.indices);
+    let attn_post = norm(attention.hidden, weight = w.post_attention_layernorm, eps = 1e-5);
+    let residual = mhc_post(attn_hc, attn_post);
+
+    let ffn_hc = mhc_pre(residual, weight = w.mlp_mhc_module, streams = 4, sinkhorn = 20, eps = 1e-6);
+    let ffn_input = mhc_input(ffn_hc);
+    let ffn_norm = norm(ffn_input, weight = w.pre_mlp_layernorm, eps = 1e-5);
+    let ffn = choose(lt(index, 2), DenseFFN(ffn_norm, w.mlp, 9216, true), RoutedMoE(ffn_norm, w.mlp));
+    let ffn_post = norm(ffn, weight = w.post_mlp_layernorm, eps = 1e-5);
+    let post = mhc_post(ffn_hc, ffn_post);
+    let output = optional_norm(post, weight = w.block_post_layernorm, eps = 1e-5);
+    let result = record(hidden = output, indices = attention.indices);
+    yield result;
+}
+
+model OpenPangu92B {
+    context = 8192;
+    eos = 148902;
+    let w = weights("model");
+    let embedded = embedding(weight = w.embed_tokens, width = 2560, vocab = 151552);
+    let streams = repeat(embedded, count = 4);
+
+    let hidden = fold i in range(0, 46) carry(x = record(hidden = streams, indices = embedded)) {
+        let window = choose(eq(mod(i, 3), 0), 2048, 512);
+        let block = DecoderBlock(x, child(w.layers, i), i, window);
+        yield block;
+    };
+
+    let merge = mhc_merge(hidden.hidden, weight = w.merge_mhc_module, streams = 4, sinkhorn = 20, eps = 1e-6);
+    let merged = mhc_input(merge);
+    let normalized = norm(merged, weight = w.norm, eps = 1e-5);
+    let logits = TPLinear(normalized, weights("lm_head"), 151552);
+    yield logits;
+}
+
+plan TP8EP8 for OpenPangu92B {
+    target = ascend_token_v1;
+    tp = 8;
+    ep = 8;
+    devices = [0, 1, 2, 3, 4, 5, 6, 7];
+    max_num_seqs = 1;
+    max_num_batched_tokens = 1;
+    max_model_len = 8192;
+}
