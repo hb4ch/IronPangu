@@ -1,9 +1,9 @@
 language inferfabric 1;
 
 // C8 matches checkpoint DSA layers 0,3,...,45; SWA layers remain BF16.
-// Experimental learned-index path; full-model NPU qualification pending.
+// Experimental learned-index path; full-model reference parity remains open.
 // DSL modules expand into the inspectable primitive execution graph.
-// TP8/EP8 correctness backend: one sequence, exact causal candidates <=512.
+// Shared-page TP8/EP8 backend; the qualified serving envelope remains <=512.
 module TPLinear(x, w, width) {
     let local = linear(x, weight = w, width = div(width, 8), placement = "tp_rows");
     let output = gather(local);
@@ -76,7 +76,7 @@ module MLAAttention(x, w, window, c8, full_indexer, previous_indices) {
         cache_norm_rope_append(kc, kr, sinks, weight = w.kv_a_layernorm,
             eps = 1e-5, theta = 6400000));
     let query = mla_query(q, weight = w.kv_b_proj, theta = 6400000,
-                          heads = 48, nope = 128, rope = 64, latent = 512, input_layout = "rank_local");
+                          heads = 48, nope = 128, rope = 64, latent = 512, input_layout = "rank_local", rotary_dtype = "bf16");
     let indices = choose(c8, choose(full_indexer, LearnedIndex(x, qn, w.indexer), previous_indices), previous_indices);
     let attended = choose(c8,
         latent_attention(query, cache, indices, scale_dim = 192, window = window, selection = "learned_indices"),

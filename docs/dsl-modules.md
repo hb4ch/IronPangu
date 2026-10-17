@@ -100,6 +100,18 @@ head dimension greater than 64 and at most 512. Lowering exposes two
 input, coefficients and output. This is distinct from the existing FP32 `rope`
 contract. The compiler contract and native build are tested; the shared native
 helper has [bit-exact NPU and graph evidence](validation/2026-10-17-rotary-prefix/README.md).
+
+`mla_query` also accepts `rotary_dtype = "bf16"` with
+`input_layout = "rank_local"`. This materializes the trailing 64 rotary columns
+of each local 192-column query head in BF16, applies BF16 rotary using BF16
+position coefficients, and concatenates the result with the absorbed latent
+query. All four physical steps (projection, column slice, rotary, concatenation)
+are visible. There is no FP32 promotion or final rounding cast in this variant.
+Omitting `rotary_dtype`, or specifying `"f32"`, preserves the earlier FP32
+rotation followed by BF16 rounding. Unsupported dtypes and BF16 rotary with
+replicated query input are rejected at authoring validation. The experimental
+92B learned-index DSL selects BF16 explicitly to align its query-rotary precision
+with the reference implementation; this alone does not establish full parity.
 Full model qualification of this new path remains pending. It does not raise
 context admission limits.
 

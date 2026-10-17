@@ -82,6 +82,19 @@ fn learned_index_graph_has_explicit_shared_dependencies_and_paged_state() {
     let recipes=serde_json::to_string(&inferfabric_compiler::token_program::recipes(&p,&graph)).unwrap();
     assert!(recipes.contains("aclnnAiInfraQuantLightningIndexer"));
     assert!(recipes.contains("index_cache_scales"));
+    for (id,_) in graph.nodes.iter().enumerate().filter(|(_,n)|n.op=="mla_query") {
+        let ops:Vec<_>=p.instructions.iter().filter(|i|i.logical_node==id).collect();
+        assert_eq!(ops.iter().map(|i|i.op.as_str()).collect::<Vec<_>>(),["query_project","column_slice","rope_bf16","concat_columns"]);
+        assert!(ops.iter().all(|i|i.dtype=="bf16"));
+        assert_eq!(ops[1].attrs["start"],"128");
+    }
+    let mut invalid_rotary=graph.clone();
+    invalid_rotary.nodes.iter_mut().find(|n|n.op=="mla_query").unwrap().attrs.insert("rotary_dtype".into(),"f16".into());
+    assert!(invalid_rotary.validate().is_err());
+    let mut default_rotary=graph.clone();
+    for node in default_rotary.nodes.iter_mut().filter(|n|n.op=="mla_query") {node.attrs.remove("rotary_dtype");}
+    let default_rotary=inferfabric_compiler::token_program::lower(&default_rotary,None).unwrap();
+    assert_eq!(default_rotary.instructions.iter().filter(|i|i.op=="query_rotary_extract").count(),46);
     let ModelDefinition::Execution{graph:bf16,..}=definition(&source.replace("cache_dtype = \"int8\"","cache_dtype = \"bf16\"")).unwrap() else {panic!()};
     let bf16=inferfabric_compiler::token_program::lower(&bf16,None).unwrap();
     assert!(!bf16.instructions.iter().any(|i|i.op=="index_quantize" || i.op=="quant_scales_f16"));

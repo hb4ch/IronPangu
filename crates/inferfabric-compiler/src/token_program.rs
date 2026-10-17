@@ -594,6 +594,7 @@ pub fn lower(graph: &Graph, inventory: Option<&Inventory>) -> Result<Program> {
         // Expand the query recipe before serialization. Every conversion and
         // materialization has its own SSA value and scheduling position.
         if n.op == "mla_query" || n.op == "rope" {
+            let bf16_rotary = n.attrs.get("rotary_dtype").is_some_and(|v| v == "bf16");
             let mut emit = |op: &str,
                             ins: Vec<usize>,
                             attrs: BTreeMap<String, String>,
@@ -636,25 +637,31 @@ pub fn lower(graph: &Graph, inventory: Option<&Inventory>) -> Result<Program> {
                     3072,
                     "bf16",
                 ));
-                emit("query_rotary_extract", inputs, attrs, 384, "f32")
+                if bf16_rotary {
+                    emit("column_slice", inputs, BTreeMap::from([
+                        ("rows".into(), "6".into()), ("start".into(), "128".into()),
+                        ("width".into(), "64".into()),
+                    ]), 384, "bf16")
+                } else {
+                    emit("query_rotary_extract", inputs, attrs, 384, "f32")
+                }
             } else {
                 inputs[0]
             };
             let rw = if projection.is_some() { 384 } else { width };
             let rotated = emit(
-                "rope_f32",
+                if bf16_rotary { "rope_bf16" } else { "rope_f32" },
                 vec![rotary],
                 BTreeMap::from([("theta".into(), n.attrs["theta"].clone())]),
                 rw,
-                "f32",
+                if bf16_rotary { "bf16" } else { "f32" },
             );
-            let rounded = emit(
-                "cast",
-                vec![rotated],
-                BTreeMap::from([("dtype".into(), "bf16".into())]),
-                rw,
-                "bf16",
-            );
+            let rounded = if bf16_rotary {
+                rotated
+            } else {
+                emit("cast", vec![rotated],
+                    BTreeMap::from([("dtype".into(), "bf16".into())]), rw, "bf16")
+            };
             let output = if let Some(projected) = projection {
                 emit(
                     "concat_columns",

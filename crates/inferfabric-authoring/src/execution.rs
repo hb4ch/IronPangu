@@ -264,6 +264,14 @@ impl Node {
             }
             "mla_query" => {
                 let mut attrs = vec!["weight", "theta", "heads", "nope", "rope", "latent"];
+                if let Some(dtype) = self.attrs.get("rotary_dtype") {
+                    attrs.push("rotary_dtype");
+                    if !matches!(dtype.as_str(), "bf16" | "f32")
+                        || (dtype == "bf16" && self.attrs.get("input_layout").map(String::as_str) != Some("rank_local"))
+                    {
+                        return fail(self, "BF16 query rotary requires rank-local input; rotary dtype must be bf16 or f32");
+                    }
+                }
                 let width = if let Some(layout) = self.attrs.get("input_layout") {
                     attrs.push("input_layout");
                     match layout.as_str() {

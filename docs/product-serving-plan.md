@@ -22,6 +22,10 @@ reproduces the divergences with identical forced prefixes and finds that changin
 reference prefill budget alone changes 6/14 reference sequences. Native matches
 10/14 one-token-reference sequences. Align prefill shapes for subsequent operator
 comparisons; neither reference is silently substituted for the other.
+An explicit [BF16 MLA query rotary variant](validation/2026-10-17-query-rotary-bf16/README.md)
+now aligns that precision boundary and removes 46 casts. It passes standard
+fixtures but leaves all boundary output sequences unchanged; collective precision
+is the next isolated contract to compare, not an assumed fix.
 
 Date: 2026-10-17. Status: implementation in progress; qualified capabilities and remaining release gates are distinguished below.
 
