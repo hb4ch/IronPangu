@@ -15,10 +15,11 @@ Run shell commands from the repository root unless stated otherwise. Examples us
 | ARM64 CLI, debug | `bash scripts/cross-compiler.sh` | `.deploy/inferfabric-compiler` |
 | ARM64 CLI, release | `bash scripts/cross-npu-probe.sh` | `.deploy/inferfabric-npu` |
 | ARM64 frontend, debug | `bash scripts/cross-frontend.sh` | `.deploy/inferfabric-server` |
+| ARM64 frontend, release | `bash scripts/cross-frontend.sh --release` | `.deploy/inferfabric-server-release` |
 | ARM64 OpenPangu W8A8 fixture exporter | `bash scripts/cross-openpangu-probe.sh` | `.deploy/export_openpangu_linear` |
 | Native C++ library and probes, inside target Docker | `cmake -S native -B native-build && cmake --build native-build -j4` | `native-build/libinferfabric_acl.so` and probe executables |
 
-Both ARM64 CLI scripts build the same `inferfabric-cli` package; their profile and copied filename differ. Despite its name, `cross-npu-probe.sh` only compiles and strips locally. It does not connect to a remote machine or execute a probe. The frontend script deliberately builds the qualified debug profile and rejects arguments such as `--release`. Stripping a debug-profile binary does not turn it into a release-profile build.
+Both ARM64 CLI scripts build the same `inferfabric-cli` package; their profile and copied filename differ. Despite its name, `cross-npu-probe.sh` only compiles and strips locally. It does not connect to a remote machine or execute a probe. The frontend defaults to the debug profile used by existing qualification records; `--release` creates a separate artifact without replacing it. Release builds require their own correctness and performance qualification. Stripping a debug-profile binary does not turn it into a release-profile build.
 
 The root Cargo workspace covers `crates/*`. `frontend/` is a **separate workspace**, with its own lockfile and vendored vLLM dependencies. Root workspace checks do not check the frontend. Scripts discover the Cargo target directory through `cargo metadata`, so `CARGO_TARGET_DIR` is supported. Generated `.cross/` and `.deploy/` directories are not source artifacts.
 
