@@ -166,6 +166,10 @@ wrong answer does not pass retrieval qualification. This suite is a baseline,
 not a substitute for diverse reasoning, boundary numerical tests, concurrent
 serving and pressure/cancellation soaks. Advance each context level only with
 its own full-model results; operator-level 64K coverage does not qualify serving.
+Use `scripts/compare-program-reference.py --tokenizer /models/92B/tokenizer.json`
+with these fixtures. It requires the tokenizer, decodes only through the first
+EOS, and checks the expected answer for the reference and every native repetition.
+It still reports all forced output tokens and fails on post-EOS differences.
 
 Experimental learned-index execution now includes explicit INT8 index queries/keys
 and FP16 scales/head weights in the [physical plan](learned-index-quantization.md).

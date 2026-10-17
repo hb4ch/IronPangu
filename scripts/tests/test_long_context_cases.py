@@ -50,6 +50,21 @@ class LongContextCases(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, 'placeholder'):
             compare.compare(cases, [], 1, 148902)
 
+    def test_equal_wrong_answers_do_not_pass_retrieval(self):
+        compare_spec = importlib.util.spec_from_file_location('compare', Path(__file__).parents[1] / 'compare-program-reference.py')
+        compare = importlib.util.module_from_spec(compare_spec)
+        compare_spec.loader.exec_module(compare)
+        cases = [dict(qualification=dict(expected_answer='1234'))]
+        result = [dict(reference_output_ids=[9, 0, 8], native_output_ids_by_repetition=[[9, 0, 8]])]
+        compare.check_answers(cases, result, lambda ids: 'wrong' if ids == [9] else '1234', 0)
+        self.assertFalse(result[0]['retrieval']['reference_correct'])
+        self.assertFalse(result[0]['retrieval']['native_correct'])
+        self.assertEqual(result[0]['retrieval']['reference_answer'], 'wrong')
+        result[0]['native_output_ids_by_repetition'] = [[1, 0, 9], [9, 0, 8]]
+        compare.check_answers(cases, result, lambda ids: ' 1234\n' if ids == [1] else 'wrong', 0)
+        self.assertEqual(result[0]['retrieval']['native_answers'], ['1234', 'wrong'])
+        self.assertFalse(result[0]['retrieval']['native_correct'])
+
 
 if __name__ == '__main__':
     unittest.main()

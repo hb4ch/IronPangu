@@ -55,23 +55,49 @@ def compare(cases, records, repetitions, eos):
     return results
 
 
+def check_answers(cases, results, decode, eos):
+    """Independent task correctness: token parity can reproduce a wrong answer."""
+    def answer(ids):
+        end = ids.index(eos) if eos in ids else len(ids)
+        return decode(ids[:end]).strip()
+    for case, result in zip(cases, results):
+        expected = case.get('qualification', {}).get('expected_answer')
+        if expected is None:
+            continue
+        reference = answer(result['reference_output_ids'])
+        native = [answer(ids) for ids in result['native_output_ids_by_repetition']]
+        result['retrieval'] = dict(expected_answer=expected, reference_answer=reference,
+                                  native_answers=native, reference_correct=reference == expected,
+                                  native_correct=all(value == expected for value in native))
+
+
 def main():
     p = argparse.ArgumentParser(description=__doc__)
     for name in ('reference', 'tokens', 'output'):
         p.add_argument('--' + name, type=Path, required=True)
     p.add_argument('--repetitions', type=int, default=3)
     p.add_argument('--eos', type=int, required=True)
+    p.add_argument('--tokenizer', type=Path, help='Required for cases with expected textual answers')
     args = p.parse_args()
     reference = args.reference.read_bytes()
     tokens = args.tokens.read_bytes()
     records = [json.loads(line) for line in tokens.decode().splitlines() if line.startswith('{')]
+    cases = json.loads(reference)
     result = dict(format='inferfabric.reference-comparison.v1',
                   reference_sha256=hashlib.sha256(reference).hexdigest(),
                   tokens_sha256=hashlib.sha256(tokens).hexdigest(),
                   timing_scope='native step durations; interleaved runs include peer work',
-                  cases=compare(json.loads(reference), records, args.repetitions, args.eos))
+                  cases=compare(cases, records, args.repetitions, args.eos))
+    if any('expected_answer' in c.get('qualification', {}) for c in cases):
+        if args.tokenizer is None:
+            p.error('--tokenizer is required to verify expected textual answers')
+        from tokenizers import Tokenizer
+        tokenizer = Tokenizer.from_file(str(args.tokenizer))
+        result['tokenizer_sha256'] = hashlib.sha256(args.tokenizer.read_bytes()).hexdigest()
+        check_answers(cases, result['cases'], lambda ids: tokenizer.decode(ids, skip_special_tokens=True), args.eos)
     args.output.write_text(json.dumps(result, indent=2) + '\n')
-    return 0 if all(c['exact_all_tokens'] for c in result['cases']) else 1
+    return 0 if all(c['exact_all_tokens'] and c.get('retrieval', {}).get('reference_correct', True)
+                    and c.get('retrieval', {}).get('native_correct', True) for c in result['cases']) else 1
 
 
 if __name__ == '__main__':
