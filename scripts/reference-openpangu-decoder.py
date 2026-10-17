@@ -19,6 +19,7 @@ if __name__ == '__main__':
     parser.add_argument('--output',type=Path,default=Path('reference-results.json'))
     parser.add_argument('--max-model-len',type=int,default=512)
     parser.add_argument('--kv-cache-dtype',default='auto')
+    parser.add_argument('--max-num-batched-tokens',type=int,help='Explicit chunked-prefill token budget for numerical comparison')
     args=parser.parse_args()
     tokenizer=Tokenizer.from_file('/models/92B/tokenizer.json')
     prompts=['1+1=?','What is the capital of France?','请用一句话介绍北京。']
@@ -28,7 +29,9 @@ if __name__ == '__main__':
         count=len(case['output_ids']) if args.cases else 32
         if count<1 or not case['input_ids'] or len(case['input_ids'])+count>args.max_model_len:
             raise ValueError('reference request exceeds total context or has empty input/output')
-    model=LLM(model='/models/92B',trust_remote_code=True,tensor_parallel_size=8,enable_expert_parallel=True,max_model_len=args.max_model_len,max_num_seqs=1,max_num_batched_tokens=min(args.max_model_len,512),kv_cache_dtype=args.kv_cache_dtype,gpu_memory_utilization=0.5,enforce_eager=True,enable_prefix_caching=False,disable_custom_all_reduce=True)
+    if args.max_num_batched_tokens is not None and args.max_num_batched_tokens<1:
+        raise ValueError('reference token budget must be positive')
+    model=LLM(model='/models/92B',trust_remote_code=True,tensor_parallel_size=8,enable_expert_parallel=True,max_model_len=args.max_model_len,max_num_seqs=1,max_num_batched_tokens=args.max_num_batched_tokens or min(args.max_model_len,512),enable_chunked_prefill=True,kv_cache_dtype=args.kv_cache_dtype,gpu_memory_utilization=0.5,enforce_eager=True,enable_prefix_caching=False,disable_custom_all_reduce=True)
     results=[]
     for case in cases:
         ids=case['input_ids']

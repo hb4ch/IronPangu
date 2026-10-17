@@ -17,6 +17,11 @@ matches 9/14 sequences, improving on the previous BF16 indexer's 8/14. Five
 divergences remain; this is not qualified C8 parity or permission to raise the
 serving context limit. The next numerical investigation must compare intermediate
 values/logits against the pinned reference and isolate those differences.
+The [output-parity investigation](validation/2026-10-17-output-parity/README.md)
+reproduces the divergences with identical forced prefixes and finds that changing
+reference prefill budget alone changes 6/14 reference sequences. Native matches
+10/14 one-token-reference sequences. Align prefill shapes for subsequent operator
+comparisons; neither reference is silently substituted for the other.
 
 Date: 2026-10-17. Status: implementation in progress; qualified capabilities and remaining release gates are distinguished below.
 

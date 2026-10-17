@@ -1,0 +1,506 @@
+[
+  {
+    "prompt_tokens": 1,
+    "case": "serial_layout_oracle_1",
+    "native": [
+      220,
+      17,
+      15,
+      15,
+      15,
+      15,
+      15,
+      15
+    ],
+    "reference_default": [
+      220,
+      17,
+      15,
+      15,
+      15,
+      15,
+      15,
+      15
+    ],
+    "reference_chunk1": [
+      220,
+      17,
+      15,
+      15,
+      15,
+      15,
+      15,
+      15
+    ],
+    "native_matches_chunk1": true,
+    "reference_chunking_invariant": true
+  },
+  {
+    "prompt_tokens": 15,
+    "case": "serial_layout_oracle_15",
+    "native": [
+      1114,
+      11786,
+      336,
+      17320,
+      405,
+      21072,
+      13,
+      148902
+    ],
+    "reference_default": [
+      1114,
+      11786,
+      336,
+      17320,
+      405,
+      21072,
+      13,
+      148902
+    ],
+    "reference_chunk1": [
+      1114,
+      11786,
+      336,
+      17320,
+      405,
+      21072,
+      13,
+      148902
+    ],
+    "native_matches_chunk1": true,
+    "reference_chunking_invariant": true
+  },
+  {
+    "prompt_tokens": 16,
+    "case": "serial_layout_oracle_16",
+    "native": [
+      198,
+      3481,
+      715,
+      82070,
+      11239,
+      8255,
+      380,
+      844
+    ],
+    "reference_default": [
+      198,
+      3481,
+      715,
+      82070,
+      11239,
+      8255,
+      380,
+      844
+    ],
+    "reference_chunk1": [
+      198,
+      3481,
+      715,
+      82070,
+      11239,
+      8255,
+      380,
+      844
+    ],
+    "native_matches_chunk1": true,
+    "reference_chunking_invariant": true
+  },
+  {
+    "prompt_tokens": 17,
+    "case": "serial_layout_oracle_17",
+    "native": [
+      16,
+      30374,
+      220,
+      34755,
+      3711,
+      101744,
+      15580,
+      0
+    ],
+    "reference_default": [
+      16,
+      30374,
+      220,
+      1687,
+      400,
+      1963,
+      76,
+      23212
+    ],
+    "reference_chunk1": [
+      16,
+      30374,
+      148906,
+      16,
+      520,
+      220,
+      16,
+      292
+    ],
+    "native_matches_chunk1": false,
+    "reference_chunking_invariant": false
+  },
+  {
+    "prompt_tokens": 31,
+    "case": "serial_layout_oracle_31",
+    "native": [
+      1344,
+      198,
+      6884,
+      405,
+      287,
+      11786,
+      336,
+      17320
+    ],
+    "reference_default": [
+      1344,
+      25,
+      4193,
+      405,
+      287,
+      11786,
+      336,
+      17320
+    ],
+    "reference_chunk1": [
+      1344,
+      25,
+      4193,
+      405,
+      287,
+      11786,
+      336,
+      17320
+    ],
+    "native_matches_chunk1": false,
+    "reference_chunking_invariant": true
+  },
+  {
+    "prompt_tokens": 32,
+    "case": "serial_layout_oracle_32",
+    "native": [
+      715,
+      82070,
+      11239,
+      8255,
+      380,
+      88047,
+      55245,
+      198
+    ],
+    "reference_default": [
+      715,
+      82070,
+      11239,
+      8255,
+      380,
+      88047,
+      55245,
+      198
+    ],
+    "reference_chunk1": [
+      715,
+      82070,
+      11239,
+      8255,
+      380,
+      88047,
+      55245,
+      380
+    ],
+    "native_matches_chunk1": false,
+    "reference_chunking_invariant": false
+  },
+  {
+    "prompt_tokens": 33,
+    "case": "serial_layout_oracle_33",
+    "native": [
+      98390,
+      297,
+      39,
+      4086,
+      11,
+      287,
+      1579,
+      1061
+    ],
+    "reference_default": [
+      98390,
+      198,
+      6337,
+      11,
+      287,
+      1579,
+      405,
+      23212
+    ],
+    "reference_chunk1": [
+      98390,
+      297,
+      39,
+      4086,
+      11,
+      287,
+      1579,
+      1061
+    ],
+    "native_matches_chunk1": true,
+    "reference_chunking_invariant": false
+  },
+  {
+    "prompt_tokens": 63,
+    "case": "serial_layout_oracle_63",
+    "native": [
+      6884,
+      405,
+      287,
+      11786,
+      336,
+      17320,
+      30,
+      148906
+    ],
+    "reference_default": [
+      6884,
+      405,
+      287,
+      11786,
+      336,
+      17320,
+      30,
+      148906
+    ],
+    "reference_chunk1": [
+      6884,
+      405,
+      287,
+      11786,
+      336,
+      17320,
+      30,
+      148906
+    ],
+    "native_matches_chunk1": true,
+    "reference_chunking_invariant": true
+  },
+  {
+    "prompt_tokens": 64,
+    "case": "serial_layout_oracle_64",
+    "native": [
+      380,
+      148906,
+      8255,
+      541,
+      33949,
+      65826,
+      305,
+      13209
+    ],
+    "reference_default": [
+      380,
+      148906,
+      8255,
+      541,
+      33949,
+      65826,
+      305,
+      13209
+    ],
+    "reference_chunk1": [
+      380,
+      148906,
+      8255,
+      541,
+      17721,
+      48532,
+      1603,
+      305
+    ],
+    "native_matches_chunk1": false,
+    "reference_chunking_invariant": false
+  },
+  {
+    "prompt_tokens": 65,
+    "case": "serial_layout_oracle_65",
+    "native": [
+      16,
+      30374,
+      148902,
+      148900,
+      1114,
+      1297,
+      336,
+      220
+    ],
+    "reference_default": [
+      16,
+      30374,
+      148902,
+      148900,
+      297,
+      16,
+      10,
+      16
+    ],
+    "reference_chunk1": [
+      16,
+      30374,
+      148902,
+      148900,
+      1114,
+      1297,
+      336,
+      220
+    ],
+    "native_matches_chunk1": true,
+    "reference_chunking_invariant": false
+  },
+  {
+    "prompt_tokens": 127,
+    "case": "serial_layout_oracle_127",
+    "native": [
+      336,
+      17320,
+      30,
+      148902,
+      148900,
+      1114,
+      11786,
+      336
+    ],
+    "reference_default": [
+      336,
+      17320,
+      30,
+      148902,
+      148900,
+      1114,
+      11786,
+      336
+    ],
+    "reference_chunk1": [
+      336,
+      17320,
+      30,
+      148902,
+      148900,
+      1114,
+      11786,
+      336
+    ],
+    "native_matches_chunk1": true,
+    "reference_chunking_invariant": true
+  },
+  {
+    "prompt_tokens": 255,
+    "case": "serial_layout_oracle_255",
+    "native": [
+      3481,
+      715,
+      82070,
+      11239,
+      8255,
+      380,
+      148902,
+      148900
+    ],
+    "reference_default": [
+      3481,
+      715,
+      82070,
+      11239,
+      8255,
+      380,
+      148902,
+      148900
+    ],
+    "reference_chunk1": [
+      3481,
+      715,
+      82070,
+      11239,
+      8255,
+      380,
+      148902,
+      148900
+    ],
+    "native_matches_chunk1": true,
+    "reference_chunking_invariant": true
+  },
+  {
+    "prompt_tokens": 480,
+    "case": "serial_layout_oracle_480",
+    "native": [
+      148902,
+      148900,
+      148902,
+      148900,
+      148902,
+      148900,
+      148902,
+      148900
+    ],
+    "reference_default": [
+      148902,
+      148900,
+      148902,
+      148900,
+      148902,
+      148900,
+      148902,
+      148902
+    ],
+    "reference_chunk1": [
+      148902,
+      148900,
+      148902,
+      148900,
+      148902,
+      148900,
+      148902,
+      148900
+    ],
+    "native_matches_chunk1": true,
+    "reference_chunking_invariant": false
+  },
+  {
+    "prompt_tokens": 504,
+    "case": "serial_layout_oracle_504",
+    "native": [
+      30,
+      148902,
+      148900,
+      1114,
+      11786,
+      336,
+      17320,
+      405
+    ],
+    "reference_default": [
+      30,
+      148902,
+      148900,
+      1114,
+      11786,
+      336,
+      17320,
+      405
+    ],
+    "reference_chunk1": [
+      30,
+      148902,
+      148900,
+      1114,
+      11786,
+      336,
+      17320,
+      405
+    ],
+    "native_matches_chunk1": true,
+    "reference_chunking_invariant": true
+  }
+]

@@ -1,0 +1,90 @@
+[
+  {
+    "rank": 0,
+    "arena_bytes": 12451963904,
+    "workspace_bytes": 130916352,
+    "frozen": true,
+    "activation_host_transfers": 0,
+    "workspace_growth": 0,
+    "replay_allocations": 0,
+    "internal_fences": 0,
+    "source_prepared_sha256": "99e1b5b932a859fabd87532a1685febb57f06568973cc21fbfe57dfdcfa149a1"
+  },
+  {
+    "rank": 1,
+    "arena_bytes": 12451963904,
+    "workspace_bytes": 130916352,
+    "frozen": true,
+    "activation_host_transfers": 0,
+    "workspace_growth": 0,
+    "replay_allocations": 0,
+    "internal_fences": 0,
+    "source_prepared_sha256": "99e1b5b932a859fabd87532a1685febb57f06568973cc21fbfe57dfdcfa149a1"
+  },
+  {
+    "rank": 2,
+    "arena_bytes": 12451963904,
+    "workspace_bytes": 130916352,
+    "frozen": true,
+    "activation_host_transfers": 0,
+    "workspace_growth": 0,
+    "replay_allocations": 0,
+    "internal_fences": 0,
+    "source_prepared_sha256": "99e1b5b932a859fabd87532a1685febb57f06568973cc21fbfe57dfdcfa149a1"
+  },
+  {
+    "rank": 3,
+    "arena_bytes": 12451963904,
+    "workspace_bytes": 130916352,
+    "frozen": true,
+    "activation_host_transfers": 0,
+    "workspace_growth": 0,
+    "replay_allocations": 0,
+    "internal_fences": 0,
+    "source_prepared_sha256": "99e1b5b932a859fabd87532a1685febb57f06568973cc21fbfe57dfdcfa149a1"
+  },
+  {
+    "rank": 4,
+    "arena_bytes": 12451963904,
+    "workspace_bytes": 130916352,
+    "frozen": true,
+    "activation_host_transfers": 0,
+    "workspace_growth": 0,
+    "replay_allocations": 0,
+    "internal_fences": 0,
+    "source_prepared_sha256": "99e1b5b932a859fabd87532a1685febb57f06568973cc21fbfe57dfdcfa149a1"
+  },
+  {
+    "rank": 5,
+    "arena_bytes": 12451963904,
+    "workspace_bytes": 130916352,
+    "frozen": true,
+    "activation_host_transfers": 0,
+    "workspace_growth": 0,
+    "replay_allocations": 0,
+    "internal_fences": 0,
+    "source_prepared_sha256": "99e1b5b932a859fabd87532a1685febb57f06568973cc21fbfe57dfdcfa149a1"
+  },
+  {
+    "rank": 6,
+    "arena_bytes": 12451963904,
+    "workspace_bytes": 130916352,
+    "frozen": true,
+    "activation_host_transfers": 0,
+    "workspace_growth": 0,
+    "replay_allocations": 0,
+    "internal_fences": 0,
+    "source_prepared_sha256": "99e1b5b932a859fabd87532a1685febb57f06568973cc21fbfe57dfdcfa149a1"
+  },
+  {
+    "rank": 7,
+    "arena_bytes": 12451963904,
+    "workspace_bytes": 130916352,
+    "frozen": true,
+    "activation_host_transfers": 0,
+    "workspace_growth": 0,
+    "replay_allocations": 0,
+    "internal_fences": 0,
+    "source_prepared_sha256": "99e1b5b932a859fabd87532a1685febb57f06568973cc21fbfe57dfdcfa149a1"
+  }
+]

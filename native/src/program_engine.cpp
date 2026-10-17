@@ -27,6 +27,9 @@ struct Engine {
   std::string binding_component;
   std::vector<int32_t> binding_pages;
   bool preparation;
+  // Opt-in offline diagnostics expose only the sampler's existing request
+  // outputs. No activation readback, new kernels or completion boundaries.
+  bool output_diagnostics = std::getenv("INFERFABRIC_OUTPUT_DIAGNOSTICS") != nullptr;
   bool stopping = false, acl_initialized = false;
   std::string failure;
 
@@ -124,11 +127,11 @@ struct Engine {
             decoder.bind_cache_pages(binding_component, binding_pages);
           else if (cmd == Command::Token) {
             auto logits = decoder.token(int(token), int(pos), true);
-            if (want) next = uint32_t(decoder.emit(logits, int(pos), false));
+            if (want) next = uint32_t(decoder.emit(logits, int(pos), output_diagnostics));
             else decoder.execution.complete();
           } else if(cmd == Command::Prefill) {
             auto logits=decoder.prefill(chunk_tokens,int(pos),true);
-            if(want)next=uint32_t(decoder.emit(logits,int(pos+chunk_tokens.size()-1),false));
+            if(want)next=uint32_t(decoder.emit(logits,int(pos+chunk_tokens.size()-1),output_diagnostics));
             else decoder.execution.complete();
           }
           {

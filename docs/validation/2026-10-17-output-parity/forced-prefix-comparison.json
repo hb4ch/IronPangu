@@ -1,0 +1,267 @@
+[
+  {
+    "case": "serial_layout_oracle_17_forced_step_3",
+    "source_prompt_tokens": 17,
+    "source_step": 3,
+    "reference_token": 1687,
+    "native_token": 34755,
+    "native_top5": [
+      {
+        "token": 34755,
+        "logprob": -1.50281
+      },
+      {
+        "token": 17,
+        "logprob": -2.00281
+      },
+      {
+        "token": 1687,
+        "logprob": -2.00281
+      },
+      {
+        "token": 16,
+        "logprob": -3.00281
+      },
+      {
+        "token": 1121,
+        "logprob": -3.00281
+      }
+    ],
+    "reference_top5": {
+      "1687": {
+        "logprob": -1.5124001502990723,
+        "rank": 1
+      },
+      "34755": {
+        "logprob": -1.5124001502990723,
+        "rank": 2
+      },
+      "16": {
+        "logprob": -2.5124001502990723,
+        "rank": 3
+      },
+      "17": {
+        "logprob": -2.5124001502990723,
+        "rank": 4
+      },
+      "1121": {
+        "logprob": -2.5124001502990723,
+        "rank": 5
+      }
+    },
+    "native_margin_over_reference": 0.5000000000000002,
+    "reference_margin_over_native": 0.0
+  },
+  {
+    "case": "serial_layout_oracle_31_forced_step_1",
+    "source_prompt_tokens": 31,
+    "source_step": 1,
+    "reference_token": 25,
+    "native_token": 198,
+    "native_top5": [
+      {
+        "token": 198,
+        "logprob": -0.451494
+      },
+      {
+        "token": 148902,
+        "logprob": -1.45149
+      },
+      {
+        "token": 25,
+        "logprob": -2.45149
+      },
+      {
+        "token": 530,
+        "logprob": -3.45149
+      },
+      {
+        "token": 148906,
+        "logprob": -5.45149
+      }
+    ],
+    "reference_top5": {
+      "25": {
+        "logprob": -0.4314936101436615,
+        "rank": 1
+      },
+      "198": {
+        "logprob": -1.4314936399459839,
+        "rank": 2
+      },
+      "148902": {
+        "logprob": -2.4314935207366943,
+        "rank": 3
+      },
+      "530": {
+        "logprob": -4.431493759155273,
+        "rank": 4
+      },
+      "148906": {
+        "logprob": -5.431493759155273,
+        "rank": 5
+      }
+    },
+    "native_margin_over_reference": 1.999996,
+    "reference_margin_over_native": 1.0000000298023224
+  },
+  {
+    "case": "serial_layout_oracle_33_forced_step_1",
+    "source_prompt_tokens": 33,
+    "source_step": 1,
+    "reference_token": 198,
+    "native_token": 297,
+    "native_top5": [
+      {
+        "token": 297,
+        "logprob": -0.490316
+      },
+      {
+        "token": 198,
+        "logprob": -0.990316
+      },
+      {
+        "token": 148902,
+        "logprob": -5.49032
+      },
+      {
+        "token": 25,
+        "logprob": -5.99032
+      },
+      {
+        "token": 148906,
+        "logprob": -5.99032
+      }
+    ],
+    "reference_top5": {
+      "198": {
+        "logprob": -0.48157933354377747,
+        "rank": 1
+      },
+      "297": {
+        "logprob": -0.9815793037414551,
+        "rank": 2
+      },
+      "148902": {
+        "logprob": -6.481579303741455,
+        "rank": 3
+      },
+      "25": {
+        "logprob": -6.981579303741455,
+        "rank": 4
+      },
+      "784": {
+        "logprob": -6.981579303741455,
+        "rank": 5
+      }
+    },
+    "native_margin_over_reference": 0.5,
+    "reference_margin_over_native": 0.4999999701976776
+  },
+  {
+    "case": "serial_layout_oracle_65_forced_step_4",
+    "source_prompt_tokens": 65,
+    "source_step": 4,
+    "reference_token": 297,
+    "native_token": 1114,
+    "native_top5": [
+      {
+        "token": 1114,
+        "logprob": -1.12087
+      },
+      {
+        "token": 297,
+        "logprob": -2.12087
+      },
+      {
+        "token": 148902,
+        "logprob": -2.12087
+      },
+      {
+        "token": 16,
+        "logprob": -3.12087
+      },
+      {
+        "token": 40,
+        "logprob": -3.12087
+      }
+    ],
+    "reference_top5": {
+      "297": {
+        "logprob": -1.248615026473999,
+        "rank": 1
+      },
+      "1114": {
+        "logprob": -1.248615026473999,
+        "rank": 2
+      },
+      "148902": {
+        "logprob": -2.248615026473999,
+        "rank": 3
+      },
+      "5987": {
+        "logprob": -3.248615026473999,
+        "rank": 4
+      },
+      "16": {
+        "logprob": -3.748615026473999,
+        "rank": 5
+      }
+    },
+    "native_margin_over_reference": 1.0,
+    "reference_margin_over_native": 0.0
+  },
+  {
+    "case": "serial_layout_oracle_480_forced_step_7",
+    "source_prompt_tokens": 480,
+    "source_step": 7,
+    "reference_token": 148902,
+    "native_token": 148900,
+    "native_top5": [
+      {
+        "token": 148900,
+        "logprob": -0.34263
+      },
+      {
+        "token": 148902,
+        "logprob": -3.59263
+      },
+      {
+        "token": 2584,
+        "logprob": -4.34263
+      },
+      {
+        "token": 198,
+        "logprob": -4.59263
+      },
+      {
+        "token": 117783,
+        "logprob": -4.59263
+      }
+    ],
+    "reference_top5": {
+      "148902": {
+        "logprob": -0.08459536731243134,
+        "rank": 1
+      },
+      "148900": {
+        "logprob": -3.0845954418182373,
+        "rank": 2
+      },
+      "10033": {
+        "logprob": -5.584595203399658,
+        "rank": 3
+      },
+      "2584": {
+        "logprob": -6.084595203399658,
+        "rank": 4
+      },
+      "198": {
+        "logprob": -6.584595203399658,
+        "rank": 5
+      }
+    },
+    "native_margin_over_reference": 3.25,
+    "reference_margin_over_native": 3.000000074505806
+  }
+]

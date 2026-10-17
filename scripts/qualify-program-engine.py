@@ -20,6 +20,7 @@ def main():
     for name in ('binary', 'plan', 'checkpoint', 'cases', 'output'):
         p.add_argument('--' + name, required=True, type=Path)
     p.add_argument('--prepare', action='store_true')
+    p.add_argument('--output-diagnostics', action='store_true', help='Record existing sampler top-five request outputs; no activation readback')
     p.add_argument('--packed-prefill', action='store_true', help='require the compiled packed chunk path')
     p.add_argument('--permuted-pages', action='store_true', help='qualify rank/component-specific noncontiguous device cache bindings')
     p.add_argument('--interleave', action='store_true', help='interleave resident histories token by token, including slot reuse while peers are live')
@@ -35,6 +36,9 @@ def main():
     env.pop('INFERFABRIC_ALTERNATE_PAGE_LAYOUTS', None)
     env.pop('INFERFABRIC_INTERLEAVE_RESIDENTS', None)
     env.pop('INFERFABRIC_PACKED_PREFILL', None)
+    env.pop('INFERFABRIC_OUTPUT_DIAGNOSTICS',None)
+    if args.output_diagnostics:
+        env['INFERFABRIC_OUTPUT_DIAGNOSTICS']='1'
     if args.packed_prefill:
         env['INFERFABRIC_PACKED_PREFILL'] = '1'
     if args.interleave:
@@ -69,7 +73,17 @@ def main():
     (args.output / 'tokens.jsonl').write_text(result.stdout)
     if result.returncode:
         raise RuntimeError(f'native engine exited {result.returncode}; inspect stderr.log')
-    rows = [json.loads(line) for line in result.stdout.splitlines() if line.startswith('{')]
+    records = [json.loads(line) for line in result.stdout.splitlines() if line.startswith('{')]
+    rows = [row for row in records if 'request' in row]
+    diagnostics=[row for row in records if 'top5' in row]
+    if len(rows)+len(diagnostics)!=len(records) or (diagnostics and not args.output_diagnostics):
+        raise RuntimeError('unexpected native output records')
+    if args.output_diagnostics:
+        if len(diagnostics)!=len(rows) or any(a['token']!=b['token'] for a,b in zip(diagnostics,rows)):
+            raise RuntimeError('sampler diagnostic/output correspondence mismatch')
+        (args.output/'output-diagnostics.json').write_text(json.dumps([
+            dict(request=row['request'],case=cases[row['request']]['case'],generation_step=row['step'],**diag)
+            for row,diag in zip(rows,diagnostics)],indent=2)+'\n')
     expected_total = sum(len(c['output_ids']) for c in cases)
     if len(rows) != expected_total:
         raise RuntimeError('incomplete or unexpected output records')
