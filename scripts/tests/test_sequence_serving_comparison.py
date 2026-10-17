@@ -1,6 +1,8 @@
 import importlib.util
 from pathlib import Path
 import unittest
+import json
+import tempfile
 
 spec = importlib.util.spec_from_file_location('qualify', Path(__file__).parents[1] / 'qualify-sequence-serving.py')
 module = importlib.util.module_from_spec(spec)
@@ -8,6 +10,20 @@ spec.loader.exec_module(module)
 
 
 class OutputComparison(unittest.TestCase):
+    def test_stale_physical_page_names_fail_before_execution(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            (root / 'device-program.json').write_text(json.dumps({'instructions': [
+                {'name': 'cache_v2', 'op': 'cache_c8_norm_rope_append'},
+                {'name': 'projection', 'op': 'linear'}]}))
+            bindings = root / 'bindings.txt'
+            for bad in ('0 cache_v1 0 1\n', '0 projection 0 1\n', '0 cache_v2 0\n0 cache_v2 1\n'):
+                bindings.write_text(bad)
+                with self.assertRaises(ValueError):
+                    module.validate_binding_names(root, bindings)
+            bindings.write_text('0 cache_v2 0 1\n1 cache_v2 1 0\n')
+            module.validate_binding_names(root, bindings)
+
     def test_first_divergence_is_separate_for_each_request(self):
         reference = {(0, 0): 10, (0, 1): 20, (1, 0): 30}
         actual = [dict(request=0, step=0, token=11), dict(request=0, step=1, token=21)]

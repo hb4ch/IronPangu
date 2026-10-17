@@ -80,7 +80,8 @@ fn unsafe_dataflow_shapes_effects_and_budgets_are_rejected() {
         ),
         SOURCE.replacen("yield logits;", "yield normalized;", 1),
         SOURCE.replace("context = 512", "context = 513"),
-        SOURCE.replace("max_num_seqs = 1", "max_num_seqs = 4"),
+        SOURCE.replace("max_num_seqs = 1", "max_num_seqs = 0"),
+        SOURCE.replace("max_num_batched_tokens = 1", "max_num_batched_tokens = 0"),
         SOURCE.replacen(
             "mhc_post(attn_hc, attn_post)",
             "mhc_post(ffn_hc, attn_post)",
@@ -201,4 +202,16 @@ fn reusable_model_preserves_layers_with_explicit_communication_layouts() {
         assert!(definition(&source).is_err());
     }
     assert!(SOURCE.lines().count() < 150);
+}
+
+#[test]
+fn serving_budgets_round_trip_through_both_authoring_routes() {
+    let source = SOURCE.replace("max_num_seqs = 1", "max_num_seqs = 3")
+        .replace("max_num_batched_tokens = 1", "max_num_batched_tokens = 16");
+    let model = definition(&source).unwrap();
+    let decoded = authoring::decode(&authoring::encode(&model).unwrap()).unwrap();
+    assert_eq!(model, decoded);
+    let ModelDefinition::Execution { parallel, .. } = decoded else { panic!() };
+    assert_eq!(parallel.max_num_seqs, 3);
+    assert_eq!(parallel.max_num_batched_tokens, 16);
 }

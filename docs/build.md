@@ -402,6 +402,33 @@ to prepare and bind the arena before ordinary execution.
 
 ### Multiple resident request states
 
+The execution DSL now supplies the compiler's default storage and invocation
+budgets. `max_num_seqs` selects resident capacity; `max_num_batched_tokens=4096`
+selects the eager, uncaptured prefill envelope (including real tail lengths).
+`max_model_len` must equal the model's `context`. Compiled-language model
+artifacts use the same validation, and `token::write_bundle` honors these fields.
+Explicit `--resident-sequences`, `--prefill-tokens`, or `--prefill-variants`
+remain overrides; an explicit variant family replaces the authored prefill
+budget. Unsupported backend capacities still fail physical-program validation.
+
+For example, the **experimental**
+`examples/openpangu/92b-tp8-ep8-c8-serving.inferfabric` declares three residents,
+4096 batched tokens and a 65,536-token context, with explicit BF16 collectives:
+
+```bash
+INFERFABRIC_EXPERIMENTAL_OUTPUT_ROWS=1 INFERFABRIC_EXPERIMENTAL_BULK_COLLECTIVES=1 \
+./inferfabric-compiler compile-token examples/openpangu/92b-tp8-ep8-c8-serving.inferfabric \
+  /models/92B serving-candidate --allow-stale-index-size --shared-pages
+```
+
+This requires the locally cross-compiled compiler. It does not certify output
+correctness or permit reusing another plan's arena. Prepare and qualify the new
+plan before serving it. The candidate's BF16 reductions are under numerical
+qualification; the previously qualified FP32 bundle remains a separate artifact.
+A server may admit fewer requests than compiled residents, for example reserving
+one of three residents for prefix snapshots and serving two active requests.
+
+
 Compile storage capacity separately from the invocation batch size:
 
 ```bash

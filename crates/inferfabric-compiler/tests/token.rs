@@ -719,3 +719,43 @@ fn shared_page_policy_is_executable_and_preserves_variant_widths() {
     assert_eq!(u32::from_le_bytes(binary[28..32].try_into().unwrap()),4);
     assert_eq!(&p.with_shared_pages(false).unwrap().encode().unwrap()[..8],b"IFTOKN04");
 }
+
+#[test]
+fn serving_candidate_keeps_bf16_reductions_explicit_in_the_program() {
+    let ModelDefinition::Execution { graph, .. } = definition(include_str!(
+        "../../../examples/openpangu/92b-tp8-ep8-c8-serving.inferfabric"
+    )).unwrap() else { panic!() };
+    assert_eq!(graph.max_context, 65536);
+    let program = inferfabric_compiler::token_program::lower(&graph, None).unwrap();
+    let reductions: Vec<_> = program.instructions.iter().filter(|n| n.op == "allreduce").collect();
+    assert_eq!(reductions.len(), 92);
+    for reduction in reductions {
+        assert_eq!(reduction.dtype, "bf16");
+        assert_eq!(reduction.attrs["dtype"], "bf16");
+        assert_eq!(program.instructions[reduction.inputs[0]].dtype, "bf16");
+    }
+}
+
+#[test]
+fn bundle_defaults_preserve_authored_serving_budgets() {
+    let (mut graph, mut parallel, inventory) = fixture();
+    graph.max_context = 65536;
+    parallel.max_model_len = 65536;
+    parallel.max_num_seqs = 3;
+    parallel.max_num_batched_tokens = 4096;
+    ModelDefinition::Execution { graph: graph.clone(), parallel: parallel.clone() }.validate().unwrap();
+    let root = std::env::temp_dir().join(format!("inferfabric-authored-budgets-{}-{}",
+        std::process::id(), std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_nanos()));
+    let output = root.join("model");
+    inferfabric_compiler::token::write_bundle(&graph, &parallel, &inventory, &output).unwrap();
+    let program: inferfabric_compiler::token_program::Program =
+        serde_json::from_slice(&std::fs::read(output.join("device-program.json")).unwrap()).unwrap();
+    assert_eq!(program.resident_sequences, 3);
+    assert_eq!(program.prefill_tokens, 4096);
+    assert!(program.uncaptured_prefill);
+    let serving: inferfabric_ir::serving::Manifest = serde_json::from_slice(
+        &std::fs::read(output.join("serving.json")).unwrap()).unwrap();
+    assert_eq!(serving.resident_sequences, 3);
+    assert!(serving.variants.iter().any(|v| v.max_tokens == 4096));
+    std::fs::remove_dir_all(root).unwrap();
+}

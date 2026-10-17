@@ -20,6 +20,21 @@ def records(path):
             for record in [json.loads(line)] if 'request' in record]
 
 
+def validate_binding_names(plan, bindings):
+    program = json.loads((plan / 'device-program.json').read_text())
+    paged_ops = {'cache_append', 'cache_norm_rope_append', 'cache_c8_norm_rope_append', 'index_cache_append'}
+    names = {node['name'] for node in program['instructions'] if node['op'] in paged_ops}
+    seen = set()
+    for line in bindings.read_text().splitlines():
+        fields = line.split()
+        if len(fields) < 3 or fields[1] not in names:
+            raise ValueError('page binding is not a cache in this physical plan; regenerate the sequence fixture')
+        key = (int(fields[0]), fields[1])
+        if key in seen:
+            raise ValueError('duplicate rank/cache page binding')
+        seen.add(key)
+
+
 def compare_output(actual, reference):
     observed = {}
     duplicates = []
@@ -108,6 +123,7 @@ def main():
     for name in ('binary', 'plan', 'checkpoint', 'requests', 'bindings', 'reference-output', 'output-prefix'):
         parser.add_argument('--' + name, type=Path, required=True)
     args = parser.parse_args()
+    validate_binding_names(args.plan, args.bindings)
     reference_rows = records(args.reference_output)
     reference = {(r['request'], r['step']): r['token'] for r in reference_rows}
     if not reference or len(reference) != len(reference_rows):

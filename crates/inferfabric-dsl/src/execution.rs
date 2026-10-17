@@ -94,14 +94,6 @@ pub fn elaborate(ast: &Document) -> Result<ModelDefinition> {
     graph.max_context = f.number("context")?;
     graph.eos = f.number("eos")?;
     f.finish()?;
-    if parallel.max_model_len != graph.max_context
-        || parallel.max_num_seqs != 1
-        || parallel.max_num_batched_tokens != 1
-    {
-        return Err(invalid(
-            "ascend_token_v1 is single-sequence/token; plan budgets must match graph",
-        ));
-    }
     let result = ModelDefinition::Execution { parallel, graph };
     result.validate()?;
     Ok(result)

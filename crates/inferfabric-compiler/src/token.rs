@@ -93,8 +93,6 @@ pub fn initialization_plans(
     topology.validate()?;
     if topology.tp != 8
         || topology.max_model_len != graph.max_context
-        || topology.max_num_seqs != 1
-        || topology.max_num_batched_tokens != 1
     {
         return Err(invalid("unsupported token executor topology/capacity"));
     }
@@ -343,7 +341,7 @@ pub fn write_bundle(
     inventory: &Inventory,
     output: &std::path::Path,
 ) -> Result<()> {
-    write_bundle_with_resident_sequences(graph, topology, inventory, output, 1)
+    write_bundle_with_resident_sequences(graph, topology, inventory, output, topology.max_num_seqs)
 }
 pub fn write_bundle_with_resident_sequences(
     graph: &Graph,
@@ -352,7 +350,7 @@ pub fn write_bundle_with_resident_sequences(
     output: &std::path::Path,
     resident_sequences: usize,
 ) -> Result<()> {
-    write_bundle_with_resources(graph, topology, inventory, output, resident_sequences, 1)
+    write_bundle_with_resources(graph, topology, inventory, output, resident_sequences, topology.max_num_batched_tokens)
 }
 pub fn write_bundle_with_resources(
     graph: &Graph, topology: &OpenPanguParallel, inventory: &Inventory,

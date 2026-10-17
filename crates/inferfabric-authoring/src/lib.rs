@@ -32,10 +32,8 @@ impl ModelDefinition {
                 graph.validate()?;
                 if parallel.tp != 8
                     || parallel.max_model_len != graph.max_context
-                    || parallel.max_num_seqs != 1
-                    || parallel.max_num_batched_tokens != 1
                 {
-                    return Err(invalid("ascend_token_v1 currently requires TP=EP=8"));
+                    return Err(invalid("ascend_token_v1 requires TP=EP=8 and matching graph/context bounds"));
                 }
                 Ok(())
             }

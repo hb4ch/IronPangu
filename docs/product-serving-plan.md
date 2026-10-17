@@ -18,6 +18,12 @@ After this gate passes, qualify extended output through the HTTP frontend, then
 resume matched performance and production-hardening gates. Do not spend more
 NPU time on repeated short-answer suites that cannot expose this failure.
 
+The authored serving-budget path now accepts and preserves multiple residents
+and 4096-token uncaptured prefill, rather than requiring single-token DSL budgets
+plus command-line overrides. The new BF16-collective serving example is a separate
+experimental candidate; it must pass numerical and arena qualification before
+replacing the current bundle.
+
 ## Current qualified baseline (2026-10-18)
 
 Use the [planned bulk-domain candidate](validation/2026-10-18-bulk-domains/README.md)

@@ -171,8 +171,8 @@ fn run() -> Result<()> {
                 &parallel,
                 &inventory,
                 Path::new(&args[3]),
-                resident_sequences.unwrap_or(1),
-                prefill_tokens.unwrap_or(1),
+                resident_sequences.unwrap_or(parallel.max_num_seqs),
+                prefill_tokens.unwrap_or_else(|| if prefill_variants.is_some() { 1 } else { parallel.max_num_batched_tokens }),
                 shared_pages,
                 prefill_variants.as_deref().unwrap_or(&[]),
             )?;
