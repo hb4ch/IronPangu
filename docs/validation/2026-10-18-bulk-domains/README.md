@@ -89,3 +89,22 @@ packed prefill, first-EOS and arithmetic-history checks, 300-second request
 inactivity timeout. Raw evidence is `bulk-domains64k-http/`; `results.json` is the
 terminal completed report. Intermediate `*-progress.json` files are not terminal
 status records.
+
+
+## Native 64K completion and TPOT
+
+A separate unprofiled frozen-only run passes all 39 reference tokens over six
+requests and 196,629 completed input tokens in 53 batches. The first 65,520-token
+prompt executes exactly **15 x 4096 + 4080** input rows; no per-token prefill or
+long-prefill graph is used. Four pure single-sequence decode calls after long
+context take **28.120 / 22.424 / 22.414 / 22.908 ms**, median **22.666 ms**. This
+small native completed-call sample is not a sustained production TPOT percentile.
+All eight rank residency, frozen arena, workspace, graph replay and metadata
+lifetime checks pass. `native64-summary.json` and
+`bulk-domains64k-native-frozen/` preserve the samples and full evidence.
+
+Reproduce with a fresh `prepare-sequence-fixture.py` output from the frozen plan,
+`retrieval-64k-reference.json`, arithmetic peer in
+`batched16-preparation-reference.json`; run `qualify-sequence-serving.py
+--frozen-only --batch-trace` with the same backend and HCCL base port 44200.
+No profiler is enabled in this run.
