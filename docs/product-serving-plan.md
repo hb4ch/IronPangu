@@ -10,6 +10,13 @@ progress. Shared pages are reserved per request across all ranks and reclaimed
 after completion; pool size is still the compiled resident-count times capacity.
 SWA recycling, prefix snapshots and the 64K release gates below remain open.
 
+[Planned page-table capacities](validation/2026-10-17-planned-page-tables/README.md)
+now replace the fixed binding-count ceiling. C8 table allocation and its physical
+recipe follow compiled capacity; oversized bindings fail before worker dispatch.
+Metadata/ownership tests cover 65,536 tokens and the full 512-token native/HTTP
+regression passes. This does not raise the serving context gate: BF16 SWA storage
+still needs window recycling and longer-context decoder qualification.
+
 Experimental learned-index execution now includes explicit INT8 index queries/keys
 and FP16 scales/head weights in the [physical plan](learned-index-quantization.md).
 Its [C8 reference boundary comparison](validation/2026-10-17-learned-index-int8/README.md)

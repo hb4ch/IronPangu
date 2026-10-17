@@ -12,6 +12,7 @@ import os
 from pathlib import Path
 import statistics
 import random
+import re
 import subprocess
 
 
@@ -21,6 +22,7 @@ def main():
         p.add_argument('--' + name, required=True, type=Path)
     p.add_argument('--prepare', action='store_true')
     p.add_argument('--output-diagnostics', action='store_true', help='Record existing sampler top-five request outputs; no activation readback')
+    p.add_argument('--check-binding-limits', action='store_true', help='Reject oversized bindings through both ABIs, then verify valid retries and inference')
     p.add_argument('--packed-prefill', action='store_true', help='require the compiled packed chunk path')
     p.add_argument('--permuted-pages', action='store_true', help='qualify rank/component-specific noncontiguous device cache bindings')
     p.add_argument('--interleave', action='store_true', help='interleave resident histories token by token, including slot reuse while peers are live')
@@ -37,6 +39,11 @@ def main():
     env.pop('INFERFABRIC_INTERLEAVE_RESIDENTS', None)
     env.pop('INFERFABRIC_PACKED_PREFILL', None)
     env.pop('INFERFABRIC_OUTPUT_DIAGNOSTICS',None)
+    env.pop('INFERFABRIC_TEST_BINDING_LIMITS',None)
+    if args.check_binding_limits:
+        if not args.permuted_pages:
+            raise ValueError('binding-limit checks require --permuted-pages')
+        env['INFERFABRIC_TEST_BINDING_LIMITS']='1'
     if args.output_diagnostics:
         env['INFERFABRIC_OUTPUT_DIAGNOSTICS']='1'
     if args.packed_prefill:
@@ -47,7 +54,8 @@ def main():
         env['INFERFABRIC_PREPARE_ARENA'] = '1'
     if args.permuted_pages:
         manifest = json.loads((args.plan / 'serving.json').read_text())
-        executable = json.loads((args.plan / 'device-program.json').read_text())['instructions']
+        program = json.loads((args.plan / 'device-program.json').read_text())
+        executable = program['instructions']
         randomizer = random.Random(1729)
         lines = []
         for state in manifest['states']:
@@ -73,6 +81,14 @@ def main():
     (args.output / 'tokens.jsonl').write_text(result.stdout)
     if result.returncode:
         raise RuntimeError(f'native engine exited {result.returncode}; inspect stderr.log')
+    binding_rejections=0
+    if args.check_binding_limits:
+        checks=re.findall(r'binding limits: (\d+) invalid requests rejected; valid retries passed',
+                          (args.output/'stderr.log').read_text())
+        expected=len(lines)*(4 if program.get('shared_pages',False) else 2)
+        if checks!=[str(expected)] or not expected:
+            raise RuntimeError('binding-limit checks did not execute all expected rejections/retries')
+        binding_rejections=expected
     records = [json.loads(line) for line in result.stdout.splitlines() if line.startswith('{')]
     rows = [row for row in records if 'request' in row]
     diagnostics=[row for row in records if 'top5' in row]
@@ -117,6 +133,7 @@ def main():
                   output_tokens=expected_total, exact_fixture_tokens=True,
                   fixture_sha256=hashlib.sha256(args.cases.read_bytes()).hexdigest(),
                   permuted_pages=args.permuted_pages,
+                  binding_limit_rejections=binding_rejections,
                   interleaved_residents=args.interleave,
                   packed_prefill=args.packed_prefill,
                   scope='one loaded TP8/EP8 group, ' + ('compiled packed prefill and serial decode' if args.packed_prefill else 'serial token graph') + '; no long-context claim',

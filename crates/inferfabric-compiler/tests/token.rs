@@ -82,6 +82,19 @@ fn learned_index_graph_has_explicit_shared_dependencies_and_paged_state() {
     let recipes=serde_json::to_string(&inferfabric_compiler::token_program::recipes(&p,&graph)).unwrap();
     assert!(recipes.contains("aclnnAiInfraQuantLightningIndexer"));
     assert!(recipes.contains("index_cache_scales"));
+    let mut short_context=graph.clone();short_context.max_context=129;
+    let short_program=inferfabric_compiler::token_program::lower(&short_context,None).unwrap();
+    let short_recipes=inferfabric_compiler::token_program::recipes(&short_program,&short_context);
+    for (instruction,recipe) in short_program.instructions.iter().zip(&short_recipes) {
+        let expected=match instruction.op.as_str() {
+            "cache_c8_norm_rope_append"=>5,
+            "cache_norm_rope_append"|"cache_append"=>32,
+            "index_cache_append"=>3,
+            _=>continue,
+        };
+        let table=recipe["value_fields"].as_array().unwrap().iter().find(|field|field["name"]=="device_block_table").unwrap();
+        assert_eq!(table["shape"],serde_json::json!([1,expected]));
+    }
     for (id,_) in graph.nodes.iter().enumerate().filter(|(_,n)|n.op=="mla_query") {
         let ops:Vec<_>=p.instructions.iter().filter(|i|i.logical_node==id).collect();
         assert_eq!(ops.iter().map(|i|i.op.as_str()).collect::<Vec<_>>(),["query_project","column_slice","rope_bf16","concat_columns"]);

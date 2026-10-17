@@ -1369,8 +1369,9 @@ struct Decoder {
   }
   void upload_page_table(AttentionState &state) {
     const auto &pages=state.page_binding.pages();
-    if(pages.size()>32)throw std::runtime_error("device block table capacity");
-    std::vector<int32_t> table(32,0);
+    const size_t capacity=state.table.bytes/sizeof(int32_t);
+    if(pages.size()>capacity)throw std::runtime_error("device block table capacity");
+    std::vector<int32_t> table(capacity,0);
     std::copy(pages.begin(),pages.end(),table.begin());
     resident::control_upload(state.table,table);
   }
@@ -1395,7 +1396,7 @@ struct Decoder {
     auto &state = *found->second;
     if (state.cache_bits != 16 && !state.packed_c8)
       throw std::runtime_error("row-quantized cache paging is not implemented");
-    if (pages.size()>32) throw std::runtime_error("device block table capacity");
+    if (pages.size()>state.table.bytes/sizeof(int32_t)) throw std::runtime_error("device block table capacity");
     state.page_binding.bind(pages);
     upload_page_table(state);
     // No graph pointer changes: only declared control metadata is updated.

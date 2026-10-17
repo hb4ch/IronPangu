@@ -1,5 +1,6 @@
 #include "token_executor.h"
 #include "../include/program_engine.h"
+#include "../include/paged_state_contract.h"
 #include <condition_variable>
 #include <mutex>
 #include <atomic>
@@ -230,8 +231,16 @@ extern "C" int inferfabric_program_reset_resident(void *p, uint32_t slot) {
 extern "C" int inferfabric_program_bind_pages(void *p, uint32_t rank, const char *component, const int32_t *pages, uint32_t count) {
   return call([&] {
     auto &e=engine(p);
-    if (e.next_positions[e.active_resident] || rank>=e.loads.size() || !component || !pages || !count || count>32)
+    if (e.next_positions[e.active_resident] || rank>=e.loads.size() || !component || !pages)
       throw std::runtime_error("invalid page binding arguments");
+    const inferfabric::execution::Node *found=nullptr;
+    for(const auto &node:e.program.nodes)
+      if(node.name==component && inferfabric::execution::is_paged_state(node)) {
+        if(found)throw std::runtime_error("ambiguous named cache state");
+        found=&node;
+      }
+    if(!found)throw std::runtime_error("unregistered named cache state");
+    inferfabric::execution::paged_state_contract(e.program,*found).validate_count(count,e.program.shared_pages);
     e.binding_component=component;
     e.binding_pages.assign(pages,pages+count);
     e.submit(Command::BindPages,rank);
@@ -263,13 +272,14 @@ extern "C" int inferfabric_program_bind_state(void *p,uint32_t rank,uint32_t log
     auto &e=engine(p);
     const inferfabric::execution::Node *found=nullptr;
     for(const auto &n:e.program.nodes)
-      if(n.logical_node==logical_node && (n.op=="index_cache_append" || n.op=="cache_append" || n.op=="cache_norm_rope_append" || n.op=="cache_c8_norm_rope_append")) {
+      if(n.logical_node==logical_node && inferfabric::execution::is_paged_state(n)) {
         if(found)throw std::runtime_error("ambiguous cache state binding");
         found=&n;
       }
     if(!found || !e.program.shared_pages)throw std::runtime_error("unregistered shared cache state");
-    if(e.next_positions[e.active_resident] || rank>=e.loads.size() || !pages || !count || count>32)
+    if(e.next_positions[e.active_resident] || rank>=e.loads.size() || !pages)
       throw std::runtime_error("invalid shared page binding");
+    inferfabric::execution::paged_state_contract(e.program,*found).validate_count(count,true);
     e.binding_component=found->name;e.binding_pages.assign(pages,pages+count);
     e.submit(Command::BindPages,rank);
   });

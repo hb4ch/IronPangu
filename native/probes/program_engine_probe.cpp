@@ -1,5 +1,6 @@
 // Offline client of the same persistent ABI used by the Rust frontend.
 #include "program_engine.h"
+#include "token_execution_plan.h"
 #include <chrono>
 #include <cstdlib>
 #include <iostream>
@@ -47,6 +48,30 @@ int main(int argc, char **argv) {
     }
     for (const auto &r : requests) if (!r.steps || r.steps > 128 || r.prompt.empty()) throw std::runtime_error("probe request bound");
     check(inferfabric_program_open(argv[1], argv[2], std::getenv("INFERFABRIC_PREPARE_ARENA") ? 1 : 0, &engine));
+    if(std::getenv("INFERFABRIC_TEST_BINDING_LIMITS")) {
+      if(bindings.empty())throw std::runtime_error("binding-limit test requires manifest-derived bindings");
+      const auto plan=inferfabric::execution::Plan::read(std::string(argv[1])+"/execution.bin");
+      size_t rejected=0;
+      for(const auto &binding:bindings) {
+        const inferfabric::execution::Node *node=nullptr;
+        for(const auto &candidate:plan.nodes)if(candidate.name==binding.component)node=&candidate;
+        if(!node)throw std::runtime_error("binding test component missing from plan");
+        auto extra=binding.pages;extra.push_back(0);
+        for(auto count:{uint32_t(extra.size()),UINT32_MAX}) {
+          if(!inferfabric_program_bind_pages(engine,binding.rank,binding.component.c_str(),extra.data(),count))
+            throw std::runtime_error("oversized named binding accepted");
+          ++rejected;
+          if(plan.shared_pages) {
+            if(!inferfabric_program_bind_state(engine,binding.rank,node->logical_node,extra.data(),count))
+              throw std::runtime_error("oversized logical binding accepted");
+            ++rejected;
+          }
+        }
+        // Failure must not poison the worker group; a valid binding still works.
+        check(inferfabric_program_bind_pages(engine,binding.rank,binding.component.c_str(),binding.pages.data(),uint32_t(binding.pages.size())));
+      }
+      std::cerr<<"binding limits: "<<rejected<<" invalid requests rejected; valid retries passed\n";
+    }
     uint32_t chunk=1;
     if(std::getenv("INFERFABRIC_PACKED_PREFILL")) {
       check(inferfabric_program_prefill_capacity(engine,&chunk));
