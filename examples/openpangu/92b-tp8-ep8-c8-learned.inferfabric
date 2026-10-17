@@ -49,7 +49,7 @@ module LearnedIndex(x, qr, w) {
     let query = rotary_prefix(q, heads = 24, head_dim = 128, rotary_dim = 64, theta = 6400000);
     let key = rotary_prefix(kn, heads = 1, head_dim = 128, rotary_dim = 64, theta = 6400000);
     let weights = linear(x, weight = w.weights_proj, width = 24, placement = "replicated");
-    let cache = index_cache_append(key, width = 128, page_tokens = 64);
+    let cache = index_cache_append(key, width = 128, page_tokens = 64, cache_dtype = "int8");
     let indices = sparse_index(query, weights, cache, heads = 24, head_dim = 128, topk = 2048, scoring = "weighted_relu");
     yield indices;
 }

@@ -111,7 +111,7 @@ struct Plan {
       if (p.physical) {
         n.dtype = str(); n.kernel = str(); n.logical_node = number();
         if (n.logical_node >= count ||
-            (n.kind == 0 ? (n.dtype != "bf16" && n.dtype != "f32") : n.dtype != "opaque"))
+            (n.kind == 0 ? (n.dtype != "bf16" && n.dtype != "f16" && n.dtype != "f32") : n.dtype != "opaque"))
           throw std::runtime_error("physical storage contract");
       }
       p.nodes.push_back(std::move(n));

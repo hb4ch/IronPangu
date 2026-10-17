@@ -69,10 +69,23 @@ fn learned_index_graph_has_explicit_shared_dependencies_and_paged_state() {
         assert!(users.iter().all(|n|n.op=="latent_attention" && n.attrs["selection"]=="learned_indices"));
     }
     let (_,states)=inferfabric_compiler::token_serving::envelope(&graph,8).unwrap();
-    assert_eq!(states.iter().filter(|s|matches!(&s.storage,inferfabric_ir::serving::Storage::Pages{encoding,..} if encoding=="bf16_index_keys")).count(),8);
+    assert_eq!(states.iter().filter(|s|matches!(&s.storage,inferfabric_ir::serving::Storage::Pages{encoding,row_bytes:130,..} if encoding=="int8_index_keys_f16_scales")).count(),8);
     let p=inferfabric_compiler::token_program::lower(&graph,None).unwrap();
     assert_eq!(p.instructions.iter().filter(|i|i.op=="indexed_packed_attention").count(),16);
     assert_eq!(p.instructions.iter().filter(|i|i.op=="sparse_index").count(),8);
+    assert_eq!(p.instructions.iter().filter(|i|i.op=="index_quantize").count(),16);
+    assert_eq!(p.instructions.iter().filter(|i|i.op=="quant_scales_f16").count(),16);
+    for selector in p.instructions.iter().filter(|i|i.op=="sparse_index") {
+        assert_eq!(p.instructions[selector.inputs[0]].op,"quant_scales_f16");
+        assert_eq!(p.instructions[selector.inputs[1]].dtype,"f16");
+    }
+    let recipes=serde_json::to_string(&inferfabric_compiler::token_program::recipes(&p,&graph)).unwrap();
+    assert!(recipes.contains("aclnnAiInfraQuantLightningIndexer"));
+    assert!(recipes.contains("index_cache_scales"));
+    let ModelDefinition::Execution{graph:bf16,..}=definition(&source.replace("cache_dtype = \"int8\"","cache_dtype = \"bf16\"")).unwrap() else {panic!()};
+    let bf16=inferfabric_compiler::token_program::lower(&bf16,None).unwrap();
+    assert!(!bf16.instructions.iter().any(|i|i.op=="index_quantize" || i.op=="quant_scales_f16"));
+    assert!(definition(&source.replace("cache_dtype = \"int8\"","cache_dtype = \"int4\"")).is_err());
     assert_eq!(p.instructions.iter().filter(|i|i.op=="packed_attention_metadata").count(),1);
     let mut bad=graph.clone();
     let attention=bad.nodes.iter_mut().find(|n|n.attrs.get("selection").map(String::as_str)==Some("learned_indices")).unwrap();

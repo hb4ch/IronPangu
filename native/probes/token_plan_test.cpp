@@ -121,8 +121,15 @@ int main(int argc, char **argv) {
       reject([](auto &x){for(auto &n:x.nodes)if(n.op=="cache_c8_norm_rope_append"){n.attrs["cache_quantization"]="per_token_head_symmetric";break;}});
       reject([](auto &x){for(auto &n:x.nodes)if(n.op=="cache_c8_norm_rope_append"){n.attrs["cache_rope_dtype"]="int8";break;}});
       reject([](auto &x){for(auto &n:x.nodes)if(n.op=="cache_c8_norm_rope_append"){n.attrs["cache_scale_dtype"]="bf16";break;}});
-      reject([](auto &x){for(auto &n:x.nodes)if(n.op=="packed_latent_attention"){n.inputs[2]=0;break;}});
-      reject([](auto &x){for(auto &n:x.nodes)if(n.op=="packed_latent_attention"){n.inputs[1]=0;break;}});
+      reject([](auto &x){for(auto &n:x.nodes)if(n.op=="packed_latent_attention" || n.op=="indexed_packed_attention"){n.inputs.back()=0;break;}});
+      reject([](auto &x){for(auto &n:x.nodes)if(n.op=="packed_latent_attention" || n.op=="indexed_packed_attention"){n.inputs[1]=0;break;}});
+    }
+    if(std::any_of(p.nodes.begin(),p.nodes.end(),[](const auto &n){return n.op=="index_quantize";})) {
+      reject([](auto &x){for(auto &n:x.nodes)if(n.op=="index_quantize"){n.attrs["block_width"]="3072";break;}});
+      reject([](auto &x){for(auto &n:x.nodes)if(n.op=="sparse_index"){auto &q=x.nodes[n.inputs[0]];n.inputs[0]=q.inputs[0];break;}});
+      reject([](auto &x){for(auto &n:x.nodes)if(n.op=="sparse_index"){auto &w=x.nodes[n.inputs[1]];n.inputs[1]=w.inputs[0];break;}});
+      reject([](auto &x){for(auto &n:x.nodes)if(n.op=="index_cache_append"){n.attrs["cache_dtype"]="int4";break;}});
+      reject([](auto &x){for(auto &n:x.nodes)if(n.op=="index_cache_append"){auto &q=x.nodes[n.inputs[0]];n.inputs[0]=q.inputs[0];break;}});
     }
     if(std::any_of(p.nodes.begin(),p.nodes.end(),[](const auto &n){return n.op=="cache_quantize_append";})) {
       reject([](auto &x){for(auto &n:x.nodes)if(n.op=="cache_quantize_append"){n.attrs["cache_dtype"]="int2";break;}});

@@ -80,6 +80,12 @@ inline void validate_kernels(const Plan &p) {
       check({{0, tensor(0)}}, {"dtype"}, {0, tensor(0)});
       if (n.text("dtype") != n.dtype || n.kernel != "aclnnCast" ||
           p.nodes[n.inputs[0]].dtype == n.dtype) error();
+    } else if(p.physical && n.op=="index_quantize") {
+      check({{0,tensor(0)}},{"block_width"},{5,tensor(0)});eq("block_width","128");
+      if(n.width!=128 && n.width!=3072)error();
+    } else if(p.physical && n.op=="quant_scales_f16") {
+      check({{5,n.width}},{},{5,n.width});
+      if(p.nodes[n.inputs[0]].op!="index_quantize")error();
     } else if (p.physical && n.op == "quantize") {
       check({{0,tensor(0)}},{"dtype","scheme","scale_dtype"},{5,tensor(0)});
       eq("dtype","int8"); eq("scheme","per_token_symmetric"); eq("scale_dtype","f32");
@@ -250,9 +256,17 @@ inline void validate_kernels(const Plan &p) {
       eq("eps","1e-5");eq("theta","6400000");eq("cache_dtype","int8_ds_mla");
       eq("cache_scale_dtype","f32");eq("cache_quantization","pertile128");eq("cache_rope_dtype","bf16");
     } else if(p.physical && n.op=="index_cache_append") {
-      check({{0,128}},{"width","page_tokens"},{9,128});eq("width","128");eq("page_tokens","64");
+      bool quant=n.attrs.count("cache_dtype") && n.text("cache_dtype")=="int8";
+      std::vector<std::string> attrs{"width","page_tokens"};
+      if(n.attrs.count("cache_dtype")){attrs.push_back("cache_dtype");if(!quant)eq("cache_dtype","bf16");}
+      check({{quant?5u:0u,128}},attrs,{9,128});eq("width","128");eq("page_tokens","64");
+      if(quant && p.nodes[n.inputs[0]].op!="quant_scales_f16")error();
     } else if(p.physical && n.op=="sparse_index") {
-      check({{0,3072},{0,24},{9,128},{7,0}},{"heads","head_dim","topk","scoring"},{8,2048});
+      if(n.inputs.size()!=4)error();
+      const auto &cache=p.nodes[n.inputs[2]];
+      bool quant=cache.attrs.count("cache_dtype") && cache.text("cache_dtype")=="int8";
+      check({{quant?5u:0u,3072},{0,24},{9,128},{7,0}},{"heads","head_dim","topk","scoring"},{8,2048});
+      if(quant && p.nodes[n.inputs[0]].op!="quant_scales_f16")error();
       eq("heads","24");eq("head_dim","128");eq("topk","2048");eq("scoring","weighted_relu");
       if(p.nodes[n.inputs[3]].op!="packed_attention_metadata")error();
     } else if(p.physical && n.op=="indexed_packed_attention") {
@@ -351,6 +365,7 @@ inline void validate_kernels(const Plan &p) {
         const auto &v = p.nodes[j];
         if (v.kind != 0) continue;
         std::string required = "bf16";
+        if(n.op=="sparse_index" && j==n.inputs[1] && p.nodes[n.inputs[0]].kind==5)required="f16";
         if (n.op == "slice" || n.op == "repeat" || n.op == "concat" || (n.op == "optional_norm" && n.kernel == "alias")) continue;
         if (n.op == "router" || n.op == "rope" || n.op == "rope_f32" || n.op == "router_projection" || n.op == "router_select" || n.op == "expert_reduce" || n.op == "add_f32") required = "f32";
         if (n.op == "allreduce") required = n.attrs.count("dtype") ? n.text("dtype") : "f32";

@@ -27,8 +27,8 @@ pub fn envelope(graph: &Graph, ranks: usize) -> Result<(Vec<Variant>, Vec<State>
         let storage = match n.op.as_str() {
             "index_cache_append" => Storage::Pages {
                 page_tokens: n.integer("page_tokens")? as u32,
-                row_bytes: n.integer("width")? as u64 * 2,
-                encoding: "bf16_index_keys".into(),
+                row_bytes: if n.attrs.get("cache_dtype").is_some_and(|v|v=="int8") {130} else {n.integer("width")? as u64 * 2},
+                encoding: if n.attrs.get("cache_dtype").is_some_and(|v|v=="int8") {"int8_index_keys_f16_scales"} else {"bf16_index_keys"}.into(),
             },
             "mome" => {
                 let Type::Tensor(width) = types[n.inputs[0]] else {

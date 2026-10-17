@@ -2,6 +2,12 @@
 // defines the architecture, residual wiring, layer count and weight bindings.
 struct SelectedIndices { V value; };
 struct IndexCacheRef { std::string name; };
+static aclDataType storage_dtype(const std::string &dtype) {
+  if(dtype=="bf16")return ACL_BF16;
+  if(dtype=="f16")return ACL_FLOAT16;
+  if(dtype=="f32")return ACL_FLOAT;
+  throw std::runtime_error("unsupported physical tensor dtype");
+}
 using Value = std::variant<V, HC, Routes, ExpertRows, std::string, Quantized, RoutedQuantized, std::monostate, SelectedIndices, IndexCacheRef>;
 static std::string expert_name(std::string pattern, int expert) {
   auto at = pattern.find("{expert}");
@@ -26,7 +32,7 @@ V execute_token() {
     };
     auto tensor = [&](size_t j) -> const V & {
       const auto &v = std::get<V>(input(j));
-      if (program.physical && v.dtype() != (program.nodes[n.inputs[j]].dtype == "bf16" ? ACL_BF16 : ACL_FLOAT))
+      if (program.physical && v.dtype() != storage_dtype(program.nodes[n.inputs[j]].dtype))
         throw std::runtime_error("physical input storage mismatch: " + n.name);
       return v;
     };
@@ -39,7 +45,12 @@ V execute_token() {
     };
     Value result;
     if (n.op == "cast") {
-      result = cast(tensor(0), n.dtype == "bf16" ? ACL_BF16 : ACL_FLOAT,true);
+      result = cast(tensor(0), storage_dtype(n.dtype),true);
+    } else if(n.op=="index_quantize") {
+      result=quantize(tensor(0),n.integer("block_width"));
+    } else if(n.op=="quant_scales_f16") {
+      const auto &q=std::get<Quantized>(input(0));
+      result=Quantized{q.values,cast(q.scales,ACL_FLOAT16,true)};
     } else if (n.op == "quantize") {
       result = quantize(tensor(0),n.width);
     } else if (n.op == "copy") {
@@ -156,12 +167,19 @@ V execute_token() {
       result=n.name;
     } else if(n.op=="index_cache_append") {
       auto &state=index_states[n.name];
-      if(!state)state=std::make_unique<resident::IndexState>(((program.context+63)/64)*64,program.resident_sequences,program.shared_pages);
-      each_row([&](uint32_t row){state->append(row_tensor(0,row),cache_append_descriptor(n.name,ACL_INT32));});
+      bool quant=n.attrs.count("cache_dtype") && n.text("cache_dtype")=="int8";
+      if(!state)state=std::make_unique<resident::IndexState>(((program.context+63)/64)*64,program.resident_sequences,program.shared_pages,quant);
+      each_row([&](uint32_t row){
+        if(quant){const auto &q=std::get<Quantized>(input(0));state->append_quantized(q.values.view(row*128,128),q.scales.view(row,1),cache_append_descriptor(n.name,ACL_INT32));}
+        else state->append(row_tensor(0,row),cache_append_descriptor(n.name,ACL_INT32));
+      });
       result=IndexCacheRef{n.name};
     } else if(n.op=="sparse_index") {
       auto &state=*index_states.at(std::get<IndexCacheRef>(input(2)).name);
-      result=SelectedIndices{row_values(n.width,[&](uint32_t row){return state.select_indices(row_tensor(0,row),row_tensor(1,row),control_row(*packed_length));})};
+      result=SelectedIndices{row_values(n.width,[&](uint32_t row){
+        if(state.quantized){const auto &q=std::get<Quantized>(input(0));return state.select_quantized(q.values.view(row*3072,3072),q.scales.view(row*24,24),row_tensor(1,row),control_row(*packed_length));}
+        return state.select_indices(row_tensor(0,row),row_tensor(1,row),control_row(*packed_length));
+      })};
     } else if(n.op=="indexed_packed_attention") {
       const auto &indices=std::get<SelectedIndices>(input(2)).value;
       result=row_values(n.width,[&](uint32_t row){auto selected=indices.view(row*2048,2048);return attend_packed(row_tensor(0,row),std::get<std::string>(input(1)),&selected);});
@@ -223,7 +241,7 @@ V execute_token() {
     if (result.index() != n.kind)
       throw std::runtime_error("kernel result type " + n.name);
     if (auto v = std::get_if<V>(&result)) {
-      if (program.physical && v->dtype() != (n.dtype == "bf16" ? ACL_BF16 : ACL_FLOAT))
+      if (program.physical && v->dtype() != storage_dtype(n.dtype))
         throw std::runtime_error("physical output storage mismatch: " + n.name);
       if (v->size() != n.width*(n.op=="sink_normalize" ? 1 : active_tokens))
         throw std::runtime_error("kernel result shape " + n.name);

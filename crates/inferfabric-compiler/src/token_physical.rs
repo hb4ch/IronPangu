@@ -76,7 +76,7 @@ pub fn lower(graph: &Graph, devices: &[u32]) -> Result<Plan> {
                 Location::Device,
             ),
             Type::Quantized(_) => (None,vec![],None,"int8_payload_with_f32_per_token_scale",Location::Device),
-            Type::IndexCache(_) => (None,vec![],None,"paged_bf16_index_keys",Location::Device),
+            Type::IndexCache(_) => (None,vec![],None,if n.attrs.get("cache_dtype").is_some_and(|v|v=="int8") {"paged_int8_index_keys_f16_scales"} else {"paged_bf16_index_keys"},Location::Device),
             Type::Indices(w) => (Some("i32".into()),vec![w as u64],Some(w as u64*4),"logical_token_indices",Location::Device),
             Type::HyperConnection => (
                 None,
@@ -134,11 +134,11 @@ pub fn lower(graph: &Graph, devices: &[u32]) -> Result<Plan> {
         }
         if n.op == "index_cache_append" {
             boundaries.push(Boundary {kind:BoundaryKind::PersistentState,
-                detail:"BF16 128-column index keys in 64-token physical pages, reserved and retired with the request's other state; stable table address and explicit device append index".into()});
+                detail:format!("128-column index keys in 64-token physical pages, encoding {}; reserved and retired with the request's other state. INT8 encoding includes explicit per-key quantization and FP16 scale cast, with both arrays sharing page IDs",n.attrs.get("cache_dtype").map(String::as_str).unwrap_or("bf16"))});
         }
         if n.op == "sparse_index" {
             boundaries.push(Boundary {kind:BoundaryKind::InternalLaunches,
-                detail:"aclnnLightningIndexerEnhance consumes replicated 24-head queries, head weights, paged BF16 keys and causal device lengths; returns 2048 INT32 logical token indices retained for all declared consumers".into()});
+                detail:"Replicated 24-head weighted-ReLU selector returns 2048 INT32 logical token indices retained for declared consumers. BF16 cache uses LightningIndexerEnhance; INT8 cache uses AiInfraQuantLightningIndexer with explicit per-head quantization, FP16 scale/head-weight casts and causal device lengths".into()});
         }
         if n.op == "latent_attention" && n.attrs.get("selection").map(String::as_str)==Some("learned_indices") {
             boundaries.push(Boundary {kind:BoundaryKind::InternalLaunches,

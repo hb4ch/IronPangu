@@ -3,6 +3,7 @@
 #include "page_binding.h"
 #include <aclnnop/aclnn_index_copy.h>
 #include <aclnn_lightning_indexer_enhance.h>
+#include <aclnn_ai_infra_quant_lightning_indexer.h>
 #include <dlfcn.h>
 
 namespace inferfabric::resident {
@@ -23,14 +24,16 @@ inline SparseIndexApi &sparse_index_api(){static SparseIndexApi api;return api;}
 
 struct IndexState {
   uint32_t capacity,residents;
-  bool shared;
+  bool shared,quantized;
   state::ResidentPages pages;
   openpangu::DeviceTensor keys,table,query_length;
-  IndexState(uint32_t cap,uint32_t slots,bool shared_pages)
-      :capacity(cap),residents(slots),shared(shared_pages),pages(64,cap,slots,shared_pages),
-       keys({int64_t(cap)*slots/64,64,1,128},ACL_BF16,2),table({1,cap/64},ACL_INT32,4),
+  std::unique_ptr<openpangu::DeviceTensor> scales;
+  IndexState(uint32_t cap,uint32_t slots,bool shared_pages,bool quant=false)
+      :capacity(cap),residents(slots),shared(shared_pages),quantized(quant),pages(64,cap,slots,shared_pages),
+       keys({int64_t(cap)*slots/64,64,1,128},quant?ACL_INT8:ACL_BF16,quant?1:2),table({1,cap/64},ACL_INT32,4),
        query_length({1},ACL_INT32,4) {
     if(!prepared::active)throw std::runtime_error("index state requires prepared context");
+    if(quantized){scales=std::make_unique<openpangu::DeviceTensor>(std::vector<int64_t>{int64_t(cap)*slots/64,64,1},ACL_FLOAT16,2);prepared::active->zero(scales->data,scales->bytes);}
     prepared::active->zero(keys.data,keys.bytes);upload_table();
     control_upload(query_length,std::vector<int32_t>{1});
   }
@@ -41,7 +44,11 @@ struct IndexState {
   void select(uint32_t slot){pages.select(slot);upload_table();}
   void bind(const std::vector<int32_t> &ids){pages.bind(ids);upload_table();}
   void clear(uint32_t slot,bool active){
-    for(auto page:pages.pages(slot))prepared::active->zero(static_cast<uint8_t *>(keys.data)+size_t(page)*64*128*2,64*128*2);
+    for(auto page:pages.pages(slot)) {
+      size_t bytes=64*128*(quantized?1:2);
+      prepared::active->zero(static_cast<uint8_t *>(keys.data)+size_t(page)*bytes,bytes);
+      if(quantized)prepared::active->zero(static_cast<uint8_t *>(scales->data)+size_t(page)*64*2,64*2);
+    }
     if(shared)pages.release(slot);
     if(active)upload_table();
   }
@@ -66,6 +73,33 @@ struct IndexState {
         context.descriptor(weights.data(),{1,24},ACL_BF16),query_length.tensor,length,table.tensor,
         "TND","PA_BSND",2048,3,INT64_MAX,INT64_MAX,false,1,0,out.tensor,nullptr,&bytes,&executor),"sparse index prepare");
     prepared::check(api.launch(context.workspace(bytes),bytes,executor,context.stream),"sparse index launch");
+    return Tensor::alias(out,ACL_INT32);
+  }
+  void append_quantized(const Tensor &key,const Tensor &scale,aclTensor *position){
+    if(!quantized || key.dtype()!=ACL_INT8 || key.size()!=128 || scale.dtype()!=ACL_FLOAT16 || scale.size()!=1)
+      throw std::runtime_error("quantized index key contract");
+    auto &context=*prepared::active;
+    auto append=[&](openpangu::DeviceTensor &dest,const Tensor &src,int64_t width,aclDataType dtype){
+      uint64_t bytes=0;aclOpExecutor *executor=nullptr;
+      prepared::check(prepared::query("index_cache_append",false,aclnnInplaceIndexCopyGetWorkspaceSize,
+        context.descriptor(dest.data,{int64_t(capacity)*residents,width},dtype),0,position,
+        context.descriptor(src.data(),{1,width},dtype),&bytes,&executor),"quant index append prepare");
+      prepared::check(aclnnInplaceIndexCopy(context.workspace(bytes),bytes,executor,context.stream),"quant index append");
+    };
+    append(keys,key,128,ACL_INT8);append(*scales,scale,1,ACL_FLOAT16);
+  }
+  Tensor select_quantized(const Tensor &query,const Tensor &query_scale,const Tensor &weights,aclTensor *length){
+    if(!quantized || query.dtype()!=ACL_INT8 || query.size()!=3072 || query_scale.dtype()!=ACL_FLOAT16 || query_scale.size()!=24 || weights.dtype()!=ACL_FLOAT16 || weights.size()!=24)
+      throw std::runtime_error("quantized sparse index operands");
+    auto &context=*prepared::active;
+    openpangu::DeviceTensor out({1,1,2048},ACL_INT32,4);
+    uint64_t bytes=0;aclOpExecutor *executor=nullptr;
+    prepared::check(prepared::query("aclnnAiInfraQuantLightningIndexer",false,aclnnAiInfraQuantLightningIndexerGetWorkspaceSize,
+      context.descriptor(query.data(),{1,24,128},ACL_INT8),keys.tensor,
+      context.descriptor(weights.data(),{1,24},ACL_FLOAT16),context.descriptor(query_scale.data(),{1,24},ACL_FLOAT16),
+      scales->tensor,query_length.tensor,length,table.tensor,0,0,"TND","PA_BSND",2048,3,INT64_MAX,INT64_MAX,
+      out.tensor,&bytes,&executor),"quant sparse index prepare");
+    prepared::check(aclnnAiInfraQuantLightningIndexer(context.workspace(bytes),bytes,executor,context.stream),"quant sparse index launch");
     return Tensor::alias(out,ACL_INT32);
   }
 };

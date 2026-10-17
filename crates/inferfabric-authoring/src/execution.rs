@@ -323,7 +323,12 @@ impl Node {
             }
             "index_cache_append" => {
                 let width = width()?;
-                self.schema(inputs, &[Tensor(width)], &["width", "page_tokens"])?;
+                let mut attrs=vec!["width", "page_tokens"];
+                if self.attrs.contains_key("cache_dtype") {attrs.push("cache_dtype");}
+                self.schema(inputs, &[Tensor(width)], &attrs)?;
+                if self.attrs.get("cache_dtype").is_some_and(|v|v!="int8" && v!="bf16") {
+                    return fail(self,"unsupported index-cache dtype");
+                }
                 if width != 128 || self.integer("page_tokens")? != 64 {
                     return fail(self, "unsupported index-cache storage");
                 }

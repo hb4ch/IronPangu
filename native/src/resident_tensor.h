@@ -14,6 +14,7 @@ namespace inferfabric::resident {
 inline size_t element_bytes(aclDataType t) {
   switch (t) {
   case ACL_BF16:
+  case ACL_FLOAT16:
     return 2;
   case ACL_INT8:
     return 1;

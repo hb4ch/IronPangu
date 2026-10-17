@@ -1,0 +1,8 @@
+{
+  "scope": "isolated serial diagnostic; reference mismatch remains",
+  "decode_samples": 294,
+  "tpot_mean_ms": 19.188357142857143,
+  "tpot_median_ms": 19.0825,
+  "tpot_min_ms": 18.857,
+  "tpot_max_ms": 19.794
+}

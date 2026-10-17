@@ -10,11 +10,13 @@ progress. Shared pages are reserved per request across all ranks and reclaimed
 after completion; pool size is still the compiled resident-count times capacity.
 SWA recycling, prefix snapshots and the 64K release gates below remain open.
 
-Experimental [learned-index decoder integration](validation/2026-10-17-learned-index/README.md)
-now executes the full model and passes normal native/HTTP fixtures, but its fresh
-OmniInfer C8 boundary comparison matches only 8/14 sequences. It is not promoted
-as qualified C8 parity. INT8 index keys/queries and FP16 scales/head weights are
-a known missing reference contract; the current experimental indexer is BF16.
+Experimental learned-index execution now includes explicit INT8 index queries/keys
+and FP16 scales/head weights in the [physical plan](learned-index-quantization.md).
+Its [C8 reference boundary comparison](validation/2026-10-17-learned-index-int8/README.md)
+matches 9/14 sequences, improving on the previous BF16 indexer's 8/14. Five
+divergences remain; this is not qualified C8 parity or permission to raise the
+serving context limit. The next numerical investigation must compare intermediate
+values/logits against the pinned reference and isolate those differences.
 
 Date: 2026-10-17. Status: implementation in progress; qualified capabilities and remaining release gates are distinguished below.
 
