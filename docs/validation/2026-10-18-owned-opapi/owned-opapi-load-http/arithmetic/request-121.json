@@ -1,0 +1,47 @@
+{
+  "format": "inferfabric.completed-arithmetic.v1",
+  "sequence": 121,
+  "resident": 1,
+  "history": {
+    "version": 1,
+    "spans": [
+      {
+        "start": 0,
+        "end": 4096,
+        "query_tokens": 4096,
+        "numerical_class": "uncaptured_prefill_4096_v1:sequence-batch-v1:a65cd4ae08a45a4cb3dab7422990da3272fc6b0a880909be0962cb42bb55f660:member=0"
+      },
+      {
+        "start": 4096,
+        "end": 8176,
+        "query_tokens": 4080,
+        "numerical_class": "uncaptured_prefill_4096_v1:sequence-batch-v1:e6916775c4288cdfedf2935db728d99d924e244d7966e61454f647986a7524cf:member=1"
+      },
+      {
+        "start": 8176,
+        "end": 8177,
+        "query_tokens": 1,
+        "numerical_class": "uncaptured_prefill_4096_v1:sequence-batch-v1:e6001948667c80b3fe1cc10e54046e1538fd296b64bfac6bba244a3b03c4c143:member=0"
+      },
+      {
+        "start": 8177,
+        "end": 8178,
+        "query_tokens": 1,
+        "numerical_class": "uncaptured_prefill_4096_v1:sequence-batch-v1:a9e55f2be93192e1b130ba4a53962ac2c2dfeb8c7bbfbd40c5d7442cdceb206c:member=0"
+      },
+      {
+        "start": 8178,
+        "end": 8179,
+        "query_tokens": 1,
+        "numerical_class": "uncaptured_prefill_4096_v1:sequence-batch-v1:883dc5d886eac348c5fe01eb61b0b4b04fdb8e89b6b493652032be4063226cf5:member=0"
+      },
+      {
+        "start": 8179,
+        "end": 8180,
+        "query_tokens": 1,
+        "numerical_class": "uncaptured_prefill_4096_v1:sequence-batch-v1:29a386d65c40e71dd592bcc1d23602de04a1e769c12e5e988dd36e7080a75687:member=0"
+      }
+    ]
+  },
+  "imported_tokens": 0
+}

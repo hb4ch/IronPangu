@@ -1,0 +1,70 @@
+{
+  "resource_gate_passed": false,
+  "completed_load_and_recovery_requests": 120,
+  "rss_growth_bytes_by_wave": [
+    0,
+    8146944,
+    72650752,
+    147820544,
+    152612864,
+    152973312,
+    153235456,
+    218640384,
+    219488256,
+    219664384,
+    285007872,
+    285667328,
+    285995008,
+    286224384,
+    351481856,
+    352108544,
+    352280576,
+    352358400,
+    352432128,
+    352669696,
+    352751616,
+    352784384,
+    352784384,
+    353013760
+  ],
+  "last_nine_waves_growth_bytes": 905216,
+  "rank_invariants_passed": true,
+  "ttft_by_case": {
+    "access-code-529": {
+      "requests": 18,
+      "ttft_ms_median": 2400.383976055309,
+      "ttft_ms_max": 5017.219638917595
+    },
+    "arithmetic": {
+      "requests": 18,
+      "ttft_ms_median": 348.4304004814476,
+      "ttft_ms_max": 1834.9786489270627
+    },
+    "chinese": {
+      "requests": 18,
+      "ttft_ms_median": 344.4456763099879,
+      "ttft_ms_max": 3851.3245130889118
+    },
+    "geography": {
+      "requests": 18,
+      "ttft_ms_median": 373.8259980455041,
+      "ttft_ms_max": 1988.6902952566743
+    },
+    "retrieval-8192-early": {
+      "requests": 8,
+      "ttft_ms_median": 6070.570904063061,
+      "ttft_ms_max": 7195.691498927772
+    },
+    "retrieval-8192-late": {
+      "requests": 8,
+      "ttft_ms_median": 5876.897571841255,
+      "ttft_ms_max": 6853.480476886034
+    },
+    "retrieval-8192-middle": {
+      "requests": 8,
+      "ttft_ms_median": 5345.739472424611,
+      "ttft_ms_max": 7212.649617809802
+    }
+  },
+  "scope": "HTTP TTFT under mixed load; stream chunks are not decode token TPOT; 128 MiB RSS gate failed"
+}

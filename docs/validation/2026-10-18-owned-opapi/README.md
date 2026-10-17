@@ -48,8 +48,37 @@ The small window-attention control also passed all six batch configurations
 using workspace-owned attention outputs failed at `ViewCopy` before inference;
 the external RAII output descriptors are the qualified implementation.
 
-The long-running HTTP host-resource gate is a separate requirement. Its result
-must be inspected before claiming the RSS growth issue resolved.
+## HTTP load result: resource gate still fails
+
+`owned-opapi-load-http` used the unchanged vLLM Rust 0.25.1 frontend, two active
+residents, a 4096-token budget and this backend's new frozen bundle. The runner
+completed all 24 four-client waves plus cancellation/recovery (120 exact EOS
+reference outputs). No allocation tracer or allocator tuning was enabled.
+Normal SIGTERM drain reports 171 admissions, 52 mixed ticks, 237,112 consumed
+input tokens, zero remaining shared-page bytes and closed native workers.
+All eight frozen-arena/workspace/transfer invariants still pass.
+
+RSS grew from 7,367,770,112 to 7,720,783,872 bytes: **353,013,760 bytes
+(336.7 MiB)**, exceeding the unchanged 128 MiB gate. The runner exited 1.
+Threads (631) and FDs (76) stayed fixed. The final nine waves added 905,216
+bytes; this short apparent plateau does not prove a long-term bound or justify
+changing the gate. The full curve and failed gate are retained. The earlier
+unmodified 24-wave run grew 790,700,032 bytes; different scheduling histories
+prevent attributing the entire difference to this patch.
+
+For the 24 mixed-load 8K retrieval requests, per-case median HTTP TTFT ranged
+from 5.35 to 6.07 seconds (maximum 7.21 seconds). These include queueing behind
+concurrent requests. They are not serial 64K measurements or pure decode TPOT.
+`http-result.json` contains per-case timing and invariant checks; the raw run
+directory contains output evidence, histories, audits and resource records.
+
+The additional cache-writer control passed 20 launches and 9,775,872 checked
+values across BF16/packed cache modes. Both small probes now finalize their own
+resources without resetting the device.
+
+Next distinguish bounded warmup/history growth from remaining retained metadata
+with a longer, varied serving workload before declaring host stability. The
+full serving objective, including current-library 64K qualification, remains open.
 
 Reproduction uses `scripts/qualify-sequence-serving.py --batch-trace` with the
 new `program_engine_probe`, `owned-opapi-source`, the fixture's requests/page

@@ -1,0 +1,59 @@
+{
+  "format": "inferfabric.completed-arithmetic.v1",
+  "sequence": 125,
+  "resident": 0,
+  "history": {
+    "version": 1,
+    "spans": [
+      {
+        "start": 0,
+        "end": 15,
+        "query_tokens": 15,
+        "numerical_class": "uncaptured_prefill_4096_v1:sequence-batch-v1:ef4d2e58269c00feb68dd4b0d590672e50d2cde1714fd5d145494f782a1d69ab:member=1"
+      },
+      {
+        "start": 15,
+        "end": 16,
+        "query_tokens": 1,
+        "numerical_class": "uncaptured_prefill_4096_v1:sequence-batch-v1:e402df84561273acb65ac3003999ec51baf46d162d609b7f5897d5c04d26231a:member=1"
+      },
+      {
+        "start": 16,
+        "end": 17,
+        "query_tokens": 1,
+        "numerical_class": "uncaptured_prefill_4096_v1:sequence-batch-v1:b4c654d88b1402366bac576b18e780c8bcdb36be4c19394d940f5d5320bbf441:member=1"
+      },
+      {
+        "start": 17,
+        "end": 18,
+        "query_tokens": 1,
+        "numerical_class": "uncaptured_prefill_4096_v1:sequence-batch-v1:69334eebc9b0369c3494a17960173c1a6b6531f373d5f646de284eae4f7e8b13:member=1"
+      },
+      {
+        "start": 18,
+        "end": 19,
+        "query_tokens": 1,
+        "numerical_class": "uncaptured_prefill_4096_v1:sequence-batch-v1:92d9ef28415e8d084db4b90598cbf9ec1081e32a24690ad03b0bdc6a5ed8b2d0:member=1"
+      },
+      {
+        "start": 19,
+        "end": 20,
+        "query_tokens": 1,
+        "numerical_class": "uncaptured_prefill_4096_v1:sequence-batch-v1:32c843e19ac4094f113c88153175ed5b7c2843503c2aca1d70d428692bbd4f80:member=1"
+      },
+      {
+        "start": 20,
+        "end": 21,
+        "query_tokens": 1,
+        "numerical_class": "uncaptured_prefill_4096_v1:sequence-batch-v1:2cdffd9aab16cbf3c24b7bbdfabf8aef2589973562715a6a84224e2e593b68aa:member=1"
+      },
+      {
+        "start": 21,
+        "end": 22,
+        "query_tokens": 1,
+        "numerical_class": "uncaptured_prefill_4096_v1:sequence-batch-v1:bc2367961750c3f05f4ed881a821f8d058b89ed014f31f5889be157620bc8cbe:member=1"
+      }
+    ]
+  },
+  "imported_tokens": 0
+}
