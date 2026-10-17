@@ -1,0 +1,522 @@
+[
+  {
+    "rank": 0,
+    "graphs": [
+      {
+        "name": "token_decode",
+        "replays": 352
+      },
+      {
+        "name": "packed_prefill",
+        "replays": 1264
+      }
+    ],
+    "arena": {
+      "format": "inferfabric.frozen-arena.v1",
+      "frozen": true,
+      "backend_fingerprint": "3495408223334228404",
+      "program_fingerprint": "5593600947320618038",
+      "bytes": 12452992512,
+      "slot_count": 3521
+    },
+    "workspace": {
+      "planned": true,
+      "planned_bytes": 130916352,
+      "peak_requested_bytes": 130916352,
+      "growth_allocations": 0,
+      "slot": 0
+    },
+    "transfers": {
+      "format": "inferfabric.transfer-audit.v1",
+      "activation_host_transfers": 0,
+      "rejected": 0,
+      "boundaries": [
+        {
+          "role": "control_input",
+          "h2d_calls": 105341,
+          "h2d_bytes": 32664344,
+          "d2h_calls": 0,
+          "d2h_bytes": 0
+        },
+        {
+          "role": "parameter_preparation",
+          "h2d_calls": 505,
+          "h2d_bytes": 207457084,
+          "d2h_calls": 598,
+          "d2h_bytes": 152775396
+        },
+        {
+          "role": "request_output",
+          "h2d_calls": 0,
+          "h2d_bytes": 0,
+          "d2h_calls": 1360,
+          "d2h_bytes": 48960
+        }
+      ]
+    },
+    "memory": {
+      "rank": 0,
+      "hbm_used_bytes": 33925226496,
+      "hbm_growth_bytes": 33486839808
+    },
+    "source_prepared_sha256": "5001f23659754e762b3882d309e167b93cf0a963ad517f049de1c07305e1513c",
+    "retained_steps": 1614,
+    "retained_step_device_allocations": 0,
+    "retained_step_internal_fences": 0
+  },
+  {
+    "rank": 1,
+    "graphs": [
+      {
+        "name": "token_decode",
+        "replays": 352
+      },
+      {
+        "name": "packed_prefill",
+        "replays": 1264
+      }
+    ],
+    "arena": {
+      "format": "inferfabric.frozen-arena.v1",
+      "frozen": true,
+      "backend_fingerprint": "3495408223334228404",
+      "program_fingerprint": "5593600947320618038",
+      "bytes": 12452992512,
+      "slot_count": 3521
+    },
+    "workspace": {
+      "planned": true,
+      "planned_bytes": 130916352,
+      "peak_requested_bytes": 130916352,
+      "growth_allocations": 0,
+      "slot": 0
+    },
+    "transfers": {
+      "format": "inferfabric.transfer-audit.v1",
+      "activation_host_transfers": 0,
+      "rejected": 0,
+      "boundaries": [
+        {
+          "role": "control_input",
+          "h2d_calls": 105341,
+          "h2d_bytes": 32664344,
+          "d2h_calls": 0,
+          "d2h_bytes": 0
+        },
+        {
+          "role": "parameter_preparation",
+          "h2d_calls": 505,
+          "h2d_bytes": 207457084,
+          "d2h_calls": 598,
+          "d2h_bytes": 152775396
+        },
+        {
+          "role": "request_output",
+          "h2d_calls": 0,
+          "h2d_bytes": 0,
+          "d2h_calls": 340,
+          "d2h_bytes": 21760
+        }
+      ]
+    },
+    "memory": {
+      "rank": 1,
+      "hbm_used_bytes": 33664540672,
+      "hbm_growth_bytes": 33484898304
+    },
+    "source_prepared_sha256": "5001f23659754e762b3882d309e167b93cf0a963ad517f049de1c07305e1513c",
+    "retained_steps": 1614,
+    "retained_step_device_allocations": 0,
+    "retained_step_internal_fences": 0
+  },
+  {
+    "rank": 2,
+    "graphs": [
+      {
+        "name": "token_decode",
+        "replays": 352
+      },
+      {
+        "name": "packed_prefill",
+        "replays": 1264
+      }
+    ],
+    "arena": {
+      "format": "inferfabric.frozen-arena.v1",
+      "frozen": true,
+      "backend_fingerprint": "3495408223334228404",
+      "program_fingerprint": "5593600947320618038",
+      "bytes": 12452992512,
+      "slot_count": 3521
+    },
+    "workspace": {
+      "planned": true,
+      "planned_bytes": 130916352,
+      "peak_requested_bytes": 130916352,
+      "growth_allocations": 0,
+      "slot": 0
+    },
+    "transfers": {
+      "format": "inferfabric.transfer-audit.v1",
+      "activation_host_transfers": 0,
+      "rejected": 0,
+      "boundaries": [
+        {
+          "role": "control_input",
+          "h2d_calls": 105341,
+          "h2d_bytes": 32664344,
+          "d2h_calls": 0,
+          "d2h_bytes": 0
+        },
+        {
+          "role": "parameter_preparation",
+          "h2d_calls": 505,
+          "h2d_bytes": 207457084,
+          "d2h_calls": 598,
+          "d2h_bytes": 152775396
+        },
+        {
+          "role": "request_output",
+          "h2d_calls": 0,
+          "h2d_bytes": 0,
+          "d2h_calls": 340,
+          "d2h_bytes": 21760
+        }
+      ]
+    },
+    "memory": {
+      "rank": 2,
+      "hbm_used_bytes": 33923690496,
+      "hbm_growth_bytes": 33489920000
+    },
+    "source_prepared_sha256": "5001f23659754e762b3882d309e167b93cf0a963ad517f049de1c07305e1513c",
+    "retained_steps": 1614,
+    "retained_step_device_allocations": 0,
+    "retained_step_internal_fences": 0
+  },
+  {
+    "rank": 3,
+    "graphs": [
+      {
+        "name": "token_decode",
+        "replays": 352
+      },
+      {
+        "name": "packed_prefill",
+        "replays": 1264
+      }
+    ],
+    "arena": {
+      "format": "inferfabric.frozen-arena.v1",
+      "frozen": true,
+      "backend_fingerprint": "3495408223334228404",
+      "program_fingerprint": "5593600947320618038",
+      "bytes": 12452992512,
+      "slot_count": 3521
+    },
+    "workspace": {
+      "planned": true,
+      "planned_bytes": 130916352,
+      "peak_requested_bytes": 130916352,
+      "growth_allocations": 0,
+      "slot": 0
+    },
+    "transfers": {
+      "format": "inferfabric.transfer-audit.v1",
+      "activation_host_transfers": 0,
+      "rejected": 0,
+      "boundaries": [
+        {
+          "role": "control_input",
+          "h2d_calls": 105341,
+          "h2d_bytes": 32664344,
+          "d2h_calls": 0,
+          "d2h_bytes": 0
+        },
+        {
+          "role": "parameter_preparation",
+          "h2d_calls": 505,
+          "h2d_bytes": 207457084,
+          "d2h_calls": 598,
+          "d2h_bytes": 152775396
+        },
+        {
+          "role": "request_output",
+          "h2d_calls": 0,
+          "h2d_bytes": 0,
+          "d2h_calls": 340,
+          "d2h_bytes": 21760
+        }
+      ]
+    },
+    "memory": {
+      "rank": 3,
+      "hbm_used_bytes": 33666842624,
+      "hbm_growth_bytes": 33484328960
+    },
+    "source_prepared_sha256": "5001f23659754e762b3882d309e167b93cf0a963ad517f049de1c07305e1513c",
+    "retained_steps": 1614,
+    "retained_step_device_allocations": 0,
+    "retained_step_internal_fences": 0
+  },
+  {
+    "rank": 4,
+    "graphs": [
+      {
+        "name": "token_decode",
+        "replays": 352
+      },
+      {
+        "name": "packed_prefill",
+        "replays": 1264
+      }
+    ],
+    "arena": {
+      "format": "inferfabric.frozen-arena.v1",
+      "frozen": true,
+      "backend_fingerprint": "3495408223334228404",
+      "program_fingerprint": "5593600947320618038",
+      "bytes": 12452992512,
+      "slot_count": 3521
+    },
+    "workspace": {
+      "planned": true,
+      "planned_bytes": 130916352,
+      "peak_requested_bytes": 130916352,
+      "growth_allocations": 0,
+      "slot": 0
+    },
+    "transfers": {
+      "format": "inferfabric.transfer-audit.v1",
+      "activation_host_transfers": 0,
+      "rejected": 0,
+      "boundaries": [
+        {
+          "role": "control_input",
+          "h2d_calls": 105341,
+          "h2d_bytes": 32664344,
+          "d2h_calls": 0,
+          "d2h_bytes": 0
+        },
+        {
+          "role": "parameter_preparation",
+          "h2d_calls": 505,
+          "h2d_bytes": 207457084,
+          "d2h_calls": 598,
+          "d2h_bytes": 152775396
+        },
+        {
+          "role": "request_output",
+          "h2d_calls": 0,
+          "h2d_bytes": 0,
+          "d2h_calls": 340,
+          "d2h_bytes": 21760
+        }
+      ]
+    },
+    "memory": {
+      "rank": 4,
+      "hbm_used_bytes": 33933889536,
+      "hbm_growth_bytes": 33492205568
+    },
+    "source_prepared_sha256": "5001f23659754e762b3882d309e167b93cf0a963ad517f049de1c07305e1513c",
+    "retained_steps": 1614,
+    "retained_step_device_allocations": 0,
+    "retained_step_internal_fences": 0
+  },
+  {
+    "rank": 5,
+    "graphs": [
+      {
+        "name": "token_decode",
+        "replays": 352
+      },
+      {
+        "name": "packed_prefill",
+        "replays": 1264
+      }
+    ],
+    "arena": {
+      "format": "inferfabric.frozen-arena.v1",
+      "frozen": true,
+      "backend_fingerprint": "3495408223334228404",
+      "program_fingerprint": "5593600947320618038",
+      "bytes": 12452992512,
+      "slot_count": 3521
+    },
+    "workspace": {
+      "planned": true,
+      "planned_bytes": 130916352,
+      "peak_requested_bytes": 130916352,
+      "growth_allocations": 0,
+      "slot": 0
+    },
+    "transfers": {
+      "format": "inferfabric.transfer-audit.v1",
+      "activation_host_transfers": 0,
+      "rejected": 0,
+      "boundaries": [
+        {
+          "role": "control_input",
+          "h2d_calls": 105341,
+          "h2d_bytes": 32664344,
+          "d2h_calls": 0,
+          "d2h_bytes": 0
+        },
+        {
+          "role": "parameter_preparation",
+          "h2d_calls": 505,
+          "h2d_bytes": 207457084,
+          "d2h_calls": 598,
+          "d2h_bytes": 152775396
+        },
+        {
+          "role": "request_output",
+          "h2d_calls": 0,
+          "h2d_bytes": 0,
+          "d2h_calls": 340,
+          "d2h_bytes": 21760
+        }
+      ]
+    },
+    "memory": {
+      "rank": 5,
+      "hbm_used_bytes": 33652301824,
+      "hbm_growth_bytes": 33484701696
+    },
+    "source_prepared_sha256": "5001f23659754e762b3882d309e167b93cf0a963ad517f049de1c07305e1513c",
+    "retained_steps": 1614,
+    "retained_step_device_allocations": 0,
+    "retained_step_internal_fences": 0
+  },
+  {
+    "rank": 6,
+    "graphs": [
+      {
+        "name": "token_decode",
+        "replays": 352
+      },
+      {
+        "name": "packed_prefill",
+        "replays": 1264
+      }
+    ],
+    "arena": {
+      "format": "inferfabric.frozen-arena.v1",
+      "frozen": true,
+      "backend_fingerprint": "3495408223334228404",
+      "program_fingerprint": "5593600947320618038",
+      "bytes": 12452992512,
+      "slot_count": 3521
+    },
+    "workspace": {
+      "planned": true,
+      "planned_bytes": 130916352,
+      "peak_requested_bytes": 130916352,
+      "growth_allocations": 0,
+      "slot": 0
+    },
+    "transfers": {
+      "format": "inferfabric.transfer-audit.v1",
+      "activation_host_transfers": 0,
+      "rejected": 0,
+      "boundaries": [
+        {
+          "role": "control_input",
+          "h2d_calls": 105341,
+          "h2d_bytes": 32664344,
+          "d2h_calls": 0,
+          "d2h_bytes": 0
+        },
+        {
+          "role": "parameter_preparation",
+          "h2d_calls": 505,
+          "h2d_bytes": 207457084,
+          "d2h_calls": 598,
+          "d2h_bytes": 152775396
+        },
+        {
+          "role": "request_output",
+          "h2d_calls": 0,
+          "h2d_bytes": 0,
+          "d2h_calls": 340,
+          "d2h_bytes": 21760
+        }
+      ]
+    },
+    "memory": {
+      "rank": 6,
+      "hbm_used_bytes": 33918918656,
+      "hbm_growth_bytes": 33492123648
+    },
+    "source_prepared_sha256": "5001f23659754e762b3882d309e167b93cf0a963ad517f049de1c07305e1513c",
+    "retained_steps": 1614,
+    "retained_step_device_allocations": 0,
+    "retained_step_internal_fences": 0
+  },
+  {
+    "rank": 7,
+    "graphs": [
+      {
+        "name": "token_decode",
+        "replays": 352
+      },
+      {
+        "name": "packed_prefill",
+        "replays": 1264
+      }
+    ],
+    "arena": {
+      "format": "inferfabric.frozen-arena.v1",
+      "frozen": true,
+      "backend_fingerprint": "3495408223334228404",
+      "program_fingerprint": "5593600947320618038",
+      "bytes": 12452992512,
+      "slot_count": 3521
+    },
+    "workspace": {
+      "planned": true,
+      "planned_bytes": 130916352,
+      "peak_requested_bytes": 130916352,
+      "growth_allocations": 0,
+      "slot": 0
+    },
+    "transfers": {
+      "format": "inferfabric.transfer-audit.v1",
+      "activation_host_transfers": 0,
+      "rejected": 0,
+      "boundaries": [
+        {
+          "role": "control_input",
+          "h2d_calls": 105341,
+          "h2d_bytes": 32664344,
+          "d2h_calls": 0,
+          "d2h_bytes": 0
+        },
+        {
+          "role": "parameter_preparation",
+          "h2d_calls": 505,
+          "h2d_bytes": 207457084,
+          "d2h_calls": 598,
+          "d2h_bytes": 152775396
+        },
+        {
+          "role": "request_output",
+          "h2d_calls": 0,
+          "h2d_bytes": 0,
+          "d2h_calls": 340,
+          "d2h_bytes": 21760
+        }
+      ]
+    },
+    "memory": {
+      "rank": 7,
+      "hbm_used_bytes": 33666043904,
+      "hbm_growth_bytes": 33482690560
+    },
+    "source_prepared_sha256": "5001f23659754e762b3882d309e167b93cf0a963ad517f049de1c07305e1513c",
+    "retained_steps": 1614,
+    "retained_step_device_allocations": 0,
+    "retained_step_internal_fences": 0
+  }
+]

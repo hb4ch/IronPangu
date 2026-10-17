@@ -222,6 +222,8 @@ pub fn lower(graph: &Graph, inventory: Option<&Inventory>) -> Result<Program> {
             Type::Experts(w) => (3, w),
             Type::Cache => (4, 0),
             Type::Quantized(w) => (5, w),
+            Type::Indices(w) => (8, w),
+            Type::IndexCache(w) => (9, w),
         };
         let dtype = if kind != 0 {
             "opaque".into()
@@ -503,15 +505,25 @@ pub fn lower(graph: &Graph, inventory: Option<&Inventory>) -> Result<Program> {
             outputs.push(result);
             continue;
         }
+        if n.op == "sparse_index" {
+            let meta=if let Some(id)=p.instructions.iter().position(|i|i.op=="packed_attention_metadata") { id } else {
+                emit(&mut p,logical,&n.name,"packed_attention_metadata",vec![],BTreeMap::new(),7,0,"opaque")
+            };
+            inputs.push(meta);
+            let out=emit(&mut p,logical,&n.name,"sparse_index",inputs,n.attrs.clone(),8,2048,"opaque");
+            outputs.push(out);continue;
+        }
         if n.op == "latent_attention" && p.instructions[inputs[1]].op=="cache_c8_norm_rope_append" {
             let meta=if let Some(id)=p.instructions.iter().position(|i|i.op=="packed_attention_metadata") { id } else {
                 emit(&mut p,logical,&n.name,"packed_attention_metadata",vec![],BTreeMap::new(),7,0,"opaque")
             };
             inputs.push(meta);
-            let out=emit(&mut p,logical,&n.name,"packed_latent_attention",inputs,n.attrs.clone(),0,3072,"bf16");
+            let op=if n.attrs["selection"]=="learned_indices" {"indexed_packed_attention"} else {"packed_latent_attention"};
+            let out=emit(&mut p,logical,&n.name,op,inputs,n.attrs.clone(),0,3072,"bf16");
             outputs.push(out);continue;
         }
         if n.op == "latent_attention" {
+            if n.attrs["selection"]=="learned_indices" {return Err(invalid("learned-index attention currently requires packed C8 cache"));}
             let meta = if let Some(id) = attention_metadata {
                 id
             } else {
@@ -698,7 +710,7 @@ impl Program {
         }
         let mut names = std::collections::BTreeSet::new();
         for (id, i) in self.instructions.iter().enumerate() {
-            if i.kind > 7
+            if i.kind > 9
                 || (i.width > 200000 && !(i.op == "cache_dequantize" && i.width == self.max_context.div_ceil(16)*16*576))
                 || i.inputs.len() > 8
                 || i.attrs.len() > 16
@@ -779,7 +791,7 @@ impl Program {
 /// A vendor API may enqueue several device kernels; do not label it a measured launch.
 pub fn recipes(p: &Program, graph: &Graph) -> Vec<serde_json::Value> {
     let cache_controls: BTreeMap<_, _> = p.instructions.iter()
-        .filter(|i| matches!(i.op.as_str(), "cache_c8_norm_rope_append" | "cache_norm_rope_append" | "cache_append"))
+        .filter(|i| matches!(i.op.as_str(), "cache_c8_norm_rope_append" | "cache_norm_rope_append" | "cache_append" | "index_cache_append"))
         .enumerate().map(|(slot, i)| (i.name.as_str(), slot * 16 * p.prefill_tokens)).collect();
     p.instructions.iter().map(|i| {
         let n = &graph.nodes[i.logical_node];
@@ -830,7 +842,9 @@ pub fn recipes(p: &Program, graph: &Graph) -> Vec<serde_json::Value> {
             "sink_normalize" => (&["aclnnRmsNorm", "aclrtMemcpyAsync"], "initialization only after first preparation", "persistent normalized sink"),
             "packed_attention_metadata" => (&["if_packed_attention_metadata"], "device position -> causal INT32 indices and sequence length", "shared persistent indices and length; no activation transfer"),
             "cache_c8_norm_rope_append" => (&["aclnnAiInfraKvRmsNormRopeCache"], "fused RMSNorm + BF16 rotary + pertile128 INT8 latent quantization; 4 FP32 scales", "packed PA_BSND rows: 512 INT8 bytes + 64 BF16 rotary + 4 FP32 scales = 656 bytes; no BF16 mirror"),
-            "packed_latent_attention" => (&["aclnnAiInfraKvQuantSparseFlashAttention"], "direct packed C8 attention: quant modes 2, scale repo 1, tile 128, rope 64; BF16 learned sinks", "reads packed cache directly; no full-cache dequantization buffer"),
+            "index_cache_append" => (&["aclnnInplaceIndexCopy"], "BF16 index key append at device physical row; page size 64", "persistent paged BF16 keys; exclusive request ownership"),
+            "sparse_index" => (&["aclnnLightningIndexerEnhance"], "24-head BF16 weighted-ReLU top-2048; causal device lengths", "INT32 logical indices; shared consumers retain the SSA value"),
+            "indexed_packed_attention" | "packed_latent_attention" => (&["aclnnAiInfraKvQuantSparseFlashAttention"], "direct packed C8 attention: quant modes 2, scale repo 1, tile 128, rope 64; BF16 learned sinks", "reads packed cache directly; no full-cache dequantization buffer"),
             "cache_normalize" => (&["aclnnAiInfraKvRmsNormRopeCache"], "BF16 RMS normalization and rotary encoding into temporary row", "temporary 16-row vendor output; only first row consumed"),
             "cache_quantize_append" => (&["if_cache_quantize"], "explicit symmetric per-token-head quantization; ties away from zero; signed INT4 low nibble first", "persistent packed payload + FP32 scales; BF16 learned sinks remain constants"),
             "cache_dequantize" => (&["if_cache_dequantize"], "explicit packed cache decode to BF16; future rows zeroed; all device resident", "leased BF16 attention scratch, reusable across layers; no persistent BF16 cache mirror"),
@@ -875,6 +889,10 @@ pub fn recipes(p: &Program, graph: &Graph) -> Vec<serde_json::Value> {
             5=>vec![serde_json::json!({"name":"quantized","dtype":"int8","shape":[1,i.width]}),serde_json::json!({"name":"scales","dtype":"f32","shape":[1]})],
             6=>vec![serde_json::json!({"name":"quantized_rows","dtype":"int8","shape":[8,i.width]}),serde_json::json!({"name":"scales","dtype":"f32","shape":[8]}),serde_json::json!({"name":"groups","dtype":"int64","shape":[32]}),serde_json::json!({"name":"inverse_indices","dtype":"int32","shape":[8]})],
             7=>vec![serde_json::json!({"name":"metadata_effect","dtype":"int32","shape":[1024]})],
+            8=>vec![serde_json::json!({"name":"selected_indices","dtype":"int32","shape":[1,1,i.width],"addressing":"logical_token","sharing":"SSA consumers retain the device value"})],
+            9=>vec![serde_json::json!({"name":"index_cache","dtype":"bf16","shape":[p.resident_sequences*p.max_context.div_ceil(64),64,1,i.width]}),
+                serde_json::json!({"name":"device_block_table","dtype":"int32","shape":[1,p.max_context.div_ceil(64)],"role":"control_input","ownership":if p.shared_pages {"shared exclusive page reservations"} else {"fixed resident partitions"}}),
+                serde_json::json!({"name":"physical_append_position","dtype":"int32","shape":[1],"page_tokens":64,"role":"control_input","control_bank_bytes":cache_controls.len()*16*p.prefill_tokens,"byte_offset":cache_controls[i.name.as_str()]+8})],
             _=>vec![],
         };
         if matches!(i.op.as_str(), "cache_c8_norm_rope_append" | "cache_norm_rope_append" | "cache_append") {
@@ -902,7 +920,7 @@ pub fn recipes(p: &Program, graph: &Graph) -> Vec<serde_json::Value> {
                 if let Some(mut shape)=shape {
                     if i.kind==0 && name=="value" && i.op!="sink_normalize" {
                         shape.insert(0,serde_json::json!(p.prefill_tokens));
-                    } else if matches!(name,"expert_ids"|"scores"|"packed_rows"|"inverse_indices"|"quantized"|"scales"|"quantized_rows"|"causal_indices"|"kv_length"|"metadata_effect"|"physical_append_position")
+                    } else if matches!(name,"selected_indices"|"expert_ids"|"scores"|"packed_rows"|"inverse_indices"|"quantized"|"scales"|"quantized_rows"|"causal_indices"|"kv_length"|"metadata_effect"|"physical_append_position")
                         && let Some(n)=shape.first().and_then(serde_json::Value::as_u64) {
                         shape[0]=serde_json::json!(n*p.prefill_tokens as u64);
                     }
@@ -910,8 +928,8 @@ pub fn recipes(p: &Program, graph: &Graph) -> Vec<serde_json::Value> {
                 }
             }
         }
-        let per_query = matches!(i.op.as_str(), "mome"|"mome_inplace"|"query_project"|"query_rotary_extract"|"rope"|"rope_bf16"|"rope_f32"|"mla_query"|"mla_value"|"cache_append"|"cache_norm_rope_append"|"cache_c8_norm_rope_append"|"latent_attention"|"packed_latent_attention"|"attention_metadata"|"packed_attention_metadata");
-        let assembly = matches!(i.op.as_str(), "repeat"|"slice"|"query_project"|"query_rotary_extract"|"rope"|"rope_bf16"|"rope_f32"|"mla_query"|"mla_value"|"mome"|"latent_attention"|"packed_latent_attention");
+        let per_query = matches!(i.op.as_str(), "mome"|"mome_inplace"|"query_project"|"query_rotary_extract"|"rope"|"rope_bf16"|"rope_f32"|"mla_query"|"mla_value"|"index_cache_append"|"cache_append"|"cache_norm_rope_append"|"cache_c8_norm_rope_append"|"latent_attention"|"indexed_packed_attention"|"sparse_index"|"packed_latent_attention"|"attention_metadata"|"packed_attention_metadata");
+        let assembly = matches!(i.op.as_str(), "repeat"|"slice"|"query_project"|"query_rotary_extract"|"rope"|"rope_bf16"|"rope_f32"|"mla_query"|"mla_value"|"mome"|"latent_attention"|"indexed_packed_attention"|"sparse_index"|"packed_latent_attention");
         let packed = if p.prefill_tokens > 1 { serde_json::json!({
             "tokens":p.prefill_tokens,
             "schedule":if i.op=="sink_normalize" {"shared initialization constant"} else if per_query {"ordered per-query calls"} else {"token matrix"},

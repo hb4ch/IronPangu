@@ -28,6 +28,8 @@ const PRIMITIVES: &[&str] = &[
     "cache_append",
     "cache_norm_rope_append",
     "latent_attention",
+    "index_cache_append",
+    "sparse_index",
     "swiglu",
     "router",
     "expert_linear",

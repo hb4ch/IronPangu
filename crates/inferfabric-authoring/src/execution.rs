@@ -45,6 +45,8 @@ pub enum Type {
     Routes,
     Experts(usize),
     Cache,
+    IndexCache(usize),
+    Indices(usize),
 }
 fn fail<T>(n: &Node, message: &str) -> Result<T> {
     Err(invalid(format!("{} ({}): {message}", n.name, n.op)))
@@ -319,15 +321,35 @@ impl Node {
                 }
                 Cache
             }
+            "index_cache_append" => {
+                let width = width()?;
+                self.schema(inputs, &[Tensor(width)], &["width", "page_tokens"])?;
+                if width != 128 || self.integer("page_tokens")? != 64 {
+                    return fail(self, "unsupported index-cache storage");
+                }
+                IndexCache(width)
+            }
+            "sparse_index" => {
+                self.schema(inputs, &[Tensor(24 * 128), Tensor(24), IndexCache(128)],
+                    &["heads", "head_dim", "topk", "scoring"])?;
+                if self.integer("heads")? != 24 || self.integer("head_dim")? != 128 ||
+                    self.integer("topk")? != 2048 || self.attrs["scoring"] != "weighted_relu" {
+                    return fail(self, "unsupported sparse index contract");
+                }
+                Indices(2048)
+            }
             "latent_attention" => {
+                let learned = self.attrs.get("selection").map(String::as_str) == Some("learned_indices");
+                let expected = if learned { vec![Tensor(3456), Cache, Indices(2048)] } else { vec![Tensor(3456), Cache] };
                 self.schema(
                     inputs,
-                    &[Tensor(3456), Cache],
+                    &expected,
                     &["scale_dim", "window", "selection"],
                 )?;
                 if self.integer("scale_dim")? != 192
                     || ![512, 2048].contains(&self.integer("window")?)
-                    || self.attrs["selection"] != "all_causal_within_window"
+                    || (!learned && self.attrs["selection"] != "all_causal_within_window")
+                    || (learned && self.integer("window")? != 2048)
                 {
                     return fail(self, "unsupported attention semantics");
                 }
@@ -491,6 +513,12 @@ impl Graph {
             if *t == Type::Cache && (uses.len() != 1 || uses[0].op != "latent_attention") {
                 return Err(invalid("cache handle must feed exactly one attention"));
             }
+            if matches!(t, Type::IndexCache(_)) && (uses.len() != 1 || uses[0].op != "sparse_index") {
+                return Err(invalid("index cache must feed exactly one selector"));
+            }
+            if matches!(t, Type::Indices(_)) && uses.iter().any(|n| n.op != "latent_attention" || n.attrs.get("selection").map(String::as_str) != Some("learned_indices")) {
+                return Err(invalid("selected indices require explicit learned attention consumers"));
+            }
             if *t == Type::HyperConnection {
                 let pre = self.nodes[i].op == "mhc_pre";
                 if uses.iter().filter(|n| n.op == "mhc_input").count() != 1
@@ -524,7 +552,7 @@ impl Graph {
                 Type::Routes => (2, 0),
                 Type::Experts(w) => (3, w),
                 Type::Cache => (4, 0),
-                Type::Quantized(_) => return Err(invalid("quantized values require physical program encoding")),
+                Type::Quantized(_) | Type::Indices(_) | Type::IndexCache(_) => return Err(invalid("typed storage values require physical program encoding")),
             };
             u32_(&mut b, tag);
             u32_(&mut b, width);

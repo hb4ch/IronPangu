@@ -58,6 +58,8 @@ pub fn render_with_program(
             Type::HyperConnection => serde_json::json!({"kind":"hyperconnection"}),
             Type::Routes => serde_json::json!({"kind":"routes"}),
             Type::Cache => serde_json::json!({"kind":"cache"}),
+            Type::IndexCache(w) => serde_json::json!({"kind":"index_cache", "width":w,"dtype":"bf16"}),
+            Type::Indices(w) => serde_json::json!({"kind":"selected_indices", "width":w,"dtype":"int32","addressing":"logical_token"}),
             Type::Quantized(w) => serde_json::json!({"kind":"quantized", "width":w,"dtype":"int8","scale_dtype":"f32"}),
         })
         .collect();

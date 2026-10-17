@@ -260,7 +260,7 @@ extern "C" int inferfabric_program_bind_state(void *p,uint32_t rank,uint32_t log
     auto &e=engine(p);
     const inferfabric::execution::Node *found=nullptr;
     for(const auto &n:e.program.nodes)
-      if(n.logical_node==logical_node && (n.op=="cache_append" || n.op=="cache_norm_rope_append" || n.op=="cache_c8_norm_rope_append")) {
+      if(n.logical_node==logical_node && (n.op=="index_cache_append" || n.op=="cache_append" || n.op=="cache_norm_rope_append" || n.op=="cache_c8_norm_rope_append")) {
         if(found)throw std::runtime_error("ambiguous cache state binding");
         found=&n;
       }

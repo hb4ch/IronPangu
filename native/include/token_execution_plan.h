@@ -87,7 +87,7 @@ struct Plan {
       n.op = str();
       if ((p.resident_sequences > 1 || p.prefill_tokens > 1 || p.shared_pages) && n.op == "cache_quantize_append")
         throw std::runtime_error("resident slots require paged cache operators");
-      if (n.kind > (p.physical ? 7u : 4u) || (n.width > 200000 && !(p.physical && n.op=="cache_dequantize" && n.width==((p.context+15)/16)*16*576)) || !names.insert(n.name).second)
+      if (n.kind > (p.physical ? 9u : 4u) || (n.width > 200000 && !(p.physical && n.op=="cache_dequantize" && n.width==((p.context+15)/16)*16*576)) || !names.insert(n.name).second)
         throw std::runtime_error("invalid node descriptor");
       auto inputs = number();
       if (inputs > 8)

@@ -11,6 +11,7 @@
 #include "prepared_weight_views.h"
 #include "resident_tensor.h"
 #include "resident_rotary.h"
+#include "resident_index.h"
 #include "resident_transfer.h"
 #include <aclnn_ai_infra_fused_causal_conv1d.h>
 #include <aclnn_ai_infra_kv_rms_norm_rope_cache.h>
@@ -119,6 +120,7 @@ struct Decoder {
   std::map<std::pair<std::string, std::string>, std::unique_ptr<DeviceTensor>> paired_projections;
   std::map<std::string, std::unique_ptr<MomeState>> mome_states;
   std::map<std::string, std::unique_ptr<AttentionState>> attention_states;
+  std::map<std::string, std::unique_ptr<resident::IndexState>> index_states;
   std::map<std::string, size_t> cache_control_offsets;
   std::unique_ptr<DeviceTensor> cache_controls;
   std::unique_ptr<DeviceTensor> resident_index;
@@ -163,7 +165,7 @@ struct Decoder {
     resident_index=std::make_unique<DeviceTensor>(std::vector<int64_t>{1},ACL_INT32,4);
     resident::control_upload(*resident_index,std::vector<int32_t>{0});
     for (const auto &node : program.nodes)
-      if (node.op == "cache_append" || node.op == "cache_norm_rope_append" || node.op == "cache_c8_norm_rope_append") {
+      if (node.op == "index_cache_append" || node.op == "cache_append" || node.op == "cache_norm_rope_append" || node.op == "cache_c8_norm_rope_append") {
         auto offset=cache_control_offsets.size()*16*program.prefill_tokens;
         if (!cache_control_offsets.emplace(node.name,offset).second)
           throw std::runtime_error("duplicate cache control binding");
@@ -768,7 +770,7 @@ struct Decoder {
     throw std::runtime_error("packed attention metadata kernel not built");
 #endif
   }
-  V attend_packed(const V &query,const std::string &name) {
+  V attend_packed(const V &query,const std::string &name, const V *selected=nullptr) {
     auto &state=*attention_states.at(name);
     if(!state.packed_c8 || !packed_indices || query.dtype()!=ACL_BF16 || query.size()!=3456)
       throw std::runtime_error("packed attention contract");
@@ -776,9 +778,11 @@ struct Decoder {
     auto *sink_values=weight_views.get(state.sink.data,128*576,{128,1,512},{576,576,1},ACL_BF16);
     char layout[]="TND",cache_layout[]="PA_BSND";
     uint64_t bytes=0;aclOpExecutor *e=nullptr;
+    if(selected && (selected->dtype()!=ACL_INT32 || selected->size()!=2048))throw std::runtime_error("selected index storage");
+    auto *indices=selected?execution.descriptor(selected->data(),{1,1,2048},ACL_INT32):control_row(*packed_indices,{1,1,512});
     checked(prepared::query("aclnnAiInfraKvQuantSparseFlashAttention",false,
         aclnnAiInfraKvQuantSparseFlashAttentionGetWorkspaceSize,
-        q.t,state.key.tensor,state.key.tensor,control_row(*packed_indices,{1,1,512}),nullptr,nullptr,
+        q.t,state.key.tensor,state.key.tensor,indices,nullptr,nullptr,
         state.table.tensor,state.qlen.tensor,control_row(*packed_length),state.sink.tensor,sink_values,
         1/std::sqrt(192.0),2,2,1,layout,cache_layout,3,INT64_MAX,INT64_MAX,2,1,128,64,
         state.out.tensor,&bytes,&e),"packed C8 attention prepare");
@@ -1232,6 +1236,8 @@ struct Decoder {
       for(const auto &entry:cache_control_offsets) {
         auto state=attention_states.find(entry.first);
         uint64_t physical=state==attention_states.end()?uint64_t(position):state->second->page_binding.append(position);
+        auto index=index_states.find(entry.first);
+        if(index!=index_states.end())physical=index->second->pages.append(position);
         if(physical>INT32_MAX)throw std::runtime_error("physical append position overflow");
         int64_t wide=int64_t(physical);int32_t narrow=int32_t(physical);
         std::memcpy(cache_control_host.data()+entry.second+row*16,&wide,sizeof(wide));
@@ -1307,6 +1313,7 @@ struct Decoder {
   }
   // No model-specific layer traversal: only instantiated state bindings are reset.
   void reset_request() {
+    for(auto &entry:index_states)execution.zero(entry.second->keys.data,entry.second->keys.bytes);
     for (auto &entry : mome_states)
       execution.zero(entry.second->state.data, entry.second->state.bytes);
     for (auto &entry : attention_states) {
@@ -1323,6 +1330,7 @@ struct Decoder {
     if(slot>=program.resident_sequences || last_position < -1 || last_position>=int(program.context))
       throw std::runtime_error("resident selection bounds");
     if(slot!=active_resident) {
+      for(auto &entry:index_states)entry.second->select(slot);
       resident::control_upload(*resident_index,std::vector<int32_t>{int32_t(slot)});
       for(auto &entry:attention_states) {
         auto &state=*entry.second;
@@ -1335,6 +1343,7 @@ struct Decoder {
   }
   void reset_resident(uint32_t slot) {
     if(slot>=program.resident_sequences)throw std::runtime_error("resident reset bounds");
+    for(auto &entry:index_states)entry.second->clear(slot,slot==active_resident);
     for(auto &entry:mome_states) {
       auto &state=entry.second->state;
       auto bytes=state.bytes/program.resident_sequences;
@@ -1369,6 +1378,7 @@ struct Decoder {
   // with no cache ownership; the external allocator supplies request reservations.
   void release_preparation_pages() {
     if(!program.shared_pages)return;
+    for(auto &entry:index_states){for(uint32_t slot=0;slot<program.resident_sequences;++slot)entry.second->pages.release(slot);entry.second->upload_table();}
     for(auto &entry:attention_states) {
       auto &state=*entry.second;
       for(uint32_t slot=0;slot<program.resident_sequences;++slot)state.page_binding.release(slot);
@@ -1378,6 +1388,8 @@ struct Decoder {
   }
   void bind_cache_pages(const std::string &name, const std::vector<int32_t> &pages) {
     if (current_position != -1) throw std::runtime_error("page binding requires a reset request");
+    auto index=index_states.find(name);
+    if(index!=index_states.end()){index->second->bind(pages);return;}
     auto found = attention_states.find(name);
     if (found == attention_states.end()) throw std::runtime_error("unknown cache state binding");
     auto &state = *found->second;

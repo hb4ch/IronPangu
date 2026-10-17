@@ -25,6 +25,11 @@ pub fn envelope(graph: &Graph, ranks: usize) -> Result<(Vec<Variant>, Vec<State>
     let mut states = Vec::new();
     for (id, n) in graph.nodes.iter().enumerate() {
         let storage = match n.op.as_str() {
+            "index_cache_append" => Storage::Pages {
+                page_tokens: n.integer("page_tokens")? as u32,
+                row_bytes: n.integer("width")? as u64 * 2,
+                encoding: "bf16_index_keys".into(),
+            },
             "mome" => {
                 let Type::Tensor(width) = types[n.inputs[0]] else {
                     return Err(invalid("convolution input"));
@@ -83,6 +88,7 @@ pub fn envelope(graph: &Graph, ranks: usize) -> Result<(Vec<Variant>, Vec<State>
                 .unwrap_or("bf16")
             {
                 _ if n.op == "mome" => context,
+                _ if n.op == "index_cache_append" => context.div_ceil(64)*64,
                 "bf16" => 512,
                 "int8_ds_mla" => context.div_ceil(32) * 32,
                 _ => context.div_ceil(16) * 16,

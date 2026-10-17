@@ -1,0 +1,1564 @@
+{
+  "serial_packed_interleaved_tokens": 336,
+  "serial_packed_interleaved_exact": true,
+  "independent_reference_sequences": 14,
+  "independent_reference_sequences_exact": 8,
+  "full_reference_qualification": false,
+  "reference_contract_gap": "Native uses BF16 index keys/query; Omni C8 uses INT8 index keys/query and FP16 scales/head weights. This is a known difference, not proof of the cause of all divergences.",
+  "cases": [
+    {
+      "repeat": 0,
+      "case": "serial_layout_oracle_1",
+      "prompt_tokens": 1,
+      "native_output_ids": [
+        220,
+        17,
+        15,
+        15,
+        15,
+        15,
+        15,
+        15
+      ],
+      "previous_output_ids": [
+        220,
+        17,
+        15,
+        15,
+        15,
+        15,
+        15,
+        15
+      ],
+      "reference_output_ids": [
+        220,
+        17,
+        15,
+        15,
+        15,
+        15,
+        15,
+        15
+      ],
+      "matches_previous": true,
+      "matches_omni_c8": true
+    },
+    {
+      "repeat": 0,
+      "case": "serial_layout_oracle_15",
+      "prompt_tokens": 15,
+      "native_output_ids": [
+        1114,
+        11786,
+        336,
+        17320,
+        405,
+        21072,
+        13,
+        148902
+      ],
+      "previous_output_ids": [
+        1114,
+        11786,
+        336,
+        17320,
+        405,
+        21072,
+        13,
+        148902
+      ],
+      "reference_output_ids": [
+        1114,
+        11786,
+        336,
+        17320,
+        405,
+        21072,
+        13,
+        148902
+      ],
+      "matches_previous": true,
+      "matches_omni_c8": true
+    },
+    {
+      "repeat": 0,
+      "case": "serial_layout_oracle_16",
+      "prompt_tokens": 16,
+      "native_output_ids": [
+        198,
+        3481,
+        715,
+        82070,
+        11239,
+        8255,
+        380,
+        844
+      ],
+      "previous_output_ids": [
+        198,
+        3481,
+        715,
+        82070,
+        11239,
+        8255,
+        380,
+        844
+      ],
+      "reference_output_ids": [
+        198,
+        3481,
+        715,
+        82070,
+        11239,
+        8255,
+        380,
+        844
+      ],
+      "matches_previous": true,
+      "matches_omni_c8": true
+    },
+    {
+      "repeat": 0,
+      "case": "serial_layout_oracle_17",
+      "prompt_tokens": 17,
+      "native_output_ids": [
+        16,
+        30374,
+        220,
+        34755,
+        3711,
+        101744,
+        15580,
+        0
+      ],
+      "previous_output_ids": [
+        16,
+        30374,
+        148906,
+        16,
+        520,
+        220,
+        16,
+        292
+      ],
+      "reference_output_ids": [
+        16,
+        30374,
+        220,
+        1687,
+        400,
+        1963,
+        76,
+        23212
+      ],
+      "matches_previous": false,
+      "matches_omni_c8": false
+    },
+    {
+      "repeat": 0,
+      "case": "serial_layout_oracle_31",
+      "prompt_tokens": 31,
+      "native_output_ids": [
+        1344,
+        198,
+        6884,
+        405,
+        287,
+        11786,
+        336,
+        17320
+      ],
+      "previous_output_ids": [
+        1344,
+        198,
+        6884,
+        405,
+        287,
+        11786,
+        336,
+        17320
+      ],
+      "reference_output_ids": [
+        1344,
+        25,
+        4193,
+        405,
+        287,
+        11786,
+        336,
+        17320
+      ],
+      "matches_previous": true,
+      "matches_omni_c8": false
+    },
+    {
+      "repeat": 0,
+      "case": "serial_layout_oracle_32",
+      "prompt_tokens": 32,
+      "native_output_ids": [
+        715,
+        82070,
+        11239,
+        8255,
+        380,
+        88047,
+        55245,
+        380
+      ],
+      "previous_output_ids": [
+        715,
+        82070,
+        11239,
+        8255,
+        380,
+        88047,
+        55245,
+        380
+      ],
+      "reference_output_ids": [
+        715,
+        82070,
+        11239,
+        8255,
+        380,
+        88047,
+        55245,
+        198
+      ],
+      "matches_previous": true,
+      "matches_omni_c8": false
+    },
+    {
+      "repeat": 0,
+      "case": "serial_layout_oracle_33",
+      "prompt_tokens": 33,
+      "native_output_ids": [
+        98390,
+        297,
+        39,
+        4086,
+        11,
+        287,
+        1579,
+        1061
+      ],
+      "previous_output_ids": [
+        98390,
+        198,
+        75659,
+        11,
+        287,
+        1579,
+        405,
+        23212
+      ],
+      "reference_output_ids": [
+        98390,
+        198,
+        6337,
+        11,
+        287,
+        1579,
+        405,
+        23212
+      ],
+      "matches_previous": false,
+      "matches_omni_c8": false
+    },
+    {
+      "repeat": 0,
+      "case": "serial_layout_oracle_63",
+      "prompt_tokens": 63,
+      "native_output_ids": [
+        6884,
+        405,
+        287,
+        11786,
+        336,
+        17320,
+        30,
+        148906
+      ],
+      "previous_output_ids": [
+        6884,
+        405,
+        287,
+        11786,
+        336,
+        17320,
+        30,
+        148906
+      ],
+      "reference_output_ids": [
+        6884,
+        405,
+        287,
+        11786,
+        336,
+        17320,
+        30,
+        148906
+      ],
+      "matches_previous": true,
+      "matches_omni_c8": true
+    },
+    {
+      "repeat": 0,
+      "case": "serial_layout_oracle_64",
+      "prompt_tokens": 64,
+      "native_output_ids": [
+        380,
+        148906,
+        8255,
+        541,
+        33949,
+        65826,
+        305,
+        13209
+      ],
+      "previous_output_ids": [
+        380,
+        148906,
+        8255,
+        541,
+        17721,
+        48532,
+        1603,
+        305
+      ],
+      "reference_output_ids": [
+        380,
+        148906,
+        8255,
+        541,
+        33949,
+        65826,
+        305,
+        13209
+      ],
+      "matches_previous": false,
+      "matches_omni_c8": true
+    },
+    {
+      "repeat": 0,
+      "case": "serial_layout_oracle_65",
+      "prompt_tokens": 65,
+      "native_output_ids": [
+        16,
+        30374,
+        148902,
+        148900,
+        1114,
+        1297,
+        336,
+        220
+      ],
+      "previous_output_ids": [
+        16,
+        30374,
+        148902,
+        148900,
+        297,
+        16,
+        520,
+        220
+      ],
+      "reference_output_ids": [
+        16,
+        30374,
+        148902,
+        148900,
+        297,
+        16,
+        10,
+        16
+      ],
+      "matches_previous": false,
+      "matches_omni_c8": false
+    },
+    {
+      "repeat": 0,
+      "case": "serial_layout_oracle_127",
+      "prompt_tokens": 127,
+      "native_output_ids": [
+        336,
+        17320,
+        30,
+        148902,
+        148900,
+        1114,
+        11786,
+        336
+      ],
+      "previous_output_ids": [
+        336,
+        17320,
+        30,
+        148902,
+        148900,
+        1114,
+        11786,
+        336
+      ],
+      "reference_output_ids": [
+        336,
+        17320,
+        30,
+        148902,
+        148900,
+        1114,
+        11786,
+        336
+      ],
+      "matches_previous": true,
+      "matches_omni_c8": true
+    },
+    {
+      "repeat": 0,
+      "case": "serial_layout_oracle_255",
+      "prompt_tokens": 255,
+      "native_output_ids": [
+        3481,
+        715,
+        82070,
+        11239,
+        8255,
+        380,
+        148902,
+        148900
+      ],
+      "previous_output_ids": [
+        3481,
+        715,
+        82070,
+        11239,
+        8255,
+        380,
+        148902,
+        148900
+      ],
+      "reference_output_ids": [
+        3481,
+        715,
+        82070,
+        11239,
+        8255,
+        380,
+        148902,
+        148900
+      ],
+      "matches_previous": true,
+      "matches_omni_c8": true
+    },
+    {
+      "repeat": 0,
+      "case": "serial_layout_oracle_480",
+      "prompt_tokens": 480,
+      "native_output_ids": [
+        148902,
+        148900,
+        16,
+        10,
+        16,
+        28,
+        17,
+        148902
+      ],
+      "previous_output_ids": [
+        148902,
+        148900,
+        148902,
+        148900,
+        148902,
+        148900,
+        148902,
+        148900
+      ],
+      "reference_output_ids": [
+        148902,
+        148900,
+        148902,
+        148900,
+        148902,
+        148900,
+        148902,
+        148902
+      ],
+      "matches_previous": false,
+      "matches_omni_c8": false
+    },
+    {
+      "repeat": 0,
+      "case": "serial_layout_oracle_504",
+      "prompt_tokens": 504,
+      "native_output_ids": [
+        30,
+        148902,
+        148900,
+        1114,
+        11786,
+        336,
+        17320,
+        405
+      ],
+      "previous_output_ids": [
+        30,
+        148902,
+        148900,
+        1114,
+        11786,
+        336,
+        17320,
+        405
+      ],
+      "reference_output_ids": [
+        30,
+        148902,
+        148900,
+        1114,
+        11786,
+        336,
+        17320,
+        405
+      ],
+      "matches_previous": true,
+      "matches_omni_c8": true
+    },
+    {
+      "repeat": 1,
+      "case": "serial_layout_oracle_1",
+      "prompt_tokens": 1,
+      "native_output_ids": [
+        220,
+        17,
+        15,
+        15,
+        15,
+        15,
+        15,
+        15
+      ],
+      "previous_output_ids": [
+        220,
+        17,
+        15,
+        15,
+        15,
+        15,
+        15,
+        15
+      ],
+      "reference_output_ids": [
+        220,
+        17,
+        15,
+        15,
+        15,
+        15,
+        15,
+        15
+      ],
+      "matches_previous": true,
+      "matches_omni_c8": true
+    },
+    {
+      "repeat": 1,
+      "case": "serial_layout_oracle_15",
+      "prompt_tokens": 15,
+      "native_output_ids": [
+        1114,
+        11786,
+        336,
+        17320,
+        405,
+        21072,
+        13,
+        148902
+      ],
+      "previous_output_ids": [
+        1114,
+        11786,
+        336,
+        17320,
+        405,
+        21072,
+        13,
+        148902
+      ],
+      "reference_output_ids": [
+        1114,
+        11786,
+        336,
+        17320,
+        405,
+        21072,
+        13,
+        148902
+      ],
+      "matches_previous": true,
+      "matches_omni_c8": true
+    },
+    {
+      "repeat": 1,
+      "case": "serial_layout_oracle_16",
+      "prompt_tokens": 16,
+      "native_output_ids": [
+        198,
+        3481,
+        715,
+        82070,
+        11239,
+        8255,
+        380,
+        844
+      ],
+      "previous_output_ids": [
+        198,
+        3481,
+        715,
+        82070,
+        11239,
+        8255,
+        380,
+        844
+      ],
+      "reference_output_ids": [
+        198,
+        3481,
+        715,
+        82070,
+        11239,
+        8255,
+        380,
+        844
+      ],
+      "matches_previous": true,
+      "matches_omni_c8": true
+    },
+    {
+      "repeat": 1,
+      "case": "serial_layout_oracle_17",
+      "prompt_tokens": 17,
+      "native_output_ids": [
+        16,
+        30374,
+        220,
+        34755,
+        3711,
+        101744,
+        15580,
+        0
+      ],
+      "previous_output_ids": [
+        16,
+        30374,
+        148906,
+        16,
+        520,
+        220,
+        16,
+        292
+      ],
+      "reference_output_ids": [
+        16,
+        30374,
+        220,
+        1687,
+        400,
+        1963,
+        76,
+        23212
+      ],
+      "matches_previous": false,
+      "matches_omni_c8": false
+    },
+    {
+      "repeat": 1,
+      "case": "serial_layout_oracle_31",
+      "prompt_tokens": 31,
+      "native_output_ids": [
+        1344,
+        198,
+        6884,
+        405,
+        287,
+        11786,
+        336,
+        17320
+      ],
+      "previous_output_ids": [
+        1344,
+        198,
+        6884,
+        405,
+        287,
+        11786,
+        336,
+        17320
+      ],
+      "reference_output_ids": [
+        1344,
+        25,
+        4193,
+        405,
+        287,
+        11786,
+        336,
+        17320
+      ],
+      "matches_previous": true,
+      "matches_omni_c8": false
+    },
+    {
+      "repeat": 1,
+      "case": "serial_layout_oracle_32",
+      "prompt_tokens": 32,
+      "native_output_ids": [
+        715,
+        82070,
+        11239,
+        8255,
+        380,
+        88047,
+        55245,
+        380
+      ],
+      "previous_output_ids": [
+        715,
+        82070,
+        11239,
+        8255,
+        380,
+        88047,
+        55245,
+        380
+      ],
+      "reference_output_ids": [
+        715,
+        82070,
+        11239,
+        8255,
+        380,
+        88047,
+        55245,
+        198
+      ],
+      "matches_previous": true,
+      "matches_omni_c8": false
+    },
+    {
+      "repeat": 1,
+      "case": "serial_layout_oracle_33",
+      "prompt_tokens": 33,
+      "native_output_ids": [
+        98390,
+        297,
+        39,
+        4086,
+        11,
+        287,
+        1579,
+        1061
+      ],
+      "previous_output_ids": [
+        98390,
+        198,
+        75659,
+        11,
+        287,
+        1579,
+        405,
+        23212
+      ],
+      "reference_output_ids": [
+        98390,
+        198,
+        6337,
+        11,
+        287,
+        1579,
+        405,
+        23212
+      ],
+      "matches_previous": false,
+      "matches_omni_c8": false
+    },
+    {
+      "repeat": 1,
+      "case": "serial_layout_oracle_63",
+      "prompt_tokens": 63,
+      "native_output_ids": [
+        6884,
+        405,
+        287,
+        11786,
+        336,
+        17320,
+        30,
+        148906
+      ],
+      "previous_output_ids": [
+        6884,
+        405,
+        287,
+        11786,
+        336,
+        17320,
+        30,
+        148906
+      ],
+      "reference_output_ids": [
+        6884,
+        405,
+        287,
+        11786,
+        336,
+        17320,
+        30,
+        148906
+      ],
+      "matches_previous": true,
+      "matches_omni_c8": true
+    },
+    {
+      "repeat": 1,
+      "case": "serial_layout_oracle_64",
+      "prompt_tokens": 64,
+      "native_output_ids": [
+        380,
+        148906,
+        8255,
+        541,
+        33949,
+        65826,
+        305,
+        13209
+      ],
+      "previous_output_ids": [
+        380,
+        148906,
+        8255,
+        541,
+        17721,
+        48532,
+        1603,
+        305
+      ],
+      "reference_output_ids": [
+        380,
+        148906,
+        8255,
+        541,
+        33949,
+        65826,
+        305,
+        13209
+      ],
+      "matches_previous": false,
+      "matches_omni_c8": true
+    },
+    {
+      "repeat": 1,
+      "case": "serial_layout_oracle_65",
+      "prompt_tokens": 65,
+      "native_output_ids": [
+        16,
+        30374,
+        148902,
+        148900,
+        1114,
+        1297,
+        336,
+        220
+      ],
+      "previous_output_ids": [
+        16,
+        30374,
+        148902,
+        148900,
+        297,
+        16,
+        520,
+        220
+      ],
+      "reference_output_ids": [
+        16,
+        30374,
+        148902,
+        148900,
+        297,
+        16,
+        10,
+        16
+      ],
+      "matches_previous": false,
+      "matches_omni_c8": false
+    },
+    {
+      "repeat": 1,
+      "case": "serial_layout_oracle_127",
+      "prompt_tokens": 127,
+      "native_output_ids": [
+        336,
+        17320,
+        30,
+        148902,
+        148900,
+        1114,
+        11786,
+        336
+      ],
+      "previous_output_ids": [
+        336,
+        17320,
+        30,
+        148902,
+        148900,
+        1114,
+        11786,
+        336
+      ],
+      "reference_output_ids": [
+        336,
+        17320,
+        30,
+        148902,
+        148900,
+        1114,
+        11786,
+        336
+      ],
+      "matches_previous": true,
+      "matches_omni_c8": true
+    },
+    {
+      "repeat": 1,
+      "case": "serial_layout_oracle_255",
+      "prompt_tokens": 255,
+      "native_output_ids": [
+        3481,
+        715,
+        82070,
+        11239,
+        8255,
+        380,
+        148902,
+        148900
+      ],
+      "previous_output_ids": [
+        3481,
+        715,
+        82070,
+        11239,
+        8255,
+        380,
+        148902,
+        148900
+      ],
+      "reference_output_ids": [
+        3481,
+        715,
+        82070,
+        11239,
+        8255,
+        380,
+        148902,
+        148900
+      ],
+      "matches_previous": true,
+      "matches_omni_c8": true
+    },
+    {
+      "repeat": 1,
+      "case": "serial_layout_oracle_480",
+      "prompt_tokens": 480,
+      "native_output_ids": [
+        148902,
+        148900,
+        16,
+        10,
+        16,
+        28,
+        17,
+        148902
+      ],
+      "previous_output_ids": [
+        148902,
+        148900,
+        148902,
+        148900,
+        148902,
+        148900,
+        148902,
+        148900
+      ],
+      "reference_output_ids": [
+        148902,
+        148900,
+        148902,
+        148900,
+        148902,
+        148900,
+        148902,
+        148902
+      ],
+      "matches_previous": false,
+      "matches_omni_c8": false
+    },
+    {
+      "repeat": 1,
+      "case": "serial_layout_oracle_504",
+      "prompt_tokens": 504,
+      "native_output_ids": [
+        30,
+        148902,
+        148900,
+        1114,
+        11786,
+        336,
+        17320,
+        405
+      ],
+      "previous_output_ids": [
+        30,
+        148902,
+        148900,
+        1114,
+        11786,
+        336,
+        17320,
+        405
+      ],
+      "reference_output_ids": [
+        30,
+        148902,
+        148900,
+        1114,
+        11786,
+        336,
+        17320,
+        405
+      ],
+      "matches_previous": true,
+      "matches_omni_c8": true
+    },
+    {
+      "repeat": 2,
+      "case": "serial_layout_oracle_1",
+      "prompt_tokens": 1,
+      "native_output_ids": [
+        220,
+        17,
+        15,
+        15,
+        15,
+        15,
+        15,
+        15
+      ],
+      "previous_output_ids": [
+        220,
+        17,
+        15,
+        15,
+        15,
+        15,
+        15,
+        15
+      ],
+      "reference_output_ids": [
+        220,
+        17,
+        15,
+        15,
+        15,
+        15,
+        15,
+        15
+      ],
+      "matches_previous": true,
+      "matches_omni_c8": true
+    },
+    {
+      "repeat": 2,
+      "case": "serial_layout_oracle_15",
+      "prompt_tokens": 15,
+      "native_output_ids": [
+        1114,
+        11786,
+        336,
+        17320,
+        405,
+        21072,
+        13,
+        148902
+      ],
+      "previous_output_ids": [
+        1114,
+        11786,
+        336,
+        17320,
+        405,
+        21072,
+        13,
+        148902
+      ],
+      "reference_output_ids": [
+        1114,
+        11786,
+        336,
+        17320,
+        405,
+        21072,
+        13,
+        148902
+      ],
+      "matches_previous": true,
+      "matches_omni_c8": true
+    },
+    {
+      "repeat": 2,
+      "case": "serial_layout_oracle_16",
+      "prompt_tokens": 16,
+      "native_output_ids": [
+        198,
+        3481,
+        715,
+        82070,
+        11239,
+        8255,
+        380,
+        844
+      ],
+      "previous_output_ids": [
+        198,
+        3481,
+        715,
+        82070,
+        11239,
+        8255,
+        380,
+        844
+      ],
+      "reference_output_ids": [
+        198,
+        3481,
+        715,
+        82070,
+        11239,
+        8255,
+        380,
+        844
+      ],
+      "matches_previous": true,
+      "matches_omni_c8": true
+    },
+    {
+      "repeat": 2,
+      "case": "serial_layout_oracle_17",
+      "prompt_tokens": 17,
+      "native_output_ids": [
+        16,
+        30374,
+        220,
+        34755,
+        3711,
+        101744,
+        15580,
+        0
+      ],
+      "previous_output_ids": [
+        16,
+        30374,
+        148906,
+        16,
+        520,
+        220,
+        16,
+        292
+      ],
+      "reference_output_ids": [
+        16,
+        30374,
+        220,
+        1687,
+        400,
+        1963,
+        76,
+        23212
+      ],
+      "matches_previous": false,
+      "matches_omni_c8": false
+    },
+    {
+      "repeat": 2,
+      "case": "serial_layout_oracle_31",
+      "prompt_tokens": 31,
+      "native_output_ids": [
+        1344,
+        198,
+        6884,
+        405,
+        287,
+        11786,
+        336,
+        17320
+      ],
+      "previous_output_ids": [
+        1344,
+        198,
+        6884,
+        405,
+        287,
+        11786,
+        336,
+        17320
+      ],
+      "reference_output_ids": [
+        1344,
+        25,
+        4193,
+        405,
+        287,
+        11786,
+        336,
+        17320
+      ],
+      "matches_previous": true,
+      "matches_omni_c8": false
+    },
+    {
+      "repeat": 2,
+      "case": "serial_layout_oracle_32",
+      "prompt_tokens": 32,
+      "native_output_ids": [
+        715,
+        82070,
+        11239,
+        8255,
+        380,
+        88047,
+        55245,
+        380
+      ],
+      "previous_output_ids": [
+        715,
+        82070,
+        11239,
+        8255,
+        380,
+        88047,
+        55245,
+        380
+      ],
+      "reference_output_ids": [
+        715,
+        82070,
+        11239,
+        8255,
+        380,
+        88047,
+        55245,
+        198
+      ],
+      "matches_previous": true,
+      "matches_omni_c8": false
+    },
+    {
+      "repeat": 2,
+      "case": "serial_layout_oracle_33",
+      "prompt_tokens": 33,
+      "native_output_ids": [
+        98390,
+        297,
+        39,
+        4086,
+        11,
+        287,
+        1579,
+        1061
+      ],
+      "previous_output_ids": [
+        98390,
+        198,
+        75659,
+        11,
+        287,
+        1579,
+        405,
+        23212
+      ],
+      "reference_output_ids": [
+        98390,
+        198,
+        6337,
+        11,
+        287,
+        1579,
+        405,
+        23212
+      ],
+      "matches_previous": false,
+      "matches_omni_c8": false
+    },
+    {
+      "repeat": 2,
+      "case": "serial_layout_oracle_63",
+      "prompt_tokens": 63,
+      "native_output_ids": [
+        6884,
+        405,
+        287,
+        11786,
+        336,
+        17320,
+        30,
+        148906
+      ],
+      "previous_output_ids": [
+        6884,
+        405,
+        287,
+        11786,
+        336,
+        17320,
+        30,
+        148906
+      ],
+      "reference_output_ids": [
+        6884,
+        405,
+        287,
+        11786,
+        336,
+        17320,
+        30,
+        148906
+      ],
+      "matches_previous": true,
+      "matches_omni_c8": true
+    },
+    {
+      "repeat": 2,
+      "case": "serial_layout_oracle_64",
+      "prompt_tokens": 64,
+      "native_output_ids": [
+        380,
+        148906,
+        8255,
+        541,
+        33949,
+        65826,
+        305,
+        13209
+      ],
+      "previous_output_ids": [
+        380,
+        148906,
+        8255,
+        541,
+        17721,
+        48532,
+        1603,
+        305
+      ],
+      "reference_output_ids": [
+        380,
+        148906,
+        8255,
+        541,
+        33949,
+        65826,
+        305,
+        13209
+      ],
+      "matches_previous": false,
+      "matches_omni_c8": true
+    },
+    {
+      "repeat": 2,
+      "case": "serial_layout_oracle_65",
+      "prompt_tokens": 65,
+      "native_output_ids": [
+        16,
+        30374,
+        148902,
+        148900,
+        1114,
+        1297,
+        336,
+        220
+      ],
+      "previous_output_ids": [
+        16,
+        30374,
+        148902,
+        148900,
+        297,
+        16,
+        520,
+        220
+      ],
+      "reference_output_ids": [
+        16,
+        30374,
+        148902,
+        148900,
+        297,
+        16,
+        10,
+        16
+      ],
+      "matches_previous": false,
+      "matches_omni_c8": false
+    },
+    {
+      "repeat": 2,
+      "case": "serial_layout_oracle_127",
+      "prompt_tokens": 127,
+      "native_output_ids": [
+        336,
+        17320,
+        30,
+        148902,
+        148900,
+        1114,
+        11786,
+        336
+      ],
+      "previous_output_ids": [
+        336,
+        17320,
+        30,
+        148902,
+        148900,
+        1114,
+        11786,
+        336
+      ],
+      "reference_output_ids": [
+        336,
+        17320,
+        30,
+        148902,
+        148900,
+        1114,
+        11786,
+        336
+      ],
+      "matches_previous": true,
+      "matches_omni_c8": true
+    },
+    {
+      "repeat": 2,
+      "case": "serial_layout_oracle_255",
+      "prompt_tokens": 255,
+      "native_output_ids": [
+        3481,
+        715,
+        82070,
+        11239,
+        8255,
+        380,
+        148902,
+        148900
+      ],
+      "previous_output_ids": [
+        3481,
+        715,
+        82070,
+        11239,
+        8255,
+        380,
+        148902,
+        148900
+      ],
+      "reference_output_ids": [
+        3481,
+        715,
+        82070,
+        11239,
+        8255,
+        380,
+        148902,
+        148900
+      ],
+      "matches_previous": true,
+      "matches_omni_c8": true
+    },
+    {
+      "repeat": 2,
+      "case": "serial_layout_oracle_480",
+      "prompt_tokens": 480,
+      "native_output_ids": [
+        148902,
+        148900,
+        16,
+        10,
+        16,
+        28,
+        17,
+        148902
+      ],
+      "previous_output_ids": [
+        148902,
+        148900,
+        148902,
+        148900,
+        148902,
+        148900,
+        148902,
+        148900
+      ],
+      "reference_output_ids": [
+        148902,
+        148900,
+        148902,
+        148900,
+        148902,
+        148900,
+        148902,
+        148902
+      ],
+      "matches_previous": false,
+      "matches_omni_c8": false
+    },
+    {
+      "repeat": 2,
+      "case": "serial_layout_oracle_504",
+      "prompt_tokens": 504,
+      "native_output_ids": [
+        30,
+        148902,
+        148900,
+        1114,
+        11786,
+        336,
+        17320,
+        405
+      ],
+      "previous_output_ids": [
+        30,
+        148902,
+        148900,
+        1114,
+        11786,
+        336,
+        17320,
+        405
+      ],
+      "reference_output_ids": [
+        30,
+        148902,
+        148900,
+        1114,
+        11786,
+        336,
+        17320,
+        405
+      ],
+      "matches_previous": true,
+      "matches_omni_c8": true
+    }
+  ]
+}

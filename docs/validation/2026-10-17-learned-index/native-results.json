@@ -1,0 +1,85 @@
+{
+  "format": "inferfabric.persistent-program-qualification.v1",
+  "requests": 9,
+  "output_tokens": 99,
+  "exact_fixture_tokens": true,
+  "fixture_sha256": "d543d78afd600b46215ed0a45fccede9a267cfec7f3170a5dc5c28421dd511a4",
+  "permuted_pages": true,
+  "interleaved_residents": true,
+  "packed_prefill": true,
+  "scope": "one loaded TP8/EP8 group, compiled packed prefill and serial decode; no long-context claim",
+  "measurements": [
+    {
+      "request": 0,
+      "case": "arithmetic",
+      "prompt_tokens": 12,
+      "output_tokens": 8,
+      "engine_ttft_ms": 282.23,
+      "tpot_ms": 42.481142857142856
+    },
+    {
+      "request": 1,
+      "case": "geography",
+      "prompt_tokens": 15,
+      "output_tokens": 8,
+      "engine_ttft_ms": 391.164,
+      "tpot_ms": 68.72771428571428
+    },
+    {
+      "request": 2,
+      "case": "chinese",
+      "prompt_tokens": 14,
+      "output_tokens": 17,
+      "engine_ttft_ms": 476.906,
+      "tpot_ms": 55.2894375
+    },
+    {
+      "request": 3,
+      "case": "arithmetic",
+      "prompt_tokens": 12,
+      "output_tokens": 8,
+      "engine_ttft_ms": 212.62,
+      "tpot_ms": 40.34871428571429
+    },
+    {
+      "request": 4,
+      "case": "geography",
+      "prompt_tokens": 15,
+      "output_tokens": 8,
+      "engine_ttft_ms": 333.019,
+      "tpot_ms": 76.83457142857142
+    },
+    {
+      "request": 5,
+      "case": "chinese",
+      "prompt_tokens": 14,
+      "output_tokens": 17,
+      "engine_ttft_ms": 301.431,
+      "tpot_ms": 70.4211875
+    },
+    {
+      "request": 6,
+      "case": "arithmetic",
+      "prompt_tokens": 12,
+      "output_tokens": 8,
+      "engine_ttft_ms": 220.926,
+      "tpot_ms": 39.993
+    },
+    {
+      "request": 7,
+      "case": "geography",
+      "prompt_tokens": 15,
+      "output_tokens": 8,
+      "engine_ttft_ms": 536.04,
+      "tpot_ms": 46.355
+    },
+    {
+      "request": 8,
+      "case": "chinese",
+      "prompt_tokens": 14,
+      "output_tokens": 17,
+      "engine_ttft_ms": 306.368,
+      "tpot_ms": 22.7354375
+    }
+  ]
+}

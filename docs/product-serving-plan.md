@@ -10,6 +10,12 @@ progress. Shared pages are reserved per request across all ranks and reclaimed
 after completion; pool size is still the compiled resident-count times capacity.
 SWA recycling, prefix snapshots and the 64K release gates below remain open.
 
+Experimental [learned-index decoder integration](validation/2026-10-17-learned-index/README.md)
+now executes the full model and passes normal native/HTTP fixtures, but its fresh
+OmniInfer C8 boundary comparison matches only 8/14 sequences. It is not promoted
+as qualified C8 parity. INT8 index keys/queries and FP16 scales/head weights are
+a known missing reference contract; the current experimental indexer is BF16.
+
 Date: 2026-10-17. Status: implementation in progress; qualified capabilities and remaining release gates are distinguished below.
 
 This is the next implementation plan for OpenPangu V2 92B, followed by independent 505B qualification. It supersedes the initial Qwen-first serving sequence in `design.md`, while preserving its frontend and device-residency constraints. The first release is a colocated single-node TP=8/EP=8 engine. Disaggregated prefill/decode is a later topology, not a prerequisite for useful serving.
@@ -161,7 +167,8 @@ dependency from `indexer_types`; do not encode the layer pattern in the executor
 Named compile-time records in the DSL now allow a block to return hidden state
 and a selected-index handle together and carry both through a fold. They erase
 to ordinary dataflow edges; no runtime aggregate or model-specific side channel
-is needed. The indexer primitives and native integration remain pending.
+is needed. The primitives and native path are implemented experimentally; the
+reference-parity and long-context gates remain pending.
 The consumer reuses the producer's selected logical token indices, while reading
 its own layer's attention cache. Its retained checkpoint indexer weights do not
 imply an additional executed indexer or a separate index cache.

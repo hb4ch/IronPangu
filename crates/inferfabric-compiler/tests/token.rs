@@ -56,6 +56,31 @@ plan P for Renamed {target=ascend_token_v1;tp=8;ep=8;devices=[0,1,2,3,4,5,6,7];m
     (graph, parallel, inventory)
 }
 #[test]
+fn learned_index_graph_has_explicit_shared_dependencies_and_paged_state() {
+    let source=include_str!("../../../examples/openpangu/92b-tp8-ep8-c8-learned.inferfabric");
+    let ModelDefinition::Execution{graph,..}=definition(source).unwrap() else {panic!()};
+    let types=graph.validate().unwrap();
+    let selectors:Vec<_>=graph.nodes.iter().enumerate().filter(|(_,n)|n.op=="sparse_index").collect();
+    assert_eq!(selectors.len(),8);
+    for (id,_) in selectors {
+        assert_eq!(types[id],inferfabric_authoring::execution::Type::Indices(2048));
+        let users:Vec<_>=graph.nodes.iter().filter(|n|n.inputs.contains(&id)).collect();
+        assert_eq!(users.len(),2);
+        assert!(users.iter().all(|n|n.op=="latent_attention" && n.attrs["selection"]=="learned_indices"));
+    }
+    let (_,states)=inferfabric_compiler::token_serving::envelope(&graph,8).unwrap();
+    assert_eq!(states.iter().filter(|s|matches!(&s.storage,inferfabric_ir::serving::Storage::Pages{encoding,..} if encoding=="bf16_index_keys")).count(),8);
+    let p=inferfabric_compiler::token_program::lower(&graph,None).unwrap();
+    assert_eq!(p.instructions.iter().filter(|i|i.op=="indexed_packed_attention").count(),16);
+    assert_eq!(p.instructions.iter().filter(|i|i.op=="sparse_index").count(),8);
+    assert_eq!(p.instructions.iter().filter(|i|i.op=="packed_attention_metadata").count(),1);
+    let mut bad=graph.clone();
+    let attention=bad.nodes.iter_mut().find(|n|n.attrs.get("selection").map(String::as_str)==Some("learned_indices")).unwrap();
+    attention.inputs.pop();
+    assert!(bad.validate().is_err());
+}
+
+#[test]
 fn rotary_prefix_expands_into_explicit_bf16_column_operations() {
     let (mut graph, _, inventory) = fixture();
     graph.nodes.insert(1, inferfabric_authoring::execution::Node {

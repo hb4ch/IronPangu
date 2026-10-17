@@ -36,7 +36,7 @@ inline void validate_kernels(const Plan &p) {
   using T = std::pair<uint32_t, uint32_t>;
   if(p.physical) {
     auto count=[&](const char *op){return std::count_if(p.nodes.begin(),p.nodes.end(),[&](const auto &n){return n.op==op;});};
-    if(count("packed_latent_attention") && count("packed_attention_metadata")!=1)
+    if((count("packed_latent_attention") || count("sparse_index") || count("indexed_packed_attention")) && count("packed_attention_metadata")!=1)
       throw std::runtime_error("packed attention metadata must have one declared writer");
     if(count("latent_attention") && (count("attention_metadata")!=1 || count("attention_metadata_zero")!=1))
       throw std::runtime_error("attention metadata must have one declared writer");
@@ -249,6 +249,16 @@ inline void validate_kernels(const Plan &p) {
       check({{0,576},{0,73728}},{"weight","eps","theta","cache_dtype","cache_scale_dtype","cache_quantization","cache_rope_dtype"},{4,0});
       eq("eps","1e-5");eq("theta","6400000");eq("cache_dtype","int8_ds_mla");
       eq("cache_scale_dtype","f32");eq("cache_quantization","pertile128");eq("cache_rope_dtype","bf16");
+    } else if(p.physical && n.op=="index_cache_append") {
+      check({{0,128}},{"width","page_tokens"},{9,128});eq("width","128");eq("page_tokens","64");
+    } else if(p.physical && n.op=="sparse_index") {
+      check({{0,3072},{0,24},{9,128},{7,0}},{"heads","head_dim","topk","scoring"},{8,2048});
+      eq("heads","24");eq("head_dim","128");eq("topk","2048");eq("scoring","weighted_relu");
+      if(p.nodes[n.inputs[3]].op!="packed_attention_metadata")error();
+    } else if(p.physical && n.op=="indexed_packed_attention") {
+      check({{0,3456},{4,0},{8,2048},{7,0}},{"scale_dim","window","selection"},{0,3072});
+      eq("scale_dim","192");eq("window","2048");eq("selection","learned_indices");
+      if(p.nodes[n.inputs[1]].op!="cache_c8_norm_rope_append" || p.nodes[n.inputs[3]].op!="packed_attention_metadata")error();
     } else if(p.physical && n.op=="packed_attention_metadata") {
       check({}, {}, {7,0});
     } else if(p.physical && n.op=="packed_latent_attention") {
@@ -365,7 +375,7 @@ inline void validate_kernels(const Plan &p) {
           ++all;
           inputs += c.op == "mhc_input";
           posts += c.op == "mhc_post";
-          att += c.op == "latent_attention" || c.op == "packed_latent_attention";
+          att += c.op == "latent_attention" || c.op == "packed_latent_attention" || c.op=="indexed_packed_attention";
           dec += c.op == "cache_dequantize";
         }
       if (n.kind == 4 && (att != 1 || (n.op=="cache_quantize_append" ? (all!=2 || dec!=1) : all!=1)))

@@ -76,6 +76,8 @@ pub fn lower(graph: &Graph, devices: &[u32]) -> Result<Plan> {
                 Location::Device,
             ),
             Type::Quantized(_) => (None,vec![],None,"int8_payload_with_f32_per_token_scale",Location::Device),
+            Type::IndexCache(_) => (None,vec![],None,"paged_bf16_index_keys",Location::Device),
+            Type::Indices(w) => (Some("i32".into()),vec![w as u64],Some(w as u64*4),"logical_token_indices",Location::Device),
             Type::HyperConnection => (
                 None,
                 vec![],
@@ -130,7 +132,18 @@ pub fn lower(graph: &Graph, devices: &[u32]) -> Result<Plan> {
             boundaries.push(Boundary { kind: BoundaryKind::InternalLaunches,
                 detail: "Fused KV RMS normalization, half-rotary and paged cache write; BF16 input, gamma and rotary coefficients, epsilon 1e-5. Position is a device control input. Combined latent/rotary cache remains device resident; no implicit readback or fallback. Numerical contract differs from separate FP32 rotary".into() });
         }
-        if n.op == "latent_attention" {
+        if n.op == "index_cache_append" {
+            boundaries.push(Boundary {kind:BoundaryKind::PersistentState,
+                detail:"BF16 128-column index keys in 64-token physical pages, reserved and retired with the request's other state; stable table address and explicit device append index".into()});
+        }
+        if n.op == "sparse_index" {
+            boundaries.push(Boundary {kind:BoundaryKind::InternalLaunches,
+                detail:"aclnnLightningIndexerEnhance consumes replicated 24-head queries, head weights, paged BF16 keys and causal device lengths; returns 2048 INT32 logical token indices retained for all declared consumers".into()});
+        }
+        if n.op == "latent_attention" && n.attrs.get("selection").map(String::as_str)==Some("learned_indices") {
+            boundaries.push(Boundary {kind:BoundaryKind::InternalLaunches,
+                detail:"aclnnAiInfraKvQuantSparseFlashAttention consumes the selected-index SSA input and this layer's own packed C8 cache/page table; no selection recomputation or index readback".into()});
+        } else if n.op == "latent_attention" {
             boundaries.push(Boundary { kind: BoundaryKind::InternalLaunches,
                 detail: "Dense FusedInferAttentionSink in TND sliding-window mode implements the validated all-causal-within-window contract (context <=512 and <=window). Bounded noncontiguous paged KV views stay on device. One AICPU metadata operation per rank/token is shared by attention nodes and captured for replay; no host length readback. This is a distinct numerical kernel from sparse Pioneer".into() });
             boundaries.push(Boundary { kind: BoundaryKind::PersistentState,
@@ -222,6 +235,7 @@ pub fn lower(graph: &Graph, devices: &[u32]) -> Result<Plan> {
                 id: format!("ascend.token.device_resident.{}.v1", n.op),
                 contract_revision: revision.clone(), numerical_contract: match n.op.as_str() {
                     "cache_norm_rope_append" => "ascend_token_v1/cache_norm_rope_append/fused_bf16_rotary_v1".into(),
+                    "latent_attention" if n.attrs.get("selection").map(String::as_str)==Some("learned_indices") => "ascend_token_v1/latent_attention/learned_indices_packed_c8_v1".into(),
                     "latent_attention" => "ascend_token_v1/latent_attention/dense_sink_bf16_v1".into(),
                     "allreduce" => format!("ascend_token_v1/allreduce/{}", n.attrs.get("dtype").map(String::as_str).unwrap_or("f32")),
                     "expert_linear" if n.attrs.contains_key("paired_weight") => "ascend_token_v1/expert_linear/paired_fused_routing_gmm_bf16_scales_v1".into(),

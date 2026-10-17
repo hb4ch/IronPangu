@@ -50,7 +50,7 @@ def main():
             storage = state['storage']
             if storage['kind'] != 'pages':
                 continue
-            lowered = [i for i in executable if i['logical_node'] == state['logical_node'] and i['op'] in ('cache_append', 'cache_norm_rope_append', 'cache_c8_norm_rope_append')]
+            lowered = [i for i in executable if i['logical_node'] == state['logical_node'] and i['op'] in ('cache_append', 'cache_norm_rope_append', 'cache_c8_norm_rope_append', 'index_cache_append')]
             if len(lowered) != 1:
                 raise RuntimeError('state does not map to exactly one executable cache binding')
             component = lowered[0]['name']
