@@ -43,6 +43,7 @@
 #include <filesystem>
 #include <fstream>
 #include <hccl/hccl.h>
+#include <hccl/hccl_comm.h>
 #include <iostream>
 #include <numeric>
 #include <thread>
@@ -175,7 +176,8 @@ struct Decoder {
   std::vector<uint8_t> cache_control_host;
   std::map<std::string, V> prepared_sinks;
   aclrtStream stream = nullptr;
-  HcclComm comm = nullptr;
+  HcclComm comm = nullptr, bulk_comm = nullptr;
+  bool bulk_collectives_active = false;
   inferfabric::CompiledKernel swiglu;
   inferfabric::initialization::ParameterStore weights;
   std::map<std::string, inferfabric::initialization::ParameterId> bindings;
@@ -184,7 +186,7 @@ struct Decoder {
            inferfabric::initialization::DType>
       source_types;
   Decoder(const inferfabric::initialization::Plan &p, const std::string &root,
-          HcclRootInfo &info, const inferfabric::execution::Plan &execution, const std::string &arena_path, uint64_t fingerprint, const std::string &workspace_path, uint64_t backend_fingerprint = 0)
+          HcclRootInfo &info, const inferfabric::execution::Plan &execution, const std::string &arena_path, uint64_t fingerprint, const std::string &workspace_path, uint64_t backend_fingerprint = 0, HcclRootInfo *bulk_info = nullptr)
       : execution(arena_path,fingerprint,workspace_path,backend_fingerprint), rank(p.rank), program(execution),
         swiglu(std::getenv("INFERFABRIC_SWIGLU_LIBRARY")
                    ? std::getenv("INFERFABRIC_SWIGLU_LIBRARY")
@@ -246,12 +248,21 @@ struct Decoder {
     checked(aclrtGetDeviceInfo(device, ACL_DEV_ATTR_CUBE_CORE_NUM, &cube_cores), "attention cube cores");
     checked(aclrtGetDeviceInfo(device, ACL_DEV_ATTR_VECTOR_CORE_NUM, &vector_cores), "attention vector cores");
     if (cube_cores <= 0 || vector_cores <= 0) throw std::runtime_error("attention core contract");
-    checked(HcclCommInitRootInfo(8, &info, rank, &comm), "HCCL");
+    if(program.bulk_collective_domain) {
+      if(!bulk_info)throw std::runtime_error("planned bulk communicator root missing");
+      HcclCommConfig config; HcclCommConfigInit(&config);
+      config.hcclBufferSize=200;
+      config.hcclOpExpansionMode=1;
+      checked(HcclCommInitRootInfoConfig(8,&info,rank,&config,&comm),"HOST HCCL domain");
+      config.hcclOpExpansionMode=2;
+      checked(HcclCommInitRootInfoConfig(8,bulk_info,rank,&config,&bulk_comm),"AI_CPU bulk HCCL domain");
+    } else checked(HcclCommInitRootInfo(8, &info, rank, &comm), "HCCL");
   }
   ~Decoder() {
     if (stream)
       aclrtSynchronizeStream(stream);
     execution.release_graphs();
+    if (bulk_comm) HcclCommDestroy(bulk_comm);
     if (comm)
       HcclCommDestroy(comm);
   }
@@ -368,7 +379,7 @@ struct Decoder {
       inferfabric::profiling::Scope timing("HcclAllReduce");
       checked(HcclAllReduce(a.data(), b.data, x.size(),
                             bf16 ? HCCL_DATA_TYPE_BFP16 : HCCL_DATA_TYPE_FP32,
-                            HCCL_REDUCE_SUM, comm, stream),
+                            HCCL_REDUCE_SUM, bulk_collectives_active ? bulk_comm : comm, stream),
               "all reduce");
     }
     return result(b, dtype);
@@ -1370,6 +1381,7 @@ struct Decoder {
       if(!attention_states.count(entry.first) && !index_states.count(entry.first))
         throw std::runtime_error("sequence batch state not prepared");
     const bool decode=std::all_of(sequences.begin(),sequences.end(),[](const auto &s){return s.tokens==1;});
+    bulk_collectives_active=program.bulk_collective_domain && !decode;
     compact_output_active=program.compact_output_rows && !decode;
     output_sample_rows=batch.sample_rows;
     prepared::Context::BoundedBuffers bounded(execution,!decode);
@@ -1413,6 +1425,7 @@ struct Decoder {
   }
 
   V token(int id, int pos, bool decode = false) {
+    bulk_collectives_active=false;
     compact_output_active=false;
     set_token_inputs(id, pos);
     execution.begin_step(pos);
@@ -1435,6 +1448,7 @@ struct Decoder {
   }
   // A request boundary is explicit control work. All preceding work has completed.
   V prefill(const std::vector<uint32_t> &tokens,int pos,bool replay=true,bool sample=true) {
+    bulk_collectives_active=program.bulk_collective_domain;
     compact_output_active=program.compact_output_rows;
     output_sample_rows=sample?std::vector<uint32_t>{uint32_t(tokens.size()-1)}:std::vector<uint32_t>{};
     if(!program.supports_prefill(tokens.size()) || tokens.size()<=1)throw std::runtime_error("prefill variant size");

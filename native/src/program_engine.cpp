@@ -13,7 +13,7 @@ struct Engine {
   std::string bundle, checkpoint;
   inferfabric::execution::Plan program;
   std::vector<inferfabric::initialization::Plan> loads;
-  HcclRootInfo root{};
+  HcclRootInfo root{}, bulk_root{};
   std::mutex mutex;
   std::condition_variable changed;
   std::vector<std::thread> workers;
@@ -79,6 +79,7 @@ struct Engine {
     acl_initialized = true;
     openpangu::checked(aclrtSetDevice(loads[0].device), "engine bootstrap");
     openpangu::checked(HcclGetRootInfo(&root), "engine HCCL root");
+    if(program.bulk_collective_domain)openpangu::checked(HcclGetRootInfo(&bulk_root), "engine bulk HCCL root");
     for (size_t rank = 0; rank < loads.size(); ++rank)
       workers.emplace_back([this, rank] { worker(rank); });
     std::unique_lock<std::mutex> lock(mutex);
@@ -98,7 +99,7 @@ struct Engine {
         if(rank==0)std::cerr<<"program preparation rank=0 phase=load_parameters\n";
         inferfabric::token::Decoder decoder(loads[rank], checkpoint, root, program,
             present("arena"), inferfabric::prepared::ArenaLayout::fingerprint_file(bundle + "/execution.bin"),
-            present("workspace"), inferfabric::prepared::ArenaLayout::fingerprint_file(library.dli_fname));
+            present("workspace"), inferfabric::prepared::ArenaLayout::fingerprint_file(library.dli_fname), program.bulk_collective_domain ? &bulk_root : nullptr);
         // Same preparation order as the qualified diagnostic client. Warmup
         // constructs all parameter views, graph addresses and output invocations.
         if(rank==0)std::cerr<<"program preparation rank=0 phase=decode\n";

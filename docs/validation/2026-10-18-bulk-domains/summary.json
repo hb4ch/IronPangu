@@ -1,0 +1,69 @@
+{
+  "library_sha256": "f71e4b259683fadf6a7887fad9885c26e154273ecfcf1cc2e575bb46288dddb1",
+  "execution_sha256": "9652f83e031201b4b8bb887f73b1f82b42f1c102254a538758544443073935d7",
+  "candidate": {
+    "bulk_at_least_4000_tokens_ms": [
+      484.899,
+      485.778,
+      480.722,
+      486.083,
+      623.2,
+      761.108
+    ],
+    "bulk_median_ms": 485.93050000000005,
+    "single_sequence_decode_ms": [
+      22.467,
+      22.115,
+      22.041
+    ],
+    "single_sequence_decode_median_ms": 22.115,
+    "hbm_used_bytes": [
+      60013948928,
+      59754041344,
+      60011757568,
+      59753725952,
+      60024958976,
+      59740033024,
+      60008579072,
+      59759038464
+    ]
+  },
+  "previous_host": {
+    "bulk_at_least_4000_tokens_ms": [
+      1979.384,
+      2190.39,
+      2170.984,
+      1939.89,
+      2177.189,
+      2278.42
+    ],
+    "bulk_median_ms": 2174.0865,
+    "single_sequence_decode_ms": [
+      22.053,
+      21.395,
+      21.503
+    ],
+    "single_sequence_decode_median_ms": 21.503,
+    "hbm_used_bytes": [
+      59513741312,
+      59252281344,
+      59506774016,
+      59253317632,
+      59522887680,
+      59239432192,
+      59507163136,
+      59252580352
+    ]
+  },
+  "comparison_caveat": "same fixture, separate unprofiled runs, not interleaved controlled A/B; small decode sample",
+  "hbm_delta_bytes": [
+    500207616,
+    501760000,
+    504983552,
+    500408320,
+    502071296,
+    500600832,
+    501415936,
+    506458112
+  ]
+}

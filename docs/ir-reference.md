@@ -251,3 +251,35 @@ binding memory. The viewer exposes selection and dynamic row axes in each affect
 recipe. This candidate is enabled at compilation by
 `INFERFABRIC_EXPERIMENTAL_OUTPUT_ROWS=1`; NPU qualification, not successful
 compilation alone, determines whether a generated bundle is accepted for serving.
+
+
+### Token program v9: bulk collective execution domains
+
+`IFTOKN09` requires uncaptured prefill with a 4096-token envelope. It retains
+v7's context, EOS, output, instruction count, resident count, prefill capacity
+and shared-page header. A u32 compact-output flag follows the shared-page flag;
+when one, the four v8 output-row fields follow. Instructions retain their prior
+encoding. Older readers reject the new magic rather than ignoring the contract.
+
+The physical program's `bulk_collective_domain: true` selects two communicators
+per rank, created during initialization with separate root information:
+
+| Invocation / primitive | Domain | Capture |
+| --- | --- | --- |
+| Pure decode, including multi-request decode | HOST | Existing decode ACLGraph |
+| Uncaptured prefill or mixed prefill/decode, AllReduce | AI_CPU | Never captured |
+| AllGather and sampled-token consensus | HOST | Existing policy |
+
+Selection uses the invocation kind, not the current tensor row count: compacting
+the output suffix cannot accidentally change the communication domain. Both
+communicators explicitly configure a 200 MiB HCCL buffer size. These are HCCL-owned
+resources outside the frozen activation arena; configuration is not a claim about
+total allocator overhead. Qualification measures total HBM separately. Global
+`HCCL_OP_EXPANSION_MODE` is not mutated; initialization or execution failure is an
+error, not permission to fall back. No extra synchronization is added.
+
+The compiler qualification switch is `INFERFABRIC_EXPERIMENTAL_BULK_COLLECTIVES=1`.
+It writes the decision into the plan; it is not an execution-time toggle. Recipe
+metadata exposes the domains, buffer configuration and capture restriction, and
+the generic viewer shows these in collective summaries and instruction details.
+Full-model correctness and latency qualification are required before promotion.

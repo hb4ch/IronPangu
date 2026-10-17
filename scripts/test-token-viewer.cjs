@@ -62,3 +62,14 @@ if(api.data.arena?.ranks[7]?.workspace) {
     assert(details.includes('Live leases cannot overlap'));
   }
 }
+
+if(api.data.program.bulk_collective_domain) {
+  api.go(layer);
+  assert(element('#content').innerHTML.includes('decode HOST / bulk AI_CPU'));
+  const id=api.data.program.instructions.findIndex(i=>i.op==='allreduce');
+  assert.equal(api.data.recipes[id].collective_domains.uncaptured_bulk,"AI_CPU");
+  vm.runInContext(`inspect(${id})`,context);
+  assert(element("#detail").innerHTML.includes("Collective execution domains"));
+  assert(element("#detail").innerHTML.includes("configured_buffer_mib_per_domain"));
+  console.log(JSON.stringify({bulk_collective_domains_visible:true,pass:true}));
+}

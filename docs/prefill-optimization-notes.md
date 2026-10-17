@@ -119,3 +119,23 @@ The [three-stage native qualification](validation/2026-10-18-output-rows/README.
 ## Qualified communication-domain candidate
 
 The [40 MiB collective-domain test](validation/2026-10-18-collective-domains/README.md) passes synthetic reduction correctness and interleaved HOST decode graph replay with an AI_CPU bulk domain. Median worst-rank call time is 0.899 ms versus 35.983 ms for HOST in this diagnostic. This justifies explicit per-variant communicator planning and full-model qualification; it is not a model speedup claim. Keep the process-global HOST mode fixed, create domains before preparation, and expose their memory/selection in the physical plan.
+
+
+### Integration priority: bulk communication on the real serving path (2026-10-18)
+
+The next gate is the real packed/mixed serving path, not another synthetic
+collective sweep. The candidate compiler now emits `IFTOKN09`, assigning bulk
+AllReduce to a separately initialized AI_CPU communicator while retaining HOST
+for decode graphs, AllGather and sampling consensus. Both domains use the same
+owning compute stream. No new stream/global fence or activation staging is added.
+The assignment survives compact output-row selection and appears in the generic
+plan viewer. The buffer configuration is explicit; HCCL allocations remain
+outside the activation arena and must be included in measured HBM occupancy.
+
+Qualification order is full model discovery/fixed/frozen output and resource
+checks, then long-context HTTP mixed scheduling and prefix-cache recovery. The
+synthetic result alone does not authorize making this the default. Primary
+acceptance metrics are uncached 4K forward time, long-prompt TTFT, short-request
+latency under mixed work, pure decode TPOT, correct first-EOS output and bounded
+memory. Continuous batching and bulk prefill are prerequisites for production;
+other optimization work must not displace these gates.

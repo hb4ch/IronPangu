@@ -6,6 +6,21 @@ use inferfabric_dsl::{authoring::ModelDefinition, definition};
 use inferfabric_ir::initialization::{DType, Instruction};
 use std::collections::BTreeMap;
 #[test]
+fn bulk_domain_binary_carries_optional_compact_output_contract() {
+    let (mut graph, _, inventory) = fixture();
+    graph.max_context=65536;
+    let plan=inferfabric_compiler::token_program::lower(&graph,Some(&inventory)).unwrap()
+        .with_uncaptured_prefill().unwrap().with_bulk_collective_domain().unwrap();
+    let plain=plan.encode().unwrap();
+    assert_eq!(&plain[..8],b"IFTOKN09");
+    assert_eq!(u32::from_le_bytes(plain[36..40].try_into().unwrap()),0);
+    let compact=plan.with_output_rows().unwrap();
+    let bytes=compact.encode().unwrap();
+    assert_eq!(&bytes[..8],b"IFTOKN09");
+    assert_eq!(u32::from_le_bytes(bytes[36..40].try_into().unwrap()),1);
+    assert_eq!(u32::from_le_bytes(bytes[40..44].try_into().unwrap()) as usize,compact.output_rows.unwrap().source);
+}
+#[test]
 fn compact_output_rows_are_encoded_and_verified() {
     let (mut graph, _, inventory) = fixture();
     graph.max_context = 65536;

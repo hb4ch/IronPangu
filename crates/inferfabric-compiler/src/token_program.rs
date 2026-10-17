@@ -29,6 +29,9 @@ pub struct Program {
     /// A bounded variable-query launch envelope, never an ACLGraph family.
     #[serde(default)]
     pub uncaptured_prefill: bool,
+    /// Separate AI_CPU domain for uncaptured AllReduce; decode stays HOST.
+    #[serde(default)]
+    pub bulk_collective_domain: bool,
     /// Explicit exact shapes. Empty preserves the legacy single-size contract.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub prefill_variants: Vec<usize>,
@@ -154,7 +157,7 @@ fn emit(
 pub fn lower(graph: &Graph, inventory: Option<&Inventory>) -> Result<Program> {
     let types = graph.validate()?;
     let mut p = Program {
-        format: "inferfabric.token-program.v2".into(), max_context: graph.max_context, resident_sequences: 1, prefill_tokens: 1, uncaptured_prefill: false, prefill_variants: vec![], shared_pages: false,
+        format: "inferfabric.token-program.v2".into(), max_context: graph.max_context, resident_sequences: 1, prefill_tokens: 1, uncaptured_prefill: false, bulk_collective_domain: false, prefill_variants: vec![], shared_pages: false,
         eos: graph.eos, output: 0, output_rows: None, instructions: vec![], conversions_shared: 0, copies_eliminated: 0,
         limitations: vec!["Per-token vendor composites are expanded into declared API invocations, explicit casts, packing and initialization of outputs. Parameter/state preparation remains a declared initialization recipe; vendor-internal kernel launches are opaque. Hardware preparation binds fixed arena slots; this is not a cost-optimized arena packing.".into()],
     };
@@ -709,6 +712,12 @@ pub fn lower(graph: &Graph, inventory: Option<&Inventory>) -> Result<Program> {
 }
 
 impl Program {
+    pub fn with_bulk_collective_domain(mut self) -> Result<Self> {
+        if !self.uncaptured_prefill { return Err(invalid("bulk collective domain requires uncaptured prefill")); }
+        self.bulk_collective_domain = true;
+        let residents = self.resident_sequences;
+        self.with_resident_sequences(residents)
+    }
     pub fn with_output_rows(mut self) -> Result<Self> {
         if !self.uncaptured_prefill { return Err(invalid("compact output rows require uncaptured prefill")); }
         self.output_rows = Some(crate::output_rows::plan(&self.instructions, self.output)?.ok_or_else(|| invalid("no safe output suffix"))?);
@@ -806,11 +815,12 @@ impl Program {
     }
     pub fn with_resident_sequences(mut self, count: usize) -> Result<Self> {
         self.resident_sequences = count;
-        self.format = if self.output_rows.is_some() { "inferfabric.token-program.v8" } else if self.uncaptured_prefill { "inferfabric.token-program.v7" } else if !self.prefill_variants.is_empty() { "inferfabric.token-program.v6" } else if self.shared_pages { "inferfabric.token-program.v5" } else if self.prefill_tokens > 1 { "inferfabric.token-program.v4" } else if count == 1 { "inferfabric.token-program.v2" } else { "inferfabric.token-program.v3" }.into();
+        self.format = if self.bulk_collective_domain { "inferfabric.token-program.v9" } else if self.output_rows.is_some() { "inferfabric.token-program.v8" } else if self.uncaptured_prefill { "inferfabric.token-program.v7" } else if !self.prefill_variants.is_empty() { "inferfabric.token-program.v6" } else if self.shared_pages { "inferfabric.token-program.v5" } else if self.prefill_tokens > 1 { "inferfabric.token-program.v4" } else if count == 1 { "inferfabric.token-program.v2" } else { "inferfabric.token-program.v3" }.into();
         self.validate()?;
         Ok(self)
     }
     pub fn validate(&self) -> Result<()> {
+        if self.bulk_collective_domain && !self.uncaptured_prefill { return Err(invalid("bulk collective domain requires uncaptured prefill")); }
         if let Some(rows) = &self.output_rows {
             if !self.uncaptured_prefill || crate::output_rows::plan(&self.instructions, self.output)?.as_ref() != Some(rows) {
                 return Err(invalid("output row plan does not match the proven suffix"));
@@ -824,7 +834,7 @@ impl Program {
             self.prefill_variants.last().is_some_and(|&n|n!=self.prefill_tokens) {
             return Err(invalid("invalid exact prefill variant family"));
         }
-        if self.format != if self.output_rows.is_some() { "inferfabric.token-program.v8" } else if self.uncaptured_prefill { "inferfabric.token-program.v7" } else if !self.prefill_variants.is_empty() { "inferfabric.token-program.v6" } else if self.shared_pages { "inferfabric.token-program.v5" } else if self.prefill_tokens > 1 { "inferfabric.token-program.v4" } else if self.resident_sequences == 1 { "inferfabric.token-program.v2" } else { "inferfabric.token-program.v3" }
+        if self.format != if self.bulk_collective_domain { "inferfabric.token-program.v9" } else if self.output_rows.is_some() { "inferfabric.token-program.v8" } else if self.uncaptured_prefill { "inferfabric.token-program.v7" } else if !self.prefill_variants.is_empty() { "inferfabric.token-program.v6" } else if self.shared_pages { "inferfabric.token-program.v5" } else if self.prefill_tokens > 1 { "inferfabric.token-program.v4" } else if self.resident_sequences == 1 { "inferfabric.token-program.v2" } else { "inferfabric.token-program.v3" }
             || (!self.uncaptured_prefill && !matches!(self.prefill_tokens, 1 | 2 | 4 | 8 | 16 | 32))
             || self.prefill_tokens > self.max_context
             || ((self.prefill_tokens > 1 || self.shared_pages) && self.instructions.iter().any(|i| i.op == "cache_quantize_append"))
@@ -890,7 +900,7 @@ impl Program {
         if self.instructions.iter().any(|i| i.kernel == "unbound") {
             return Err(invalid("cannot execute unbound kernel selection"));
         }
-        let mut b = if self.output_rows.is_some() { b"IFTOKN08" } else if self.uncaptured_prefill { b"IFTOKN07" } else if !self.prefill_variants.is_empty() { b"IFTOKN06" } else if self.shared_pages { b"IFTOKN05" } else if self.prefill_tokens > 1 { b"IFTOKN04" } else if self.resident_sequences == 1 { b"IFTOKN02" } else { b"IFTOKN03" }.to_vec();
+        let mut b = if self.bulk_collective_domain { b"IFTOKN09" } else if self.output_rows.is_some() { b"IFTOKN08" } else if self.uncaptured_prefill { b"IFTOKN07" } else if !self.prefill_variants.is_empty() { b"IFTOKN06" } else if self.shared_pages { b"IFTOKN05" } else if self.prefill_tokens > 1 { b"IFTOKN04" } else if self.resident_sequences == 1 { b"IFTOKN02" } else { b"IFTOKN03" }.to_vec();
         for n in [
             self.max_context,
             self.eos,
@@ -907,6 +917,7 @@ impl Program {
             num(&mut b,self.prefill_variants.len());
             for &count in &self.prefill_variants {num(&mut b,count);}
         }
+        if self.bulk_collective_domain { num(&mut b, usize::from(self.output_rows.is_some())); }
         if let Some(rows) = &self.output_rows {
             for value in [rows.source, rows.source_width, rows.first, rows.last] { num(&mut b, value); }
         }
@@ -1188,7 +1199,7 @@ fn recipes_for_query(p: &Program, graph: &Graph, query_tokens: usize) -> Vec<ser
             "control_row_stride_bytes":16,
             "control_bank_bytes":cache_controls.len()*16*p.prefill_tokens
         }) } else {serde_json::Value::Null};
-        serde_json::json!({"packed_prefill":packed,"preparation":preparation,"value_fields":fields,"apis":apis,"internal":internal,"materialization":materialization,"placement":placement,"communication":communication,
+        serde_json::json!({"packed_prefill":packed,"preparation":preparation,"value_fields":fields,"apis":apis,"internal":internal,"materialization":materialization,"placement":placement,"communication":communication,"collective_domains":if p.bulk_collective_domain && matches!(i.op.as_str(),"allreduce"|"gather"|"gather_heads") { serde_json::json!({"decode":"HOST","uncaptured_bulk":if i.op=="allreduce" {"AI_CPU"} else {"HOST"},"domain_count":2,"configured_buffer_mib_per_domain":200,"allocation":"HCCL-owned outside activation arena; actual overhead measured at preparation","selection":"bulk invocation, independent of output row count","capture":"HOST only; no runtime fallback"}) } else { serde_json::Value::Null },
             "granularity":if i.op=="sink_normalize" {"initialization recipe"} else {"instruction"}})
     }).collect()
 }

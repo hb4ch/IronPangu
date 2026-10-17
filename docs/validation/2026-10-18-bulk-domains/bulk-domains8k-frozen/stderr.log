@@ -1,0 +1,9 @@
+program uncaptured prefill ACLNN_CACHE_LIMIT=0
+program preparation rank=0 phase=load_parameters
+program preparation rank=0 phase=decode
+program preparation rank=0 phase=uncaptured_prefill query_tokens=4096 pass=0
+program preparation rank=0 phase=uncaptured_prefill query_tokens=4096 pass=1
+program preparation rank=0 phase=sequence_decode sequences=1
+program preparation rank=0 phase=sequence_decode sequences=2
+program preparation rank=0 phase=sequence_decode sequences=3
+program preparation rank=0 phase=complete

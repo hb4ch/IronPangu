@@ -42,6 +42,7 @@ struct Plan {
     for(auto variant:prefill_variants)if(variant==count)return true;
     return false;
   }
+  bool bulk_collective_domain = false;
   bool compact_output_rows = false;
   uint32_t output_row_source=0,output_row_width=0,output_row_first=0,output_row_last=0;
   bool shared_pages = false;
@@ -69,11 +70,12 @@ struct Plan {
       return v;
     };
     char magic[8];
-    if (!s.read(magic, 8) || (std::memcmp(magic, "IFTOKN01", 8) && std::memcmp(magic, "IFTOKN02", 8) && std::memcmp(magic, "IFTOKN03", 8) && std::memcmp(magic, "IFTOKN04", 8) && std::memcmp(magic, "IFTOKN05", 8) && std::memcmp(magic, "IFTOKN06", 8) && std::memcmp(magic, "IFTOKN07", 8) && std::memcmp(magic, "IFTOKN08", 8)))
+    if (!s.read(magic, 8) || (std::memcmp(magic, "IFTOKN01", 8) && std::memcmp(magic, "IFTOKN02", 8) && std::memcmp(magic, "IFTOKN03", 8) && std::memcmp(magic, "IFTOKN04", 8) && std::memcmp(magic, "IFTOKN05", 8) && std::memcmp(magic, "IFTOKN06", 8) && std::memcmp(magic, "IFTOKN07", 8) && std::memcmp(magic, "IFTOKN08", 8) && std::memcmp(magic, "IFTOKN09", 8)))
       throw std::runtime_error("missing/unsupported execution plan");
     Plan p;
+    p.bulk_collective_domain = !std::memcmp(magic, "IFTOKN09", 8);
     p.compact_output_rows = !std::memcmp(magic, "IFTOKN08", 8);
-    p.uncaptured_prefill = !std::memcmp(magic, "IFTOKN07", 8) || p.compact_output_rows;
+    p.uncaptured_prefill = !std::memcmp(magic, "IFTOKN07", 8) || p.compact_output_rows || p.bulk_collective_domain;
     p.prefill_family = !std::memcmp(magic, "IFTOKN06", 8);
     p.shared_pages = !std::memcmp(magic, "IFTOKN05", 8);
     p.physical = std::memcmp(magic, "IFTOKN01", 8) != 0;
@@ -106,6 +108,11 @@ struct Plan {
     if (!p.context || p.context > 65536 || p.eos >= 151552 || !count ||
         count > 10000 || p.output >= count)
       throw std::runtime_error("token plan bounds");
+    if(p.bulk_collective_domain) {
+      auto compact=number();
+      if(compact>1)throw std::runtime_error("bulk domain output-row flag");
+      p.compact_output_rows=compact;
+    }
     if(p.compact_output_rows) {
       p.output_row_source=number();p.output_row_width=number();p.output_row_first=number();p.output_row_last=number();
       if(p.output_row_source>=p.output_row_first || p.output_row_first>=count || p.output_row_last!=p.output || p.output!=count-1)

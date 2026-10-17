@@ -89,3 +89,31 @@ fn conversions_are_explicit_shared_and_rounding_is_preserved() {
     }
     assert_eq!(p.instructions[p.output].width, 151552);
 }
+
+#[test]
+fn bulk_collective_domain_is_versioned_and_requires_uncaptured_execution() {
+    use inferfabric_dsl::{authoring::ModelDefinition, definition};
+    let ModelDefinition::Execution { mut graph, .. } = definition(include_str!(
+        "../../../examples/openpangu/92b-tp8-ep8-c8-learned.inferfabric"
+    )).unwrap() else { panic!() };
+    graph.max_context = 65536;
+    let p = lower(&graph, None).unwrap();
+    assert!(p.clone().with_bulk_collective_domain().is_err());
+    let p = p.with_uncaptured_prefill().unwrap().with_bulk_collective_domain().unwrap();
+    assert_eq!(p.format, "inferfabric.token-program.v9");
+    p.validate().unwrap();
+    let recipes = inferfabric_compiler::token_program::recipes(&p, &graph);
+    for (i, r) in p.instructions.iter().zip(&recipes) {
+        if i.op == "allreduce" {
+            assert_eq!(r["collective_domains"]["uncaptured_bulk"], "AI_CPU");
+            assert_eq!(r["collective_domains"]["decode"], "HOST");
+        }
+        if i.op == "gather_heads" { assert_eq!(r["collective_domains"]["uncaptured_bulk"], "HOST"); }
+    }
+    let mut invalid = p.clone();
+    invalid.uncaptured_prefill = false;
+    assert!(invalid.validate().is_err());
+    let p = p.with_output_rows().unwrap();
+    assert_eq!(p.format, "inferfabric.token-program.v9");
+    p.validate().unwrap();
+}
