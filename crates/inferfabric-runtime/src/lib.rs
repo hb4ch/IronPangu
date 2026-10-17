@@ -1,5 +1,6 @@
 //! Device contracts, fail-closed Ascend placeholder and deterministic orchestration mock.
 pub mod state_pool;
+pub mod prefix_index;
 use inferfabric_ir::*;
 use inferfabric_model::{Error, Layer, Result, Role, Spec, invalid};
 use serde::{Deserialize, Serialize};
