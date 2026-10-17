@@ -6,6 +6,7 @@ Receipt intervals are HTTP chunk intervals, not necessarily one token per chunk.
 """
 import argparse
 import concurrent.futures
+import hashlib
 import json
 import os
 import re
@@ -16,7 +17,14 @@ import threading
 import time
 import urllib.error
 import urllib.request
-from tokenizers import Tokenizer
+
+def expected_ids(case, eos, respect_eos):
+    if case.get('qualification', {}).get('output_is_placeholder'):
+        raise ValueError('placeholder outputs are not an independent reference')
+    ids = case['output_ids']
+    if not ids:
+        raise ValueError('empty reference output')
+    return ids[:ids.index(eos)+1] if respect_eos and eos in ids else list(ids)
 
 
 def main():
@@ -29,22 +37,41 @@ def main():
     p.add_argument('--expect-prefill', choices=('packed','serial'), help='verify actual graph use, excluding startup warmup')
     p.add_argument('--resident-cases', type=Path, help='serial oracle fixtures for concurrent long-prefill/short-decode qualification')
     p.add_argument('--check-overload', action='store_true', help='Burst long streaming requests beyond admission capacity, check 503/retry metadata and recovery')
+    p.add_argument('--request-timeout-seconds', type=int, default=120, help='Socket inactivity timeout, not a whole-run deadline; raise for 64K prefill')
+    p.add_argument('--respect-eos', action='store_true', help='Test normal serving through first EOS; preserve full references and report the narrower comparison scope')
     args = p.parse_args()
+    if args.request_timeout_seconds < 1:
+        p.error('--request-timeout-seconds must be positive')
     if args.check_overload and (not args.resident_cases or not args.max_num_seqs):
         p.error('--check-overload requires --resident-cases and --max-num-seqs')
     args.output.mkdir(parents=True, exist_ok=False)
     cases = json.loads(args.cases.read_text())
+    from tokenizers import Tokenizer
     tokenizer = Tokenizer.from_file(str(args.checkpoint / 'tokenizer.json'))
+    eos = json.loads((args.plan/'device-program.json').read_text())['eos']
+    def expected_text(case):
+        ids = expected_ids(case, eos, args.respect_eos)
+        expected_answer = case.get('qualification', {}).get('expected_answer')
+        if expected_answer is not None:
+            through_eos = expected_ids(case, eos, True)
+            if tokenizer.decode(through_eos, skip_special_tokens=True).strip() != expected_answer:
+                raise ValueError('independent reference failed its retrieval answer')
+        return tokenizer.decode(ids, skip_special_tokens=True)
+    for case in cases:
+        expected_text(case)
+    if args.resident_cases:
+        for case in json.loads(args.resident_cases.read_text()):
+            expected_text(case)
     url = f'http://127.0.0.1:{args.port}'
 
     def request(case, stream=False, disconnect=False, temperature=0):
         body = dict(model='inferfabric-program', prompt=case['input_ids'],
-                    max_tokens=len(case['output_ids']), temperature=temperature, stream=stream, ignore_eos=True)
+                    max_tokens=len(case['output_ids']), temperature=temperature, stream=stream, ignore_eos=not args.respect_eos)
         if stream:
             body['stream_options'] = {'include_usage': True}
         began = time.perf_counter()
         req = urllib.request.Request(url + '/v1/completions', data=json.dumps(body).encode(), headers={'Content-Type': 'application/json'})
-        with urllib.request.urlopen(req, timeout=120) as response:
+        with urllib.request.urlopen(req, timeout=args.request_timeout_seconds) as response:
             if not stream:
                 value = json.load(response)
                 return value['choices'][0]['text'], {'total_ms': (time.perf_counter()-began)*1000, 'usage': value['usage']}
@@ -100,13 +127,13 @@ def main():
                 time.sleep(1)
             results = []
             for case in cases:
-                expected = tokenizer.decode(case['output_ids'], skip_special_tokens=True)
+                expected = expected_text(case)
                 text, collected = request(case)
                 streamed, metrics = request(case, stream=True)
                 if text != expected or streamed != text:
                     raise RuntimeError(f"{case['case']} text mismatch: {text!r} / {streamed!r} / {expected!r}")
                 for observed in (collected, metrics):
-                    if observed['usage']['prompt_tokens'] != len(case['input_ids']) or observed['usage']['completion_tokens'] != len(case['output_ids']):
+                    if observed['usage']['prompt_tokens'] != len(case['input_ids']) or observed['usage']['completion_tokens'] != len(expected_ids(case, eos, args.respect_eos)):
                         raise RuntimeError('HTTP token usage does not match complete fixture')
                 results.append(dict(case=case['case'], text=text, collected=collected, streaming=metrics))
             residents = args.max_num_seqs or json.loads((args.plan/'serving.json').read_text()).get('resident_sequences', 1)
@@ -117,11 +144,11 @@ def main():
                 futures = [executor.submit(request, c) for c in concurrent_cases]
                 for case, future in zip(concurrent_cases, futures):
                     text, _ = future.result()
-                    if text != tokenizer.decode(case['output_ids'], skip_special_tokens=True):
+                    if text != expected_text(case):
                         raise RuntimeError('queued request isolation')
             request(cases[-1], stream=True, disconnect=True)
             text, _ = request(cases[0])
-            if text != tokenizer.decode(cases[0]['output_ids'], skip_special_tokens=True):
+            if text != expected_text(cases[0]):
                 raise RuntimeError('disconnect recovery')
             mixed = None
             if args.resident_cases:
@@ -133,10 +160,10 @@ def main():
                     short_text, short_metrics = request(cases[0], stream=True)
                     if long.done():
                         raise RuntimeError('long prefill blocked short request: no independent resident progress')
-                    if short_text != tokenizer.decode(cases[0]['output_ids'], skip_special_tokens=True):
+                    if short_text != expected_text(cases[0]):
                         raise RuntimeError('resident cancellation/reset corrupted short request')
                     long_text, long_metrics = long.result()
-                    if long_text != tokenizer.decode(long_case['output_ids'], skip_special_tokens=True):
+                    if long_text != expected_text(long_case):
                         raise RuntimeError('resident cancellation/reset corrupted long peer')
                     mixed = dict(long_prompt_tokens=len(long_case['input_ids']), short_finished_before_long=True,
                                  cancellation_during_peer_prefill=True, short=short_metrics, long=long_metrics)
@@ -166,7 +193,7 @@ def main():
                     start.wait(timeout=30)
                     req = urllib.request.Request(url+'/v1/completions', data=body, headers={'Content-Type':'application/json'})
                     try:
-                        response = urllib.request.urlopen(req, timeout=300)
+                        response = urllib.request.urlopen(req, timeout=max(300, args.request_timeout_seconds))
                         return response.status, dict(response.headers), None, response
                     except urllib.error.HTTPError as error:
                         with error:
@@ -200,11 +227,15 @@ def main():
                         if error.code!=503 or time.monotonic()>=deadline: raise
                         error.close()
                         time.sleep(0.1)
-                if text!=tokenizer.decode(cases[0]['output_ids'],skip_special_tokens=True):
+                if text!=expected_text(cases[0]):
                     raise RuntimeError('output changed after overload/disconnect recovery')
                 overload['recovery_output_correct'] = True
             report = dict(frontend='vLLM Rust 0.25.1', mode='resident request scheduler; compiled prefill and serial decode',
-                          full_fixture_text=True, sse_agreement=True, queued_isolation=True,
+                          full_fixture_text=not args.respect_eos, sse_agreement=True, queued_isolation=True,
+                          reference_comparison_scope='through_first_eos' if args.respect_eos else 'full_forced_continuation',
+                          fixture_sha256=hashlib.sha256(args.cases.read_bytes()).hexdigest(),
+                          resident_fixture_sha256=hashlib.sha256(args.resident_cases.read_bytes()).hexdigest() if args.resident_cases else None,
+                          request_socket_timeout_seconds=args.request_timeout_seconds,
                           disconnect_recovery=True, unsupported_sampling_rejected=True, results=results,
                           concurrent_requests=len(concurrent_cases), mixed_residents=mixed,
                           context_overflow_rejected=True,

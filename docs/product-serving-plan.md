@@ -181,6 +181,23 @@ See [full-model qualification](validation/2026-10-17-prefill-family/README.md).
 
 ### Reproducible 64K retrieval ladder
 
+For long HTTP qualification, `--request-timeout-seconds 900` raises the client
+socket inactivity timeout; it is not a whole-run deadline or a serving latency
+guarantee. Default tests still force all reference output tokens. The explicit
+`--respect-eos` mode instead exercises normal serving through first EOS while
+retaining the original reference and generation budget. Its report records
+`through_first_eos`, sets `full_fixture_text` false, and pins both fixture hashes.
+It must not be used to erase the separate forced-continuation mismatch evidence.
+Both modes reject placeholder references and independently check declared
+retrieval answers before starting the server. Local tests cover EOS truncation,
+usage count including EOS, unchanged source data, no-EOS outputs and invalid
+references; full NPU verification of this new HTTP mode remains a separate gate.
+
+The offline reference launcher loads both Omni custom-op vendor environments
+itself. A 64K startup attempt without them failed on a missing mHC PreV2 symbol;
+loading them explicitly allowed the engine to initialize and begin generation.
+That failed attempt is an environment failure, not evidence of a 64K model limit.
+
 `scripts/make-long-context-cases.py` produces deterministic early/middle/late
 retrieval inputs at 8,192, 16,384, 32,768 and 65,536 **total** tokens, reserving
 16 tokens for generation by default. Each case records its exact needle token

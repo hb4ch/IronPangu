@@ -2,6 +2,8 @@
 # OFFLINE GOLDEN REFERENCE ONLY: Torch/OmniInfer are excluded from native serving.
 set -eo pipefail
 source /usr/local/Ascend/cann/set_env.sh
+source /usr/local/Ascend/ascend-toolkit/vendors/omni_training_custom_transformer/bin/set_env.bash
+source /usr/local/Ascend/ascend-toolkit/vendors/omni_custom_transformer/bin/set_env.bash
 export OMNI_VLLM_PATCHES_DIR=high_throughout
 export VLLM_PLUGINS=omni-npu,omni_npu_patches,omni_custom_models
 export VLLM_DISABLE_PYNCCL=1
