@@ -117,6 +117,7 @@ version = "0.1.0"
 dependencies = [
  "inferfabric-model",
  "serde",
+ "serde_json",
 ]
 
 [[package]]

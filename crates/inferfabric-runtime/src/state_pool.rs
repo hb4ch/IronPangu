@@ -1,7 +1,7 @@
 //! Host ownership metadata for preallocated device state. No tensor bytes live here.
 //! Reservations span every component/rank atomically. Retired resources remain
 //! occupied until explicit rank completions and outstanding borrowers release them.
-use inferfabric_ir::serving::{Manifest, Storage};
+use inferfabric_ir::serving::{Manifest, Storage, Retention};
 use inferfabric_model::{Error, Result, invalid};
 use std::collections::{BTreeMap, BTreeSet};
 use std::sync::atomic::{AtomicU64, Ordering};
@@ -55,6 +55,7 @@ struct Pool {
     capacity: u32,
     page_tokens: Option<u32>,
     max_tokens: u32,
+    retention: Retention,
     free: BTreeSet<u32>,
 }
 struct Allocation {
@@ -83,7 +84,7 @@ pub struct StatePool {
 }
 impl StatePool {
     /// Capacities are units (pages or slots), explicitly budgeted per component/rank.
-    /// Keeping full histories is conservative: no sliding-window savings are assumed.
+    /// Recycling is enabled only by an explicit validated retention contract.
     pub fn new(manifest: &Manifest, epoch: u64, capacities: BTreeMap<Key, u32>) -> Result<Self> {
         manifest.validate()?;
         if epoch == 0 || manifest.states.is_empty() {
@@ -118,6 +119,7 @@ impl StatePool {
                     capacity,
                     page_tokens,
                     max_tokens: state.capacity_tokens,
+                    retention: state.retention,
                     free: (0..capacity).collect(),
                 });
             }
@@ -194,10 +196,11 @@ impl StatePool {
         let mut bindings = Vec::new();
         // Prepare every reservation before mutating any free list.
         for p in &self.pools {
-            if tokens > p.max_tokens {
+            if p.retention.is_full() && tokens > p.max_tokens {
                 return Err(invalid("state reservation exceeds compiled capacity"));
             }
-            let count = p.page_tokens.map_or(1, |n| tokens.div_ceil(n));
+            let retained=if p.retention.is_full(){tokens}else{tokens.min(p.max_tokens)};
+            let count = p.page_tokens.map_or(1, |n| retained.div_ceil(n));
             if count as usize > p.free.len() {
                 return Err(Error::Capacity(format!(
                     "state pool {} rank {}",
@@ -277,7 +280,10 @@ impl StatePool {
         let page_tokens = pool
             .page_tokens
             .ok_or_else(|| invalid("slot is not paged state"))?;
-        let physical_page = bindings[index].units[(position / page_tokens) as usize];
+        let logical_page=position/page_tokens;
+        let page=if pool.retention.is_full(){logical_page}else{logical_page%(pool.max_tokens/page_tokens)};
+        let physical_page = *bindings[index].units.get(page as usize)
+            .ok_or_else(||invalid("append exceeds reserved pages"))?;
         let row_in_page = position % page_tokens;
         Ok(PageAddress {
             physical_page,

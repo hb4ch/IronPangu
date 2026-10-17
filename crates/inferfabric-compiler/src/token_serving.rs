@@ -77,6 +77,7 @@ pub fn envelope(graph: &Graph, ranks: usize) -> Result<(Vec<Variant>, Vec<State>
             .into_iter()
             .max();
         states.push(State {
+            retention: Retention::Full,
             id: n.name.clone(),
             logical_node: id,
             ranks: owners.clone(),

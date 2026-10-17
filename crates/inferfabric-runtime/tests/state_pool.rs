@@ -2,6 +2,56 @@ use inferfabric_ir::serving::*;
 use inferfabric_runtime::state_pool::StatePool;
 use std::collections::BTreeMap;
 
+#[test]
+fn bounded_swa_ring_preserves_full_history_peers_and_rank_retirement() {
+    let mut m=manifest();m.identity.devices=(0..8).collect();
+    m.variants[0].max_context=65536;
+    let mut prefill=m.variants[0].clone();prefill.id="packed4".into();
+    prefill.phase=Phase::Prefill;prefill.packed=true;prefill.max_query_tokens=4;prefill.max_tokens=4;
+    m.variants.push(prefill);
+    for s in &mut m.states {s.ranks=(0..8).collect();s.capacity_tokens=65536;}
+    m.states[0].capacity_tokens=544;m.states[0].window_tokens=Some(512);
+    m.states[0].retention=Retention::SlidingWindow{max_query_tokens:4};
+    let mut capacities=BTreeMap::new();
+    for s in &m.states {
+        let units=match s.storage {Storage::Pages{page_tokens,..}=>2*s.capacity_tokens/page_tokens,Storage::Slot{..}=>2};
+        for &rank in &s.ranks {capacities.insert((s.id.clone(),rank),units);}
+    }
+    let mut full=m.clone();full.states[0].retention=Retention::Full;
+    let mut conservative=StatePool::new(&full,9,capacities.clone()).unwrap();
+    let unchanged=conservative.usage();
+    assert!(conservative.reserve(9,1,65536).is_err());
+    assert_eq!(conservative.usage(),unchanged); // window metadata alone grants no ring semantics
+    let mut p=StatePool::new(&m,9,capacities).unwrap();let baseline=p.usage();
+    let long=p.reserve(9,1,65536).unwrap();let peer=p.reserve(9,2,65536).unwrap();
+    for rank in 0..8 {
+        for start in [0u32,15,511,512,527,528,543,544,2047,32767,65532] {
+            let mut live=std::collections::BTreeSet::new();
+            for pos in start.saturating_sub(511)..start+4 {
+                let a=p.page_address(9,long,"kv16",rank,pos).unwrap();
+                assert!(live.insert(a.byte_offset));
+                assert_eq!(a.byte_offset,u64::from(pos%544)*1152);
+                let b=p.page_address(9,peer,"kv16",rank,pos).unwrap();
+                assert_eq!(b.byte_offset,a.byte_offset+544*1152);
+            }
+        }
+        assert_eq!(p.page_address(9,long,"kv32",rank,65535).unwrap().byte_offset,65535*656);
+        assert!(p.page_address(9,long,"kv16",rank,65536).is_err());
+    }
+    let occupied=p.usage();assert!(p.reserve(9,3,1).is_err());assert_eq!(p.usage(),occupied);
+    let borrowed=p.borrow(9,long).unwrap();let flight=p.submit(9,&[long],&[]).unwrap();
+    p.retire(9,long).unwrap();
+    for rank in 0..8 {p.complete(9,flight,rank).unwrap();}
+    assert!(p.reserve(9,3,65536).is_err()); // borrowers still own all ring pages
+    p.release(9,borrowed).unwrap();let replacement=p.reserve(9,3,65536).unwrap();
+    assert!(p.page_address(9,long,"kv16",0,0).is_err());
+    p.retire(9,replacement).unwrap();p.retire(9,peer).unwrap();assert_eq!(p.usage(),baseline);
+    let short=p.reserve(9,4,17).unwrap();
+    assert_eq!(p.bindings(9,short).unwrap()[0].units.len(),2);
+    assert!(p.page_address(9,short,"kv16",0,17).is_err());
+    p.retire(9,short).unwrap();assert_eq!(p.usage(),baseline);
+}
+
 fn manifest() -> Manifest {
     Manifest {
         version: VERSION,
@@ -28,6 +78,7 @@ fn manifest() -> Manifest {
         }],
         states: vec![
             State {
+                retention: Retention::Full,
                 id: "kv16".into(),
                 logical_node: 0,
                 ranks: vec![0, 1],
@@ -41,6 +92,7 @@ fn manifest() -> Manifest {
                 checkpoint_supported: false,
             },
             State {
+                retention: Retention::Full,
                 id: "kv32".into(),
                 logical_node: 1,
                 ranks: vec![0, 1],
@@ -54,6 +106,7 @@ fn manifest() -> Manifest {
                 checkpoint_supported: false,
             },
             State {
+                retention: Retention::Full,
                 id: "history".into(),
                 logical_node: 2,
                 ranks: vec![0, 1],

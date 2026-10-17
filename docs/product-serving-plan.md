@@ -44,9 +44,11 @@ contract; it does not yet enable recycling in the serving executor:
 The [explicit-window metadata implementation](validation/2026-10-17-window-metadata/README.md)
 now passes the full standard 92B native/HTTP regression. Dense attention and its
 metadata producer use the DSL window, with separate persistent buffers and
-validated dependencies per window. Ring allocation and serving-pool retention
-semantics remain pending; the pool must distinguish executable context from
-physical retained capacity instead of rejecting long requests at the ring size.
+validated dependencies per window. The [explicit retention contract](validation/2026-10-17-retention-contract/README.md)
+now distinguishes executable context from physical retained capacity in the generic
+pool, with synthetic 64K ownership tests and a full native HTTP regression.
+The compiler still emits full retention and the native adapter rejects ring
+manifests until allocation, table expansion and scatter addressing are integrated.
 
 Experimental learned-index execution now includes explicit INT8 index queries/keys
 and FP16 scales/head weights in the [physical plan](learned-index-quantization.md).

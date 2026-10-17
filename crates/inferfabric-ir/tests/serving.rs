@@ -1,4 +1,42 @@
 use inferfabric_ir::serving::*;
+#[test]
+fn sliding_retention_is_explicit_chunk_safe_and_fail_closed() {
+    let mut m=manifest();
+    m.variants[0].max_context=65536;
+    let mut prefill=m.variants[0].clone();
+    prefill.id="packed".into();prefill.phase=Phase::Prefill;
+    prefill.packed=true;prefill.max_query_tokens=4;prefill.max_tokens=4;
+    m.variants.push(prefill);
+    let s=&mut m.states[0];
+    s.storage=Storage::Pages{page_tokens:16,row_bytes:1152,encoding:"bf16".into()};
+    s.window_tokens=Some(512);s.capacity_tokens=544;
+    s.retention=Retention::SlidingWindow{max_query_tokens:4};
+    s.checkpoint_supported=false;
+    m.validate().unwrap();
+    for case in 0..7 {
+        let mut bad=m.clone();let s=&mut bad.states[0];
+        match case {
+            0=>s.capacity_tokens=512,
+            1=>s.capacity_tokens=528,
+            2=>s.window_tokens=None,
+            3=>s.retention=Retention::SlidingWindow{max_query_tokens:1},
+            4=>s.retention=Retention::SlidingWindow{max_query_tokens:0},
+            5=>s.checkpoint_supported=true,
+            _=>s.storage=Storage::Slot{bytes:100,dtype:"bf16".into()},
+        }
+        assert!(bad.validate().is_err(),"case {case}");
+    }
+    assert_eq!(sliding_capacity(65536,512,1,16).unwrap(),528);
+    assert_eq!(sliding_capacity(65536,512,4,16).unwrap(),544);
+    assert_eq!(sliding_capacity(129,512,4,16).unwrap(),144);
+    assert!(sliding_capacity(u32::MAX,u32::MAX,1,16).is_err());
+    let encoded=serde_json::to_value(&m).unwrap();
+    assert_eq!(encoded["states"][0]["retention"]["kind"],"sliding_window");
+    assert_eq!(serde_json::from_value::<Manifest>(encoded).unwrap(),m);
+    let old=manifest();let encoded=serde_json::to_value(&old).unwrap();
+    assert!(encoded["states"][0].get("retention").is_none());
+    assert_eq!(serde_json::from_value::<Manifest>(encoded).unwrap(),old);
+}
 fn manifest() -> Manifest {
     Manifest {
         version: VERSION,
@@ -24,6 +62,7 @@ fn manifest() -> Manifest {
             packed: true,
         }],
         states: vec![State {
+            retention: Retention::Full,
             id: "kv".into(),
             logical_node: 0,
             ranks: vec![0, 1],

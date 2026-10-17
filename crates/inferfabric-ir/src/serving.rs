@@ -59,10 +59,37 @@ pub struct State {
     pub logical_node: usize,
     pub ranks: Vec<u32>,
     pub storage: Storage,
+    /// Physical per-request retention, rounded to pages. Executable context is
+    /// declared separately by variants; full retention still bounds requests.
     pub capacity_tokens: u32,
+    /// Explicit addressing policy. An attention window alone never enables recycling.
+    #[serde(default, skip_serializing_if = "Retention::is_full")]
+    pub retention: Retention,
     /// None means retain the whole causal prefix, not an unknown window.
     pub window_tokens: Option<u32>,
     pub checkpoint_supported: bool,
+}
+
+#[derive(Debug, Clone, Copy, Default, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(tag = "kind", rename_all = "snake_case", deny_unknown_fields)]
+pub enum Retention {
+    #[default]
+    Full,
+    SlidingWindow { max_query_tokens: u32 },
+}
+impl Retention {
+    pub fn is_full(&self) -> bool { matches!(self, Self::Full) }
+}
+
+/// Maximum number of pages touched by a window plus all later writes in a chunk.
+pub fn sliding_capacity(context:u32, window:u32, query:u32, page:u32)->Result<u32> {
+    if context==0 || window==0 || query==0 || page==0 || query>context {
+        return Err(invalid("invalid sliding retention dimensions"));
+    }
+    let retained=u64::from(window)+u64::from(query)-1;
+    let pages=((retained+u64::from(page)-2)/u64::from(page)+1)
+        .min(u64::from(context).div_ceil(u64::from(page)));
+    u32::try_from(pages*u64::from(page)).map_err(|_|invalid("sliding retention overflow"))
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
@@ -128,6 +155,8 @@ impl Manifest {
             }
         }
         let mut states = BTreeSet::new();
+        let context=self.variants.iter().map(|v|v.max_context).max().unwrap();
+        let query=self.variants.iter().map(|v|v.max_query_tokens).max().unwrap();
         for s in &self.states {
             if s.id.is_empty()
                 || !states.insert(&s.id)
@@ -162,6 +191,16 @@ impl Manifest {
                     return Err(invalid("invalid serving state slot"));
                 }
                 _ => {}
+            }
+            if let Retention::SlidingWindow { max_query_tokens }=s.retention {
+                let Storage::Pages {page_tokens,..}=s.storage else {
+                    return Err(invalid("sliding retention requires paged state"));
+                };
+                let window=s.window_tokens.ok_or_else(||invalid("sliding retention requires a window"))?;
+                if max_query_tokens<query || s.checkpoint_supported ||
+                    s.capacity_tokens!=sliding_capacity(context,window,max_query_tokens,page_tokens)? {
+                    return Err(invalid("invalid sliding retention capacity/variant/checkpoint contract"));
+                }
             }
         }
         Ok(())

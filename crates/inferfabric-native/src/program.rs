@@ -91,6 +91,9 @@ pub fn manifest(bundle: &Path) -> Result<Manifest> {
 /// Only the two concrete native invocation contracts are accepted, not arbitrary batches.
 pub fn prefill_capacity(m: &Manifest) -> Result<u32> {
     m.validate()?;
+    if m.states.iter().any(|s|!s.retention.is_full()) {
+        return Err(invalid("native program engine has not enabled recycled state addressing"));
+    }
     if m.variants.is_empty()
         || m.variants.len() > 2
         || m.variants[0].id != "serial_token_v1"
@@ -502,6 +505,14 @@ mod tests {
         m.variants.push(v);
         assert_eq!(prefill_capacity(&m).unwrap(), 4);
         let valid = m.clone();
+        let state=m.states.iter_mut().find(|s|matches!(s.storage,Storage::Pages{..})).unwrap();
+        state.retention=inferfabric_ir::serving::Retention::SlidingWindow{max_query_tokens:4};
+        state.window_tokens=Some(512);state.checkpoint_supported=false;
+        let Storage::Pages{page_tokens,..}=state.storage else {unreachable!()};
+        state.capacity_tokens=inferfabric_ir::serving::sliding_capacity(512,512,4,page_tokens).unwrap();
+        m.validate().unwrap();
+        assert!(prefill_capacity(&m).unwrap_err().to_string().contains("recycled state addressing"));
+        m=valid.clone();
         m.variants[1].max_sequences = 2;
         assert!(prefill_capacity(&m).is_err());
         m = valid.clone();
