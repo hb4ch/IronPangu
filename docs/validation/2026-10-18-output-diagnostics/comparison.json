@@ -1,0 +1,63 @@
+{
+  "format": "inferfabric.token-divergence.v1",
+  "case": "extended-answer-65536-middle",
+  "inspected_outputs": 8,
+  "reference_outputs": 128,
+  "matching_prefix_tokens": 4,
+  "first_difference": {
+    "output_index": 4,
+    "position": 65411,
+    "expected_token": 198,
+    "actual_token": 844,
+    "native_topk": [
+      {
+        "token": 844,
+        "logprob": -0.358768
+      },
+      {
+        "token": 198,
+        "logprob": -1.35877
+      },
+      {
+        "token": 297,
+        "logprob": -3.35877
+      },
+      {
+        "token": 13,
+        "logprob": -5.35877
+      },
+      {
+        "token": 11,
+        "logprob": -6.35877
+      }
+    ],
+    "reference_topk": {
+      "198": {
+        "logprob": -0.3531574308872223,
+        "rank": 1
+      },
+      "844": {
+        "logprob": -1.3531574010849,
+        "rank": 2
+      },
+      "297": {
+        "logprob": -3.3531575202941895,
+        "rank": 3
+      },
+      "13": {
+        "logprob": -6.3531575202941895,
+        "rank": 4
+      },
+      "11": {
+        "logprob": -7.3531575202941895,
+        "rank": 5
+      }
+    },
+    "native_actual_minus_expected_logprob": 1.000002,
+    "reference_actual_minus_expected_logprob": -0.9999999701976776
+  },
+  "scope": "output logprobs at equal token history; not full-model qualification",
+  "request_sha256": "2aa576d7af389961009fafbf605b5511a1ee5e64108bc3338d89ad6fc56808ac",
+  "reference_sha256": "697d2ad8c0009a7f430d2848f5007fa57d17c73e087506d5599e3abed5871bd0",
+  "tokens_sha256": "dd4e78c994849417431927b513a662a9265cdf1ca34746b215b2452ba45eac6b"
+}

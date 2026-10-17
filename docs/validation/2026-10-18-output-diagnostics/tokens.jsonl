@@ -1,0 +1,16 @@
+{"step":65407,"token":21,"logit":189,"top5":[{"token":21,"logprob":-0.187117},{"token":5433,"logprob":-2.18712},{"token":1114,"logprob":-3.18712},{"token":6540,"logprob":-4.18712},{"token":334,"logprob":-8.18712}]}
+{"request":0,"resident":0,"step":0,"token":21,"batch_sequences":1,"batch_tokens":3968,"elapsed_us":9512856}
+{"step":65408,"token":15,"logit":142,"top5":[{"token":15,"logprob":-0.000132552},{"token":11,"logprob":-10.0001},{"token":844,"logprob":-10.0001},{"token":148902,"logprob":-11.0001},{"token":198,"logprob":-12.0001}]}
+{"request":0,"resident":0,"step":1,"token":15,"batch_sequences":1,"batch_tokens":1,"elapsed_us":35522}
+{"step":65409,"token":22,"logit":183,"top5":[{"token":22,"logprob":-7.77214e-05},{"token":21,"logprob":-11.0001},{"token":23,"logprob":-11.0001},{"token":15,"logprob":-12.0001},{"token":16,"logprob":-12.0001}]}
+{"request":0,"resident":0,"step":2,"token":22,"batch_sequences":1,"batch_tokens":1,"elapsed_us":32643}
+{"step":65410,"token":22,"logit":185,"top5":[{"token":22,"logprob":-2.82522e-05},{"token":21,"logprob":-11},{"token":23,"logprob":-12},{"token":20,"logprob":-13},{"token":16,"logprob":-14}]}
+{"request":0,"resident":0,"step":3,"token":22,"batch_sequences":1,"batch_tokens":1,"elapsed_us":32226}
+{"step":65411,"token":844,"logit":190,"top5":[{"token":844,"logprob":-0.358768},{"token":198,"logprob":-1.35877},{"token":297,"logprob":-3.35877},{"token":13,"logprob":-5.35877},{"token":11,"logprob":-6.35877}]}
+{"request":0,"resident":0,"step":4,"token":844,"batch_sequences":1,"batch_tokens":1,"elapsed_us":32071}
+{"step":65412,"token":16,"logit":199,"top5":[{"token":16,"logprob":-0.000221586},{"token":15,"logprob":-9.00022},{"token":17,"logprob":-10.0002},{"token":63,"logprob":-12.0002},{"token":220,"logprob":-12.0002}]}
+{"request":0,"resident":0,"step":5,"token":16,"batch_sequences":1,"batch_tokens":1,"elapsed_us":31515}
+{"step":65413,"token":11,"logit":206,"top5":[{"token":11,"logprob":-3.92191e-05},{"token":198,"logprob":-11},{"token":13,"logprob":-12},{"token":17,"logprob":-13},{"token":220,"logprob":-13}]}
+{"request":0,"resident":0,"step":6,"token":11,"batch_sequences":1,"batch_tokens":1,"elapsed_us":32115}
+{"step":65414,"token":17,"logit":90.5,"top5":[{"token":17,"logprob":-0.693282},{"token":220,"logprob":-0.693282},{"token":16,"logprob":-9.19328},{"token":18,"logprob":-11.1933},{"token":19,"logprob":-11.6933}]}
+{"request":0,"resident":0,"step":7,"token":17,"batch_sequences":1,"batch_tokens":1,"elapsed_us":31687}

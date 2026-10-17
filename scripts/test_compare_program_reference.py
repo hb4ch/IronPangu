@@ -20,6 +20,11 @@ class ComparisonTests(unittest.TestCase):
                      dict(request=0, step=1, token=9, elapsed_us=3000),
                      dict(request=0, step=2, token=5, elapsed_us=5000)]
 
+    def test_diagnostic_intervention_cannot_become_an_oracle(self):
+        self.cases[0]['reference_intervention'] = 'changed rotary tables'
+        with self.assertRaisesRegex(ValueError, 'not an independent reference'):
+            module.compare(self.cases, self.rows, 1, 9)
+
     def test_step_durations_are_not_cumulative_and_single_output_has_no_tpot(self):
         a, b = module.compare(self.cases, self.rows, 1, 9)
         self.assertTrue(a['exact_all_tokens'])

@@ -1,5 +1,29 @@
 # Product serving execution and scheduling
 
+## Dependency order and test discipline (2026-10-18)
+
+Real packed/chunked prefill and continuous batching are the critical serving
+path. Preserve their existing qualified implementation: one uncaptured forward
+per 4096 uncached prompt tokens plus the actual tail, paged state, mixed
+prefill/decode scheduling, admission budgets and safe resident release. Never
+substitute token-by-token prefill or long-prefill graph capture. Fix regressions
+in these foundations before peripheral features or performance tuning.
+
+Next close long-output correctness on that same execution path, then qualify
+extended HTTP output, prefix reuse and matched TTFT/TPOT. Production fault,
+backpressure and soak gates remain required. A short answer pass does not close
+extended-output correctness; a native probe does not prove HTTP scheduling.
+Before a costly model run, state its hypothesis, fixed configuration and decision
+criterion. Use the smallest discriminating fixture first, then the full gate.
+Do not repeat an unchanged short-answer suite to investigate an extended failure.
+
+[Output diagnostics](validation/2026-10-18-output-diagnostics/README.md) expose
+an important limitation: preparation-mode instrumentation changes the observed
+first divergence (index 4 rather than frozen index 7). Only compare scores at
+identical histories; the later diagnostic tie is not an explanation of the
+frozen failure. Keep the production bundle unchanged until attribution and
+full-output qualification succeed.
+
 ## Highest-priority open gate (2026-10-18)
 
 [Extended decode qualification](validation/2026-10-18-extended-decode/README.md)

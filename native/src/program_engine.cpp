@@ -31,13 +31,16 @@ struct Engine {
   std::vector<int32_t> binding_pages;
   bool preparation;
   // Opt-in offline diagnostics expose only the sampler's existing request
-  // outputs. No activation readback, new kernels or completion boundaries.
+  // outputs. Batch scoring adds output-only kernels/stream completions and
+  // requires explicit preparation; normal serving never enables this path.
   bool output_diagnostics = std::getenv("INFERFABRIC_OUTPUT_DIAGNOSTICS") != nullptr;
   bool stopping = false, acl_initialized = false;
   std::string failure;
 
   Engine(const char *path, const char *weights, bool prepare) : bundle(path), checkpoint(weights),
       program(inferfabric::execution::Plan::read(bundle + "/execution.bin")), preparation(prepare) {
+    if(output_diagnostics && program.uncaptured_prefill && !preparation)
+      throw std::runtime_error("uncaptured output diagnostics require explicit preparation mode; serving arena is not a diagnostic arena");
     if(program.uncaptured_prefill) {
       // CANN 9.1's implicit executor-cache teardown crashed after the full
       // variable-query regression. Our explicit repeatable invocations and
@@ -205,6 +208,18 @@ struct Engine {
           } else if(cmd == Command::Batch) {
             auto logits=decoder.sequence_batch(chunk_tokens,batch_members);
             next_batch=decoder.emit_rows(logits,batch_sample_rows);
+            if(output_diagnostics) {
+              if(!preparation)throw std::runtime_error("batch output diagnostics require explicit preparation mode");
+              size_t sampled=0;
+              for(const auto &member:batch_members)if(member.sample) {
+                const auto row=decoder.compact_output_active?sampled:batch_sample_rows.at(sampled);
+                auto values=logits.view(row*decoder.vocabulary(),decoder.vocabulary());
+                auto observed=uint32_t(decoder.emit(values,int(member.position+member.tokens-1),true));
+                if(observed!=next_batch.at(sampled))throw std::runtime_error("output diagnostics changed batch argmax");
+                ++sampled;
+              }
+              if(sampled!=next_batch.size())throw std::runtime_error("diagnostic batch output extent");
+            }
           }
           {
             std::lock_guard<std::mutex> lock(mutex);
