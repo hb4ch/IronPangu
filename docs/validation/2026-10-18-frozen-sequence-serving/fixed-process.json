@@ -1,0 +1,11 @@
+{
+  "returncode": 0,
+  "elapsed_seconds": 146.1794665143825,
+  "command": [
+    "/data/p00603624/inferfabric/openpangu92/native-build-head-batch/program_engine_probe",
+    "/data/p00603624/inferfabric/openpangu92/sequence-serving-fixed-plan",
+    "/models/92B",
+    "/data/p00603624/inferfabric/openpangu92/bulk-prefill4k-discovery/requests.txt"
+  ],
+  "preparation": true
+}

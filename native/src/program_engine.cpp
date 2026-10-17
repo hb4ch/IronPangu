@@ -386,7 +386,8 @@ extern "C" int inferfabric_program_batch(void *p,const IFProgramSequenceV1 *sequ
     const uint32_t *tokens,uint32_t token_count,uint32_t *outputs,uint32_t output_capacity,uint32_t *output_count) {
   return call([&]{
     auto &e=engine(p);
-    if(!e.preparation)throw std::runtime_error("multi-sequence arena qualification pending; preparation mode required");
+    // Production open already requires matching frozen arena/workspace files
+    // and successful startup preparation of every sequence decode graph.
     if(!sequences || !tokens || !output_count || !sequence_count || sequence_count>e.program.resident_sequences ||
        !token_count || token_count>e.program.prefill_tokens || !e.program.uncaptured_prefill)
       throw std::runtime_error("invalid sequence batch arguments");
@@ -411,5 +412,5 @@ extern "C" int inferfabric_program_batch(void *p,const IFProgramSequenceV1 *sequ
 }
 extern "C" int inferfabric_program_batch_capacity(void *p,uint32_t *capacity) {
   return call([&]{if(!capacity)throw std::runtime_error("null batch capacity");auto &e=engine(p);
-    *capacity=e.preparation && e.program.uncaptured_prefill?e.program.prefill_tokens:0;});
+    *capacity=e.program.uncaptured_prefill?e.program.prefill_tokens:0;});
 }

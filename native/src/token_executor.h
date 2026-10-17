@@ -1243,7 +1243,7 @@ struct Decoder {
     throw std::runtime_error("missing embedding vocabulary contract");
   }
   std::vector<uint32_t> emit_rows(const V &logits,const std::vector<uint32_t> &rows) {
-    if(rows.empty()){execution.complete();return {};}
+    if(rows.empty()){execution.complete();pending_kernels.clear();return {};}
     V selected(rows.size(),ACL_INT64),peers(rows.size()*8,ACL_INT64);
     for(size_t i=0;i<rows.size();++i) {
       if(uint64_t(rows[i]+1)*vocabulary()>logits.size())throw std::runtime_error("sample row bounds");
