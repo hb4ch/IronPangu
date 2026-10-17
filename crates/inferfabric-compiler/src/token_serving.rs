@@ -5,7 +5,17 @@ use inferfabric_model::{Result, invalid};
 
 pub fn program_envelope(graph:&Graph,ranks:usize,program:&crate::token_program::Program)->Result<(Vec<Variant>,Vec<State>)> {
     program.validate()?;
-    let (mut variants,states)=envelope(graph,ranks)?;
+    let (mut variants,mut states)=envelope(graph,ranks)?;
+    for state in &mut states {
+        if matches!(&state.storage,Storage::Pages{encoding,..} if encoding=="bf16_latent512_rotary64") {
+            let windows=graph.nodes.iter().filter(|n|n.op=="latent_attention" && n.inputs.get(1)==Some(&state.logical_node))
+                .map(|n|n.integer("window")).collect::<Result<std::collections::BTreeSet<_>>>()?;
+            if windows.len()!=1{return Err(invalid("paged cache must have one compatible attention window"));}
+            state.window_tokens=Some(*windows.first().unwrap() as u32);
+            state.capacity_tokens=sliding_capacity(program.max_context as u32,state.window_tokens.unwrap(),program.prefill_tokens as u32,16)?;
+            state.retention=Retention::SlidingWindow{max_query_tokens:program.prefill_tokens as u32};
+        }
+    }
     if program.prefill_tokens>1 {
         let count=program.prefill_tokens as u32;
         variants.push(Variant{id:format!("packed_prefill_{count}_v1"),phase:Phase::Prefill,

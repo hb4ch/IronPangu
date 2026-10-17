@@ -23,6 +23,7 @@ pub fn lower(graph: &Graph, devices: &[u32]) -> Result<Plan> {
     source.extend_from_slice(include_bytes!("../../../native/src/program_engine.cpp"));
     source.extend_from_slice(include_bytes!("../../../native/src/page_binding.h"));
     source.extend_from_slice(include_bytes!("../../../native/include/paged_state_contract.h"));
+    source.extend_from_slice(include_bytes!("../../../native/include/sliding_window_layout.h"));
     source.extend_from_slice(include_bytes!("../../../native/src/token_dispatch.inc"));
     source.extend_from_slice(include_bytes!(
         "../../../native/include/ascend_token_contract.h"

@@ -371,7 +371,7 @@ pub fn write_bundle_with_page_policy(
     let mut serving = crate::token_serving::lower(graph, &physical, &binary, &inventory.metadata_sha256)?;
     serving.resident_sequences = resident_sequences as u32;
     serving.shared_pages = shared_pages;
-    serving.variants = crate::token_serving::program_envelope(graph,topology.devices.len(),&program)?.0;
+    (serving.variants,serving.states) = crate::token_serving::program_envelope(graph,topology.devices.len(),&program)?;
     if prefill_tokens > 1 {
         serving.limitations.push("Packed prefill uses an exact compiled chunk width, batched tokenwise operators and ordered per-query attention/convolution. Numerical equivalence and hardware readiness require independent qualification; no prefix reuse across numerical classes is granted.".into());
     }

@@ -933,10 +933,14 @@ pub fn recipes(p: &Program, graph: &Graph) -> Vec<serde_json::Value> {
                 }
             }
             if i.op != "cache_c8_norm_rope_append" {
-                fields.push(serde_json::json!({"name":"bf16_cache","dtype":"bf16","shape":[p.resident_sequences*32,16,1,576]}));
+                let window=graph.nodes.iter().filter(|node|node.op=="latent_attention" && node.inputs.get(1)==Some(&i.logical_node))
+                    .filter_map(|node|node.integer("window").ok()).max().unwrap_or(p.max_context);
+                let capacity=inferfabric_ir::serving::sliding_capacity(p.max_context as u32,window as u32,p.prefill_tokens as u32,16).expect("validated cache dimensions") as usize;
+                fields.push(serde_json::json!({"name":"bf16_cache","dtype":"bf16","shape":[p.resident_sequences*capacity/16,16,1,576],"retention":"sliding_window","window_tokens":window,"retained_capacity_tokens":capacity,"max_query_tokens":p.prefill_tokens,"addressing":"absolute logical page modulo retained page count, then owned physical page ID"}));
             }
-            fields.push(serde_json::json!({"name":"resident_partition","resident_sequences":p.resident_sequences,"logical_capacity_tokens":if i.op=="cache_c8_norm_rope_append" {p.max_context.div_ceil(32)*32} else {512},"ownership":if p.shared_pages {"shared physical page pool; partial request reservations; exclusive ownership checked at bind; release after rank completion"} else {"disjoint fixed page partitions; mappings persist across selection; cross-partition binding rejected"}}));
-            fields.push(serde_json::json!({"name":"device_block_table","dtype":"int32","shape":[1,if i.op=="cache_c8_norm_rope_append" {p.max_context.div_ceil(32)} else {32}],"role":"control_input","binding":"component/rank physical page IDs; stable device address"}));
+            let retained=if i.op=="cache_c8_norm_rope_append" {serde_json::json!(p.max_context.div_ceil(32)*32)} else {fields.iter().find(|f|f["name"]=="bf16_cache").unwrap()["retained_capacity_tokens"].clone()};
+            fields.push(serde_json::json!({"name":"resident_partition","resident_sequences":p.resident_sequences,"logical_capacity_tokens":p.max_context,"owned_capacity_tokens":retained,"ownership":if p.shared_pages {"shared physical page pool; partial request reservations; exclusive ownership checked at bind; release after rank completion"} else {"disjoint fixed page partitions; mappings persist across selection; cross-partition binding rejected"}}));
+            fields.push(serde_json::json!({"name":"device_block_table","dtype":"int32","shape":[1,if i.op=="cache_c8_norm_rope_append" {p.max_context.div_ceil(32)} else {p.max_context.div_ceil(16)}],"role":"control_input","binding":"absolute logical pages map to owned physical page IDs; BF16 ring repeats owned IDs; stable device address"}));
             fields.push(serde_json::json!({"name":"physical_append_position","dtype":if i.op=="cache_append" {"int32"} else {"int64"},"shape":[1],"role":"control_input","binding":"block_table[logical_position / page_tokens] * page_tokens + logical_position % page_tokens","page_tokens":if i.op=="cache_c8_norm_rope_append" {32} else {16},"staging":"one packed control upload per rank per invocation","control_bank_bytes":cache_controls.len()*16*p.prefill_tokens,"byte_offset":cache_controls[i.name.as_str()]+if i.op=="cache_append" {8} else {0}}));
         }
         if matches!(i.op.as_str(), "mome" | "mome_inplace") {

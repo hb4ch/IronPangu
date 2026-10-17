@@ -91,8 +91,13 @@ pub fn manifest(bundle: &Path) -> Result<Manifest> {
 /// Only the two concrete native invocation contracts are accepted, not arbitrary batches.
 pub fn prefill_capacity(m: &Manifest) -> Result<u32> {
     m.validate()?;
-    if m.states.iter().any(|s|!s.retention.is_full()) {
-        return Err(invalid("native program engine has not enabled recycled state addressing"));
+    for s in &m.states {
+        if let inferfabric_ir::serving::Retention::SlidingWindow{max_query_tokens}=s.retention {
+            if !matches!(&s.storage,Storage::Pages{page_tokens:16,encoding,..} if encoding=="bf16_latent512_rotary64") ||
+                max_query_tokens!=m.variants.iter().map(|v|v.max_query_tokens).max().unwrap() {
+                return Err(invalid("unsupported native recycled state addressing"));
+            }
+        }
     }
     if m.variants.is_empty()
         || m.variants.len() > 2
@@ -508,9 +513,12 @@ mod tests {
         let state=m.states.iter_mut().find(|s|matches!(s.storage,Storage::Pages{..})).unwrap();
         state.retention=inferfabric_ir::serving::Retention::SlidingWindow{max_query_tokens:4};
         state.window_tokens=Some(512);state.checkpoint_supported=false;
+        state.storage=Storage::Pages{page_tokens:16,row_bytes:1152,encoding:"bf16_latent512_rotary64".into()};
         let Storage::Pages{page_tokens,..}=state.storage else {unreachable!()};
         state.capacity_tokens=inferfabric_ir::serving::sliding_capacity(512,512,4,page_tokens).unwrap();
         m.validate().unwrap();
+        assert_eq!(prefill_capacity(&m).unwrap(),4);
+        if let Storage::Pages{encoding,..}=&mut m.states.iter_mut().find(|s|!s.retention.is_full()).unwrap().storage {*encoding="unknown".into();}
         assert!(prefill_capacity(&m).unwrap_err().to_string().contains("recycled state addressing"));
         m=valid.clone();
         m.variants[1].max_sequences = 2;

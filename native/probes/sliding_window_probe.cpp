@@ -1,10 +1,63 @@
 #include "openpangu_probe_common.h"
 #include "../src/openpangu_ops.h"
 #include "../include/sliding_window_layout.h"
+#include "../src/openpangu_decoder_state.h"
+#include <aclnnop/aclnn_index_copy.h>
 #include <aclnn_ai_infra_fused_infer_attention_sink.h>
 #include <aclnn_ai_infra_fused_infer_attention_sink_metadata.h>
 using openpangu::DeviceTensor;
 using openpangu::Operation;
+void production_state_scatter() {
+  pangu::AttentionState state(16,544,false,2,true,65536);
+  state.page_binding.release(0);state.page_binding.release(1);
+  std::vector<int32_t> owned(34);for(int i=0;i<34;++i)owned[i]=67-i;
+  state.page_binding.bind(owned);
+  auto blocks=state.blocks();state.table.upload(blocks);
+  for(uint32_t pos=0;pos<65536;++pos) {
+    auto expected=uint64_t(owned[(pos/16)%34])*16+pos%16;
+    if(state.append(pos)!=expected || blocks[pos/16]!=int32_t(expected/16))
+      throw std::runtime_error("production ring table/append disagreement");
+  }
+  state.page_binding.select(1);
+  bool rejected=false;try{state.page_binding.bind({owned[0]});}catch(const std::runtime_error&){rejected=true;}
+  if(!rejected)throw std::runtime_error("production ring cross-owner alias");
+  state.page_binding.select(0);
+  std::vector<uint16_t> expected(state.key.bytes/2,0);state.key.upload(expected);
+  DeviceTensor source({4,576},ACL_BF16,2),index({4},ACL_INT32,4);
+  int64_t shape[]={1088,576},stride[]={576,1};
+  auto cache=aclCreateTensor(shape,2,ACL_BF16,stride,0,ACL_FORMAT_ND,shape,2,state.key.data);
+  if(!cache)throw std::runtime_error("scatter cache descriptor");
+  aclrtStream stream=nullptr;aclmdlRI graph=nullptr;check(aclrtCreateStream(&stream),"scatter stream");
+  Operation op;
+  auto setup=[&](uint32_t start) {
+    std::vector<int32_t> indices(4);std::vector<uint16_t> rows(4*576);
+    for(uint32_t r=0;r<4;++r) {
+      indices[r]=int32_t(state.append(start+r));
+      for(int d=0;d<576;++d) {
+        auto value=bf16(float(int(((start+r)*17+d*13)%101)-50)/128);
+        rows[r*576+d]=value;expected[size_t(indices[r])*576+d]=value;
+      }
+    }
+    source.upload(rows);index.upload(indices);
+  };
+  auto prepare=[&]{check(aclnnInplaceIndexCopyGetWorkspaceSize(cache,0,index.tensor,source.tensor,&op.bytes,&op.executor),"ring scatter prepare");};
+  setup(0);prepare();op.allocate();
+  check(aclmdlRICaptureBegin(stream,ACL_MODEL_RI_CAPTURE_MODE_GLOBAL),"scatter capture");
+  op.run(aclnnInplaceIndexCopy,stream);check(aclmdlRICaptureEnd(stream,&graph),"scatter capture end");
+  std::vector<uint32_t> starts;
+  for(uint32_t start=0;start<2048;start+=4)starts.push_back(start);
+  for(uint32_t start=32760;start<32784;start+=4)starts.push_back(start);
+  for(uint32_t start=65512;start<65536;start+=4)starts.push_back(start);
+  for(auto start:starts) {
+    setup(start);check(aclmdlRIExecuteAsync(graph,stream),"scatter replay");
+    check(aclrtSynchronizeStream(stream),"scatter completion");
+  }
+  if(state.key.read<uint16_t>()!=expected)throw std::runtime_error("production ring scatter mismatch or peer overwritten");
+  state.page_binding.release(0);state.page_binding.select(1);state.page_binding.bind(owned);
+  if(state.blocks()!=blocks)throw std::runtime_error("production ring reassignment differs");
+  check(aclmdlRIDestroy(graph),"scatter graph destroy");check(aclrtDestroyStream(stream),"scatter stream destroy");aclDestroyTensor(cache);
+  std::cout<<"{\"production_state_scatter\":\"passed\",\"checked_addresses\":65536,\"graph_replays\":"<<starts.size()<<",\"peer_storage_preserved\":true}\n";
+}
 // Qualification only: synthetic fixtures and output readback are not serving fallbacks.
 struct WindowProbe {
   inferfabric::state::SlidingWindowLayout layout{65536,512,4,16};
@@ -117,6 +170,7 @@ struct WindowProbe {
     if(stream)aclrtDestroyStream(stream);}
 };
 int main(){try{check(aclInit(nullptr),"init");check(aclrtSetDevice(0),"device");{
+  production_state_scatter();
   WindowProbe p;p.run();std::cout<<"{\"status\":\"passed\",\"max_context\":65536,\"window\":512,\"chunk\":4,\"physical_pages\":"<<p.layout.physical_pages
     <<",\"checked_values\":"<<p.checked_values<<",\"graph_replays\":"<<p.replays<<",\"max_abs_error\":"<<p.max_error<<"}\n";
 }check(aclrtResetDevice(0),"reset");check(aclFinalize(),"finalize");}catch(const std::exception &e){std::cerr<<e.what()<<'\n';return 1;}}

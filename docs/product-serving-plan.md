@@ -47,8 +47,12 @@ metadata producer use the DSL window, with separate persistent buffers and
 validated dependencies per window. The [explicit retention contract](validation/2026-10-17-retention-contract/README.md)
 now distinguishes executable context from physical retained capacity in the generic
 pool, with synthetic 64K ownership tests and a full native HTTP regression.
-The compiler still emits full retention and the native adapter rejects ring
-manifests until allocation, table expansion and scatter addressing are integrated.
+The [native ring integration](validation/2026-10-17-native-ring/README.md) now
+emits BF16 retention policies, allocates retained storage, expands ownership into
+absolute tables and scatters through the ring mapping. Production-state NPU tests
+cover 65,536 addresses and 524 scatter graph replays; the full standard 92B native
+and HTTP regressions pass. At the still-enforced context 512 gate the model does
+not wrap, so full-model wrap output and longer-context qualification remain open.
 
 Experimental learned-index execution now includes explicit INT8 index queries/keys
 and FP16 scales/head weights in the [physical plan](learned-index-quantization.md).

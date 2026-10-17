@@ -1,6 +1,7 @@
 #pragma once
 #include "initialization_plan.h"
 #include "token_execution_plan.h"
+#include "paged_state_contract.h"
 #include <algorithm>
 namespace inferfabric::execution {
 inline bool exclusive_region(const Plan &p, uint32_t input, size_t owner) {
@@ -51,6 +52,8 @@ inline void validate_kernels(const Plan &p) {
 
   for (size_t i = 0; i < p.nodes.size(); ++i) {
     const auto &n = p.nodes[i];
+    if(n.op=="cache_append" || n.op=="cache_norm_rope_append")
+      (void)paged_state_contract(p,n);
     std::vector<T> in;
     for (auto j : n.inputs)
       in.emplace_back(p.nodes[j].kind, p.nodes[j].width);

@@ -3,6 +3,7 @@
 // Device-resident execution of a validated generic token program.
 // No activation or routing value has a host representation.
 #include "ascend_token_contract.h"
+#include "paged_state_contract.h"
 #include "compiled_kernel.h"
 #include "execution_capture.h"
 #include "initialization_acl.h"
@@ -654,12 +655,18 @@ struct Decoder {
     prepared_sinks.emplace(state_name, values);
     return values;
   }
+  inferfabric::execution::PagedStateContract cache_contract(const std::string &name) const {
+    for(const auto &node:program.nodes)if(node.name==name)
+      return inferfabric::execution::paged_state_contract(program,node);
+    throw std::runtime_error("unregistered cache state");
+  }
   void append_cache(const V &latent, const V &sink_values,
                     const std::string &state_name, int pos) {
     auto &ptr = attention_states[state_name];
     if (!ptr) {
       resident::TransferScope constants(resident::TransferRole::ControlInput);
-      ptr = std::make_unique<AttentionState>(16,512,false,program.resident_sequences,program.shared_pages);
+      auto contract=cache_contract(state_name);
+      ptr = std::make_unique<AttentionState>(16,contract.capacity_tokens,false,program.resident_sequences,program.shared_pages,contract.logical_tokens);
       prepared::Context::InitializationCopies declared(execution);
       to_device(ptr->sink, sink_values);
     }
@@ -687,7 +694,8 @@ struct Decoder {
     auto &ptr = attention_states[state_name];
     if (!ptr) {
       resident::TransferScope constants(resident::TransferRole::ControlInput);
-      ptr = std::make_unique<AttentionState>(packed?8:16,((program.context+31)/32)*32,packed,program.resident_sequences,program.shared_pages);
+      auto contract=cache_contract(state_name);
+      ptr = std::make_unique<AttentionState>(packed?8:16,contract.capacity_tokens,packed,program.resident_sequences,program.shared_pages,contract.logical_tokens);
       prepared::Context::InitializationCopies declared(execution);
       to_device(ptr->sink, sinks);
     }
@@ -1240,7 +1248,7 @@ struct Decoder {
       positions64[row]=position;lengths[row]=position+1;
       for(const auto &entry:cache_control_offsets) {
         auto state=attention_states.find(entry.first);
-        uint64_t physical=state==attention_states.end()?uint64_t(position):state->second->page_binding.append(position);
+        uint64_t physical=state==attention_states.end()?uint64_t(position):state->second->append(position);
         auto index=index_states.find(entry.first);
         if(index!=index_states.end())physical=index->second->pages.append(position);
         if(physical>INT32_MAX)throw std::runtime_error("physical append position overflow");
@@ -1373,12 +1381,7 @@ struct Decoder {
     if(slot==active_resident)current_position=-1;
   }
   void upload_page_table(AttentionState &state) {
-    const auto &pages=state.page_binding.pages();
-    const size_t capacity=state.table.bytes/sizeof(int32_t);
-    if(pages.size()>capacity)throw std::runtime_error("device block table capacity");
-    std::vector<int32_t> table(capacity,0);
-    std::copy(pages.begin(),pages.end(),table.begin());
-    resident::control_upload(state.table,table);
+    resident::control_upload(state.table,state.blocks());
   }
   // Preparation uses complete partitions to exercise every shape. Serving starts
   // with no cache ownership; the external allocator supplies request reservations.

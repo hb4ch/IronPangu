@@ -21,6 +21,30 @@ fn dense_attention_metadata_is_shared_only_with_matching_windows() {
         assert_eq!(windows[&n.attrs["window"]],n.inputs[2]);
     }
 }
+#[test]
+fn compiled_serving_ring_matches_prefill_and_physical_storage() {
+    use inferfabric_ir::serving::{Retention,Storage};
+    let ModelDefinition::Execution {mut graph,..}=definition(include_str!("../../../examples/openpangu/92b-tp8-ep8-c8-learned.inferfabric")).unwrap() else {panic!()};
+    graph.max_context=129;
+    let p=inferfabric_compiler::token_program::lower(&graph,None).unwrap().with_prefill_tokens(4).unwrap();
+    let (_,states)=inferfabric_compiler::token_serving::program_envelope(&graph,8,&p).unwrap();
+    let recipes=inferfabric_compiler::token_program::recipes(&p,&graph);
+    let mut rings=0;
+    for state in &states {
+        if matches!(&state.storage,Storage::Pages{encoding,..} if encoding=="bf16_latent512_rotary64") {
+            rings+=1;assert_eq!(state.capacity_tokens,144);
+            assert_eq!(state.retention,Retention::SlidingWindow{max_query_tokens:4});
+            let id=p.instructions.iter().position(|i|i.logical_node==state.logical_node && i.op=="cache_norm_rope_append").unwrap();
+            let fields=recipes[id]["value_fields"].as_array().unwrap();
+            let cache=fields.iter().find(|f|f["name"]=="bf16_cache").unwrap();
+            assert_eq!(cache["shape"],serde_json::json!([9,16,1,576]));
+            assert_eq!(cache["max_query_tokens"],4);
+        } else {assert!(state.retention.is_full());}
+    }
+    assert_eq!(rings,30);
+    let source=include_str!("../../../examples/openpangu/92b-tp8-ep8-c8-learned.inferfabric").replace("mla_value(attended,",r#"mla_value(choose(c8, attended, add(attended, latent_attention(query, cache, scale_dim = 192, window = 2048, selection = "all_causal_within_window"))),"#);
+    assert!(definition(&source).unwrap_err().to_string().contains("exactly one attention"));
+}
 fn fixture() -> (
     inferfabric_authoring::execution::Graph,
     inferfabric_model::OpenPanguParallel,
@@ -104,7 +128,7 @@ fn learned_index_graph_has_explicit_shared_dependencies_and_paged_state() {
     for (instruction,recipe) in short_program.instructions.iter().zip(&short_recipes) {
         let expected=match instruction.op.as_str() {
             "cache_c8_norm_rope_append"=>5,
-            "cache_norm_rope_append"|"cache_append"=>32,
+            "cache_norm_rope_append"|"cache_append"=>9,
             "index_cache_append"=>3,
             _=>continue,
         };

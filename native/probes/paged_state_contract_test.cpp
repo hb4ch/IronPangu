@@ -16,9 +16,11 @@ int main() {
     plan.context=context;
     for(const auto &op:{"cache_c8_norm_rope_append","index_cache_append","cache_norm_rope_append"}) {
       Node node;node.op=op;node.attrs["page_tokens"]="64";
+      node.name="cache";Node consumer;consumer.op="latent_attention";consumer.inputs={0,0};consumer.attrs["window"]="512";
+      plan.nodes={node,consumer};
       auto contract=paged_state_contract(plan,node);
       uint32_t page=node.op=="index_cache_append"?64:node.op=="cache_c8_norm_rope_append"?32:16;
-      uint32_t capacity=page==16?512:((context+page-1)/page)*page;
+      uint32_t capacity=page==16?std::min((context+15)/16,33u)*16:((context+page-1)/page)*page;
       assert(contract.page_tokens==page && contract.capacity_tokens==capacity);
       auto count=contract.table_entries();
       contract.validate_count(count,false);contract.validate_count(1,true);
