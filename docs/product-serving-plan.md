@@ -153,6 +153,35 @@ Chunking partitions the same prompt into consecutive ranges. Only the final prom
 
 Long-context work includes the actual learned DSA indexer, its weight bindings, full/shared-layer rules, index cache and sparse attention selection. Qualify positions below, at and above 2048 and SWA wrap boundaries. Context admission remains capped at the verified limit until that gate passes.
 
+#### Learned-indexer integration contract
+
+The current checkpoint has eight full producers at layers 0, 6, 12, 18, 24, 30,
+36 and 42, each followed by a shared consumer three layers later. Read this
+dependency from `indexer_types`; do not encode the layer pattern in the executor.
+The consumer reuses the producer's selected logical token indices, while reading
+its own layer's attention cache. Its retained checkpoint indexer weights do not
+imply an additional executed indexer or a separate index cache.
+
+For a full producer, lower the following explicit dependency chain using generic
+ops: replicated query projection `qr[1024] -> q[24,128]`, replicated key projection
+`hidden[2560] -> k[128]`, key RMSNorm, rotary on the **first 64 columns** of each
+query/key, replicated unquantized head-weight projection `hidden -> weights[24]`,
+paged key append, then weighted-ReLU top-2048 selection. Main MLA's rotary layout
+must not be reused implicitly: it has a different column arrangement. Projection
+dtypes follow checkpoint bindings; index-cache precision is a separate explicit
+plan decision from attention C8 precision.
+
+The installed BF16 `aclnnLightningIndexerEnhance` path has
+[native 64K paged/causal and graph evidence](validation/2026-10-17-sparse-indexer/README.md).
+Use its TND queries and PA_BSND keys with device-resident cumulative query lengths,
+key lengths and page tables. Its output is a logical-index tensor consumed by
+attention's own page table, not physical row addresses. Shared consumers hold a
+normal DAG dependency on this tensor. Bind all persistent index pages through the
+existing initialization/state-pool contract; include their bytes in admission and
+future prefix checkpoint completeness. Include the indexer workspace in maximum
+shared-workspace discovery **before** arena binding. This kernel evidence does not
+qualify learned projections, long-context attention, SWA wrapping or model output.
+
 ## 6. Continuous batching policy
 
 `max_num_seqs` bounds resident active requests, not HTTP queue length. `max_num_batched_tokens` bounds real input tokens across all sub-batches in one scheduling iteration. Expose a separate bounded queue and queue deadline. Count cached tokens separately from newly computed tokens; expose padded token work too.

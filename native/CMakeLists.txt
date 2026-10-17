@@ -83,6 +83,12 @@ target_link_libraries(openpangu_moe_probe PRIVATE "${ACL_LIBRARY}" "${OPAPI_LIBR
 target_compile_options(openpangu_moe_probe PRIVATE -Wall -Wextra -Werror)
 
 set(OMNI_TRAINING_ROOT "/usr/local/Ascend/ascend-toolkit/vendors/omni_training_custom_transformer" CACHE PATH "Qualified omni-ops training operator package")
+if(EXISTS "${OMNI_TRAINING_ROOT}/op_api/include/aclnn_lightning_indexer_enhance.h")
+  add_executable(sparse_indexer_probe probes/sparse_indexer_probe.cpp)
+  target_include_directories(sparse_indexer_probe PRIVATE "${ACL_INCLUDE}" "${OMNI_TRAINING_ROOT}/op_api/include")
+  target_link_libraries(sparse_indexer_probe PRIVATE "${OMNI_TRAINING_ROOT}/op_api/lib/libcust_opapi.so" "${ACL_LIBRARY}" "${OPAPI_LIBRARY}" "${NNOPBASE_LIBRARY}")
+  target_compile_options(sparse_indexer_probe PRIVATE -Wall -Wextra -Werror)
+endif()
 if(EXISTS "${OMNI_TRAINING_ROOT}/op_api/include/aclnn_ai_infra_manifold_constrained_hyper_connection_pre.h")
   add_executable(openpangu_mhc_probe probes/openpangu_mhc_probe.cpp)
   target_include_directories(openpangu_mhc_probe PRIVATE "${ACL_INCLUDE}" "${OMNI_TRAINING_ROOT}/op_api/include")
