@@ -194,12 +194,14 @@ struct Decoder {
         std::make_unique<DeviceTensor>(std::vector<int64_t>{program.prefill_tokens, 1, 1, 64}, ACL_BF16, 2);
     rotary_sin_bf16 =
         std::make_unique<DeviceTensor>(std::vector<int64_t>{program.prefill_tokens, 1, 1, 64}, ACL_BF16, 2);
-    query_length64 = std::make_unique<DeviceTensor>(std::vector<int64_t>{1}, ACL_INT64, 8);
+    query_length64 = std::make_unique<DeviceTensor>(std::vector<int64_t>{program.prefill_tokens}, ACL_INT64, 8);
     for(const auto &node:program.nodes)if(node.op=="latent_attention") {
       auto window=node.integer("window");
-      if(!attention_metadata.count(window))attention_metadata[window]=std::make_unique<DeviceTensor>(std::vector<int64_t>{int64_t(program.prefill_tokens)*1024}, ACL_INT32, 4);
+      if(!attention_metadata.count(window))attention_metadata[window]=std::make_unique<DeviceTensor>(std::vector<int64_t>{1024}, ACL_INT32, 4);
     }
-    resident::control_upload(*query_length64, std::vector<int64_t>{1});
+    std::vector<int64_t> query_counts(program.prefill_tokens);
+    std::iota(query_counts.begin(),query_counts.end(),1);
+    resident::control_upload(*query_length64,query_counts);
     attention_mask = std::make_unique<DeviceTensor>(std::vector<int64_t>{2048, 2048}, ACL_BOOL, 1);
     std::vector<uint8_t> mask(2048 * 2048);
     for (int i = 0; i < 2048; ++i) for (int j = i + 1; j < 2048; ++j) mask[i * 2048 + j] = 1;
@@ -811,22 +813,18 @@ struct Decoder {
     if (metadata_enqueued.count(window)) return;
     auto &metadata=*attention_metadata.at(window);
     if(!cleared) execution.zero(metadata.data, metadata.bytes);
-    auto previous=active_row;
-    for(active_row=0;active_row<active_tokens;++active_row)prepare_attention_metadata_row(window);
-    active_row=previous;
-    metadata_enqueued.insert(window);
-  }
-  void prepare_attention_metadata_row(uint32_t window) {
     char layout[] = "TND", cache_layout[] = "BnBsH";
     uint64_t bytes = 0;
     aclOpExecutor *e = nullptr;
     checked(prepared::query("attention_metadata", false,
         aclnnAiInfraFusedInferAttentionSinkMetadataGetWorkspaceSize,
-        query_length64->tensor, control_row(*sequence_length64),
+        prefix(*query_length64,{1},(active_tokens-1)*sizeof(int64_t)),
+        prefix(*sequence_length64,{1},(active_tokens-1)*sizeof(int64_t)),
         6, 1, 512, 512, 1, 4, int64_t(window) - 1, 0,
         layout, cache_layout, 0, 128, 64, 16, cube_cores, vector_cores,
-        control_row(*attention_metadata.at(window),{1024}), &bytes, &e), "attention metadata prepare");
+        metadata.tensor, &bytes, &e), "attention metadata prepare");
     run(aclnnAiInfraFusedInferAttentionSinkMetadata, bytes, e);
+    metadata_enqueued.insert(window);
   }
   V attend(const V &queries, const std::string &state_name, uint32_t window, const V *decoded=nullptr) {
     if(!program.physical) prepare_attention_metadata(window);
@@ -834,11 +832,12 @@ struct Decoder {
     auto &state = *attention_states.at(state_name);
     if((state.cache_bits!=16) != bool(decoded))throw std::runtime_error("unplanned cache conversion");
     auto query = cast(queries, ACL_BF16);
-    auto *q = execution.strided_descriptor(query.data(), 3456,
-        {1, 6, 512}, {3456, 576, 1}, ACL_BF16);
+    if(query.size()!=size_t(active_tokens)*3456)throw std::runtime_error("dense attention query rows");
+    auto *q = execution.strided_descriptor(query.data(), query.size(),
+        {active_tokens, 6, 512}, {3456, 576, 1}, ACL_BF16);
     auto *qr = execution.strided_descriptor(
-        static_cast<uint16_t *>(query.data()) + 512, 2944,
-        {1, 6, 64}, {3456, 576, 1}, ACL_BF16);
+        static_cast<uint16_t *>(query.data()) + 512, query.size()-512,
+        {active_tokens, 6, 64}, {3456, 576, 1}, ACL_BF16);
     // Preserve the actual backing extent and view offset for paged cache views.
     auto cache_view = [&](int64_t width, int64_t offset) {
       int64_t shape[] = {state.physical_capacity/16, 16, width};
@@ -867,23 +866,24 @@ struct Decoder {
     auto *sink_rope = weight_views.get(
         static_cast<uint16_t *>(state.sink.data) + 512, 128 * 576 - 512,
         {128, 1, 64}, {576, 576, 1}, ACL_BF16);
-    View output(state.out.data, {1, 6, 512}, ACL_BF16);
+    DeviceTensor output({active_tokens, 6, 512}, ACL_BF16,2);
     char layout[] = "TND";
     uint64_t bytes = 0;
     aclOpExecutor *e = nullptr;
     checked(prepared::query("aclnnAiInfraFusedInferAttentionSink", false,
         aclnnAiInfraFusedInferAttentionSinkGetWorkspaceSize,
         q, keys.value, values.value,
-        nullptr, attention_mask->tensor, query_length64->tensor, control_row(*sequence_length64),
+        nullptr, attention_mask->tensor,prefix(*query_length64,{1},(active_tokens-1)*sizeof(int64_t)),
+        prefix(*sequence_length64,{1},(active_tokens-1)*sizeof(int64_t)),
         nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr,
         state.table.tensor, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr,
-        qr, rope_cache.get(), nullptr, nullptr, control_row(*attention_metadata.at(window),{1024}),
+        qr, rope_cache.get(), nullptr, nullptr, attention_metadata.at(window)->tensor,
         sink, sink_rope, sink,
         6, 1 / std::sqrt(192.0), int64_t(window) - 1, 0, layout,
         1, 4, 0, 16, 0, false, 0, 0, 0, 0,
-        output.t, nullptr, &bytes, &e), "dense sink attention prepare");
+        output.tensor, nullptr, &bytes, &e), "dense sink attention prepare");
     run(aclnnAiInfraFusedInferAttentionSink, bytes, e);
-    return result(state.out);
+    return result(output);
   }
   V activate(const V &gate, const V &up) {
     return activate(active_tokens==1 ? resident::concat(gate, up) : concat_columns(gate,up,active_tokens));

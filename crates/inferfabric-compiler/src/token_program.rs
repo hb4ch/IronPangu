@@ -830,7 +830,7 @@ pub fn recipes(p: &Program, graph: &Graph) -> Vec<serde_json::Value> {
             "expert_values" => (&[], "view packed expert rows as a tensor", "alias; no copy"),
             "expert_pack" => (&["aclrtMemcpyAsync"], "interleave gate/up rows for the same routing decision", "new BF16 packed rows; borrowed routing metadata"),
             "attention_metadata_zero" => (&["aclrtMemsetAsync"], "initialize metadata output once per token", "persistent metadata buffer"),
-            "attention_metadata" => (&["aclnnAiInfraFusedInferAttentionSinkMetadata"], "device sequence length; pre_tokens = declared window - 1; shared only within the same window", "persistent device metadata per window/query"),
+            "attention_metadata" => (&["aclnnAiInfraFusedInferAttentionSinkMetadata"], "total query count and final device KV length; pre_tokens = declared window - 1; shared only within the same window", "one persistent 4096-byte device metadata buffer per window for the whole chunk"),
             "cast" => (&["aclnnCast"], "", "new device output; shared by identical consumers"),
             "quantize" => (&["aclnnDynamicQuant"], "BF16 → signed INT8; per-token symmetric FP32 scale", "explicit INT8 payload + FP32 scale"),
             "index_quantize" => (&["aclnnDynamicQuant"], "BF16 → signed INT8; independent 128-column heads/keys with FP32 scale", "INT8 payload + FP32 scale per 128 columns"),
@@ -905,6 +905,7 @@ pub fn recipes(p: &Program, graph: &Graph) -> Vec<serde_json::Value> {
             "router_projection" => "Once before replay: transpose/convert checkpoint gate parameters and upload FP32 weights and bias.",
             "mome_inplace" => "Once before replay: transpose convolution weights and initialize recurrent state and control indices.",
             "packed_attention_metadata" => "Once before replay: upload query counts 1..max_query_tokens as control constants; per-query KV lengths and candidate indices are generated on device.",
+            "attention_metadata" => "Once before replay: upload INT64 query counts 1..max_query_tokens; one metadata buffer per declared window serves the whole chunk.",
             _ => "No parameter/state copy recipe in this instruction.",
         };
         let mut fields:Vec<serde_json::Value>=match i.kind {
@@ -931,6 +932,9 @@ pub fn recipes(p: &Program, graph: &Graph) -> Vec<serde_json::Value> {
         }
         if i.op=="packed_attention_metadata" {
             fields.push(serde_json::json!({"name":"packed_query_lengths","dtype":"int32","shape":[p.prefill_tokens],"role":"initialization_constant","values":"1..max_query_tokens; select count-1 for TND causal alignment"}));
+        }
+        if i.op=="attention_metadata" {
+            fields.push(serde_json::json!({"name":"window_query_lengths","dtype":"int64","shape":[p.prefill_tokens],"role":"shared_initialization_constant","values":"1..max_query_tokens; select count-1; KV length is the final chunk row"}));
         }
         if matches!(i.op.as_str(), "cache_c8_norm_rope_append" | "cache_norm_rope_append" | "cache_append") {
             for field in &mut fields {
@@ -961,7 +965,7 @@ pub fn recipes(p: &Program, graph: &Graph) -> Vec<serde_json::Value> {
                 if let Some(mut shape)=shape {
                     if i.kind==0 && name=="value" && i.op!="sink_normalize" {
                         shape.insert(0,serde_json::json!(p.prefill_tokens));
-                    } else if matches!(name,"selected_indices"|"expert_ids"|"scores"|"packed_rows"|"inverse_indices"|"quantized"|"scales"|"quantized_rows"|"causal_indices"|"kv_length"|"metadata_effect"|"physical_append_position")
+                    } else if matches!(name,"selected_indices"|"expert_ids"|"scores"|"packed_rows"|"inverse_indices"|"quantized"|"scales"|"quantized_rows"|"causal_indices"|"kv_length"|"physical_append_position")
                         && let Some(n)=shape.first().and_then(serde_json::Value::as_u64) {
                         shape[0]=serde_json::json!(n*p.prefill_tokens as u64);
                     }
@@ -970,15 +974,16 @@ pub fn recipes(p: &Program, graph: &Graph) -> Vec<serde_json::Value> {
             }
         }
         let batched_index = i.op=="sparse_index" && p.instructions[i.inputs[0]].kind==5;
-        let batched_attention = matches!(i.op.as_str(),"indexed_packed_attention"|"packed_latent_attention");
-        let batched = batched_index || batched_attention;
+        let batched_attention = matches!(i.op.as_str(),"indexed_packed_attention"|"packed_latent_attention"|"latent_attention");
+        let batched_window = matches!(i.op.as_str(),"latent_attention"|"attention_metadata");
+        let batched = batched_index || batched_attention || batched_window;
         let per_query = !batched && matches!(i.op.as_str(), "mome"|"mome_inplace"|"query_project"|"query_rotary_extract"|"rope"|"rope_bf16"|"rope_f32"|"mla_query"|"mla_value"|"index_cache_append"|"cache_append"|"cache_norm_rope_append"|"cache_c8_norm_rope_append"|"latent_attention"|"indexed_packed_attention"|"sparse_index"|"packed_latent_attention"|"attention_metadata"|"packed_attention_metadata");
         let assembly = !batched && matches!(i.op.as_str(), "repeat"|"slice"|"query_project"|"query_rotary_extract"|"rope"|"rope_bf16"|"rope_f32"|"mla_query"|"mla_value"|"mome"|"latent_attention"|"indexed_packed_attention"|"sparse_index"|"packed_latent_attention");
         let packed = if p.prefill_tokens > 1 { serde_json::json!({
             "tokens":p.prefill_tokens,
             "schedule":if i.op=="sink_normalize" {"shared initialization constant"} else if per_query {"ordered per-query calls"} else {"token matrix"},
             "api_repetitions":if per_query {p.prefill_tokens} else {1},
-            "causal_alignment":if batched {Some("one TND sequence; total query count and final chunk KV length; all chunk keys appended before selection/attention; each attention row consumes its own causal indices")} else {None},
+            "causal_alignment":if batched_window {Some("one TND sequence; total query count and final chunk KV length; per-row causal window from declared pre_tokens; one shared metadata buffer per window")} else if batched {Some("one TND sequence; total query count and final chunk KV length; all chunk keys appended before selection/attention; each attention row consumes its own causal indices")} else {None},
             "output_elements":if i.kind==0 {Some(i.width*if i.op=="sink_normalize" {1} else {p.prefill_tokens})} else {None},
             "assembly_copies":if assembly {p.prefill_tokens} else if i.op=="gather" {8*p.prefill_tokens} else {0},
             "assembly_api":"aclrtMemcpyAsync device-to-device",

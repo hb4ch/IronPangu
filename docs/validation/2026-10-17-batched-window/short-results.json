@@ -1,0 +1,86 @@
+{
+  "format": "inferfabric.persistent-program-qualification.v1",
+  "requests": 9,
+  "output_tokens": 99,
+  "exact_fixture_tokens": true,
+  "fixture_sha256": "d543d78afd600b46215ed0a45fccede9a267cfec7f3170a5dc5c28421dd511a4",
+  "permuted_pages": true,
+  "binding_limit_rejections": 0,
+  "interleaved_residents": true,
+  "packed_prefill": true,
+  "scope": "one loaded TP8/EP8 group, compiled packed prefill and serial decode; no long-context claim",
+  "measurements": [
+    {
+      "request": 0,
+      "case": "arithmetic",
+      "prompt_tokens": 12,
+      "output_tokens": 8,
+      "engine_ttft_ms": 394.726,
+      "tpot_ms": 41.989
+    },
+    {
+      "request": 1,
+      "case": "geography",
+      "prompt_tokens": 15,
+      "output_tokens": 8,
+      "engine_ttft_ms": 368.692,
+      "tpot_ms": 123.70171428571429
+    },
+    {
+      "request": 2,
+      "case": "chinese",
+      "prompt_tokens": 14,
+      "output_tokens": 17,
+      "engine_ttft_ms": 847.471,
+      "tpot_ms": 89.5139375
+    },
+    {
+      "request": 3,
+      "case": "arithmetic",
+      "prompt_tokens": 12,
+      "output_tokens": 8,
+      "engine_ttft_ms": 214.578,
+      "tpot_ms": 40.94642857142858
+    },
+    {
+      "request": 4,
+      "case": "geography",
+      "prompt_tokens": 15,
+      "output_tokens": 8,
+      "engine_ttft_ms": 351.846,
+      "tpot_ms": 147.40628571428573
+    },
+    {
+      "request": 5,
+      "case": "chinese",
+      "prompt_tokens": 14,
+      "output_tokens": 17,
+      "engine_ttft_ms": 307.096,
+      "tpot_ms": 141.189375
+    },
+    {
+      "request": 6,
+      "case": "arithmetic",
+      "prompt_tokens": 12,
+      "output_tokens": 8,
+      "engine_ttft_ms": 220.031,
+      "tpot_ms": 40.86142857142857
+    },
+    {
+      "request": 7,
+      "case": "geography",
+      "prompt_tokens": 15,
+      "output_tokens": 8,
+      "engine_ttft_ms": 1102.461,
+      "tpot_ms": 44.596428571428575
+    },
+    {
+      "request": 8,
+      "case": "chinese",
+      "prompt_tokens": 14,
+      "output_tokens": 17,
+      "engine_ttft_ms": 302.91,
+      "tpot_ms": 23.242625
+    }
+  ]
+}

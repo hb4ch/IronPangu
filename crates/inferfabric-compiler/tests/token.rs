@@ -6,6 +6,26 @@ use inferfabric_dsl::{authoring::ModelDefinition, definition};
 use inferfabric_ir::initialization::{DType, Instruction};
 use std::collections::BTreeMap;
 #[test]
+fn window_attention_batches_queries_with_one_metadata_buffer() {
+    let ModelDefinition::Execution {graph,..}=definition(include_str!("../../../examples/openpangu/92b-tp8-ep8-c8-learned.inferfabric")).unwrap() else {panic!()};
+    for count in [2,4,16] {
+        let p=inferfabric_compiler::token_program::lower(&graph,None).unwrap().with_prefill_tokens(count).unwrap();
+        let recipes=inferfabric_compiler::token_program::recipes(&p,&graph);
+        let mut windows=0;
+        for (i,r) in p.instructions.iter().zip(&recipes) {
+            if matches!(i.op.as_str(),"attention_metadata"|"latent_attention") {
+                assert_eq!(r["packed_prefill"]["api_repetitions"],1);
+                assert_eq!(r["packed_prefill"]["assembly_copies"],0);
+            }
+            if matches!(i.op.as_str(),"attention_metadata"|"attention_metadata_zero") {
+                assert_eq!(r["value_fields"][0]["prefill_shape"],serde_json::json!([1024]));
+            }
+            if i.op=="latent_attention" {windows+=1;assert_eq!(r["value_fields"][0]["prefill_shape"],serde_json::json!([count,i.width]));}
+        }
+        assert_eq!(windows,30);
+    }
+}
+#[test]
 fn packed_attention_is_one_causal_call_without_assembly() {
     for source in [include_str!("../../../examples/openpangu/92b-tp8-ep8-c8.inferfabric"),include_str!("../../../examples/openpangu/92b-tp8-ep8-c8-learned.inferfabric")] {
         let ModelDefinition::Execution {graph,..}=definition(source).unwrap() else {panic!()};

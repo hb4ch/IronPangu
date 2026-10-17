@@ -1,0 +1,5 @@
+{"production_state_scatter":"passed","checked_addresses":65536,"graph_replays":524,"peer_storage_preserved":true}
+{"status":"passed","query_rows":1,"max_context":65536,"window":512,"chunk":4,"physical_pages":34,"checked_values":626688,"graph_replays":136,"max_abs_error":0.00013493}
+{"status":"passed","query_rows":4,"max_context":65536,"window":512,"chunk":4,"physical_pages":34,"checked_values":626688,"graph_replays":34,"max_abs_error":0.000160951}
+{"status":"passed","query_rows":16,"max_context":65536,"window":512,"chunk":16,"physical_pages":34,"checked_values":2506752,"graph_replays":34,"max_abs_error":0.000160951}
+{"status":"passed","query_rows":4,"max_context":65536,"window":2048,"chunk":4,"physical_pages":130,"checked_values":626688,"graph_replays":34,"max_abs_error":0.000164491}
