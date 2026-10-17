@@ -34,12 +34,15 @@ const PRIMITIVES: &[&str] = &[
     "expert_reduce",
     "add",
 ];
-const STATIC: &[&str] = &["weights", "child", "choose", "div", "mod", "eq", "lt"];
+const STATIC: &[&str] = &[
+    "weights", "child", "choose", "div", "mod", "eq", "lt", "record",
+];
 #[derive(Clone)]
 enum Value {
     Tensor(String),
     Scalar(Expr),
     Scope(String),
+    Record(BTreeMap<String, Value>),
 }
 type Env = BTreeMap<String, Value>;
 struct Expander<'a> {
@@ -56,10 +59,33 @@ fn literal(v: Value, site: &SpannedMember) -> Result<Expr> {
     match v {
         Value::Scalar(e) => Ok(e),
         Value::Scope(s) => Ok(Expr::String(s)),
-        Value::Tensor(_) => Err(error(
+        Value::Tensor(_) | Value::Record(_) => Err(error(
             site,
             "tensor supplied where a compile-time attribute is required",
         )),
+    }
+}
+// Records contain graph handles only. Their structure is compile-time data;
+// no runtime tuple storage or copy is emitted.
+fn handle_shape(v: &Value) -> Option<String> {
+    match v {
+        Value::Tensor(_) => Some("handle".into()),
+        Value::Record(fields) => {
+            let mut shape = String::from("{");
+            for (name, value) in fields {
+                let child = handle_shape(value)?;
+                if shape.len() + name.len() + child.len() + 3 > 65536 {
+                    return None;
+                }
+                shape.push_str(name);
+                shape.push(':');
+                shape.push_str(&child);
+                shape.push(';');
+            }
+            shape.push('}');
+            Some(shape)
+        }
+        _ => None,
     }
 }
 fn integer(v: Value, site: &SpannedMember) -> Result<usize> {
@@ -107,10 +133,21 @@ impl Expander<'_> {
         if let Some(v) = env.get(name) {
             return Ok(v.clone());
         }
-        if let Some((root, tail)) = name.split_once('.')
-            && let Some(Value::Scope(base)) = env.get(root)
-        {
-            return Ok(Value::Scope(scoped(base, tail, site)?));
+        if let Some((root, tail)) = name.split_once('.') {
+            if let Some(Value::Scope(base)) = env.get(root) {
+                return Ok(Value::Scope(scoped(base, tail, site)?));
+            }
+            if let Some(mut value) = env.get(root) {
+                for field in tail.split('.') {
+                    let Value::Record(fields) = value else {
+                        return Err(error(site, "field access requires a record"));
+                    };
+                    value = fields
+                        .get(field)
+                        .ok_or_else(|| error(site, format!("unknown record field {field}")))?;
+                }
+                return Ok(value.clone());
+            }
         }
         if ["true", "false"].contains(&name) {
             return Ok(Value::Scalar(Expr::Name(name.into())));
@@ -156,7 +193,8 @@ impl Expander<'_> {
                     ));
                 }
                 let mut value = self.eval(initial, env, path, site, depth + 1)?;
-                tensor(value.clone(), site)?;
+                let shape = handle_shape(&value)
+                    .ok_or_else(|| error(site, "fold carry requires graph handles"))?;
                 for i in begin..end {
                     let mut local = env.clone();
                     local.insert(index.clone(), Value::Scalar(Expr::Number(i.to_string())));
@@ -170,11 +208,38 @@ impl Expander<'_> {
                     });
                     value = self.body(body, local, &instance, depth + 1)?;
                     self.frames.pop();
-                    tensor(value.clone(), site)?;
+                    if handle_shape(&value).as_ref() != Some(&shape) {
+                        return Err(error(site, "fold carry record structure changed"));
+                    }
                 }
                 Ok(value)
             }
             Expr::Call(op, args) => {
+                if op == "record" {
+                    if args.is_empty() || args.len() > 64 {
+                        return Err(error(site, "record requires 1..64 named fields"));
+                    }
+                    let mut fields = BTreeMap::new();
+                    for (name, expr) in args {
+                        let name = name
+                            .as_ref()
+                            .ok_or_else(|| error(site, "record requires named fields"))?;
+                        if name.contains('.') || fields.contains_key(name) {
+                            return Err(error(site, "duplicate or invalid record field"));
+                        }
+                        let value =
+                            self.eval(expr, env, &format!("{path}.{name}"), site, depth + 1)?;
+                        if handle_shape(&value).is_none() {
+                            return Err(error(site, "record fields require graph handles"));
+                        }
+                        fields.insert(name.clone(), value);
+                    }
+                    let value = Value::Record(fields);
+                    if handle_shape(&value).is_none() {
+                        return Err(error(site, "record structure exceeds expansion limit"));
+                    }
+                    return Ok(value);
+                }
                 if op == "choose" {
                     self.positional(args, 3, site)?;
                     let cond = self.eval(&args[0].1, env, path, site, depth + 1)?;

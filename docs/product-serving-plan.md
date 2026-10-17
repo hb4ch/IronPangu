@@ -158,6 +158,10 @@ Long-context work includes the actual learned DSA indexer, its weight bindings, 
 The current checkpoint has eight full producers at layers 0, 6, 12, 18, 24, 30,
 36 and 42, each followed by a shared consumer three layers later. Read this
 dependency from `indexer_types`; do not encode the layer pattern in the executor.
+Named compile-time records in the DSL now allow a block to return hidden state
+and a selected-index handle together and carry both through a fold. They erase
+to ordinary dataflow edges; no runtime aggregate or model-specific side channel
+is needed. The indexer primitives and native integration remain pending.
 The consumer reuses the producer's selected logical token indices, while reading
 its own layer's attention cache. Its retained checkpoint indexer weights do not
 imply an additional executed indexer or a separate index cache.

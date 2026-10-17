@@ -23,6 +23,84 @@ model Tiny {
 }
 plan P for Tiny {target=ascend_token_v1;tp=8;ep=8;devices=[0,1,2,3,4,5,6,7];max_num_seqs=1;max_num_batched_tokens=1;max_model_len=512;}
 "#;
+
+fn record_source() -> String {
+    SOURCE.replace("let y = mome(x, weight = w, taps = 3);\n    yield y;",
+        "let y = mome(x.hidden, weight = w, taps = 3);\n    let result = record(hidden = y, shared = x.shared);\n    yield result;")
+        .replace("carry(x = embedded)", "carry(x = record(hidden = embedded, shared = record(indices = embedded)))")
+        .replace("Project(hidden, w.head", "Project(add(hidden.hidden, hidden.shared.indices), w.head")
+}
+
+#[test]
+fn records_preserve_shared_edges_without_runtime_nodes() {
+    let source = record_source();
+    let ModelDefinition::Execution { graph, .. } = definition(&source).unwrap() else {
+        panic!()
+    };
+    assert_eq!(graph.nodes.len(), 6);
+    assert_eq!(graph.nodes[1].inputs, [0]);
+    assert_eq!(graph.nodes[2].inputs, [1]);
+    assert_eq!(graph.nodes[3].op, "add");
+    assert_eq!(graph.nodes[3].inputs, [2, 0]);
+    assert!(!graph.nodes.iter().any(|n| n.op == "record"));
+    let ModelDefinition::Execution { graph: again, .. } = definition(&source).unwrap() else {
+        panic!()
+    };
+    assert_eq!(graph, again);
+    let ModelDefinition::Execution { graph: zero, .. } =
+        definition(&source.replace("range(0, 2)", "range(0, 0)")).unwrap()
+    else {
+        panic!()
+    };
+    assert_eq!(zero.nodes[1].inputs, [0, 0]);
+}
+
+#[test]
+fn malformed_record_interfaces_fail_closed() {
+    let source = record_source();
+    for bad in [
+        source.replace("shared = x.shared", "renamed = x.shared"),
+        source.replace("shared = x.shared", "shared = y"),
+        source.replace("hidden.shared.indices", "hidden.shared.missing"),
+        source.replace("hidden = y, shared = x.shared", "hidden = y, hidden = y"),
+        source.replace("hidden = y, shared = x.shared", "y"),
+        source.replace("hidden = y, shared = x.shared", "hidden = 3"),
+        source.replace(
+            "hidden = y, shared = x.shared",
+            "hidden = weights(\"model\")",
+        ),
+        source.replace("hidden = y, shared = x.shared", ""),
+        source.replace(
+            "Project(add(hidden.hidden, hidden.shared.indices), w.head",
+            "Project(hidden, w.head",
+        ),
+    ] {
+        assert!(
+            definition(&bad).is_err(),
+            "accepted malformed record: {bad}"
+        );
+    }
+}
+
+#[test]
+fn repeated_record_aliases_cannot_expand_without_bound() {
+    let mut bindings = String::new();
+    let mut prior = String::from("x");
+    for i in 0..20 {
+        let name = format!("r{i}");
+        bindings.push_str(&format!("let {name}=record(left={prior},right={prior});"));
+        prior = name;
+    }
+    let source = SOURCE.replace(
+        "let y = mome(x, weight = w, taps = 3);",
+        &format!("{bindings} let y=x;"),
+    );
+    let error = definition(&source).unwrap_err().to_string();
+    assert!(
+        error.contains("record structure exceeds expansion limit"),
+        "{error}"
+    );
+}
 #[test]
 fn loop_instances_share_weights_but_not_state_and_keep_source_stack() {
     let ModelDefinition::Execution { graph, .. } = definition(SOURCE).unwrap() else {

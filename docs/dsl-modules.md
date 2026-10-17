@@ -15,6 +15,7 @@ module TPLinear(x, w, width) {
 ```
 
 Parameters accept graph values, compile-time scalar values, or weight scopes.
+They also accept named records of graph handles, described below.
 Arguments can be positional or named; positional arguments must precede named
 arguments. Missing, unknown and repeated arguments fail. Each body has immutable
 `let` bindings followed by one `yield`. Module arguments form its entire lexical
@@ -39,6 +40,41 @@ has its own immutable locals; it cannot leak bindings into the containing scope.
 Loops are unrolled, with at most 4,096 iterations per loop, 10,000 emitted nodes,
 100,000 elaboration work steps and depth 64. The work bound also covers loops
 that emit no nodes. Recursive declarations, including indirect cycles, fail.
+
+## Multiple results and loop carries
+
+`record(name = handle, ...)` groups named graph handles at compile time. Modules
+can return records, other modules can receive them, and a fold can carry them.
+Dotted access selects fields; nested records are allowed. For example:
+
+```inferfabric
+module Advance(state, w) {
+    let hidden = mome(state.hidden, weight = w, taps = 3);
+    let next = record(hidden = hidden, shared = state.shared);
+    yield next;
+}
+let initial = record(hidden = embedded, shared = embedded);
+let state = fold i in range(0, 2) carry(s = initial) {
+    let next = Advance(s, child(w.layers, i, "conv"));
+    yield next;
+};
+let combined = add(state.hidden, state.shared);
+```
+
+Here `state.shared` still refers to the original embedding node: there is no
+record operation, allocation, cast or copy in the expanded execution graph.
+This supports a module returning both its updated hidden state and a shared
+auxiliary graph result, such as sparse indices, once those primitive operations
+are implemented. It does not itself implement an indexer or prefix snapshot.
+
+Each record has 1–64 unique named fields containing graph handles or records;
+scalars and weight scopes are rejected. Field names cannot contain dots. Missing
+fields and using a record directly as a primitive input fail. Fold iterations
+must preserve the complete field structure; graph tensor types and widths remain
+subject to normal downstream type checking. A zero-iteration fold returns the
+initial record. Record structures are bounded to 65,536 bytes of structural
+description, including nested fields, preventing exponential alias expansion.
+The model's final yield must still select a single output graph handle.
 
 `choose(condition, then, else)` evaluates only the selected branch. Conditions
 must be compile-time booleans; tensor-dependent control flow is rejected.
