@@ -62,8 +62,19 @@ class Context {
 
   std::map<size_t, std::vector<Block *>> free_;
   std::map<void *, Block *> owned_;
-  std::map<std::string, aclTensor *> descriptors_;
-  std::map<std::string, aclTensor *> strided_descriptors_;
+  using Descriptor = std::shared_ptr<aclTensor>;
+  std::map<std::string, Descriptor> descriptors_, strided_descriptors_;
+  std::map<std::string, Descriptor> transient_descriptors_, transient_strided_descriptors_;
+  bool transient_metadata_ = false;
+  uint64_t peak_transient_descriptors_ = 0;
+  struct DescriptorCounts {uint64_t live=0,peak=0;};
+  std::shared_ptr<DescriptorCounts> transient_descriptor_counts_=std::make_shared<DescriptorCounts>();
+  Descriptor own_descriptor(aclTensor *tensor,bool transient) {
+    if(!transient)return Descriptor(tensor,aclDestroyTensor);
+    auto counts=transient_descriptor_counts_;
+    ++counts->live;counts->peak=std::max(counts->peak,counts->live);
+    return Descriptor(tensor,[counts](aclTensor *p){aclDestroyTensor(p);--counts->live;});
+  }
   std::map<std::string, Invocation> invocations_;
   std::map<std::string, Invocation> transient_invocations_;
   std::map<std::string, Counts> counts_;
@@ -98,14 +109,16 @@ class Context {
   Step before_{};
 
 public:
-  // Tail queries reuse the maximum-shape storage envelope. This changes only
-  // temporary lease selection, never tensor extents or decode graph pointers.
+  // Tail queries reuse the maximum-shape storage envelope. Metadata belongs to
+  // the completion epoch, including sampling after this lexical scope exits.
+  // Tensor extents and decode graph pointers remain unchanged.
   struct BoundedBuffers {
     Context &context;
     bool previous;
     explicit BoundedBuffers(Context &c, bool enabled):context(c),previous(c.bounded_buffers_) {
       if(enabled && c.capturing_)throw std::runtime_error("bounded buffers cannot enter graph capture");
       c.bounded_buffers_=enabled;
+      if(enabled)c.transient_metadata_=true;
     }
     ~BoundedBuffers(){context.bounded_buffers_=previous;}
     BoundedBuffers(const BoundedBuffers &)=delete;
@@ -157,10 +170,8 @@ public:
     active = nullptr;
     for (auto &[key, invocation] : invocations_)
       aclDestroyAclOpExecutor(invocation.executor);
-    for (auto &[key, tensor] : descriptors_)
-      aclDestroyTensor(tensor);
-    for (auto &[key, tensor] : strided_descriptors_)
-      aclDestroyTensor(tensor);
+    descriptors_.clear();
+    strided_descriptors_.clear();
     aclDestroyScalar(one_);
     if(arena_) aclrtFree(arena_);
     else for (auto &block : blocks_) aclrtFree(block->data);
@@ -237,7 +248,7 @@ public:
   static void key_part(std::string &key, char *value) {
     key_part(key, const_cast<const char *>(value));
   }
-  aclTensor *descriptor(void *pointer, const std::vector<int64_t> &shape,
+  std::shared_ptr<aclTensor> descriptor_lease(void *pointer, const std::vector<int64_t> &shape,
                         aclDataType dtype, bool transpose = false) {
     require_stream(stream);
     if (shape.empty())
@@ -248,8 +259,9 @@ public:
     key_part(key, transpose);
     for (auto d : shape)
       key_part(key, d);
-    auto found = descriptors_.find(key);
-    if (found != descriptors_.end())
+    auto &cache=transient_metadata_ ? transient_descriptors_ : descriptors_;
+    auto found = cache.find(key);
+    if (found != cache.end())
       return found->second;
     auto dimensions = shape;
     std::vector<int64_t> strides(shape.size(), 1);
@@ -264,15 +276,21 @@ public:
                                    shape.data(), shape.size(), pointer);
     if (!tensor)
       throw std::runtime_error("prepared tensor descriptor");
-    descriptors_.emplace(std::move(key), tensor);
-    return tensor;
+    auto lease=own_descriptor(tensor,transient_metadata_);
+    cache.emplace(std::move(key), lease);
+    peak_transient_descriptors_=std::max<uint64_t>(peak_transient_descriptors_,transient_descriptors_.size()+transient_strided_descriptors_.size());
+    return lease;
+  }
+  aclTensor *descriptor(void *pointer, const std::vector<int64_t> &shape,
+                        aclDataType dtype, bool transpose = false) {
+    return descriptor_lease(pointer,shape,dtype,transpose).get();
   }
   aclScalar *one() const { return one_; }
   // Bounded strided views of existing storage; no allocation, upload or fence.
   aclTensor *strided_descriptor(void *pointer, int64_t storage_elements,
                                 const std::vector<int64_t> &shape,
                                 const std::vector<int64_t> &strides,
-                                aclDataType dtype) {
+                                aclDataType dtype, bool permanent = false) {
     require_stream(stream);
     if (!pointer || storage_elements <= 0 || shape.empty() ||
         shape.size() != strides.size())
@@ -294,15 +312,17 @@ public:
       key_part(key, d);
     for (auto s : strides)
       key_part(key, s);
-    auto found = strided_descriptors_.find(key);
-    if (found != strided_descriptors_.end())
-      return found->second;
+    auto &cache=transient_metadata_ && !permanent ? transient_strided_descriptors_ : strided_descriptors_;
+    auto found = cache.find(key);
+    if (found != cache.end())
+      return found->second.get();
     auto *tensor =
         aclCreateTensor(shape.data(), shape.size(), dtype, strides.data(), 0,
                         ACL_FORMAT_ND, &storage_elements, 1, pointer);
     if (!tensor)
       throw std::runtime_error("strided tensor descriptor");
-    strided_descriptors_.emplace(std::move(key), tensor);
+    cache.emplace(std::move(key), own_descriptor(tensor,transient_metadata_ && !permanent));
+    peak_transient_descriptors_=std::max<uint64_t>(peak_transient_descriptors_,transient_descriptors_.size()+transient_strided_descriptors_.size());
     return tensor;
   }
   void *workspace(size_t bytes) {
@@ -383,10 +403,15 @@ public:
     for(auto &[key, invocation]:transient_invocations_)
       aclDestroyAclOpExecutor(invocation.executor);
     transient_invocations_.clear();
+    // Invocations die first. Tensor values that escape this boundary retain an
+    // explicit lease; cached raw views are only valid until this completion.
+    transient_descriptors_.clear();
+    transient_strided_descriptors_.clear();
+    transient_metadata_=false;
   }
   template <class F> aclmdlRI capture(const char *name, F enqueue) {
     require_stream(stream);
-    if(bounded_buffers_)
+    if(bounded_buffers_ || transient_metadata_)
       throw std::runtime_error("uncaptured variable-query execution forbids graph capture");
     if (capturing_)
       throw std::runtime_error("nested stream capture");
@@ -481,7 +506,7 @@ public:
     std::string key(name);
     key_part(key, function);
     (key_part(key, std::get<I>(args)), ...);
-    auto &cache = bounded_buffers_ ? transient_invocations_ : invocations_;
+    auto &cache = transient_metadata_ ? transient_invocations_ : invocations_;
     auto found = cache.find(key);
     if (found != cache.end()) {
       *bytes = found->second.bytes;
@@ -494,7 +519,7 @@ public:
       return status;
     check(aclSetAclOpExecutorRepeatable(*executor), name);
     cache.emplace(std::move(key), Invocation{*executor, *bytes});
-    if(bounded_buffers_) {
+    if(transient_metadata_) {
       ++transient_invocation_preparations_;
       peak_transient_invocations_=std::max<uint64_t>(peak_transient_invocations_,cache.size());
     }
@@ -516,6 +541,11 @@ public:
         << ",\"state_copy_operations\":" << state_copy_operations_
         << ",\"state_copy_bytes\":" << state_copy_bytes_
         << ",\"descriptors\":" << descriptors_.size()
+        << ",\"strided_descriptors\":" << strided_descriptors_.size()
+        << ",\"transient_descriptors\":" << transient_descriptors_.size()+transient_strided_descriptors_.size()
+        << ",\"peak_transient_descriptors\":" << peak_transient_descriptors_
+        << ",\"live_transient_descriptors\":" << transient_descriptor_counts_->live
+        << ",\"peak_live_transient_descriptors\":" << transient_descriptor_counts_->peak
         << ",\"output_boundaries\":" << boundaries_ << ",\"invocations\":[";
     bool first = true;
     for (const auto &[name, counts] : counts_) {

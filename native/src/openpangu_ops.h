@@ -37,6 +37,7 @@ struct DeviceTensor {
   void *data=nullptr;aclTensor *tensor=nullptr;size_t bytes=0;
   inferfabric::prepared::Context *owner=nullptr;
   std::shared_ptr<void> allocation;
+  std::shared_ptr<aclTensor> descriptor_owner;
   aclDataType type;
   DeviceTensor(std::vector<int64_t> shape,aclDataType dtype,size_t width):bytes(width),type(dtype) {
     if(shape.empty())throw std::runtime_error("empty tensor shape");
@@ -44,7 +45,7 @@ struct DeviceTensor {
     for(auto d:shape){if(d<=0 || uint64_t(d)>SIZE_MAX/bytes)throw std::runtime_error("tensor bounds");bytes*=d;}
     for(size_t j=shape.size()-1;j>0;--j)strides[j-1]=strides[j]*shape[j];
     owner=inferfabric::prepared::active;
-    if(owner){data=owner->acquire(bytes);auto *context=owner;allocation=std::shared_ptr<void>(data,[context](void *p){context->release(p);});tensor=owner->descriptor(data,shape,dtype);return;}
+    if(owner){data=owner->acquire(bytes);auto *context=owner;allocation=std::shared_ptr<void>(data,[context](void *p){context->release(p);});descriptor_owner=owner->descriptor_lease(data,shape,dtype);tensor=descriptor_owner.get();return;}
     checked(aclrtMalloc(&data,bytes,ACL_MEM_MALLOC_HUGE_FIRST),"tensor allocation");
     tensor=aclCreateTensor(shape.data(),shape.size(),dtype,strides.data(),0,ACL_FORMAT_ND,shape.data(),shape.size(),data);
     if(!tensor){aclrtFree(data);data=nullptr;throw std::runtime_error("tensor descriptor");}

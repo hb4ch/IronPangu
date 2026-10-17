@@ -63,6 +63,8 @@ def stage(args, name, plan, prepare, reference):
     transfers = [json.loads((output / 'transfers' / f'rank-{rank}.json').read_text()) for rank in range(ranks)]
     if not ranks or any(t['activation_host_transfers'] or t['rejected'] for t in transfers):
         raise RuntimeError(f'{name}: missing ranks or forbidden transfer')
+    if any(a.get('transient_invocations',0) or a.get('transient_descriptors',0) for a in audits):
+        raise RuntimeError(f'{name}: completion-scoped metadata retained after drain')
     if any(not any(g['name'].startswith('sequence_decode_') and g['replays'] > 1 for g in a['graphs']) for a in audits):
         raise RuntimeError(f'{name}: sequence decode replay not exercised')
     if name != 'discovery' and any(not a['workspace']['planned'] or a['workspace']['growth_allocations'] for a in audits):

@@ -216,6 +216,54 @@ int main() {
       std::cout << audit.str();
     }
     {
+      prepared::Context context;
+      openpangu::DeviceTensor weight({8},ACL_FLOAT,4);
+      resident::control_upload(weight,std::vector<float>(8,3.f));
+      resident::PreparedWeightViews weights;
+      resident::Tensor escaped;
+      std::weak_ptr<aclTensor> escaped_descriptor, temporary_descriptor;
+      aclTensor *weight_copy=nullptr;
+      {
+        prepared::Context::BoundedBuffers forward(context,true);
+        openpangu::DeviceTensor input({8},ACL_FLOAT,4);
+        resident::control_upload(input,std::vector<float>(8,7.f));
+        escaped=resident::Tensor::alias(input,ACL_FLOAT);
+        escaped_descriptor=input.descriptor_owner;
+        temporary_descriptor=context.descriptor_lease(input.data,{2,4},ACL_FLOAT);
+        weight_copy=weights.get(weight.data,8,{2,4},{4,1},ACL_FLOAT);
+      }
+      if(escaped_descriptor.expired() || temporary_descriptor.expired())
+        throw std::runtime_error("prefill descriptors retired before output completion");
+      bool rejected=false;
+      try{context.capture("pending-prefill",[]{});}catch(const std::runtime_error&){rejected=true;}
+      if(!rejected)throw std::runtime_error("capture accepted pending prefill metadata");
+      // Sampling is outside the forward's lexical scope, but still belongs to
+      // the same completion epoch. Its repeatable invocation must retire too.
+      openpangu::DeviceTensor output({8},ACL_BF16,2);
+      uint64_t bytes=0;aclOpExecutor *executor=nullptr;
+      prepared::check(prepared::query("escaped_cast",true,aclnnCastGetWorkspaceSize,
+          escaped.tensor(),ACL_BF16,output.tensor,&bytes,&executor),"escaped prepare");
+      prepared::check(aclnnCast(context.workspace(bytes),bytes,executor,context.stream),"escaped cast");
+      auto *host=context.output_host(output.bytes);
+      {resident::TransferScope scope(resident::TransferRole::RequestOutput);
+        prepared::check(aclrtMemcpyAsync(host,output.bytes,output.data,output.bytes,
+            ACL_MEMCPY_DEVICE_TO_HOST,context.stream),"escaped read");}
+      context.complete();
+      for(size_t i=0;i<8;++i)if(static_cast<uint16_t *>(host)[i]!=0x40e0)
+        throw std::runtime_error("escaped descriptor data mismatch");
+      if(!temporary_descriptor.expired() || escaped_descriptor.expired())
+        throw std::runtime_error("completion did not honor descriptor owners");
+      if(weights.get(weight.data,8,{2,4},{4,1},ACL_FLOAT)!=weight_copy)
+        throw std::runtime_error("immutable weight view lost its permanent key");
+      escaped=resident::Tensor{};
+      if(!escaped_descriptor.expired())throw std::runtime_error("transient descriptor retained after last owner");
+      std::ostringstream audit;context.write(audit);
+      if(audit.str().find("\"transient_descriptors\":0,")==std::string::npos ||
+         audit.str().find("\"transient_invocations\":0,")==std::string::npos ||
+         audit.str().find("\"retained_invocations\":0,")==std::string::npos)
+        throw std::runtime_error("sampling metadata escaped completion epoch");
+    }
+    {
       const char *path="prepared-arena-test.txt";
       {std::ofstream manifest(path);manifest<<"IFARENA1 123 "<<prepared::ArenaLayout::fingerprint_file("/proc/self/exe")<<" 516 2\n0 4\n512 4\nbindings 2\n-1 1 0\n7 2 0 1\n";}
       const char *workspace_path="prepared-workspace-test.txt";
@@ -232,7 +280,6 @@ int main() {
       context.instruction(-1);context.release(a);context.complete();
       std::remove(path);
     }
-    prepared::check(aclrtResetDevice(0), "reset");
     prepared::check(aclFinalize(), "finalize");
     std::cout << "prepared invocation, ordered reuse, pinned staging and "
                  "negative contracts passed\n";

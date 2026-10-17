@@ -1,0 +1,113 @@
+{
+  "format": "inferfabric.completed-arithmetic.v1",
+  "sequence": 126,
+  "resident": 0,
+  "history": {
+    "version": 1,
+    "spans": [
+      {
+        "start": 0,
+        "end": 14,
+        "query_tokens": 14,
+        "numerical_class": "uncaptured_prefill_4096_v1:sequence-batch-v1:6b26d937d199b5efcd4d4b2e435492422d55157bdb8ce4482a80db91a09c5769:member=1"
+      },
+      {
+        "start": 14,
+        "end": 15,
+        "query_tokens": 1,
+        "numerical_class": "uncaptured_prefill_4096_v1:sequence-batch-v1:1235d26aa71623744c092e251acc72beaac5d90d76703db6e71dadb96ad7061a:member=1"
+      },
+      {
+        "start": 15,
+        "end": 16,
+        "query_tokens": 1,
+        "numerical_class": "uncaptured_prefill_4096_v1:sequence-batch-v1:2f9b6536470ac2c245c9e2badc227ab0ba1c6e6d04a942e94d787a0ebf0b053e:member=1"
+      },
+      {
+        "start": 16,
+        "end": 17,
+        "query_tokens": 1,
+        "numerical_class": "uncaptured_prefill_4096_v1:sequence-batch-v1:1adff8b5130bb9a547b75782c9811cbed8c36a975d1d4e99d996ab062a3309f0:member=1"
+      },
+      {
+        "start": 17,
+        "end": 18,
+        "query_tokens": 1,
+        "numerical_class": "uncaptured_prefill_4096_v1:sequence-batch-v1:f97a35a60d71c72a126d594238db5c1435d68229de3b4f1f2c9ba302e7067e2c:member=1"
+      },
+      {
+        "start": 18,
+        "end": 19,
+        "query_tokens": 1,
+        "numerical_class": "uncaptured_prefill_4096_v1:sequence-batch-v1:cad7bc8654cd14c38f432f02797cc33ee90302f90c7b7006dd8b3ee6e58ddd10:member=1"
+      },
+      {
+        "start": 19,
+        "end": 20,
+        "query_tokens": 1,
+        "numerical_class": "uncaptured_prefill_4096_v1:sequence-batch-v1:c50765921188b737b8d89f38a5aeb342ebb4056bc546280ab702a78ebd77e700:member=1"
+      },
+      {
+        "start": 20,
+        "end": 21,
+        "query_tokens": 1,
+        "numerical_class": "uncaptured_prefill_4096_v1:sequence-batch-v1:23ce2844782b29302bc04a2d97003a88f3edf194fa44fbacf281852ce4790547:member=1"
+      },
+      {
+        "start": 21,
+        "end": 22,
+        "query_tokens": 1,
+        "numerical_class": "uncaptured_prefill_4096_v1:sequence-batch-v1:96a43431db08ab302c26b844e50b0e78fe38f529fc92d23f0b7e8c120be47b1a:member=1"
+      },
+      {
+        "start": 22,
+        "end": 23,
+        "query_tokens": 1,
+        "numerical_class": "uncaptured_prefill_4096_v1:sequence-batch-v1:1ad3d11a75b698c3b6395c69ad3d371f11617a9aa87c4a17d5ed37d31d049f70:member=1"
+      },
+      {
+        "start": 23,
+        "end": 24,
+        "query_tokens": 1,
+        "numerical_class": "uncaptured_prefill_4096_v1:sequence-batch-v1:a65b10fa3035d1ec238a66a1177db91d2e636f3ba73008a2d0538e40ba219ee3:member=1"
+      },
+      {
+        "start": 24,
+        "end": 25,
+        "query_tokens": 1,
+        "numerical_class": "uncaptured_prefill_4096_v1:sequence-batch-v1:8d3560289f4352d40d4fc10d3c0efbe4892f36fbe636dce03d9341a7ecc6cf8e:member=1"
+      },
+      {
+        "start": 25,
+        "end": 26,
+        "query_tokens": 1,
+        "numerical_class": "uncaptured_prefill_4096_v1:sequence-batch-v1:ef9b7d232d69e6f9d32d9c93e921c364fe65c7334cbcd820cf2f10ca6c3d8ed0:member=1"
+      },
+      {
+        "start": 26,
+        "end": 27,
+        "query_tokens": 1,
+        "numerical_class": "uncaptured_prefill_4096_v1:sequence-batch-v1:b44833ba9b666e2cf520a9b44740618cbe0ce0181c2e7f2a0f83aeaf488a0823:member=0"
+      },
+      {
+        "start": 27,
+        "end": 28,
+        "query_tokens": 1,
+        "numerical_class": "uncaptured_prefill_4096_v1:sequence-batch-v1:a9b707db2d72a77ea8a4a3640099201062506db01b120fd86d517227a773ad8b:member=0"
+      },
+      {
+        "start": 28,
+        "end": 29,
+        "query_tokens": 1,
+        "numerical_class": "uncaptured_prefill_4096_v1:sequence-batch-v1:ba318e28a2489dc0201029b23bef2dcf9380eeb3817af874a41ad2d78896c218:member=0"
+      },
+      {
+        "start": 29,
+        "end": 30,
+        "query_tokens": 1,
+        "numerical_class": "uncaptured_prefill_4096_v1:sequence-batch-v1:4f7e2d2579db0c68b533bb5bb3f795e452306054f9016e0e3391d34fc966c83a:member=0"
+      }
+    ]
+  },
+  "imported_tokens": 0
+}

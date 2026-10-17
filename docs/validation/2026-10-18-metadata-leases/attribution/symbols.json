@@ -1,0 +1,28 @@
+{
+  "/data/p00603624/inferfabric/openpangu92/native-build-owned-opapi/libinferfabric_program.so": {
+    "sha256": "918645b8806d774e5ff6476557eec19f49a7449fa96e11b74c44c3215ee20a59",
+    "addresses": [
+      "0x61658",
+      "0x8b2b0",
+      "0x60704",
+      "0x609b0",
+      "0x9c81c",
+      "0x60d6c",
+      "0x8aec0",
+      "0x8ae48",
+      "0x9a03c",
+      "0xa04a8"
+    ],
+    "symbols": "inferfabric::resident::Tensor::view(unsigned long, unsigned long) const\n??:?\ninferfabric::token::Decoder::pre(inferfabric::resident::Tensor const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, bool, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, bool)\n??:?\ninferfabric::prepared::Context::strided_descriptor(void*, long, std::vector<long, std::allocator<long> > const&, std::vector<long, std::allocator<long> > const&, aclDataType)\n??:?\ninferfabric::token::Decoder::cache_append_descriptor(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, aclDataType, unsigned int)\n??:?\ninferfabric::token::Decoder::execute_token()\n??:?\ninferfabric::prepared::Context::descriptor(void*, std::vector<long, std::allocator<long> > const&, aclDataType, bool)\n??:?\ninferfabric::token::Decoder::pre(inferfabric::resident::Tensor const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, bool, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, bool)\n??:?\ninferfabric::token::Decoder::pre(inferfabric::resident::Tensor const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, bool, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, bool)\n??:?\ninferfabric::token::Decoder::execute_token()\n??:?\ninferfabric::token::Decoder::sequence_batch(std::vector<unsigned int, std::allocator<unsigned int> > const&, std::vector<inferfabric::execution::SequenceSlice, std::allocator<inferfabric::execution::SequenceSlice> > const&, bool)\n??:?\n"
+  },
+  "/usr/local/Ascend/cann/lib64/libhccl_alg.so": {
+    "sha256": "ca13a5f01184871bb18319b7889ed97cb1c961ff3c23e5a849d8e85fde21e7a6",
+    "addresses": [
+      "0x9817a8",
+      "0x9847c4",
+      "0x98513c",
+      "0x9a1a7c"
+    ],
+    "symbols": "hccl::TaskExceptionHandler::InsertTaskMap(unsigned int&, hccl::TaskInfo&) const\n??:?\nhccl::TaskExceptionHandler::Save(unsigned int, unsigned int, unsigned int, hccl::TaskType&, hccl::TaskParaNotify const&)\n??:?\nhccl::TaskExceptionHandler::Save(unsigned int, unsigned int, unsigned int, hccl::TaskType&, hccl::TaskParaDMA const&)\n??:?\nvoid hccl::PluginRunner::operator()<hccl::TaskParaNotify>(void*, hccl::TaskType, hccl::TaskParaNotify const&) const\n??:?\n"
+  }
+}

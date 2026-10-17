@@ -32,6 +32,7 @@ class Tensor {
   std::shared_ptr<void> lease_;
   void *alias_data_ = nullptr;
   aclTensor *alias_tensor_ = nullptr;
+  std::shared_ptr<aclTensor> descriptor_owner_;
   size_t count_ = 0;
   aclDataType dtype_ = ACL_FLOAT;
 
@@ -54,8 +55,9 @@ public:
     out.dtype_ = dtype;
     out.lease_ = source.allocation;
     out.alias_data_ = source.data;
-    out.alias_tensor_ =
-        source.owner->descriptor(source.data, {int64_t(out.count_)}, dtype);
+    out.descriptor_owner_ =
+        source.owner->descriptor_lease(source.data, {int64_t(out.count_)}, dtype);
+    out.alias_tensor_ = out.descriptor_owner_.get();
     return out;
   }
   Tensor view(size_t start, size_t count) const {
@@ -65,8 +67,9 @@ public:
     out.count_ = count;
     out.alias_data_ =
         static_cast<char *>(data()) + start * element_bytes(dtype_);
-    out.alias_tensor_ =
-        prepared::active->descriptor(out.alias_data_, {int64_t(count)}, dtype_);
+    out.descriptor_owner_ =
+        prepared::active->descriptor_lease(out.alias_data_, {int64_t(count)}, dtype_);
+    out.alias_tensor_ = out.descriptor_owner_.get();
     return out;
   }
   size_t size() const { return count_; }

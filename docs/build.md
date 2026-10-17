@@ -211,6 +211,18 @@ The source provenance, license and changes are recorded in that directory.
 An incompatible vendor L0 ABI is a link error. Do not disable the adapter to
 hide that error or reuse a frozen arena from a different backend library.
 
+Uncaptured forward metadata uses an owning-stream completion epoch. Tensor
+values retain descriptor leases, so values used by sampling after the forward
+returns remain valid. The completion boundary destroys transient invocations
+before clearing ordinary/strided descriptor caches. Decode/graph metadata and
+immutable weight-view keys remain persistent. `Context::descriptor_lease` owns
+metadata only; `DeviceTensor` and resident tensor values also retain their device
+buffer leases. Raw `descriptor`/`strided_descriptor` results from an uncaptured
+epoch must not escape its completion without an explicit owner. The audit
+distinguishes transient cache entries from live leased descriptors and their
+peaks. `prepared_execution_probe` verifies these lifetimes and negative capture
+contracts before full-model qualification.
+
 ## 6. Runtime checks: CPU mock versus NPU execution
 
 The mock server can run in the build-only container with no compute devices. In one container shell:

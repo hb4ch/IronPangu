@@ -87,9 +87,15 @@ ending when `execute_token` returns is too short. Destroy dependent invocations
 before their descriptors, and retain explicit owners for tensors that escape
 into persistent state or weight-layout caches. Audit ordinary and strided
 descriptors separately, including live/peak transient counts and retained
-entries. Do not clear the current raw-pointer caches indiscriminately: both
-`DeviceTensor` and `PreparedWeightViews` retain pointers into them. This is a
-pending ownership change, not evidence that it explains all residual RSS growth.
+entries. Do not clear raw-pointer caches indiscriminately: both `DeviceTensor`
+and `PreparedWeightViews` retain pointers into them.
+
+The [completion-scoped metadata implementation](validation/2026-10-18-metadata-leases/README.md)
+now uses explicit descriptor leases in tensor values, transient caches covering
+the full output-completion epoch, and permanent immutable-weight keys. Its small
+lifetime tests and full 92B discovery/fixed/frozen output gates pass without
+changing the device arena or adding fences. All ranks finish with zero live
+transient descriptors/invocations. The 24-wave HTTP resource gate now passes: 120 correct load/recovery outputs, 24.16 MiB post-wave RSS growth against the unchanged 128 MiB limit, stable threads/FDs and complete shared-page reclamation. This closes the measured RSS regression; longer-duration production stability remains unproven. Requalify 64K bulk prefill, mixed scheduling and prefix reuse on this revision next.
 
 Validation proceeds from focused shape/lifetime checks to a short full-model
 HTTP regression, then longer-context qualification. Re-run costly full-model

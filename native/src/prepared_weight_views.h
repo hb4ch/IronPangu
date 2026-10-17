@@ -17,7 +17,7 @@ public:
     if (!owner_ || owner_ != prepared::active)
       throw std::runtime_error("prepared weight view context mismatch");
     auto *source = owner_->strided_descriptor(pointer, storage_elements, shape,
-                                              strides, dtype);
+                                              strides, dtype, true);
     auto found = views_.find(source);
     if (found != views_.end())
       return found->second->tensor;

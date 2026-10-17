@@ -1,0 +1,187 @@
+{
+  "stages": {
+    "discovery": {
+      "passed": true,
+      "stage": "discovery",
+      "exact_output_tokens": 39,
+      "requests": 6,
+      "arena_bytes": [
+        40636575256,
+        40636575256,
+        40636575256,
+        40636575256,
+        40636575256,
+        40636575256,
+        40636575256,
+        40636575256
+      ],
+      "workspace_bytes": [
+        159221248,
+        159221248,
+        159221248,
+        159221248,
+        159221248,
+        159221248,
+        159221248,
+        159221248
+      ],
+      "activation_host_transfers": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    "fixed": {
+      "passed": true,
+      "stage": "fixed",
+      "exact_output_tokens": 39,
+      "requests": 6,
+      "arena_bytes": [
+        40492359704,
+        40492359704,
+        40492359704,
+        40492359704,
+        40492359704,
+        40492359704,
+        40492359704,
+        40492359704
+      ],
+      "workspace_bytes": [
+        159221248,
+        159221248,
+        159221248,
+        159221248,
+        159221248,
+        159221248,
+        159221248,
+        159221248
+      ],
+      "activation_host_transfers": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    "frozen": {
+      "passed": true,
+      "stage": "frozen",
+      "exact_output_tokens": 39,
+      "requests": 6,
+      "arena_bytes": [
+        40492359704,
+        40492359704,
+        40492359704,
+        40492359704,
+        40492359704,
+        40492359704,
+        40492359704,
+        40492359704
+      ],
+      "workspace_bytes": [
+        159221248,
+        159221248,
+        159221248,
+        159221248,
+        159221248,
+        159221248,
+        159221248,
+        159221248
+      ],
+      "activation_host_transfers": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ]
+    }
+  },
+  "metadata": [
+    {
+      "descriptors": 9918,
+      "strided_descriptors": 516,
+      "transient_descriptors": 0,
+      "live_transient_descriptors": 0,
+      "peak_live_transient_descriptors": 2545,
+      "retained_invocations": 1017,
+      "transient_invocations": 0
+    },
+    {
+      "descriptors": 9918,
+      "strided_descriptors": 516,
+      "transient_descriptors": 0,
+      "live_transient_descriptors": 0,
+      "peak_live_transient_descriptors": 2545,
+      "retained_invocations": 1017,
+      "transient_invocations": 0
+    },
+    {
+      "descriptors": 9918,
+      "strided_descriptors": 516,
+      "transient_descriptors": 0,
+      "live_transient_descriptors": 0,
+      "peak_live_transient_descriptors": 2545,
+      "retained_invocations": 1017,
+      "transient_invocations": 0
+    },
+    {
+      "descriptors": 9918,
+      "strided_descriptors": 516,
+      "transient_descriptors": 0,
+      "live_transient_descriptors": 0,
+      "peak_live_transient_descriptors": 2545,
+      "retained_invocations": 1017,
+      "transient_invocations": 0
+    },
+    {
+      "descriptors": 9918,
+      "strided_descriptors": 516,
+      "transient_descriptors": 0,
+      "live_transient_descriptors": 0,
+      "peak_live_transient_descriptors": 2545,
+      "retained_invocations": 1017,
+      "transient_invocations": 0
+    },
+    {
+      "descriptors": 9918,
+      "strided_descriptors": 516,
+      "transient_descriptors": 0,
+      "live_transient_descriptors": 0,
+      "peak_live_transient_descriptors": 2545,
+      "retained_invocations": 1017,
+      "transient_invocations": 0
+    },
+    {
+      "descriptors": 9918,
+      "strided_descriptors": 516,
+      "transient_descriptors": 0,
+      "live_transient_descriptors": 0,
+      "peak_live_transient_descriptors": 2545,
+      "retained_invocations": 1017,
+      "transient_invocations": 0
+    },
+    {
+      "descriptors": 9918,
+      "strided_descriptors": 516,
+      "transient_descriptors": 0,
+      "live_transient_descriptors": 0,
+      "peak_live_transient_descriptors": 2545,
+      "retained_invocations": 1017,
+      "transient_invocations": 0
+    }
+  ],
+  "library_sha256": "b16e406816734bf2289ecc8c396e75d12cf0cfc10bcf826c4e8c6478acbc089d"
+}

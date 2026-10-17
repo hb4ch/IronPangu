@@ -548,6 +548,8 @@ def main():
             report['prefill_graph_replays'].append(replays)
             if not audit['arena']['frozen'] or not audit['workspace']['planned'] or audit['workspace']['growth_allocations']:
                 raise RuntimeError('HTTP execution violated frozen resource plans')
+            if audit.get('transient_invocations',0) or audit.get('transient_descriptors',0):
+                raise RuntimeError('HTTP completion-scoped metadata retained after drain')
             if transfers['activation_host_transfers'] or transfers['rejected'] or any(
                     s['device_allocations'] or s['completion_boundaries'] for s in audit['steps']):
                 raise RuntimeError('HTTP execution introduced host transfers, allocations or internal fences')
