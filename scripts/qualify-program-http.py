@@ -19,6 +19,18 @@ import time
 import urllib.error
 import urllib.request
 
+def allocator_snapshot(path, sequence, server, timeout=15):
+    Path(str(path)+'.request').write_text(str(sequence)+'\n')
+    deadline=time.monotonic()+timeout
+    ack=Path(str(path)+'.ack')
+    while time.monotonic()<deadline:
+        if server.poll() is not None:raise RuntimeError('server exited before allocator snapshot')
+        if ack.exists():
+            fields=ack.read_text().split()
+            if len(fields)==2 and int(fields[0])==sequence:return int(fields[1])
+        time.sleep(0.02)
+    raise RuntimeError('allocator snapshot acknowledgement timed out')
+
 def process_resources(pid, proc_root=Path('/proc')):
     """Linux process-wide counters (including native rank threads), no device calls."""
     root = proc_root / str(pid)
@@ -248,6 +260,8 @@ def main():
         env['LD_PRELOAD']=str(probe)+(' '+env['LD_PRELOAD'] if env.get('LD_PRELOAD') else '')
         env['INFERFABRIC_HOST_ALLOCATOR_AUDIT']=str((args.output/'host-allocator.jsonl').resolve())
         env['INFERFABRIC_HOST_ALLOCATOR_EXECUTABLE']=str(args.server.resolve())
+        env['INFERFABRIC_HOST_ALLOCATION_STACKS']=str((args.output/'host-allocation-stacks.txt').resolve())
+        env['INFERFABRIC_HOST_ALLOCATION_START']=str((args.output/'host-allocation-start').resolve())
     command = [str(args.server.resolve()), '--program', str(args.plan), str(args.checkpoint), str(args.library), str(args.port)]
     if args.prefix_cases:
         command += ['--prefix-cache-slots','1','--prefix-cache-namespace','qualification']
@@ -374,6 +388,7 @@ def main():
                 mixed = max(mixed_cases, key=lambda c: c['long_prompt_tokens'])
             load = None
             if args.load_rounds:
+                if args.host_allocator_probe:(args.output/'host-allocation-start').touch()
                 if args.load_concurrency > 4*residents:
                     raise RuntimeError('load concurrency exceeds conservative queue bound; use --check-overload separately')
                 began=time.perf_counter();waves=[]
@@ -393,6 +408,8 @@ def main():
                         if text!=expected_text(cases[0]):raise RuntimeError('load disconnect recovery output mismatch')
                         validate_usage(cases[0],metrics,eos,args.respect_eos)
                         waves.append(dict(round=round_id,requests=observations,recovery=metrics))
+                        if args.host_allocator_probe:
+                            waves[-1]['allocation_snapshot_time_ns']=allocator_snapshot(args.output/'host-allocation-stacks.txt',round_id+1,server)
                         if args.load_rss_growth_limit_mib is not None:
                             waves[-1]['process_resources'] = process_resources(server.pid)
                             waves[-1]['resource_sample_time_ns'] = time.time_ns()

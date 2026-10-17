@@ -58,6 +58,11 @@ free arena and mmap bytes. Its original probe affected shutdown, so it supplies
 runtime allocation evidence only, not a completed qualification. The corrected
 probe passes a signal-handling regression test; allocation-site attribution and
 the serving fix remain open.
+The subsequent [between-wave stack diagnostic](validation/2026-10-18-allocation-stacks/README.md)
+drains normally and attributes most sampled retained bytes to CANN `BlockCache`,
+with a smaller HCCL task-history contribution. The latter has bounded FIFO
+retention. CANN pool-free versus still-referenced metadata remains unresolved;
+the RSS gate still fails and no runtime fix has been promoted.
 
 Validation proceeds from focused shape/lifetime checks to a short full-model
 HTTP regression, then longer-context qualification. Re-run costly full-model

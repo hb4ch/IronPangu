@@ -20,21 +20,32 @@ def main():
         env=dict(os.environ,LD_PRELOAD=str(args.library.resolve(strict=True)),
                  INFERFABRIC_HOST_ALLOCATOR_EXECUTABLE=str(Path(sys.executable).resolve()),
                  INFERFABRIC_HOST_ALLOCATOR_AUDIT=str(output))
+        stacks=Path(directory)/'stacks.txt'
+        env.update(INFERFABRIC_HOST_ALLOCATION_STACKS=str(stacks),INFERFABRIC_HOST_ALLOCATION_RATE='1')
         code=('import ctypes,time; c=ctypes.CDLL(None); '
               'c.malloc.restype=ctypes.c_void_p; c.free.argtypes=[ctypes.c_void_p]; '
+              'c.realloc.argtypes=[ctypes.c_void_p,ctypes.c_size_t]; c.realloc.restype=ctypes.c_void_p; '
               'time.sleep(2.3); p=c.malloc(64*1024*1024); assert p; '
+              'assert not c.realloc(p,ctypes.c_size_t(-1).value); '
               'time.sleep(2.3); c.free(p); time.sleep(2.3)')
         subprocess.run([sys.executable,'-c',code],env=env,check=True)
         rows=[json.loads(line) for line in output.read_text().splitlines()]
         values=[row['mmap_bytes'] for row in rows]
         if max(values)-values[0]<64*1024*1024 or values[-1]>=max(values)-60*1024*1024:
             raise RuntimeError('probe did not observe the known allocation and release')
+        snapshots=stacks.read_text().split('snapshot ')[1:]
+        live=[any(line.startswith('allocation ') and line.split()[2]==str(64*1024*1024)
+                  for line in snapshot.splitlines()) for snapshot in snapshots]
+        if not any(live) or live[-1] or any('dropped=0\n' not in s for s in snapshots):
+            raise RuntimeError('sampled stacks lost failed-realloc ownership or retained a freed allocation')
+        env.pop('INFERFABRIC_HOST_ALLOCATION_STACKS')
         original=output.read_bytes()
         subprocess.run(['true'],env=env,check=True)
         result=subprocess.run([sys.executable,'-c','pass'],env=env,capture_output=True)
         if result.returncode!=125 or output.read_bytes()!=original:
             raise RuntimeError('probe did not reject an existing output without overwriting it')
         env['INFERFABRIC_HOST_ALLOCATOR_AUDIT']=str(Path(directory)/'signals.jsonl')
+        env['INFERFABRIC_HOST_ALLOCATION_STACKS']=str(Path(directory)/'signal-stacks.txt')
         ready=Path(directory)/'ready'
         code=('import signal,pathlib,sys,time; '
               'signal.pthread_sigmask(signal.SIG_BLOCK,{signal.SIGTERM,signal.SIGINT}); '
@@ -47,6 +58,14 @@ def main():
             while not ready.exists() and child.poll() is None and time.monotonic()<deadline:
                 time.sleep(0.02)
             if not ready.exists():raise RuntimeError('signal test did not become ready')
+            request=Path(env['INFERFABRIC_HOST_ALLOCATION_STACKS']+'.request')
+            ack=Path(env['INFERFABRIC_HOST_ALLOCATION_STACKS']+'.ack')
+            request.write_text('1\n')
+            deadline=time.monotonic()+10
+            while not ack.exists() and child.poll() is None and time.monotonic()<deadline:time.sleep(0.02)
+            fields=ack.read_text().split()
+            if fields[0]!='1' or f'snapshot {fields[1]} ' not in Path(env['INFERFABRIC_HOST_ALLOCATION_STACKS']).read_text():
+                raise RuntimeError('snapshot acknowledgement does not identify a complete snapshot')
             child.send_signal(signal.SIGTERM)
             if child.wait(timeout=10)!=0:raise RuntimeError('probe intercepted frontend sigwait shutdown')
         finally:

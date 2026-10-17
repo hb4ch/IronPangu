@@ -510,7 +510,7 @@ For a failing host RSS gate, build the optional diagnostic in the Linux containe
 
 ```sh
 g++ -std=c++17 -shared -fPIC -O2 -pthread -Wall -Wextra -Werror \
-  native/probes/host_allocator_probe.cpp -o host_allocator_probe.so
+  native/probes/host_allocator_probe.cpp -ldl -o host_allocator_probe.so
 python3 scripts/test-host-allocator-probe.py ./host_allocator_probe.so
 ```
 
@@ -524,3 +524,25 @@ and mmap bytes with timestamped post-wave RSS samples. Allocator counters are
 not allocation stack traces and do not alone prove a leak or its owner. Sampling
 can contend with host allocations; timing under this diagnostic is not a
 production performance result. It is opt-in and rejects existing output files.
+
+The qualifier also enables bounded sampled allocation stacks at the start of
+repeated-load waves (default one allocation per 1024 per thread). It records
+malloc/calloc/realloc/memalign paths; allocator-internal suballocations and other
+entry points are not a complete heap census. Each recorded pointer is removed
+when an intercepted free occurs; failed realloc retains its original record.
+Overflow is reported and invalidates analysis. The fixed table has 65,536 slots.
+Helpers and forked children do not inherit active tracking.
+
+After each wave the client waits for an acknowledged snapshot before submitting
+the next wave. Analyze these snapshots, rather than whichever periodic sample
+happened to overlap prefill:
+
+```sh
+python3 scripts/summarize-host-allocations.py OUTPUT/host-allocation-stacks.txt \
+  --progress OUTPUT/load-progress.json --output OUTPUT/stack-summary.json
+```
+
+The report preserves module-relative return addresses for `addr2line -f -C` and
+reports unscaled sampled bytes/counts. It must not be interpreted as exact byte
+attribution or proof that a growing vendor pool is unbounded. The additional
+metadata and locking make this an offline diagnostic only.

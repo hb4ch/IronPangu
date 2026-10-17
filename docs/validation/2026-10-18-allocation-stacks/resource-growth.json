@@ -1,0 +1,22 @@
+{
+  "baseline": {
+    "rss_bytes": 7597363200,
+    "peak_rss_bytes": 7597363200,
+    "threads": 632,
+    "file_descriptors": 78
+  },
+  "final": {
+    "rss_bytes": 7944957952,
+    "peak_rss_bytes": 7944957952,
+    "threads": 632,
+    "file_descriptors": 78
+  },
+  "maximum_growth": {
+    "rss_bytes": 347594752,
+    "threads": 0,
+    "file_descriptors": 0
+  },
+  "rss_limit_bytes": 134217728,
+  "passed": false,
+  "scope": "post-wave process counters; not continuous peak or device memory sampling"
+}

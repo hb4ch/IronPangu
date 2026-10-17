@@ -9,6 +9,17 @@ module=importlib.util.module_from_spec(spec)
 spec.loader.exec_module(module)
 
 class HttpReferenceScope(unittest.TestCase):
+    def test_allocator_snapshot_rejects_dead_server_and_stale_ack(self):
+        class Server:
+            def __init__(self,code):self.code=code
+            def poll(self):return self.code
+        with tempfile.TemporaryDirectory() as directory:
+            path=Path(directory)/'stacks'
+            Path(str(path)+'.ack').write_text('2 12345\n')
+            self.assertEqual(module.allocator_snapshot(path,2,Server(None)),12345)
+            with self.assertRaises(RuntimeError):module.allocator_snapshot(path,2,Server(1))
+            with self.assertRaises(RuntimeError):module.allocator_snapshot(path,3,Server(None),timeout=0)
+
     def test_resource_gate_detects_transient_growth_not_only_final_sample(self):
         base=dict(rss_bytes=1024,peak_rss_bytes=4096,threads=8,file_descriptors=10)
         self.assertTrue(module.resource_growth([base,base],0)['passed'])

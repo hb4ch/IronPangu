@@ -1,0 +1,1336 @@
+{
+  "/data/p00603624/inferfabric/openpangu92/host_allocator_probe_idle.so": {
+    "sha256": "6c48579c2b1c38eac8f938165a2f5db5cad95fdd2a9adc21dca7e267de0a9afb",
+    "addresses": {
+      "0x1b80": [
+        "malloc",
+        "??:?"
+      ],
+      "0x1fb8": [
+        "sampled::record(void*, unsigned long)",
+        "??:?"
+      ]
+    }
+  },
+  "/opt/openEuler/gcc-toolset-12/root/usr/lib64/libstdc++.so.6": {
+    "sha256": "a2c85008273958334eafd7dc55a4dd529a4889587f948e140532ac1a666e5a10",
+    "addresses": {
+      "0x1465f8": [
+        "std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >::_M_mutate(unsigned long, unsigned long, char const*, unsigned long)",
+        "??:?"
+      ],
+      "0x148108": [
+        "std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >::_M_append(char const*, unsigned long)",
+        "??:?"
+      ],
+      "0xa347c": [
+        "operator new(unsigned long)",
+        "??:?"
+      ],
+      "0xd438c": [
+        "std::_V2::error_category::_M_message[abi:cxx11](int) const",
+        "??:?"
+      ],
+      "0xef85c": [
+        "std::string::_Rep::_S_create(unsigned long, unsigned long, std::allocator<char> const&)",
+        "??:?"
+      ],
+      "0xefbe4": [
+        "std::string::_M_mutate(unsigned long, unsigned long, unsigned long)",
+        "??:?"
+      ],
+      "0xf0478": [
+        "std::string::_M_replace_safe(unsigned long, unsigned long, char const*, unsigned long)",
+        "??:?"
+      ]
+    }
+  },
+  "/usr/local/Ascend/cann/lib64/libhccl_alg.so": {
+    "sha256": "ca13a5f01184871bb18319b7889ed97cb1c961ff3c23e5a849d8e85fde21e7a6",
+    "addresses": {
+      "0x5ecd64": [
+        "hccl::AlignedReduceScatterDoubleRing::ReducerRun(unsigned int, void*, std::shared_ptr<hccl::Transport> const&, hccl::ReducerMemoryInfo&, hccl::Stream&)",
+        "??:?"
+      ],
+      "0x9817a8": [
+        "hccl::TaskExceptionHandler::InsertTaskMap(unsigned int&, hccl::TaskInfo&) const",
+        "??:?"
+      ],
+      "0x984360": [
+        "hccl::TaskExceptionHandler::InsertOpData(std::string&) const",
+        "??:?"
+      ],
+      "0x9847c4": [
+        "hccl::TaskExceptionHandler::Save(unsigned int, unsigned int, unsigned int, hccl::TaskType&, hccl::TaskParaNotify const&)",
+        "??:?"
+      ],
+      "0x98513c": [
+        "hccl::TaskExceptionHandler::Save(unsigned int, unsigned int, unsigned int, hccl::TaskType&, hccl::TaskParaDMA const&)",
+        "??:?"
+      ],
+      "0x985ab4": [
+        "hccl::TaskExceptionHandler::Save(unsigned int, unsigned int, unsigned int, hccl::TaskType&, hccl::TaskParaReduce const&)",
+        "??:?"
+      ],
+      "0x985adc": [
+        "hccl::TaskExceptionHandler::Save(unsigned int, unsigned int, unsigned int, hccl::TaskType&, hccl::TaskParaReduce const&)",
+        "??:?"
+      ],
+      "0x9952c4": [
+        "void std::deque<hccl::TaskInfo, std::allocator<hccl::TaskInfo> >::_M_push_back_aux<hccl::TaskInfo const&>(hccl::TaskInfo const&)",
+        "??:?"
+      ],
+      "0x996468": [
+        "void std::deque<hccl::OpDataInfo, std::allocator<hccl::OpDataInfo> >::_M_push_back_aux<hccl::OpDataInfo const&>(hccl::OpDataInfo const&)",
+        "??:?"
+      ],
+      "0x9a0a5c": [
+        "void hccl::PluginRunner::operator()<hccl::TaskParaDMA>(void*, hccl::TaskType, hccl::TaskParaDMA const&) const",
+        "??:?"
+      ],
+      "0x9a126c": [
+        "void hccl::PluginRunner::operator()<hccl::TaskParaReduce>(void*, hccl::TaskType, hccl::TaskParaReduce const&) const",
+        "??:?"
+      ],
+      "0x9a1a7c": [
+        "void hccl::PluginRunner::operator()<hccl::TaskParaNotify>(void*, hccl::TaskType, hccl::TaskParaNotify const&) const",
+        "??:?"
+      ],
+      "0x9b18fc": [
+        "hccl::ProfilerManagerImpl::TaskSdmaProfiler(hccl::ProfilerType, void*, hccl::TaskParaDMA&)",
+        "??:?"
+      ],
+      "0x9b1acc": [
+        "hccl::ProfilerManagerImpl::TaskReduceInlineProfiler(hccl::ProfilerType, void*, hccl::TaskParaReduce&)",
+        "??:?"
+      ],
+      "0x9b1c9c": [
+        "hccl::ProfilerManagerImpl::TaskRecordProfiler(hccl::ProfilerType, void*, hccl::TaskParaNotify&)",
+        "??:?"
+      ],
+      "0x9b1d84": [
+        "hccl::ProfilerManagerImpl::TaskWaitProfiler(hccl::ProfilerType, void*, hccl::TaskParaNotify&)",
+        "??:?"
+      ],
+      "0x9b2488": [
+        "hccl::ProfilerManagerImpl::HandleTask(hccl::TaskPara*, unsigned int&, hccl::ProfTaskType&)",
+        "??:?"
+      ],
+      "0x9b24d0": [
+        "hccl::ProfilerManagerImpl::HandleTask(hccl::TaskPara*, unsigned int&, hccl::ProfTaskType&)",
+        "??:?"
+      ],
+      "0x9b2570": [
+        "hccl::ProfilerManagerImpl::HandleTask(hccl::TaskPara*, unsigned int&, hccl::ProfTaskType&)",
+        "??:?"
+      ],
+      "0x9b2598": [
+        "hccl::ProfilerManagerImpl::HandleTask(hccl::TaskPara*, unsigned int&, hccl::ProfTaskType&)",
+        "??:?"
+      ],
+      "0x9b2688": [
+        "hccl::ProfilerManagerImpl::TaskProfilerHandle(void*, unsigned int)",
+        "??:?"
+      ]
+    }
+  },
+  "/usr/local/Ascend/cann/lib64/libhccl_plf.so": {
+    "sha256": "ea4e467004fa28b3a09447d2e44ad85faffcc5cc43c133ec008efeb6ea7cf110",
+    "addresses": {
+      "0x2a7378": [
+        "hccl::DispatcherPub::SignalRecord(void*, void*, unsigned int, unsigned long long, int, bool)",
+        "??:?"
+      ],
+      "0x2a7774": [
+        "hccl::DispatcherPub::SignalRecord(void*, hccl::Stream&, unsigned int, unsigned long long, int, bool, unsigned long long, unsigned int)",
+        "??:?"
+      ],
+      "0x2a7a18": [
+        "hccl::DispatcherPub::SignalWait(void*, void*, unsigned int, unsigned int, int, unsigned int, bool)",
+        "??:?"
+      ],
+      "0x2a7da8": [
+        "hccl::DispatcherPub::SignalWait(void*, hccl::Stream&, unsigned int, unsigned int, int, bool, unsigned int, unsigned int)",
+        "??:?"
+      ],
+      "0x2a8154": [
+        "hccl::DispatcherPub::MemcpyAsync(void*, unsigned long, void const*, unsigned long long, HcclRtMemcpyKind, hccl::Stream&, unsigned int, hccl::LinkType)",
+        "??:?"
+      ],
+      "0x2a87e4": [
+        "hccl::DispatcherPub::MemcpyAsync(hccl::DeviceMem&, hccl::DeviceMem const&, hccl::Stream&, unsigned int, hccl::LinkType)",
+        "??:?"
+      ],
+      "0x2ac208": [
+        "hccl::DispatcherPub::InlineReduceAsync(void const*, unsigned long long, HcclDataType, HcclReduceOp, hccl::Stream&, void*, unsigned int, hccl::LinkType)",
+        "??:?"
+      ]
+    }
+  },
+  "/usr/local/Ascend/cann/lib64/libnnopbase.so": {
+    "sha256": "308dda461704a6e5f70de6e0eac4495e9829b9cec3328563b75a5b382c6e438b",
+    "addresses": {
+      "0x130cd4": [
+        "op::internal::CreateGraphImpl()",
+        "??:?"
+      ],
+      "0x1310d8": [
+        "op::internal::BuildKernelNodeImpl(unsigned int, op::internal::SmallVector<aclTensor*, 8ul, op::internal::PoolAllocator<aclTensor*> >&, op::internal::SmallVector<aclTensor*, 8ul, op::internal::PoolAllocator<aclTensor*> >&, op::internal::SmallVector<aclTensor*, 8ul, op::internal::PoolAllocator<aclTensor*> >&)",
+        "??:?"
+      ],
+      "0x131118": [
+        "op::internal::BuildKernelNodeImpl(unsigned int, op::internal::SmallVector<aclTensor*, 8ul, op::internal::PoolAllocator<aclTensor*> >&, op::internal::SmallVector<aclTensor*, 8ul, op::internal::PoolAllocator<aclTensor*> >&, op::internal::SmallVector<aclTensor*, 8ul, op::internal::PoolAllocator<aclTensor*> >&)",
+        "??:?"
+      ],
+      "0x13116c": [
+        "op::internal::BuildKernelNodeImpl(unsigned int, op::internal::SmallVector<aclTensor*, 8ul, op::internal::PoolAllocator<aclTensor*> >&, op::internal::SmallVector<aclTensor*, 8ul, op::internal::PoolAllocator<aclTensor*> >&, op::internal::SmallVector<aclTensor*, 8ul, op::internal::PoolAllocator<aclTensor*> >&)",
+        "??:?"
+      ],
+      "0x1311c0": [
+        "op::internal::BuildKernelNodeImpl(unsigned int, op::internal::SmallVector<aclTensor*, 8ul, op::internal::PoolAllocator<aclTensor*> >&, op::internal::SmallVector<aclTensor*, 8ul, op::internal::PoolAllocator<aclTensor*> >&, op::internal::SmallVector<aclTensor*, 8ul, op::internal::PoolAllocator<aclTensor*> >&)",
+        "??:?"
+      ],
+      "0x131304": [
+        "op::internal::BuildKernelNodeImpl(unsigned int, op::internal::SmallVector<aclTensor*, 8ul, op::internal::PoolAllocator<aclTensor*> >&, op::internal::SmallVector<aclTensor*, 8ul, op::internal::PoolAllocator<aclTensor*> >&, op::internal::SmallVector<aclTensor*, 8ul, op::internal::PoolAllocator<aclTensor*> >&)",
+        "??:?"
+      ],
+      "0x131f08": [
+        "op::internal::BuildGraph(void*, unsigned int, op::OpArgList&, op::OpArgList&, op::OpArgList&, op::OpArgList&)",
+        "??:?"
+      ],
+      "0x13380c": [
+        "op::internal::Allocate(unsigned long)",
+        "??:?"
+      ],
+      "0x13427c": [
+        "op::internal::BlockCache::CacheAllocImpl(unsigned long)",
+        "??:?"
+      ],
+      "0x137e98": [
+        "aclTensor::aclTensor(ge::DataType, ge::Format, ge::Format)",
+        "??:?"
+      ],
+      "0x137fe0": [
+        "aclTensor::aclTensor(ge::DataType, ge::Format, ge::Format)",
+        "??:?"
+      ],
+      "0x138538": [
+        "aclTensor::aclTensor(gert::Shape const&, gert::Shape const&, ge::DataType, ge::Format, ge::Format, void*)",
+        "??:?"
+      ],
+      "0x138700": [
+        "aclTensor::aclTensor(gert::Shape const&, gert::Shape const&, ge::DataType, ge::Format, ge::Format, void*)",
+        "??:?"
+      ],
+      "0x1398c0": [
+        "aclTensor::aclTensor(long const*, unsigned long, aclDataType, long const*, long, aclFormat, long const*, unsigned long, void*)",
+        "??:?"
+      ],
+      "0x139ab0": [
+        "aclTensor::aclTensor(long const*, unsigned long, aclDataType, long const*, long, aclFormat, long const*, unsigned long, void*)",
+        "??:?"
+      ],
+      "0x13a22c": [
+        "aclTensor::aclTensor(aclScalar const*, ge::DataType)",
+        "??:?"
+      ],
+      "0x13b5dc": [
+        "aclTensor::aclTensor(aclTensor const&, gert::Shape const&, long)",
+        "??:?"
+      ],
+      "0x156454": [
+        "aclTensor::aclTensor<long>(long const*, unsigned long, ge::DataType)",
+        "??:?"
+      ],
+      "0x156568": [
+        "aclTensor::aclTensor<long>(long const*, unsigned long, ge::DataType)",
+        "??:?"
+      ],
+      "0x19cf48": [
+        "op::internal::GetWorkspace(unsigned int, aclTensorList**, aclOpExecutor*, op::OpArgList&, op::OpArgList&, op::OpArgList&)",
+        "??:?"
+      ],
+      "0x19d7d4": [
+        "op::internal::UpdateWorkspace(aclOpExecutor*, unsigned long const*, unsigned long, aclTensorList**)",
+        "??:?"
+      ],
+      "0x19d8dc": [
+        "op::internal::UpdateWorkspace(aclOpExecutor*, unsigned long const*, unsigned long, aclTensorList**)",
+        "??:?"
+      ],
+      "0x1ab148": [
+        "op::OpArgValue::OpArgValue(char const*)",
+        "??:?"
+      ],
+      "0x1cda14": [
+        "CreatAiCoreKernelLauncher(char const*, unsigned int, aclOpExecutor*, op::OpArgContext*)",
+        "??:?"
+      ],
+      "0x1cdbb4": [
+        "CreatAiCoreKernelLauncher(char const*, unsigned int, aclOpExecutor*, op::OpArgContext*)",
+        "??:?"
+      ],
+      "0x1ce084": [
+        "op::OpExecutorImpl::OpExecutorImpl()",
+        "??:?"
+      ],
+      "0x1ce26c": [
+        "aclOpExecutor::aclOpExecutor()",
+        "??:?"
+      ],
+      "0x1ce964": [
+        "aclOpExecutor::AllocTensor(gert::Shape const&, ge::DataType, ge::Format)",
+        "??:?"
+      ],
+      "0x1ce980": [
+        "aclOpExecutor::AllocTensor(gert::Shape const&, ge::DataType, ge::Format)",
+        "??:?"
+      ],
+      "0x1cefcc": [
+        "aclOpExecutor::AllocTensor(ge::DataType, ge::Format, ge::Format)",
+        "??:?"
+      ],
+      "0x1cefe4": [
+        "aclOpExecutor::AllocTensor(ge::DataType, ge::Format, ge::Format)",
+        "??:?"
+      ],
+      "0x1d2578": [
+        "aclOpExecutor::ConvertToTensor(aclIntArray const*, ge::DataType)",
+        "??:?"
+      ],
+      "0x1d258c": [
+        "aclOpExecutor::ConvertToTensor(aclIntArray const*, ge::DataType)",
+        "??:?"
+      ],
+      "0x1d352c": [
+        "aclOpExecutor::ConvertToTensor(aclScalar const*, ge::DataType)",
+        "??:?"
+      ],
+      "0x1d3e68": [
+        "aclOpExecutor::AllocTensorList(aclTensor const* const*, unsigned long)",
+        "??:?"
+      ],
+      "0x1d426c": [
+        "aclOpExecutor::CreateView(aclTensor const*, gert::Shape const&, long)",
+        "??:?"
+      ],
+      "0x1d4284": [
+        "aclOpExecutor::CreateView(aclTensor const*, gert::Shape const&, long)",
+        "??:?"
+      ],
+      "0x1d4660": [
+        "aclOpExecutor::CreateView(aclTensor const*, gert::Shape const&, gert::Shape const&, op::internal::SmallVector<long, 25ul, op::internal::PoolAllocator<long> > const&, long)",
+        "??:?"
+      ],
+      "0x1d6f6c": [
+        "UniqueExecutor::UniqueExecutor(char const*)",
+        "??:?"
+      ],
+      "0x1d6f78": [
+        "UniqueExecutor::UniqueExecutor(char const*)",
+        "??:?"
+      ],
+      "0xf95a4": [
+        "aclCreateTensor",
+        "??:?"
+      ]
+    }
+  },
+  "/usr/local/Ascend/cann/lib64/libopapi.so": {
+    "sha256": "3e10def2f7158482f3967b9db6ad2707cca8691198ddae8cc52bbbaf61bb2675",
+    "addresses": {
+      "0x118bb9c": [
+        "std::basic_string<char, std::char_traits<char>, std::allocator<char> > std::operator+<char, std::char_traits<char>, std::allocator<char> >(char const*, std::basic_string<char, std::char_traits<char>, std::allocator<char> >&&)",
+        "??:?"
+      ],
+      "0x1cdb38c": [
+        "int op::OpArgContextInit<op::OpInput<aclTensor const*, aclTensor const*, aclTensor const*, aclTensor const*>, op::OpOutput<aclTensor*>, op::OpAttr<long> >(op::OpArgContext&, op::OpArg*&, op::OpInput<aclTensor const*, aclTensor const*, aclTensor const*, aclTensor const*> const&, op::OpOutput<aclTensor*> const&, op::OpAttr<long> const&)",
+        "??:?"
+      ],
+      "0x1cdb3d8": [
+        "int op::OpArgContextInit<op::OpInput<aclTensor const*, aclTensor const*, aclTensor const*, aclTensor const*>, op::OpOutput<aclTensor*>, op::OpAttr<long> >(op::OpArgContext&, op::OpArg*&, op::OpInput<aclTensor const*, aclTensor const*, aclTensor const*, aclTensor const*> const&, op::OpOutput<aclTensor*> const&, op::OpAttr<long> const&)",
+        "??:?"
+      ],
+      "0x1cdc94c": [
+        "LogUnsupportedQuantActivationWarning",
+        "??:?"
+      ],
+      "0x1cdf5ec": [
+        "CheckIsEnabledActive",
+        "??:?"
+      ],
+      "0x1cdf644": [
+        "CheckIsEnabledActive",
+        "??:?"
+      ],
+      "0x1cdf654": [
+        "CheckIsEnabledActive",
+        "??:?"
+      ],
+      "0x1cdf664": [
+        "CheckIsEnabledActive",
+        "??:?"
+      ],
+      "0x1cdf674": [
+        "CheckIsEnabledActive",
+        "??:?"
+      ],
+      "0x1cdf68c": [
+        "CheckIsEnabledActive",
+        "??:?"
+      ],
+      "0x1cdf69c": [
+        "CheckIsEnabledActive",
+        "??:?"
+      ],
+      "0x1cf3e18": [
+        "CheckCommonParam",
+        "??:?"
+      ],
+      "0x1cf3e48": [
+        "CheckCommonParam",
+        "??:?"
+      ],
+      "0x1cf3e60": [
+        "CheckCommonParam",
+        "??:?"
+      ],
+      "0x1cf3e88": [
+        "CheckCommonParam",
+        "??:?"
+      ],
+      "0x1cf3eb8": [
+        "CheckCommonParam",
+        "??:?"
+      ],
+      "0x1cf3ed0": [
+        "CheckCommonParam",
+        "??:?"
+      ],
+      "0x1cf3f00": [
+        "CheckCommonParam",
+        "??:?"
+      ],
+      "0x1cf3f18": [
+        "CheckCommonParam",
+        "??:?"
+      ],
+      "0x1cf3f60": [
+        "CheckCommonParam",
+        "??:?"
+      ],
+      "0x1cf40fc": [
+        "CheckCommonParam",
+        "??:?"
+      ],
+      "0x1cf44ac": [
+        "CheckCommonParam",
+        "??:?"
+      ],
+      "0x1d0435c": [
+        "CheckCommonParam",
+        "??:?"
+      ],
+      "0x1d06ef0": [
+        "aclnnGroupedMatmulV5GetWorkspaceSize",
+        "??:?"
+      ],
+      "0x1d13534": [
+        "l0op::GroupedMatmul(aclTensorList const*, aclTensorList const*, aclTensorList const*, aclTensorList const*, aclTensorList const*, aclTensorList const*, aclTensorList const*, aclTensor const*, aclTensor const*, long, ge::DataType, bool, bool, long, long, long, aclIntArray const*, unsigned long, aclOpExecutor*)",
+        "??:?"
+      ],
+      "0x1d13984": [
+        "l0op::GroupedMatmul(aclTensorList const*, aclTensorList const*, aclTensorList const*, aclTensorList const*, aclTensorList const*, aclTensorList const*, aclTensorList const*, aclTensor const*, aclTensor const*, long, ge::DataType, bool, bool, long, long, long, aclIntArray const*, unsigned long, aclOpExecutor*)",
+        "??:?"
+      ],
+      "0x1d4edf8": [
+        "gmm::CreateContiguousTensorList(aclTensorList const*, std::vector<aclTensor*, std::allocator<aclTensor*> >&, aclOpExecutor*)",
+        "??:?"
+      ],
+      "0x1e38bac": [
+        "aclnnMoeInitRoutingV3GetWorkspaceSize",
+        "??:?"
+      ],
+      "0x1e38c6c": [
+        "aclnnMoeInitRoutingV3GetWorkspaceSize",
+        "??:?"
+      ],
+      "0x1e3dc48": [
+        "l0op::MoeInitRoutingV3(aclTensor const*, aclTensor const*, aclTensor const*, aclTensor const*, long, long, long, long, long, bool, long, aclIntArray const*, long, aclTensor const*, aclTensor const*, aclTensor const*, aclTensor const*, aclOpExecutor*)",
+        "??:?"
+      ],
+      "0x1e3de40": [
+        "l0op::MoeInitRoutingV3(aclTensor const*, aclTensor const*, aclTensor const*, aclTensor const*, long, long, long, long, long, bool, long, aclIntArray const*, long, aclTensor const*, aclTensor const*, aclTensor const*, aclTensor const*, aclOpExecutor*)",
+        "??:?"
+      ],
+      "0x412bcc": [
+        "l0op::ArgMaxV2(aclTensor const*, long, bool, aclOpExecutor*)",
+        "??:?"
+      ],
+      "0x41900c": [
+        "aclnnArgMaxGetWorkspaceSize",
+        "??:?"
+      ],
+      "0x4193cc": [
+        "aclnnArgMaxGetWorkspaceSize",
+        "??:?"
+      ],
+      "0x4b6b70": [
+        "aclnnInplaceBitwiseXorTensorGetWorkspaceSize",
+        "??:?"
+      ],
+      "0x4bbbc4": [
+        "l0op::Cast(aclTensor const*, ge::DataType, aclOpExecutor*)",
+        "??:?"
+      ],
+      "0x4bbcac": [
+        "l0op::Cast(aclTensor const*, ge::DataType, aclOpExecutor*)",
+        "??:?"
+      ],
+      "0x4bff6c": [
+        "aclnnCastGetWorkspaceSize",
+        "??:?"
+      ],
+      "0x4c091c": [
+        "aclnnCastGetWorkspaceSize",
+        "??:?"
+      ],
+      "0x4c092c": [
+        "aclnnCastGetWorkspaceSize",
+        "??:?"
+      ],
+      "0xa892f4": [
+        "l0op::AsStridedAiCore(aclTensor const*, aclTensor const*, aclTensor const*, aclTensor const*, aclTensor const*, aclOpExecutor*)",
+        "??:?"
+      ],
+      "0xa8be64": [
+        "l0op::AsStrided(aclTensor const*, aclTensor const*, aclTensor const*, aclTensor const*, aclTensor const*, aclOpExecutor*)",
+        "??:?"
+      ],
+      "0xae3874": [
+        "l0op::OptimizeContiguous(aclTensor const*, l0op::ContiguousParam&, aclOpExecutor*)",
+        "??:?"
+      ],
+      "0xae39ec": [
+        "l0op::OptimizeContiguous(aclTensor const*, l0op::ContiguousParam&, aclOpExecutor*)",
+        "??:?"
+      ],
+      "0xae3bdc": [
+        "l0op::OptimizeContiguous(aclTensor const*, l0op::ContiguousParam&, aclOpExecutor*)",
+        "??:?"
+      ],
+      "0xae4060": [
+        "l0op::AsStridedToContiguous(aclTensor const*, aclOpExecutor*)",
+        "??:?"
+      ],
+      "0xae4164": [
+        "l0op::AsStridedToContiguous(aclTensor const*, aclOpExecutor*)",
+        "??:?"
+      ],
+      "0xae417c": [
+        "l0op::AsStridedToContiguous(aclTensor const*, aclOpExecutor*)",
+        "??:?"
+      ],
+      "0xae41f0": [
+        "l0op::AsStridedToContiguous(aclTensor const*, aclOpExecutor*)",
+        "??:?"
+      ],
+      "0xae4208": [
+        "l0op::AsStridedToContiguous(aclTensor const*, aclOpExecutor*)",
+        "??:?"
+      ],
+      "0xae4290": [
+        "l0op::AsStridedToContiguous(aclTensor const*, aclOpExecutor*)",
+        "??:?"
+      ],
+      "0xae43d4": [
+        "l0op::AsStridedToContiguous(aclTensor const*, aclOpExecutor*)",
+        "??:?"
+      ],
+      "0xae8eac": [
+        "l0op::Contiguous(aclTensor const*, aclOpExecutor*)",
+        "??:?"
+      ],
+      "0xae8f4c": [
+        "l0op::Contiguous(aclTensor const*, aclOpExecutor*)",
+        "??:?"
+      ],
+      "0xbcc150": [
+        "l0op::SliceAiCore(aclTensor const*, aclTensor const*, aclTensor const*, aclTensor const*, aclOpExecutor*)",
+        "??:?"
+      ],
+      "0xbd3630": [
+        "l0op::Slice(aclTensor const*, aclIntArray const*, aclIntArray const*, aclOpExecutor*)",
+        "??:?"
+      ],
+      "0xbd3648": [
+        "l0op::Slice(aclTensor const*, aclIntArray const*, aclIntArray const*, aclOpExecutor*)",
+        "??:?"
+      ],
+      "0xbd365c": [
+        "l0op::Slice(aclTensor const*, aclIntArray const*, aclIntArray const*, aclOpExecutor*)",
+        "??:?"
+      ],
+      "0xbd3934": [
+        "l0op::Slice(aclTensor const*, aclIntArray const*, aclIntArray const*, aclOpExecutor*)",
+        "??:?"
+      ],
+      "0xc395f4": [
+        "l0op::TransposeAiCore(aclTensor const*, aclTensor const*, aclTensor const*, aclOpExecutor*)",
+        "??:?"
+      ],
+      "0xf2b6f4": [
+        "aclnnBatchMatMulWeightNz",
+        "??:?"
+      ],
+      "0xf2fd38": [
+        "aclnnBatchMatMulGetWorkspaceSize",
+        "??:?"
+      ],
+      "0xf49104": [
+        "l0op::BatchMatMulNd(aclTensor const*, aclTensor const*, aclTensor const*, aclTensor const*, bool, bool, bool, long, aclOpExecutor*)",
+        "??:?"
+      ],
+      "0xf57758": [
+        "Ops::NN::checkFusedmm(aclTensor const*, aclTensor const*, aclTensor const*, aclScalar const*, aclScalar const*, signed char, bool&)",
+        "??:?"
+      ],
+      "0xf58344": [
+        "Ops::NN::ExecBatchMatmulOpWithBiasAndAttrsV2(aclTensor const*, aclTensor const*, aclTensor const*, aclTensor const*, bool, bool, signed char, aclOpExecutor*, Ops::NN::NonContiguousMode, bool)",
+        "??:?"
+      ],
+      "0xf5a4dc": [
+        "Ops::NN::ExecBmmOpWithBiasV2(aclTensor const*, aclTensor const*, aclTensor const*, aclTensor const*, signed char, aclOpExecutor*, bool)",
+        "??:?"
+      ]
+    }
+  },
+  "/data/p00603624/inferfabric/openpangu92/native-build-device-zero/libinferfabric_program.so": {
+    "sha256": "b9d2f6e0b818ad410fb412bc0fbb814598f1fa272bb1ec9776019f94334d2472",
+    "addresses": {
+      "0x50a08": [
+        "std::_MakeUniq<openpangu::DeviceTensor>::__single_object std::make_unique<openpangu::DeviceTensor, std::vector<long, std::allocator<long> >, aclDataType, int>(std::vector<long, std::allocator<long> >&&, aclDataType&&, int&&) [clone .isra.0]",
+        "program_engine.cpp:?"
+      ],
+      "0x536d8": [
+        "(anonymous namespace)::Engine::worker(unsigned long)",
+        "program_engine.cpp:?"
+      ],
+      "0x536f4": [
+        "(anonymous namespace)::Engine::worker(unsigned long)",
+        "program_engine.cpp:?"
+      ],
+      "0x548e0": [
+        "decltype(auto) std::__apply_impl<int (*&)(aclTensor const*, aclTensorList const*, aclTensorList const*, aclTensor const*, aclTensor const*, aclTensor const*, aclTensor const*, aclTensor const*, aclTensor const*, aclTensor const*, aclTensor const*, aclTensor const*, aclTensor const*, aclTensor const*, aclTensor const*, aclTensor const*, aclTensor const*, aclTensor const*, aclTensor const*, aclTensor const*, aclTensor const*, aclTensor const*, aclTensor const*, aclTensor const*, aclTensor const*, aclTensor const*, aclTensor const*, aclTensor const*, aclTensor const*, long, double, long, long, char*, long, long, long, long, long, bool, long, long, long, long, aclTensor const*, aclTensor const*, unsigned long*, aclOpExecutor**), std::tuple<aclTensor*, aclTensorList*, aclTensorList*, decltype(nullptr), aclTensor*, aclTensor*, aclTensor*, decltype(nullptr), decltype(nullptr), decltype(nullptr), decltype(nullptr), decltype(nullptr), decltype(nullptr), decltype(nullptr), aclTensor*, decltype(nullptr), decltype(nullptr), decltype(nullptr), decltype(nullptr), decltype(nullptr), decltype(nullptr), aclTensor*, aclTensor*, decltype(nullptr), decltype(nullptr), aclTensor*, aclTensor*, aclTensor*, aclTensor*, int, double, long, int, char*, int, int, int, int, int, bool, int, int, int, int, aclTensor*, decltype(nullptr), unsigned long*, aclOpExecutor**>&, 0ul, 1ul, 2ul, 3ul, 4ul, 5ul, 6ul, 7ul, 8ul, 9ul, 10ul, 11ul, 12ul, 13ul, 14ul, 15ul, 16ul, 17ul, 18ul, 19ul, 20ul, 21ul, 22ul, 23ul, 24ul, 25ul, 26ul, 27ul, 28ul, 29ul, 30ul, 31ul, 32ul, 33ul, 34ul, 35ul, 36ul, 37ul, 38ul, 39ul, 40ul, 41ul, 42ul, 43ul, 44ul, 45ul, 46ul, 47ul>(int (*&)(aclTensor const*, aclTensorList const*, aclTensorList const*, aclTensor const*, aclTensor const*, aclTensor const*, aclTensor const*, aclTensor const*, aclTensor const*, aclTensor const*, aclTensor const*, aclTensor const*, aclTensor const*, aclTensor const*, aclTensor const*, aclTensor const*, aclTensor const*, aclTensor const*, aclTensor const*, aclTensor const*, aclTensor const*, aclTensor const*, aclTensor const*, aclTensor const*, aclTensor const*, aclTensor const*, aclTensor const*, aclTensor const*, aclTensor const*, long, double, long, long, char*, long, long, long, long, long, bool, long, long, long, long, aclTensor const*, aclTensor const*, unsigned long*, aclOpExecutor**), std::tuple<aclTensor*, aclTensorList*, aclTensorList*, decltype(nullptr), aclTensor*, aclTensor*, aclTensor*, decltype(nullptr), decltype(nullptr), decltype(nullptr), decltype(nullptr), decltype(nullptr), decltype(nullptr), decltype(nullptr), aclTensor*, decltype(nullptr), decltype(nullptr), decltype(nullptr), decltype(nullptr), decltype(nullptr), decltype(nullptr), aclTensor*, aclTensor*, decltype(nullptr), decltype(nullptr), aclTensor*, aclTensor*, aclTensor*, aclTensor*, int, double, long, int, char*, int, int, int, int, int, bool, int, int, int, int, aclTensor*, decltype(nullptr), unsigned long*, aclOpExecutor**>&, std::integer_sequence<unsigned long, 0ul, 1ul, 2ul, 3ul, 4ul, 5ul, 6ul, 7ul, 8ul, 9ul, 10ul, 11ul, 12ul, 13ul, 14ul, 15ul, 16ul, 17ul, 18ul, 19ul, 20ul, 21ul, 22ul, 23ul, 24ul, 25ul, 26ul, 27ul, 28ul, 29ul, 30ul, 31ul, 32ul, 33ul, 34ul, 35ul, 36ul, 37ul, 38ul, 39ul, 40ul, 41ul, 42ul, 43ul, 44ul, 45ul, 46ul, 47ul>) [clone .isra.0]",
+        "program_engine.cpp:?"
+      ],
+      "0x5c630": [
+        "std::pair<std::_Rb_tree_iterator<std::pair<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const, aclTensor*> >, bool> std::_Rb_tree<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >, std::pair<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const, aclTensor*>, std::_Select1st<std::pair<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const, aclTensor*> >, std::less<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > >, std::allocator<std::pair<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const, aclTensor*> > >::_M_emplace_unique<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >, aclTensor*&>(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >&&, aclTensor*&)",
+        "??:?"
+      ],
+      "0x5caa8": [
+        "inferfabric::prepared::Context::strided_descriptor(void*, long, std::vector<long, std::allocator<long> > const&, std::vector<long, std::allocator<long> > const&, aclDataType)",
+        "??:?"
+      ],
+      "0x5cb7c": [
+        "inferfabric::prepared::Context::strided_descriptor(void*, long, std::vector<long, std::allocator<long> > const&, std::vector<long, std::allocator<long> > const&, aclDataType)",
+        "??:?"
+      ],
+      "0x5d018": [
+        "inferfabric::prepared::Context::descriptor(void*, std::vector<long, std::allocator<long> > const&, aclDataType, bool)",
+        "??:?"
+      ],
+      "0x5d1cc": [
+        "inferfabric::prepared::Context::descriptor(void*, std::vector<long, std::allocator<long> > const&, aclDataType, bool)",
+        "??:?"
+      ],
+      "0x5d1e4": [
+        "inferfabric::prepared::Context::descriptor(void*, std::vector<long, std::allocator<long> > const&, aclDataType, bool)",
+        "??:?"
+      ],
+      "0x5dab8": [
+        "inferfabric::resident::Tensor::view(unsigned long, unsigned long) const",
+        "??:?"
+      ],
+      "0x5dd9c": [
+        "inferfabric::token::View::View(void*, std::vector<long, std::allocator<long> >, aclDataType, bool)",
+        "??:?"
+      ],
+      "0x5e20c": [
+        "inferfabric::resident::Tensor::alias(openpangu::DeviceTensor const&, aclDataType)",
+        "??:?"
+      ],
+      "0x706fc": [
+        "inferfabric::prepared::Context::record(inferfabric::prepared::Context::Block*)",
+        "??:?"
+      ],
+      "0x76638": [
+        "int inferfabric::prepared::query<int (*)(aclTensor const*, aclDataType, aclTensor*, unsigned long*, aclOpExecutor**), aclTensor*, aclDataType, aclTensor*, unsigned long*, aclOpExecutor**>(char const*, bool, int (*)(aclTensor const*, aclDataType, aclTensor*, unsigned long*, aclOpExecutor**), aclTensor*, aclDataType, aclTensor*, unsigned long*, aclOpExecutor**)",
+        "??:?"
+      ],
+      "0x766b8": [
+        "int inferfabric::prepared::query<int (*)(aclTensor const*, aclDataType, aclTensor*, unsigned long*, aclOpExecutor**), aclTensor*, aclDataType, aclTensor*, unsigned long*, aclOpExecutor**>(char const*, bool, int (*)(aclTensor const*, aclDataType, aclTensor*, unsigned long*, aclOpExecutor**), aclTensor*, aclDataType, aclTensor*, unsigned long*, aclOpExecutor**)",
+        "??:?"
+      ],
+      "0x77bfc": [
+        "inferfabric::prepared::Context::acquire(unsigned long, bool)",
+        "??:?"
+      ],
+      "0x78704": [
+        "inferfabric::resident::causal_convolution(aclTensor*, aclTensor*, aclTensor*, aclTensor*, aclTensor*, aclTensor*, aclTensor*, unsigned int)",
+        "??:?"
+      ],
+      "0x78fb8": [
+        "inferfabric::token::Decoder::sinkhorn(inferfabric::token::Decoder::HC)",
+        "??:?"
+      ],
+      "0x79390": [
+        "inferfabric::token::Decoder::select_route(inferfabric::resident::Tensor const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&)",
+        "??:?"
+      ],
+      "0x793d0": [
+        "inferfabric::token::Decoder::select_route(inferfabric::resident::Tensor const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&)",
+        "??:?"
+      ],
+      "0x79410": [
+        "inferfabric::token::Decoder::select_route(inferfabric::resident::Tensor const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&)",
+        "??:?"
+      ],
+      "0x7957c": [
+        "inferfabric::token::Decoder::select_route(inferfabric::resident::Tensor const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&)",
+        "??:?"
+      ],
+      "0x79af4": [
+        "inferfabric::token::Decoder::expert_gmm(inferfabric::token::Decoder::RoutedQuantized const&, inferfabric::token::Decoder::ExpertRows, inferfabric::token::Decoder::ExpertBank&)",
+        "??:?"
+      ],
+      "0x7aa68": [
+        "openpangu::DeviceTensor::DeviceTensor(std::vector<long, std::allocator<long> >, aclDataType, unsigned long)",
+        "??:?"
+      ],
+      "0x7aac0": [
+        "openpangu::DeviceTensor::DeviceTensor(std::vector<long, std::allocator<long> >, aclDataType, unsigned long)",
+        "??:?"
+      ],
+      "0x7b434": [
+        "inferfabric::resident::head_to_token(inferfabric::resident::Tensor const&, unsigned int, unsigned int, unsigned int)",
+        "??:?"
+      ],
+      "0x7b490": [
+        "inferfabric::resident::head_to_token(inferfabric::resident::Tensor const&, unsigned int, unsigned int, unsigned int)",
+        "??:?"
+      ],
+      "0x7b4d8": [
+        "inferfabric::resident::head_to_token(inferfabric::resident::Tensor const&, unsigned int, unsigned int, unsigned int)",
+        "??:?"
+      ],
+      "0x7b528": [
+        "inferfabric::resident::head_to_token(inferfabric::resident::Tensor const&, unsigned int, unsigned int, unsigned int)",
+        "??:?"
+      ],
+      "0x7b71c": [
+        "inferfabric::resident::column_slice(inferfabric::resident::Tensor const&, long, long, long)",
+        "??:?"
+      ],
+      "0x7b774": [
+        "inferfabric::resident::column_slice(inferfabric::resident::Tensor const&, long, long, long)",
+        "??:?"
+      ],
+      "0x7b7bc": [
+        "inferfabric::resident::column_slice(inferfabric::resident::Tensor const&, long, long, long)",
+        "??:?"
+      ],
+      "0x7ba04": [
+        "inferfabric::resident::rope_bf16(inferfabric::resident::Tensor const&, aclTensor*, aclTensor*, long)",
+        "??:?"
+      ],
+      "0x7bd10": [
+        "inferfabric::token::Decoder::rope_bf16(inferfabric::resident::Tensor const&)",
+        "??:?"
+      ],
+      "0x7cd44": [
+        "inferfabric::resident::normalized_cache_append(inferfabric::resident::Tensor const&, aclTensor*, aclTensor*, aclTensor*, aclTensor*, aclTensor*, unsigned int, bool)",
+        "??:?"
+      ],
+      "0x7dac8": [
+        "inferfabric::token::Decoder::quantized_linear(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, inferfabric::token::Decoder::Quantized const&)",
+        "??:?"
+      ],
+      "0x7dbe4": [
+        "inferfabric::token::Decoder::quantized_linear(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, inferfabric::token::Decoder::Quantized const&)",
+        "??:?"
+      ],
+      "0x7e844": [
+        "inferfabric::resident::Tensor::Tensor(unsigned long, aclDataType)",
+        "??:?"
+      ],
+      "0x7f15c": [
+        "inferfabric::token::Decoder::quantize_experts(inferfabric::resident::Tensor const&, inferfabric::token::Decoder::Routes const&, int, bool, inferfabric::token::Decoder::ExpertRows const*)",
+        "??:?"
+      ],
+      "0x7f64c": [
+        "inferfabric::token::Decoder::zero_expert_output(inferfabric::token::Decoder::RoutedQuantized const&, int, bool)",
+        "??:?"
+      ],
+      "0x7fa84": [
+        "inferfabric::token::Decoder::cast(inferfabric::resident::Tensor const&, aclDataType, bool)",
+        "??:?"
+      ],
+      "0x801a4": [
+        "inferfabric::token::Decoder::norm(inferfabric::resident::Tensor const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&)",
+        "??:?"
+      ],
+      "0x801e4": [
+        "inferfabric::token::Decoder::norm(inferfabric::resident::Tensor const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&)",
+        "??:?"
+      ],
+      "0x80228": [
+        "inferfabric::token::Decoder::norm(inferfabric::resident::Tensor const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&)",
+        "??:?"
+      ],
+      "0x805ec": [
+        "inferfabric::token::Decoder::matrix(inferfabric::resident::Tensor const&, void*, int, int, bool)",
+        "??:?"
+      ],
+      "0x806b0": [
+        "inferfabric::token::Decoder::matrix(inferfabric::resident::Tensor const&, void*, int, int, bool)",
+        "??:?"
+      ],
+      "0x810e4": [
+        "inferfabric::token::Decoder::sum(inferfabric::resident::Tensor const&, bool)",
+        "??:?"
+      ],
+      "0x81b68": [
+        "inferfabric::token::Decoder::emit_rows(inferfabric::resident::Tensor const&, std::vector<unsigned int, std::allocator<unsigned int> > const&)",
+        "??:?"
+      ],
+      "0x81d04": [
+        "inferfabric::token::Decoder::emit_rows(inferfabric::resident::Tensor const&, std::vector<unsigned int, std::allocator<unsigned int> > const&)",
+        "??:?"
+      ],
+      "0x87268": [
+        "inferfabric::token::Decoder::pre(inferfabric::resident::Tensor const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, bool, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, bool)",
+        "??:?"
+      ],
+      "0x872a8": [
+        "inferfabric::token::Decoder::pre(inferfabric::resident::Tensor const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, bool, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, bool)",
+        "??:?"
+      ],
+      "0x872ec": [
+        "inferfabric::token::Decoder::pre(inferfabric::resident::Tensor const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, bool, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, bool)",
+        "??:?"
+      ],
+      "0x87320": [
+        "inferfabric::token::Decoder::pre(inferfabric::resident::Tensor const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, bool, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, bool)",
+        "??:?"
+      ],
+      "0x87358": [
+        "inferfabric::token::Decoder::pre(inferfabric::resident::Tensor const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, bool, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, bool)",
+        "??:?"
+      ],
+      "0x8738c": [
+        "inferfabric::token::Decoder::pre(inferfabric::resident::Tensor const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, bool, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, bool)",
+        "??:?"
+      ],
+      "0x87440": [
+        "inferfabric::token::Decoder::pre(inferfabric::resident::Tensor const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, bool, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, bool)",
+        "??:?"
+      ],
+      "0x87710": [
+        "inferfabric::token::Decoder::pre(inferfabric::resident::Tensor const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, bool, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, bool)",
+        "??:?"
+      ],
+      "0x8cc60": [
+        "inferfabric::token::Decoder::head_matmul(inferfabric::resident::Tensor const&, inferfabric::execution::Node const&)",
+        "??:?"
+      ],
+      "0x8cfe4": [
+        "inferfabric::token::Decoder::attend_packed(inferfabric::resident::Tensor const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, inferfabric::resident::Tensor const*)",
+        "??:?"
+      ],
+      "0x8f080": [
+        "inferfabric::token::Decoder::attend(inferfabric::resident::Tensor const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, unsigned int, inferfabric::resident::Tensor const*)",
+        "??:?"
+      ],
+      "0x90ae4": [
+        "inferfabric::token::Decoder::linear_pair(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, inferfabric::resident::Tensor const&)",
+        "??:?"
+      ],
+      "0x91e80": [
+        "inferfabric::token::Decoder::mome(inferfabric::resident::Tensor, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, int, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, bool, unsigned int)",
+        "??:?"
+      ],
+      "0x9222c": [
+        "inferfabric::token::Decoder::mome(inferfabric::resident::Tensor, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, int, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, bool, unsigned int)",
+        "??:?"
+      ],
+      "0x934f4": [
+        "inferfabric::token::Decoder::append_normalized_cache(inferfabric::resident::Tensor const&, inferfabric::resident::Tensor const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, int, bool)",
+        "??:?"
+      ],
+      "0x93fcc": [
+        "inferfabric::token::Decoder::project_route(inferfabric::resident::Tensor const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&)",
+        "??:?"
+      ],
+      "0x94060": [
+        "inferfabric::token::Decoder::project_route(inferfabric::resident::Tensor const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&)",
+        "??:?"
+      ],
+      "0x9649c": [
+        "inferfabric::token::Decoder::execute_token()",
+        "??:?"
+      ],
+      "0x96534": [
+        "inferfabric::token::Decoder::execute_token()",
+        "??:?"
+      ],
+      "0x965b0": [
+        "inferfabric::token::Decoder::execute_token()",
+        "??:?"
+      ],
+      "0x96618": [
+        "inferfabric::token::Decoder::execute_token()",
+        "??:?"
+      ],
+      "0x9669c": [
+        "inferfabric::token::Decoder::execute_token()",
+        "??:?"
+      ],
+      "0x96cfc": [
+        "inferfabric::token::Decoder::execute_token()",
+        "??:?"
+      ],
+      "0x96e40": [
+        "inferfabric::token::Decoder::execute_token()",
+        "??:?"
+      ],
+      "0x97290": [
+        "inferfabric::token::Decoder::execute_token()",
+        "??:?"
+      ],
+      "0x97710": [
+        "inferfabric::token::Decoder::execute_token()",
+        "??:?"
+      ],
+      "0x9782c": [
+        "inferfabric::token::Decoder::execute_token()",
+        "??:?"
+      ],
+      "0x97934": [
+        "inferfabric::token::Decoder::execute_token()",
+        "??:?"
+      ],
+      "0x9799c": [
+        "inferfabric::token::Decoder::execute_token()",
+        "??:?"
+      ],
+      "0x97b34": [
+        "inferfabric::token::Decoder::execute_token()",
+        "??:?"
+      ],
+      "0x97bd4": [
+        "inferfabric::token::Decoder::execute_token()",
+        "??:?"
+      ],
+      "0x97d44": [
+        "inferfabric::token::Decoder::execute_token()",
+        "??:?"
+      ],
+      "0x97f68": [
+        "inferfabric::token::Decoder::execute_token()",
+        "??:?"
+      ],
+      "0x981ac": [
+        "inferfabric::token::Decoder::execute_token()",
+        "??:?"
+      ],
+      "0x982cc": [
+        "inferfabric::token::Decoder::execute_token()",
+        "??:?"
+      ],
+      "0x98388": [
+        "inferfabric::token::Decoder::execute_token()",
+        "??:?"
+      ],
+      "0x98524": [
+        "inferfabric::token::Decoder::execute_token()",
+        "??:?"
+      ],
+      "0x9858c": [
+        "inferfabric::token::Decoder::execute_token()",
+        "??:?"
+      ],
+      "0x989bc": [
+        "inferfabric::token::Decoder::execute_token()",
+        "??:?"
+      ],
+      "0x98ef8": [
+        "inferfabric::token::Decoder::execute_token()",
+        "??:?"
+      ],
+      "0x99398": [
+        "inferfabric::token::Decoder::execute_token()",
+        "??:?"
+      ],
+      "0x993e8": [
+        "inferfabric::token::Decoder::execute_token()",
+        "??:?"
+      ],
+      "0x9c908": [
+        "inferfabric::token::Decoder::sequence_batch(std::vector<unsigned int, std::allocator<unsigned int> > const&, std::vector<inferfabric::execution::SequenceSlice, std::allocator<inferfabric::execution::SequenceSlice> > const&, bool)",
+        "??:?"
+      ]
+    }
+  },
+  "/usr/local/Ascend/ascend-toolkit/vendors/omni_training_custom_transformer/op_api/lib/libcust_opapi.so": {
+    "sha256": "66a812fb5b7bbc04959d43c1917ce6cbadfbebc32d44e8eff0688a70c93f7e95",
+    "addresses": {
+      "0xc5c20": [
+        "aclnnAiInfraManifoldConstrainedHyperConnectionPreV3",
+        "??:?"
+      ],
+      "0xc700c": [
+        "aclnnAiInfraManifoldConstrainedHyperConnectionPreGetWorkspaceSize",
+        "??:?"
+      ],
+      "0xc707c": [
+        "aclnnAiInfraManifoldConstrainedHyperConnectionPreGetWorkspaceSize",
+        "??:?"
+      ],
+      "0xc9a3c": [
+        "AiInfraManifoldConstrainedHyperConnectionPrel0op::AiInfraManifoldConstrainedHyperConnectionPre(aclTensor const*, aclTensor const*, aclTensor const*, aclTensor const*, aclTensor const*, long, double, double, bool, long, aclOpExecutor*)",
+        "??:?"
+      ],
+      "0xc9a54": [
+        "AiInfraManifoldConstrainedHyperConnectionPrel0op::AiInfraManifoldConstrainedHyperConnectionPre(aclTensor const*, aclTensor const*, aclTensor const*, aclTensor const*, aclTensor const*, long, double, double, bool, long, aclOpExecutor*)",
+        "??:?"
+      ],
+      "0xc9a6c": [
+        "AiInfraManifoldConstrainedHyperConnectionPrel0op::AiInfraManifoldConstrainedHyperConnectionPre(aclTensor const*, aclTensor const*, aclTensor const*, aclTensor const*, aclTensor const*, long, double, double, bool, long, aclOpExecutor*)",
+        "??:?"
+      ],
+      "0xc9a88": [
+        "AiInfraManifoldConstrainedHyperConnectionPrel0op::AiInfraManifoldConstrainedHyperConnectionPre(aclTensor const*, aclTensor const*, aclTensor const*, aclTensor const*, aclTensor const*, long, double, double, bool, long, aclOpExecutor*)",
+        "??:?"
+      ],
+      "0xc9c9c": [
+        "AiInfraManifoldConstrainedHyperConnectionPrel0op::AiInfraManifoldConstrainedHyperConnectionPre(aclTensor const*, aclTensor const*, aclTensor const*, aclTensor const*, aclTensor const*, long, double, double, bool, long, aclOpExecutor*)",
+        "??:?"
+      ]
+    }
+  },
+  "/usr/local/Ascend/ascend-toolkit/vendors/omni_custom_transformer/op_api/lib/libcust_opapi.so": {
+    "sha256": "aa73d7fd12f51d172c171ff4e7a36c05dc4c1c3183f69f6e0cdadecd06642d3b",
+    "addresses": {
+      "0x131e44": [
+        "aclnnAiInfraKvRmsNormRopeCacheGetWorkspaceSize",
+        "??:?"
+      ],
+      "0x135124": [
+        "AiInfraKvRmsNormRopeCachel0op::AiInfraKvRmsNormRopeCache(aclTensor const*, aclTensor const*, aclTensor const*, aclTensor const*, aclTensor const*, aclTensor*, aclTensor*, aclTensor const*, aclTensor const*, aclTensor const*, aclTensor const*, aclTensor const*, double, char*, char*, char*, bool, aclTensor const*, aclTensor const*, aclOpExecutor*)",
+        "??:?"
+      ],
+      "0x135244": [
+        "AiInfraKvRmsNormRopeCachel0op::AiInfraKvRmsNormRopeCache(aclTensor const*, aclTensor const*, aclTensor const*, aclTensor const*, aclTensor const*, aclTensor*, aclTensor*, aclTensor const*, aclTensor const*, aclTensor const*, aclTensor const*, aclTensor const*, double, char*, char*, char*, bool, aclTensor const*, aclTensor const*, aclOpExecutor*)",
+        "??:?"
+      ],
+      "0x13527c": [
+        "AiInfraKvRmsNormRopeCachel0op::AiInfraKvRmsNormRopeCache(aclTensor const*, aclTensor const*, aclTensor const*, aclTensor const*, aclTensor const*, aclTensor*, aclTensor*, aclTensor const*, aclTensor const*, aclTensor const*, aclTensor const*, aclTensor const*, double, char*, char*, char*, bool, aclTensor const*, aclTensor const*, aclOpExecutor*)",
+        "??:?"
+      ],
+      "0x1352c0": [
+        "AiInfraKvRmsNormRopeCachel0op::AiInfraKvRmsNormRopeCache(aclTensor const*, aclTensor const*, aclTensor const*, aclTensor const*, aclTensor const*, aclTensor*, aclTensor*, aclTensor const*, aclTensor const*, aclTensor const*, aclTensor const*, aclTensor const*, double, char*, char*, char*, bool, aclTensor const*, aclTensor const*, aclOpExecutor*)",
+        "??:?"
+      ],
+      "0x1352f8": [
+        "AiInfraKvRmsNormRopeCachel0op::AiInfraKvRmsNormRopeCache(aclTensor const*, aclTensor const*, aclTensor const*, aclTensor const*, aclTensor const*, aclTensor*, aclTensor*, aclTensor const*, aclTensor const*, aclTensor const*, aclTensor const*, aclTensor const*, double, char*, char*, char*, bool, aclTensor const*, aclTensor const*, aclOpExecutor*)",
+        "??:?"
+      ],
+      "0x8ffac": [
+        "AiInfraFusedCausalConv1dCommonProcess",
+        "??:?"
+      ],
+      "0x90190": [
+        "AiInfraFusedCausalConv1dCommonProcess",
+        "??:?"
+      ],
+      "0x913ec": [
+        "aclnnAiInfraFusedCausalConv1dGetWorkspaceSize",
+        "??:?"
+      ],
+      "0x93658": [
+        "AiInfraFusedCausalConv1dl0op::AiInfraFusedCausalConv1d(aclTensor*, aclTensor const*, aclTensor*, aclTensor const*, aclTensor const*, aclTensor const*, aclTensor const*, aclTensor const*, aclTensor const*, aclTensor const*, aclTensor const*, aclTensor const*, long, long, long, long, long, long, long, bool, long, aclTensor const*, aclOpExecutor*)",
+        "??:?"
+      ],
+      "0x9501c": [
+        "op::OpArgContext* op::MakeOpArgContext<op::OpInput<aclTensor*, aclTensor const*, aclTensor*, aclTensor const*, aclTensor const*, aclTensor const*, aclTensor const*, aclTensor const*, aclTensor const*, aclTensor const*, aclTensor const*, aclTensor const*>, op::OpOutput<aclTensor*, aclTensor const*>, op::OpAttr<long, long, long, long, long, long, long, bool, long> >(op::OpInput<aclTensor*, aclTensor const*, aclTensor*, aclTensor const*, aclTensor const*, aclTensor const*, aclTensor const*, aclTensor const*, aclTensor const*, aclTensor const*, aclTensor const*, aclTensor const*> const&, op::OpOutput<aclTensor*, aclTensor const*> const&, op::OpAttr<long, long, long, long, long, long, long, bool, long> const&)",
+        "??:?"
+      ],
+      "0x95284": [
+        "AiInfraFusedInferAttentionSinkCreateMaxSumPlaceholder",
+        "??:?"
+      ],
+      "0x953a0": [
+        "AiInfraFusedInferAttentionSinkCreateMaxSumPlaceholder",
+        "??:?"
+      ],
+      "0x95c18": [
+        "aclnnAiInfraFusedInferAttentionSinkGetMaxWorkspaceSize",
+        "??:?"
+      ],
+      "0x95d1c": [
+        "aclnnAiInfraFusedInferAttentionSinkGetMaxWorkspaceSize",
+        "??:?"
+      ],
+      "0x96488": [
+        "aclnnAiInfraFusedInferAttentionSinkGetWorkspaceSize",
+        "??:?"
+      ],
+      "0x964d0": [
+        "aclnnAiInfraFusedInferAttentionSinkGetWorkspaceSize",
+        "??:?"
+      ],
+      "0x9653c": [
+        "aclnnAiInfraFusedInferAttentionSinkGetWorkspaceSize",
+        "??:?"
+      ],
+      "0x96584": [
+        "aclnnAiInfraFusedInferAttentionSinkGetWorkspaceSize",
+        "??:?"
+      ],
+      "0x96588": [
+        "aclnnAiInfraFusedInferAttentionSinkGetWorkspaceSize",
+        "??:?"
+      ],
+      "0x96590": [
+        "aclnnAiInfraFusedInferAttentionSinkGetWorkspaceSize",
+        "??:?"
+      ],
+      "0x966ec": [
+        "aclnnAiInfraFusedInferAttentionSinkGetWorkspaceSize",
+        "??:?"
+      ],
+      "0xa4350": [
+        "AiInfraFusedInferAttentionSinkl0op::AiInfraFusedInferAttentionSink(aclTensor const*, aclTensorList const*, aclTensorList const*, aclTensor const*, aclTensor const*, aclTensor const*, aclTensor const*, aclTensor const*, aclTensor const*, aclTensor const*, aclTensor const*, aclTensor const*, aclTensor const*, aclTensor const*, aclTensor const*, aclTensor const*, aclTensor const*, aclTensor const*, aclTensor const*, aclTensor const*, aclTensor const*, aclTensor const*, aclTensor const*, aclTensor const*, aclTensor const*, aclTensor const*, aclTensor const*, aclTensor const*, aclTensor const*, aclTensor const*, long, double, long, long, char const*, long, long, long, long, long, bool, long, long, long, long, long, bool, bool, long, aclTensor const*, aclTensor const*, aclTensor const*, aclTensor const*, aclOpExecutor*)",
+        "??:?"
+      ],
+      "0xa4368": [
+        "AiInfraFusedInferAttentionSinkl0op::AiInfraFusedInferAttentionSink(aclTensor const*, aclTensorList const*, aclTensorList const*, aclTensor const*, aclTensor const*, aclTensor const*, aclTensor const*, aclTensor const*, aclTensor const*, aclTensor const*, aclTensor const*, aclTensor const*, aclTensor const*, aclTensor const*, aclTensor const*, aclTensor const*, aclTensor const*, aclTensor const*, aclTensor const*, aclTensor const*, aclTensor const*, aclTensor const*, aclTensor const*, aclTensor const*, aclTensor const*, aclTensor const*, aclTensor const*, aclTensor const*, aclTensor const*, aclTensor const*, long, double, long, long, char const*, long, long, long, long, long, bool, long, long, long, long, long, bool, bool, long, aclTensor const*, aclTensor const*, aclTensor const*, aclTensor const*, aclOpExecutor*)",
+        "??:?"
+      ],
+      "0xa4384": [
+        "AiInfraFusedInferAttentionSinkl0op::AiInfraFusedInferAttentionSink(aclTensor const*, aclTensorList const*, aclTensorList const*, aclTensor const*, aclTensor const*, aclTensor const*, aclTensor const*, aclTensor const*, aclTensor const*, aclTensor const*, aclTensor const*, aclTensor const*, aclTensor const*, aclTensor const*, aclTensor const*, aclTensor const*, aclTensor const*, aclTensor const*, aclTensor const*, aclTensor const*, aclTensor const*, aclTensor const*, aclTensor const*, aclTensor const*, aclTensor const*, aclTensor const*, aclTensor const*, aclTensor const*, aclTensor const*, aclTensor const*, long, double, long, long, char const*, long, long, long, long, long, bool, long, long, long, long, long, bool, bool, long, aclTensor const*, aclTensor const*, aclTensor const*, aclTensor const*, aclOpExecutor*)",
+        "??:?"
+      ],
+      "0xa4544": [
+        "AiInfraFusedInferAttentionSinkl0op::AiInfraFusedInferAttentionSink(aclTensor const*, aclTensorList const*, aclTensorList const*, aclTensor const*, aclTensor const*, aclTensor const*, aclTensor const*, aclTensor const*, aclTensor const*, aclTensor const*, aclTensor const*, aclTensor const*, aclTensor const*, aclTensor const*, aclTensor const*, aclTensor const*, aclTensor const*, aclTensor const*, aclTensor const*, aclTensor const*, aclTensor const*, aclTensor const*, aclTensor const*, aclTensor const*, aclTensor const*, aclTensor const*, aclTensor const*, aclTensor const*, aclTensor const*, aclTensor const*, long, double, long, long, char const*, long, long, long, long, long, bool, long, long, long, long, long, bool, bool, long, aclTensor const*, aclTensor const*, aclTensor const*, aclTensor const*, aclOpExecutor*)",
+        "??:?"
+      ],
+      "0xa48a0": [
+        "AiInfraFusedInferAttentionSinkl0op::AiInfraFusedInferAttentionSink(aclTensor const*, aclTensorList const*, aclTensorList const*, aclTensor const*, aclTensor const*, aclTensor const*, aclTensor const*, aclTensor const*, aclTensor const*, aclTensor const*, aclTensor const*, aclTensor const*, aclTensor const*, aclTensor const*, aclTensor const*, aclTensor const*, aclTensor const*, aclTensor const*, aclTensor const*, aclTensor const*, aclTensor const*, aclTensor const*, aclTensor const*, aclTensor const*, aclTensor const*, aclTensor const*, aclTensor const*, aclTensor const*, aclTensor const*, aclTensor const*, long, double, long, long, char const*, long, long, long, long, long, bool, long, long, long, long, long, bool, bool, long, aclTensor const*, aclTensor const*, aclTensor const*, aclTensor const*, aclOpExecutor*)",
+        "??:?"
+      ],
+      "0xa7488": [
+        "int op::OpArgContextInit<op::OpAttr<long, float, int, int, char const*, long, int, long, long, int, bool, int, int, int, int, long, bool, bool, int>>(op::OpArgContext&, op::OpArg*&, op::OpAttr<long, float, int, int, char const*, long, int, long, long, int, bool, int, int, int, int, long, bool, bool, int> const&)",
+        "??:?"
+      ],
+      "0xa7b80": [
+        "op::OpArgContext* op::MakeOpArgContext<op::OpInput<aclTensor const*, aclTensorList const*, aclTensorList const*, aclTensor const*, aclTensor const*, aclTensor const*, aclTensor const*, aclTensor const*, aclTensor const*, aclTensor const*, aclTensor const*, aclTensor const*, aclTensor const*, aclTensor const*, aclTensor const*, aclTensor const*, aclTensor const*, aclTensor const*, aclTensor const*, aclTensor const*, aclTensor const*, aclTensor const*, aclTensor const*, aclTensor const*, aclTensor const*, aclTensor const*, decltype(nullptr), aclTensor const*, aclTensor const*, aclTensor const*>, op::OpOutput<aclTensor*, aclTensor*, aclTensor*, aclTensor*>, op::OpAttr<long, float, int, int, char const*, long, int, long, long, int, bool, int, int, int, int, long, bool, bool, int> >(op::OpInput<aclTensor const*, aclTensorList const*, aclTensorList const*, aclTensor const*, aclTensor const*, aclTensor const*, aclTensor const*, aclTensor const*, aclTensor const*, aclTensor const*, aclTensor const*, aclTensor const*, aclTensor const*, aclTensor const*, aclTensor const*, aclTensor const*, aclTensor const*, aclTensor const*, aclTensor const*, aclTensor const*, aclTensor const*, aclTensor const*, aclTensor const*, aclTensor const*, aclTensor const*, aclTensor const*, decltype(nullptr), aclTensor const*, aclTensor const*, aclTensor const*> const&, op::OpOutput<aclTensor*, aclTensor*, aclTensor*, aclTensor*> const&, op::OpAttr<long, float, int, int, char const*, long, int, long, long, int, bool, int, int, int, int, long, bool, bool, int> const&)",
+        "??:?"
+      ]
+    }
+  },
+  "/usr/lib64/libc.so.6": {
+    "sha256": "7aa1b9b5c5b28341bdfa9929b5f6122335c8bedf239bbf7433c7caae07464482",
+    "addresses": {
+      "0x820b8": [
+        "pthread_condattr_setpshared",
+        "??:?"
+      ],
+      "0xe979c": [
+        "clone",
+        "??:?"
+      ]
+    }
+  },
+  "/usr/local/Ascend/cann/lib64/libhcomm.so": {
+    "sha256": "648b248b39fb91164b08f20a12937ca31e780b28383b989590a7d6acc636fcb3",
+    "addresses": {
+      "0x4c7ad0": [
+        "hccl::OpExeCounter::AddCounter(void* const&, hccl::Stream&, int)",
+        "??:?"
+      ],
+      "0x7a8cbc": [
+        "HcclAllGatherInner",
+        "??:?"
+      ],
+      "0x7f1570": [
+        "HcclAllReduceInner",
+        "??:?"
+      ]
+    }
+  },
+  "/usr/local/Ascend/cann/lib64/libhccl.so": {
+    "sha256": "e7742392619bd0f7bfd1b55552070f9811b25ed3017eefd49ed2c1f9f45fc647",
+    "addresses": {
+      "0x4cbe7c": [
+        "HcclAllGather",
+        "??:?"
+      ],
+      "0x6dc740": [
+        "HcclAllReduce",
+        "??:?"
+      ]
+    }
+  },
+  "/usr/local/Ascend/driver/lib64/driver/libascend_hal.so": {
+    "sha256": "e84b2bf240bfab3412193bcdf7415b2eb8cf64a2fdca52a2ab0ff7f587a538c9",
+    "addresses": {
+      "0x1016bc": [
+        "devmm_module_mem_stats_dec",
+        "??:?"
+      ],
+      "0x103ad4": [
+        "devmm_virt_get_cache_size_by_heap_type",
+        "??:?"
+      ],
+      "0x103c74": [
+        "devmm_alloc_from_tree",
+        "??:?"
+      ],
+      "0x10edb8": [
+        "devmm_assign_rbtree_node_data",
+        "??:?"
+      ],
+      "0x10ef0c": [
+        "devmm_alloc_rbtree_node",
+        "??:?"
+      ],
+      "0xdb08c": [
+        "devmm_alloc_managed",
+        "??:?"
+      ],
+      "0xdb680": [
+        "devmm_alloc_proc",
+        "??:?"
+      ],
+      "0xfc7cc": [
+        "devmm_virt_check_idle_heap",
+        "??:?"
+      ],
+      "0xfc9dc": [
+        "devmm_virt_check_idle_heap",
+        "??:?"
+      ],
+      "0xfcb9c": [
+        "devmm_alloc_from_normal_heap",
+        "??:?"
+      ]
+    }
+  },
+  "/data/p00603624/inferfabric/inferfabric-server-apc-device-zero": {
+    "sha256": "8a13086275533707811a0199477fa404fb6c04c4c8cf5b22617b8cb13a35605d",
+    "addresses": {
+      "0x3241518": [
+        "??",
+        "??:0"
+      ],
+      "0x3253e20": [
+        "??",
+        "??:0"
+      ],
+      "0x325411c": [
+        "??",
+        "??:0"
+      ],
+      "0x32bfe38": [
+        "??",
+        "??:0"
+      ],
+      "0x32f0964": [
+        "??",
+        "??:0"
+      ],
+      "0x3a5071c": [
+        "??",
+        "??:0"
+      ],
+      "0x3a53f34": [
+        "??",
+        "??:0"
+      ],
+      "0x3b2e96c": [
+        "??",
+        "??:0"
+      ],
+      "0x3c67114": [
+        "??",
+        "??:0"
+      ],
+      "0x3c7be14": [
+        "??",
+        "??:0"
+      ],
+      "0x3c7d2a4": [
+        "??",
+        "??:0"
+      ],
+      "0x3c7ed2c": [
+        "??",
+        "??:0"
+      ],
+      "0x3c7ef48": [
+        "??",
+        "??:0"
+      ],
+      "0x3c7f72c": [
+        "??",
+        "??:0"
+      ],
+      "0x3c80914": [
+        "??",
+        "??:0"
+      ],
+      "0x3c9ea14": [
+        "??",
+        "??:0"
+      ],
+      "0x3cb4ca8": [
+        "??",
+        "??:0"
+      ],
+      "0x3cb4e24": [
+        "??",
+        "??:0"
+      ],
+      "0x3cba768": [
+        "??",
+        "??:0"
+      ],
+      "0x3cba7e4": [
+        "??",
+        "??:0"
+      ],
+      "0x3cbb3a4": [
+        "??",
+        "??:0"
+      ],
+      "0x3cbb420": [
+        "??",
+        "??:0"
+      ],
+      "0x3d2d890": [
+        "??",
+        "??:0"
+      ],
+      "0x3d2e2dc": [
+        "??",
+        "??:0"
+      ],
+      "0x3d807ec": [
+        "??",
+        "??:0"
+      ]
+    }
+  }
+}

@@ -1,0 +1,953 @@
+{
+  "complete": false,
+  "rounds": [
+    {
+      "round": 0,
+      "requests": [
+        {
+          "case": "retrieval-8192-early",
+          "ttft_ms": 11921.417551115155,
+          "request_started_ms_since_run": 126389.57231072709,
+          "first_text_ms_since_run": 138310.98986184224,
+          "text_chunks": 4,
+          "chunk_intervals_ms": [
+            31.69448208063841,
+            30.499701853841543,
+            43.854255229234695
+          ],
+          "total_ms": 12052.297829184681,
+          "usage": {
+            "prompt_tokens": 8176,
+            "total_tokens": 8181,
+            "completion_tokens": 5
+          }
+        },
+        {
+          "case": "geography",
+          "ttft_ms": 415.7191691920161,
+          "request_started_ms_since_run": 126390.37277689204,
+          "first_text_ms_since_run": 126806.09194608405,
+          "text_chunks": 7,
+          "chunk_intervals_ms": [
+            31.70657204464078,
+            28.269384987652302,
+            27.74981176480651,
+            27.70489128306508,
+            27.79006166383624,
+            27.674861252307892
+          ],
+          "total_ms": 614.5341950468719,
+          "usage": {
+            "prompt_tokens": 15,
+            "total_tokens": 23,
+            "completion_tokens": 8
+          }
+        },
+        {
+          "case": "chinese",
+          "ttft_ms": 415.2179858647287,
+          "request_started_ms_since_run": 126390.65964892507,
+          "first_text_ms_since_run": 126805.8776347898,
+          "text_chunks": 16,
+          "chunk_intervals_ms": [
+            31.84059215709567,
+            28.271086048334837,
+            27.75729075074196,
+            27.71961223334074,
+            27.790192048996687,
+            27.67517091706395,
+            44.81191094964743,
+            4044.2438409663737,
+            30.280791223049164,
+            28.239954728633165,
+            29.160292353481054,
+            60.54375180974603,
+            7096.836911980063,
+            31.61044092848897,
+            30.498892068862915
+          ],
+          "total_ms": 12012.446905020624,
+          "usage": {
+            "prompt_tokens": 14,
+            "total_tokens": 31,
+            "completion_tokens": 17
+          }
+        },
+        {
+          "case": "access-code-529",
+          "ttft_ms": 4675.191869959235,
+          "request_started_ms_since_run": 126390.98045183346,
+          "first_text_ms_since_run": 131066.17232179269,
+          "text_chunks": 4,
+          "chunk_intervals_ms": [
+            30.170710291713476,
+            28.217175044119358,
+            29.16971268132329
+          ],
+          "total_ms": 4791.780629195273,
+          "usage": {
+            "prompt_tokens": 529,
+            "total_tokens": 534,
+            "completion_tokens": 5
+          }
+        }
+      ],
+      "recovery": {
+        "ttft_ms": 337.3424708843231,
+        "request_started_ms_since_run": 138956.31003193557,
+        "first_text_ms_since_run": 139293.6525028199,
+        "text_chunks": 7,
+        "chunk_intervals_ms": [
+          23.77336099743843,
+          23.85864220559597,
+          23.44868890941143,
+          23.45739910379052,
+          23.423718754202127,
+          23.39247800409794
+        ],
+        "total_ms": 502.3140390403569,
+        "usage": {
+          "prompt_tokens": 12,
+          "total_tokens": 20,
+          "completion_tokens": 8
+        }
+      },
+      "allocation_snapshot_time_ns": 1792265944028860670,
+      "process_resources": {
+        "rss_bytes": 7597363200,
+        "peak_rss_bytes": 7597363200,
+        "threads": 632,
+        "file_descriptors": 78
+      },
+      "resource_sample_time_ns": 1792265944100773688
+    },
+    {
+      "round": 1,
+      "requests": [
+        {
+          "case": "retrieval-8192-middle",
+          "ttft_ms": 8627.039476763457,
+          "request_started_ms_since_run": 139579.9930561334,
+          "first_text_ms_since_run": 148207.03253289685,
+          "text_chunks": 4,
+          "chunk_intervals_ms": [
+            33.493195194751024,
+            29.88600777462125,
+            46.450164169073105
+          ],
+          "total_ms": 8761.052708607167,
+          "usage": {
+            "prompt_tokens": 8176,
+            "total_tokens": 8181,
+            "completion_tokens": 5
+          }
+        },
+        {
+          "case": "chinese",
+          "ttft_ms": 394.9892809614539,
+          "request_started_ms_since_run": 139581.01192396134,
+          "first_text_ms_since_run": 139976.0012049228,
+          "text_chunks": 16,
+          "chunk_intervals_ms": [
+            32.38176694139838,
+            29.632925987243652,
+            29.194531962275505,
+            29.12470232695341,
+            29.13665259256959,
+            29.07050121575594,
+            40.232927072793245,
+            3299.9368757009506,
+            30.94163630157709,
+            29.718026984483004,
+            29.303973075002432,
+            52.91765369474888,
+            4569.383114110678,
+            33.52096490561962,
+            29.887758195400238
+          ],
+          "total_ms": 8718.784065917134,
+          "usage": {
+            "prompt_tokens": 14,
+            "total_tokens": 31,
+            "completion_tokens": 17
+          }
+        },
+        {
+          "case": "access-code-529",
+          "ttft_ms": 3913.494454231113,
+          "request_started_ms_since_run": 139581.17674477398,
+          "first_text_ms_since_run": 143494.6711990051,
+          "text_chunks": 4,
+          "chunk_intervals_ms": [
+            30.952006112784147,
+            29.71891686320305,
+            29.30589299649
+          ],
+          "total_ms": 4032.6800532639027,
+          "usage": {
+            "prompt_tokens": 529,
+            "total_tokens": 534,
+            "completion_tokens": 5
+          }
+        },
+        {
+          "case": "arithmetic",
+          "ttft_ms": 394.4857679307461,
+          "request_started_ms_since_run": 139581.466646865,
+          "first_text_ms_since_run": 139975.95241479576,
+          "text_chunks": 7,
+          "chunk_intervals_ms": [
+            32.39915706217289,
+            29.63639609515667,
+            29.1901221498847,
+            29.12977198138833,
+            29.137401841580868,
+            29.070632066577673
+          ],
+          "total_ms": 602.310452144593,
+          "usage": {
+            "prompt_tokens": 12,
+            "total_tokens": 20,
+            "completion_tokens": 8
+          }
+        }
+      ],
+      "recovery": {
+        "ttft_ms": 356.66806856170297,
+        "request_started_ms_since_run": 148896.2243371643,
+        "first_text_ms_since_run": 149252.89240572602,
+        "text_chunks": 7,
+        "chunk_intervals_ms": [
+          23.235527332872152,
+          23.24195671826601,
+          23.074886295944452,
+          22.708512842655182,
+          24.181324988603592,
+          23.930911906063557
+        ],
+        "total_ms": 520.6624185666442,
+        "usage": {
+          "prompt_tokens": 12,
+          "total_tokens": 20,
+          "completion_tokens": 8
+        }
+      },
+      "allocation_snapshot_time_ns": 1792265953965444380,
+      "process_resources": {
+        "rss_bytes": 7689089024,
+        "peak_rss_bytes": 7689089024,
+        "threads": 632,
+        "file_descriptors": 78
+      },
+      "resource_sample_time_ns": 1792265954119249843
+    },
+    {
+      "round": 2,
+      "requests": [
+        {
+          "case": "retrieval-8192-late",
+          "ttft_ms": 5880.851082038134,
+          "request_started_ms_since_run": 149598.59124105424,
+          "first_text_ms_since_run": 155479.44232309237,
+          "text_chunks": 4,
+          "chunk_intervals_ms": [
+            32.058344688266516,
+            29.63090594857931,
+            44.74295116961002
+          ],
+          "total_ms": 6011.200565844774,
+          "usage": {
+            "prompt_tokens": 8176,
+            "total_tokens": 8181,
+            "completion_tokens": 5
+          }
+        },
+        {
+          "case": "access-code-529",
+          "ttft_ms": 1680.1876691170037,
+          "request_started_ms_since_run": 149599.35484686866,
+          "first_text_ms_since_run": 151279.54251598567,
+          "text_chunks": 4,
+          "chunk_intervals_ms": [
+            34.10553000867367,
+            30.435191933065653,
+            29.988898895680904
+          ],
+          "total_ms": 1804.5814773067832,
+          "usage": {
+            "prompt_tokens": 529,
+            "total_tokens": 534,
+            "completion_tokens": 5
+          }
+        },
+        {
+          "case": "arithmetic",
+          "ttft_ms": 1680.041667073965,
+          "request_started_ms_since_run": 149599.54072907567,
+          "first_text_ms_since_run": 151279.58239614964,
+          "text_chunks": 7,
+          "chunk_intervals_ms": [
+            34.0906698256731,
+            30.435882043093443,
+            29.987439047545195,
+            52.81680170446634,
+            312.50381330028176,
+            29.6249957755208
+          ],
+          "total_ms": 2199.192924890667,
+          "usage": {
+            "prompt_tokens": 12,
+            "total_tokens": 20,
+            "completion_tokens": 8
+          }
+        },
+        {
+          "case": "geography",
+          "ttft_ms": 2139.756061602384,
+          "request_started_ms_since_run": 149599.6948601678,
+          "first_text_ms_since_run": 151739.45092177019,
+          "text_chunks": 7,
+          "chunk_intervals_ms": [
+            29.56710522994399,
+            29.5751360245049,
+            254.6482509933412,
+            3426.131688989699,
+            32.15708490461111,
+            29.571465216577053
+          ],
+          "total_ms": 5970.625935588032,
+          "usage": {
+            "prompt_tokens": 15,
+            "total_tokens": 23,
+            "completion_tokens": 8
+          }
+        }
+      ],
+      "recovery": {
+        "ttft_ms": 318.55118786916137,
+        "request_started_ms_since_run": 156155.1960450597,
+        "first_text_ms_since_run": 156473.74723292887,
+        "text_chunks": 7,
+        "chunk_intervals_ms": [
+          23.834822233766317,
+          23.873941972851753,
+          23.587169591337442,
+          23.717541247606277,
+          23.49872887134552,
+          23.507999256253242
+        ],
+        "total_ms": 484.23438100144267,
+        "usage": {
+          "prompt_tokens": 12,
+          "total_tokens": 20,
+          "completion_tokens": 8
+        }
+      },
+      "allocation_snapshot_time_ns": 1792265961181930304,
+      "process_resources": {
+        "rss_bytes": 7780950016,
+        "peak_rss_bytes": 7780950016,
+        "threads": 632,
+        "file_descriptors": 78
+      },
+      "resource_sample_time_ns": 1792265961382000269
+    },
+    {
+      "round": 3,
+      "requests": [
+        {
+          "case": "retrieval-8192-early",
+          "ttft_ms": 3821.0144490003586,
+          "request_started_ms_since_run": 156861.469628755,
+          "first_text_ms_since_run": 160682.48407775536,
+          "text_chunks": 4,
+          "chunk_intervals_ms": [
+            34.15652038529515,
+            30.596693977713585,
+            29.83310678973794
+          ],
+          "total_ms": 3945.3401169739664,
+          "usage": {
+            "prompt_tokens": 8176,
+            "total_tokens": 8181,
+            "completion_tokens": 5
+          }
+        },
+        {
+          "case": "arithmetic",
+          "ttft_ms": 356.27898620441556,
+          "request_started_ms_since_run": 156862.22254484892,
+          "first_text_ms_since_run": 157218.50153105333,
+          "text_chunks": 7,
+          "chunk_intervals_ms": [
+            29.702805913984776,
+            29.390993993729353,
+            28.950920794159174,
+            28.617868199944496,
+            28.741049114614725,
+            28.964350931346416
+          ],
+          "total_ms": 559.8245169967413,
+          "usage": {
+            "prompt_tokens": 12,
+            "total_tokens": 20,
+            "completion_tokens": 8
+          }
+        },
+        {
+          "case": "geography",
+          "ttft_ms": 356.1742650344968,
+          "request_started_ms_since_run": 156862.36140597612,
+          "first_text_ms_since_run": 157218.5356710106,
+          "text_chunks": 7,
+          "chunk_intervals_ms": [
+            29.699695762246847,
+            29.289324302226305,
+            28.9942710660398,
+            28.622697573155165,
+            28.738389257341623,
+            28.963331133127213
+          ],
+          "total_ms": 571.4060859754682,
+          "usage": {
+            "prompt_tokens": 15,
+            "total_tokens": 23,
+            "completion_tokens": 8
+          }
+        },
+        {
+          "case": "chinese",
+          "ttft_ms": 3820.0317812152207,
+          "request_started_ms_since_run": 156862.51388676465,
+          "first_text_ms_since_run": 160682.54566797987,
+          "text_chunks": 16,
+          "chunk_intervals_ms": [
+            34.03182979673147,
+            30.631093308329582,
+            29.83596781268716,
+            29.59232497960329,
+            243.1618538685143,
+            23.329618386924267,
+            23.23902677744627,
+            23.203817196190357,
+            24.680727627128363,
+            23.246117401868105,
+            23.15504662692547,
+            23.14850641414523,
+            23.290367797017097,
+            23.130845744162798,
+            23.243547417223454
+          ],
+          "total_ms": 4444.425071123987,
+          "usage": {
+            "prompt_tokens": 14,
+            "total_tokens": 31,
+            "completion_tokens": 17
+          }
+        }
+      ],
+      "recovery": {
+        "ttft_ms": 320.8450460806489,
+        "request_started_ms_since_run": 161612.98039089888,
+        "first_text_ms_since_run": 161933.82543697953,
+        "text_chunks": 7,
+        "chunk_intervals_ms": [
+          24.100863840430975,
+          23.69520114734769,
+          23.611189797520638,
+          23.334218189120293,
+          23.34468811750412,
+          23.31104688346386
+        ],
+        "total_ms": 485.6905830092728,
+        "usage": {
+          "prompt_tokens": 12,
+          "total_tokens": 20,
+          "completion_tokens": 8
+        }
+      },
+      "allocation_snapshot_time_ns": 1792265966691742397,
+      "process_resources": {
+        "rss_bytes": 7866916864,
+        "peak_rss_bytes": 7866916864,
+        "threads": 632,
+        "file_descriptors": 78
+      },
+      "resource_sample_time_ns": 1792265966901251375
+    },
+    {
+      "round": 4,
+      "requests": [
+        {
+          "case": "retrieval-8192-middle",
+          "ttft_ms": 5625.433454290032,
+          "request_started_ms_since_run": 162380.8015747927,
+          "first_text_ms_since_run": 168006.23502908275,
+          "text_chunks": 4,
+          "chunk_intervals_ms": [
+            32.66735002398491,
+            42.55623370409012,
+            24.82602931559086
+          ],
+          "total_ms": 5750.376706942916,
+          "usage": {
+            "prompt_tokens": 8176,
+            "total_tokens": 8181,
+            "completion_tokens": 5
+          }
+        },
+        {
+          "case": "geography",
+          "ttft_ms": 355.75509211048484,
+          "request_started_ms_since_run": 162381.54187984765,
+          "first_text_ms_since_run": 162737.29697195813,
+          "text_chunks": 7,
+          "chunk_intervals_ms": [
+            30.03178909420967,
+            29.897618107497692,
+            29.533224646002054,
+            29.504235368221998,
+            29.559715650975704,
+            29.65223602950573
+          ],
+          "total_ms": 564.3400233238935,
+          "usage": {
+            "prompt_tokens": 15,
+            "total_tokens": 23,
+            "completion_tokens": 8
+          }
+        },
+        {
+          "case": "chinese",
+          "ttft_ms": 355.5738106369972,
+          "request_started_ms_since_run": 162381.6657611169,
+          "first_text_ms_since_run": 162737.2395717539,
+          "text_chunks": 16,
+          "chunk_intervals_ms": [
+            30.06593929603696,
+            29.899287968873978,
+            29.53440509736538,
+            29.504764825105667,
+            29.5611759647727,
+            29.650785960257053,
+            30.296640936285257,
+            1591.9795059598982,
+            30.727234203368425,
+            30.035099014639854,
+            29.65159574523568,
+            29.40339408814907,
+            267.1968871727586,
+            3081.4445610158145,
+            32.685439102351665
+          ],
+          "total_ms": 5687.849850859493,
+          "usage": {
+            "prompt_tokens": 14,
+            "total_tokens": 31,
+            "completion_tokens": 17
+          }
+        },
+        {
+          "case": "access-code-529",
+          "ttft_ms": 2155.978766269982,
+          "request_started_ms_since_run": 162381.79135182872,
+          "first_text_ms_since_run": 164537.7701180987,
+          "text_chunks": 4,
+          "chunk_intervals_ms": [
+            30.71599407121539,
+            30.03355860710144,
+            29.599236324429512
+          ],
+          "total_ms": 2275.8924402296543,
+          "usage": {
+            "prompt_tokens": 529,
+            "total_tokens": 534,
+            "completion_tokens": 5
+          }
+        }
+      ],
+      "recovery": {
+        "ttft_ms": 307.61097464710474,
+        "request_started_ms_since_run": 168608.68041217327,
+        "first_text_ms_since_run": 168916.29138682038,
+        "text_chunks": 7,
+        "chunk_intervals_ms": [
+          23.663041181862354,
+          24.117703083902597,
+          23.77415169030428,
+          23.60883029177785,
+          23.580928798764944,
+          23.489979095757008
+        ],
+        "total_ms": 473.915692884475,
+        "usage": {
+          "prompt_tokens": 12,
+          "total_tokens": 20,
+          "completion_tokens": 8
+        }
+      },
+      "allocation_snapshot_time_ns": 1792265973697187442,
+      "process_resources": {
+        "rss_bytes": 7889342464,
+        "peak_rss_bytes": 7889727488,
+        "threads": 632,
+        "file_descriptors": 78
+      },
+      "resource_sample_time_ns": 1792265973925394352
+    },
+    {
+      "round": 5,
+      "requests": [
+        {
+          "case": "retrieval-8192-late",
+          "ttft_ms": 8987.946717999876,
+          "request_started_ms_since_run": 169405.13217402622,
+          "first_text_ms_since_run": 178393.0788920261,
+          "text_chunks": 4,
+          "chunk_intervals_ms": [
+            31.190667767077684,
+            29.426753986626863,
+            45.184655115008354
+          ],
+          "total_ms": 9118.236520793289,
+          "usage": {
+            "prompt_tokens": 8176,
+            "total_tokens": 8181,
+            "completion_tokens": 5
+          }
+        },
+        {
+          "case": "chinese",
+          "ttft_ms": 2520.98939800635,
+          "request_started_ms_since_run": 169405.8256088756,
+          "first_text_ms_since_run": 171926.81500688195,
+          "text_chunks": 16,
+          "chunk_intervals_ms": [
+            30.943576246500015,
+            29.75865686312318,
+            29.739777091890574,
+            50.76166708022356,
+            286.5495136938989,
+            30.67020419985056,
+            29.541945084929466,
+            29.38209380954504,
+            29.315464198589325,
+            29.19056173413992,
+            29.091341886669397,
+            41.91308002918959,
+            5819.357203319669,
+            31.180396676063538,
+            29.52228533104062
+          ],
+          "total_ms": 9077.484521083534,
+          "usage": {
+            "prompt_tokens": 14,
+            "total_tokens": 31,
+            "completion_tokens": 17
+          }
+        },
+        {
+          "case": "access-code-529",
+          "ttft_ms": 2520.78758738935,
+          "request_started_ms_since_run": 169405.9541397728,
+          "first_text_ms_since_run": 171926.74172716215,
+          "text_chunks": 4,
+          "chunk_intervals_ms": [
+            31.057266984134912,
+            29.750955756753683,
+            29.732396826148033
+          ],
+          "total_ms": 2640.9591431729496,
+          "usage": {
+            "prompt_tokens": 529,
+            "total_tokens": 534,
+            "completion_tokens": 5
+          }
+        },
+        {
+          "case": "arithmetic",
+          "ttft_ms": 2948.4957084059715,
+          "request_started_ms_since_run": 169406.11510071903,
+          "first_text_ms_since_run": 172354.610809125,
+          "text_chunks": 7,
+          "chunk_intervals_ms": [
+            30.600562691688538,
+            29.542715288698673,
+            29.3850339949131,
+            29.30663386359811,
+            29.194122180342674,
+            29.092781711369753
+          ],
+          "total_ms": 3154.7999503090978,
+          "usage": {
+            "prompt_tokens": 12,
+            "total_tokens": 20,
+            "completion_tokens": 8
+          }
+        }
+      ],
+      "recovery": {
+        "ttft_ms": 378.32346092909575,
+        "request_started_ms_since_run": 179084.86251579598,
+        "first_text_ms_since_run": 179463.18597672507,
+        "text_chunks": 7,
+        "chunk_intervals_ms": [
+          23.832150269299746,
+          23.228115867823362,
+          23.254317231476307,
+          22.719401866197586,
+          23.06444477289915,
+          23.03024521097541
+        ],
+        "total_ms": 540.5939109623432,
+        "usage": {
+          "prompt_tokens": 12,
+          "total_tokens": 20,
+          "completion_tokens": 8
+        }
+      },
+      "allocation_snapshot_time_ns": 1792265984200249909,
+      "process_resources": {
+        "rss_bytes": 7910424576,
+        "peak_rss_bytes": 7910424576,
+        "threads": 632,
+        "file_descriptors": 78
+      },
+      "resource_sample_time_ns": 1792265984448244179
+    },
+    {
+      "round": 6,
+      "requests": [
+        {
+          "case": "retrieval-8192-early",
+          "ttft_ms": 10460.223579779267,
+          "request_started_ms_since_run": 179928.11809200794,
+          "first_text_ms_since_run": 190388.3416717872,
+          "text_chunks": 4,
+          "chunk_intervals_ms": [
+            31.826320104300976,
+            30.34079819917679,
+            29.45332182571292
+          ],
+          "total_ms": 10602.570662740618,
+          "usage": {
+            "prompt_tokens": 8176,
+            "total_tokens": 8181,
+            "completion_tokens": 5
+          }
+        },
+        {
+          "case": "access-code-529",
+          "ttft_ms": 7195.201511960477,
+          "request_started_ms_since_run": 179928.84190799668,
+          "first_text_ms_since_run": 187124.04341995716,
+          "text_chunks": 4,
+          "chunk_intervals_ms": [
+            3264.242811128497,
+            31.85233986005187,
+            30.3428890183568
+          ],
+          "total_ms": 10551.281905733049,
+          "usage": {
+            "prompt_tokens": 529,
+            "total_tokens": 534,
+            "completion_tokens": 5
+          }
+        },
+        {
+          "case": "arithmetic",
+          "ttft_ms": 404.1981650516391,
+          "request_started_ms_since_run": 179929.03418885544,
+          "first_text_ms_since_run": 180333.23235390708,
+          "text_chunks": 7,
+          "chunk_intervals_ms": [
+            29.09682085737586,
+            28.770828153938055,
+            28.35737494751811,
+            28.327635023742914,
+            28.20744412019849,
+            28.32232415676117
+          ],
+          "total_ms": 603.5457872785628,
+          "usage": {
+            "prompt_tokens": 12,
+            "total_tokens": 20,
+            "completion_tokens": 8
+          }
+        },
+        {
+          "case": "geography",
+          "ttft_ms": 404.09637428820133,
+          "request_started_ms_since_run": 179929.17665978894,
+          "first_text_ms_since_run": 180333.27303407714,
+          "text_chunks": 7,
+          "chunk_intervals_ms": [
+            29.088370967656374,
+            28.766987845301628,
+            28.355204965919256,
+            28.32716517150402,
+            28.211033903062344,
+            28.317435178905725
+          ],
+          "total_ms": 618.1060471571982,
+          "usage": {
+            "prompt_tokens": 15,
+            "total_tokens": 23,
+            "completion_tokens": 8
+          }
+        }
+      ],
+      "recovery": {
+        "ttft_ms": 361.9375675916672,
+        "request_started_ms_since_run": 191086.40151517466,
+        "first_text_ms_since_run": 191448.33908276632,
+        "text_chunks": 7,
+        "chunk_intervals_ms": [
+          23.71578896418214,
+          23.490507155656815,
+          23.304225876927376,
+          23.240074981004,
+          23.266556207090616,
+          23.169564083218575
+        ],
+        "total_ms": 525.5879019387066,
+        "usage": {
+          "prompt_tokens": 12,
+          "total_tokens": 20,
+          "completion_tokens": 8
+        }
+      },
+      "allocation_snapshot_time_ns": 1792265996210537406,
+      "process_resources": {
+        "rss_bytes": 7930187776,
+        "peak_rss_bytes": 7930187776,
+        "threads": 632,
+        "file_descriptors": 78
+      },
+      "resource_sample_time_ns": 1792265996475047880
+    },
+    {
+      "round": 7,
+      "requests": [
+        {
+          "case": "retrieval-8192-middle",
+          "ttft_ms": 4941.974400077015,
+          "request_started_ms_since_run": 191955.06262406707,
+          "first_text_ms_since_run": 196897.03702414408,
+          "text_chunks": 4,
+          "chunk_intervals_ms": [
+            36.04695200920105,
+            30.368467792868614,
+            29.945835936814547
+          ],
+          "total_ms": 5068.241751752794,
+          "usage": {
+            "prompt_tokens": 8176,
+            "total_tokens": 8181,
+            "completion_tokens": 5
+          }
+        },
+        {
+          "case": "arithmetic",
+          "ttft_ms": 407.8253051266074,
+          "request_started_ms_since_run": 191955.80761879683,
+          "first_text_ms_since_run": 192363.63292392343,
+          "text_chunks": 7,
+          "chunk_intervals_ms": [
+            29.099239967763424,
+            28.623055201023817,
+            28.434824664145708,
+            28.22285331785679,
+            28.059781063348055,
+            28.06847169995308
+          ],
+          "total_ms": 622.3559533245862,
+          "usage": {
+            "prompt_tokens": 12,
+            "total_tokens": 20,
+            "completion_tokens": 8
+          }
+        },
+        {
+          "case": "geography",
+          "ttft_ms": 407.30002988129854,
+          "request_started_ms_since_run": 191955.9589009732,
+          "first_text_ms_since_run": 192363.2589308545,
+          "text_chunks": 7,
+          "chunk_intervals_ms": [
+            29.563073068857193,
+            28.65165611729026,
+            28.41817494481802,
+            28.189102187752724,
+            28.05259171873331,
+            28.07166101410985
+          ],
+          "total_ms": 606.3982020132244,
+          "usage": {
+            "prompt_tokens": 15,
+            "total_tokens": 23,
+            "completion_tokens": 8
+          }
+        },
+        {
+          "case": "chinese",
+          "ttft_ms": 4940.814660862088,
+          "request_started_ms_since_run": 191956.1134520918,
+          "first_text_ms_since_run": 196896.9281129539,
+          "text_chunks": 16,
+          "chunk_intervals_ms": [
+            36.10409190878272,
+            30.382778961211443,
+            29.943576082587242,
+            29.762004036456347,
+            250.5562691949308,
+            24.282042868435383,
+            23.806919809430838,
+            23.392556235194206,
+            23.419386707246304,
+            23.568278178572655,
+            23.586236871778965,
+            23.569878190755844,
+            23.6226380802691,
+            23.753498680889606,
+            23.543838411569595
+          ],
+          "total_ms": 5577.864503953606,
+          "usage": {
+            "prompt_tokens": 14,
+            "total_tokens": 31,
+            "completion_tokens": 17
+          }
+        }
+      ],
+      "recovery": {
+        "ttft_ms": 302.27061873301864,
+        "request_started_ms_since_run": 197818.07555817068,
+        "first_text_ms_since_run": 198120.3461769037,
+        "text_chunks": 7,
+        "chunk_intervals_ms": [
+          24.031571112573147,
+          23.76542892307043,
+          23.68420921266079,
+          23.55080656707287,
+          23.477877024561167,
+          23.572208359837532
+        ],
+        "total_ms": 467.89530757814646,
+        "usage": {
+          "prompt_tokens": 12,
+          "total_tokens": 20,
+          "completion_tokens": 8
+        }
+      },
+      "allocation_snapshot_time_ns": 1792266002858680589,
+      "process_resources": {
+        "rss_bytes": 7944957952,
+        "peak_rss_bytes": 7944957952,
+        "threads": 632,
+        "file_descriptors": 78
+      },
+      "resource_sample_time_ns": 1792266003108842125
+    }
+  ]
+}
