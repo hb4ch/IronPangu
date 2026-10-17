@@ -1,0 +1,243 @@
+{
+  "status": "passed_limited_regression",
+  "scope": "12/15/14/529-token prompts repeated three times; two zero-input 4096-query warmups. Discovery only, no frozen-arena or 64K qualification.",
+  "cache_policy": "ACLNN_CACHE_LIMIT=0 set by diagnostic wrapper",
+  "process": {
+    "completed": true,
+    "timed_out": false,
+    "returncode": 0,
+    "timeout_seconds": 1800,
+    "elapsed_seconds": 528.2351508559659
+  },
+  "results": {
+    "format": "inferfabric.persistent-program-qualification.v1",
+    "requests": 12,
+    "output_tokens": 123,
+    "exact_fixture_tokens": true,
+    "fixture_sha256": "3a05e7ac9bb3a2e4432dc71717262771d35cd817b8d506d303f3d4b0777b926d",
+    "permuted_pages": true,
+    "binding_limit_rejections": 0,
+    "interleaved_residents": false,
+    "packed_prefill": true,
+    "copied_prefix_tokens": null,
+    "scope": "one loaded TP8/EP8 group, compiled packed prefill and serial decode; no long-context claim",
+    "measurements": [
+      {
+        "request": 0,
+        "case": "arithmetic",
+        "prompt_tokens": 12,
+        "output_tokens": 8,
+        "tpot_ms": 23.504857142857144,
+        "engine_ttft_ms": 1337.599
+      },
+      {
+        "request": 1,
+        "case": "geography",
+        "prompt_tokens": 15,
+        "output_tokens": 8,
+        "tpot_ms": 23.74985714285714,
+        "engine_ttft_ms": 1167.142
+      },
+      {
+        "request": 2,
+        "case": "chinese",
+        "prompt_tokens": 14,
+        "output_tokens": 17,
+        "tpot_ms": 23.079875,
+        "engine_ttft_ms": 1045.19
+      },
+      {
+        "request": 3,
+        "case": "access-code-529",
+        "prompt_tokens": 529,
+        "output_tokens": 8,
+        "tpot_ms": 24.39757142857143,
+        "engine_ttft_ms": 25271.579
+      },
+      {
+        "request": 4,
+        "case": "arithmetic",
+        "prompt_tokens": 12,
+        "output_tokens": 8,
+        "tpot_ms": 24.393142857142855,
+        "engine_ttft_ms": 831.569
+      },
+      {
+        "request": 5,
+        "case": "geography",
+        "prompt_tokens": 15,
+        "output_tokens": 8,
+        "tpot_ms": 24.028142857142857,
+        "engine_ttft_ms": 830.564
+      },
+      {
+        "request": 6,
+        "case": "chinese",
+        "prompt_tokens": 14,
+        "output_tokens": 17,
+        "tpot_ms": 24.230625,
+        "engine_ttft_ms": 794.255
+      },
+      {
+        "request": 7,
+        "case": "access-code-529",
+        "prompt_tokens": 529,
+        "output_tokens": 8,
+        "tpot_ms": 23.984142857142857,
+        "engine_ttft_ms": 20387.232
+      },
+      {
+        "request": 8,
+        "case": "arithmetic",
+        "prompt_tokens": 12,
+        "output_tokens": 8,
+        "tpot_ms": 23.451285714285714,
+        "engine_ttft_ms": 892.28
+      },
+      {
+        "request": 9,
+        "case": "geography",
+        "prompt_tokens": 15,
+        "output_tokens": 8,
+        "tpot_ms": 24.015142857142855,
+        "engine_ttft_ms": 883.035
+      },
+      {
+        "request": 10,
+        "case": "chinese",
+        "prompt_tokens": 14,
+        "output_tokens": 17,
+        "tpot_ms": 23.3495,
+        "engine_ttft_ms": 912.247
+      },
+      {
+        "request": 11,
+        "case": "access-code-529",
+        "prompt_tokens": 529,
+        "output_tokens": 8,
+        "tpot_ms": 24.566285714285716,
+        "engine_ttft_ms": 9737.664
+      }
+    ]
+  },
+  "artifacts": {
+    "native-build-uncaptured-v2/libinferfabric_program.so": "a4803f1b29d6f82972d5249665f2f8824641bcd25bf2f6802f21b39757609cb2",
+    "native-build-uncaptured-v2/program_engine_probe": "d25ffc6104a895eba7318ace26d9f4d6fef834930538f7e60d8da7b9f1386c00",
+    "uncaptured4k-source/execution.bin": "b16edec8f5a21bfb1f696c9f9f17f9bc7d299106eca8e3255c0e31581d60bb8e",
+    "batched16-preparation-reference.json": "3a05e7ac9bb3a2e4432dc71717262771d35cd817b8d506d303f3d4b0777b926d"
+  },
+  "ranks": [
+    {
+      "rank": 0,
+      "frozen": false,
+      "arena_bytes": 38253633024,
+      "workspace_peak_bytes": 159221248,
+      "graphs": [
+        {
+          "name": "token_decode",
+          "replays": 112
+        }
+      ],
+      "uncaptured_prefill_forwards": 14,
+      "uncaptured_prefill_tokens": 9902
+    },
+    {
+      "rank": 1,
+      "frozen": false,
+      "arena_bytes": 38253633024,
+      "workspace_peak_bytes": 159221248,
+      "graphs": [
+        {
+          "name": "token_decode",
+          "replays": 112
+        }
+      ],
+      "uncaptured_prefill_forwards": 14,
+      "uncaptured_prefill_tokens": 9902
+    },
+    {
+      "rank": 2,
+      "frozen": false,
+      "arena_bytes": 38253633024,
+      "workspace_peak_bytes": 159221248,
+      "graphs": [
+        {
+          "name": "token_decode",
+          "replays": 112
+        }
+      ],
+      "uncaptured_prefill_forwards": 14,
+      "uncaptured_prefill_tokens": 9902
+    },
+    {
+      "rank": 3,
+      "frozen": false,
+      "arena_bytes": 38253633024,
+      "workspace_peak_bytes": 159221248,
+      "graphs": [
+        {
+          "name": "token_decode",
+          "replays": 112
+        }
+      ],
+      "uncaptured_prefill_forwards": 14,
+      "uncaptured_prefill_tokens": 9902
+    },
+    {
+      "rank": 4,
+      "frozen": false,
+      "arena_bytes": 38253633024,
+      "workspace_peak_bytes": 159221248,
+      "graphs": [
+        {
+          "name": "token_decode",
+          "replays": 112
+        }
+      ],
+      "uncaptured_prefill_forwards": 14,
+      "uncaptured_prefill_tokens": 9902
+    },
+    {
+      "rank": 5,
+      "frozen": false,
+      "arena_bytes": 38253633024,
+      "workspace_peak_bytes": 159221248,
+      "graphs": [
+        {
+          "name": "token_decode",
+          "replays": 112
+        }
+      ],
+      "uncaptured_prefill_forwards": 14,
+      "uncaptured_prefill_tokens": 9902
+    },
+    {
+      "rank": 6,
+      "frozen": false,
+      "arena_bytes": 38253633024,
+      "workspace_peak_bytes": 159221248,
+      "graphs": [
+        {
+          "name": "token_decode",
+          "replays": 112
+        }
+      ],
+      "uncaptured_prefill_forwards": 14,
+      "uncaptured_prefill_tokens": 9902
+    },
+    {
+      "rank": 7,
+      "frozen": false,
+      "arena_bytes": 38253633024,
+      "workspace_peak_bytes": 159221248,
+      "graphs": [
+        {
+          "name": "token_decode",
+          "replays": 112
+        }
+      ],
+      "uncaptured_prefill_forwards": 14,
+      "uncaptured_prefill_tokens": 9902
+    }
+  ]
+}
