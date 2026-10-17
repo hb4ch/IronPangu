@@ -153,6 +153,9 @@ target_link_libraries(openpangu_decode PRIVATE dl "${MSPROFILER_LIBRARY}")
 endif()
 
 add_executable(token_plan_test probes/token_plan_test.cpp)
+add_executable(token_plan_family_test probes/token_plan_family_test.cpp)
+target_include_directories(token_plan_family_test PRIVATE include)
+target_compile_options(token_plan_family_test PRIVATE -Wall -Wextra -Werror)
 
 add_executable(frozen_arena_test probes/frozen_arena_test.cpp)
 target_link_libraries(frozen_arena_test PRIVATE inferfabric_initialization)

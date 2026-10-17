@@ -22,8 +22,10 @@ int inferfabric_program_bind_pages(void *engine, uint32_t rank, const char *comp
 int inferfabric_program_info(void *engine, uint32_t *context, uint32_t *vocabulary, uint32_t *eos);
 int inferfabric_program_token(void *engine, uint32_t token, uint32_t position,
                               uint32_t sample, uint32_t *output);
-// Exact compiled chunk width, or 1 when no packed variant was compiled.
+// Maximum compiled chunk width, or 1 when no packed variant was compiled.
 int inferfabric_program_prefill_capacity(void *engine, uint32_t *count);
+// Bit n is set iff exact prefill size n is prepared. Decode uses its own entry point.
+int inferfabric_program_prefill_variants(void *engine, uint32_t *mask);
 int inferfabric_program_shared_pages(void *engine, uint32_t *enabled);
 int inferfabric_program_bind_state(void *engine, uint32_t rank, uint32_t logical_node,
                                   const int32_t *pages, uint32_t count);

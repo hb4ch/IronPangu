@@ -72,11 +72,16 @@ int main(int argc, char **argv) {
       }
       std::cerr<<"binding limits: "<<rejected<<" invalid requests rejected; valid retries passed\n";
     }
-    uint32_t chunk=1;
+    uint32_t chunk=1,variant_mask=0;
     if(std::getenv("INFERFABRIC_PACKED_PREFILL")) {
       check(inferfabric_program_prefill_capacity(engine,&chunk));
+      check(inferfabric_program_prefill_variants(engine,&variant_mask));
       if(chunk<=1)throw std::runtime_error("packed prefill requires a compiled chunk variant");
     }
+    auto choose_chunk=[&](size_t limit) {
+      for(auto n:{16u,8u,4u,2u})if(n<=limit && (variant_mask&(1u<<n)))return n;
+      return 1u;
+    };
     if (std::getenv("INFERFABRIC_INTERLEAVE_RESIDENTS")) {
       uint32_t residents=0;
       check(inferfabric_program_resident_capacity(engine,&residents));
@@ -104,7 +109,7 @@ int main(int argc, char **argv) {
         const auto &request=requests[r.request];
         check(inferfabric_program_select_resident(engine,slot));
         auto token=r.position<request.prompt.size()?request.prompt[r.position]:r.next;
-        auto count=chunk>1 && r.position<request.prompt.size() && request.prompt.size()-r.position>=chunk ? chunk : 1;
+        auto count=r.position<request.prompt.size() ? choose_chunk(request.prompt.size()-r.position) : 1;
         auto sample=r.position+count>=request.prompt.size();
         if(count>1)check(inferfabric_program_prefill(engine,request.prompt.data()+r.position,count,r.position,sample,&r.next));
         else check(inferfabric_program_token(engine,token,r.position,sample,&r.next));
@@ -138,7 +143,7 @@ int main(int argc, char **argv) {
       }
       unsigned pos = 0, next = 0;
       while(pos<prompt.size()) {
-        auto count=chunk>1 && prompt.size()-pos>=chunk ? chunk : 1;
+        auto count=choose_chunk(prompt.size()-pos);
         if(count>1)check(inferfabric_program_prefill(engine,prompt.data()+pos,count,pos,pos+count==prompt.size(),&next));
         else check(inferfabric_program_token(engine, prompt[pos], pos, pos + 1 == prompt.size(), &next));
         pos+=count;

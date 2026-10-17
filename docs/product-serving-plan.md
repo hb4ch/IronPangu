@@ -138,12 +138,12 @@ disconnect recovery returns correct output and final page occupancy is zero.
 All 305 upstream server and 17 frontend tests pass. This closes the basic overload
 response gap; sustained pressure, slow-client and rank-failure soaks remain open.
 
-### Next contract: a prepared prefill variant family
+### Prepared prefill variant family
 
-The current executable supports decode and one exact prefill size. The existing
-`prefill_tokens` field is not permission to invoke every smaller shape. Introduce
-an explicit, versioned list of legal query counts, retaining the maximum count
-only as a storage bound. Keep old bundles' exact-shape behavior. Each variant
+Version 6 adds an explicit list of legal query counts with
+`--prefill-variants 2,4,8,16`. The existing `prefill_tokens` field remains the
+maximum storage bound, not permission to invoke arbitrary smaller shapes.
+Old bundles retain their exact-shape behavior. Each variant
 needs its own numerical-class identity, tensor shapes, kernel recipes and cost
 record in the physical plan/viewer; do not advertise an unprepared shape.
 
@@ -170,7 +170,14 @@ page/window boundaries, cancel and reuse slots, and check independent outputs
 at the selected chunk boundaries. Preserve shape-dependent numerical differences
 as failures. Measure isolated TTFT separately from mixed-workload TTFT and
 per-token decode latency; streamed text chunks are not necessarily single tokens.
-This contract is planned, not yet implemented by the fixed-size engine.
+The compiler, native engine and Rust scheduler now implement this finite family.
+Startup prepares and seals every declared graph; the ABI verifies the exact mask
+against the serving manifest. Recipes retain maximum-sized storage and expose
+each invocation's shapes, API repetitions and assembly copies in the viewer.
+The scheduler currently chooses the largest declared shape fitting prompt and
+token budget. Measured latency-aware selection remains open; this implementation
+does not claim a decode-latency guarantee or multi-sequence packed kernels.
+See [full-model qualification](validation/2026-10-17-prefill-family/README.md).
 
 ### Reproducible 64K retrieval ladder
 

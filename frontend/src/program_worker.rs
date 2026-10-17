@@ -23,6 +23,10 @@ pub(super) trait ResidentEngine {
     fn prefill_capacity(&self) -> u32 {
         1
     }
+    fn prefill_chunk(&self, limit: u32) -> u32 {
+        let n=self.prefill_capacity();
+        if n<=limit {n} else {1}
+    }
     fn prefill(
         &mut self,
         _tokens: &[u32],
@@ -47,6 +51,7 @@ pub(super) trait ResidentEngine {
     ) -> inferfabric_model::Result<Option<u32>>;
 }
 impl ResidentEngine for inferfabric_native::program::Engine {
+    fn prefill_chunk(&self, limit: u32) -> u32 { self.prefill_chunk(limit) }
     fn admit(&mut self, slot: u32, tokens: u32) -> inferfabric_model::Result<()> {
         self.prepare_resident(slot, tokens)
     }
@@ -106,13 +111,9 @@ fn advance(
         r.next
             .ok_or_else(|| inferfabric_model::invalid("missing decode input"))?
     };
-    let chunk = engine.prefill_capacity() as usize;
-    let count =
-        if prefill && chunk > 1 && chunk <= budget && prompt.len() - r.position as usize >= chunk {
-            chunk
-        } else {
-            1
-        };
+    let count = if prefill {
+        engine.prefill_chunk(budget.min(prompt.len()-r.position as usize) as u32) as usize
+    } else {1};
     let sample = r.position as usize + count >= prompt.len();
     let next = if count > 1 {
         engine.prefill(
@@ -315,11 +316,16 @@ mod tests {
         fail_at: Option<usize>,
         cancel_at: Option<(usize, Arc<AtomicBool>)>,
         chunk: u32,
+        family: Vec<u32>,
         chunks: Vec<(usize, u32, usize, bool)>,
     }
     impl ResidentEngine for Fake {
         fn prefill_capacity(&self) -> u32 {
-            self.chunk.max(1)
+            self.family.last().copied().unwrap_or(self.chunk.max(1))
+        }
+        fn prefill_chunk(&self, limit: u32) -> u32 {
+            if self.family.is_empty() { if self.chunk>1 && self.chunk<=limit {self.chunk} else {1} }
+            else {self.family.iter().rev().copied().find(|&n|n<=limit).unwrap_or(1)}
         }
         fn prefill(
             &mut self,
@@ -327,7 +333,7 @@ mod tests {
             position: u32,
             sample: bool,
         ) -> inferfabric_model::Result<Option<u32>> {
-            assert_eq!(tokens.len(), self.chunk as usize);
+            assert!(if self.family.is_empty() {tokens.len()==self.chunk as usize} else {self.family.contains(&(tokens.len() as u32))});
             self.chunks
                 .push((self.selected, position, tokens.len(), sample));
             let mut output = None;
@@ -469,6 +475,22 @@ mod tests {
                         && pos + count as u32 <= 9
                         && !sample)
             );
+            assert!(active.lock().unwrap().is_empty());
+        }
+    }
+    #[test]
+    fn family_uses_only_declared_shapes_within_budget_and_prompt() {
+        for budget in [3, 8, 16] {
+            let active=Arc::new(Mutex::new(Default::default()));
+            let (tx,mut rx)=mpsc::channel(4);
+            let (a,mut ar)=job(request("family",vec![1;15],1),&active);
+            tx.try_send(a).unwrap();drop(tx);
+            let mut engine=Fake {family:vec![2,4,8,16],..Default::default()};
+            run(&mut engine,&mut rx,&active,&Arc::new(AtomicBool::new(false)),1,budget).unwrap();
+            assert_eq!(ar.try_recv().unwrap().unwrap().token_ids,vec![15]);
+            assert!(engine.chunks.iter().all(|&(_,pos,count,_)|count<=budget && pos+count as u32<=15));
+            if budget>=8 {assert_eq!(engine.chunks.iter().map(|x|x.2).collect::<Vec<_>>(),vec![8,4,2]);}
+            else {assert!(engine.chunks.iter().all(|x|x.2==2));}
             assert!(active.lock().unwrap().is_empty());
         }
     }

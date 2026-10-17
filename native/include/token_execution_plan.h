@@ -34,6 +34,12 @@ struct Plan {
   uint32_t context = 0, eos = 0, output = 0;
   uint32_t resident_sequences = 1;
   uint32_t prefill_tokens = 1;
+  bool prefill_family = false;
+  std::vector<uint32_t> prefill_variants;
+  bool supports_prefill(uint32_t count) const {
+    for(auto variant:prefill_variants)if(variant==count)return true;
+    return false;
+  }
   bool shared_pages = false;
   std::vector<Node> nodes;
   std::vector<uint32_t> uses;
@@ -59,19 +65,32 @@ struct Plan {
       return v;
     };
     char magic[8];
-    if (!s.read(magic, 8) || (std::memcmp(magic, "IFTOKN01", 8) && std::memcmp(magic, "IFTOKN02", 8) && std::memcmp(magic, "IFTOKN03", 8) && std::memcmp(magic, "IFTOKN04", 8) && std::memcmp(magic, "IFTOKN05", 8)))
+    if (!s.read(magic, 8) || (std::memcmp(magic, "IFTOKN01", 8) && std::memcmp(magic, "IFTOKN02", 8) && std::memcmp(magic, "IFTOKN03", 8) && std::memcmp(magic, "IFTOKN04", 8) && std::memcmp(magic, "IFTOKN05", 8) && std::memcmp(magic, "IFTOKN06", 8)))
       throw std::runtime_error("missing/unsupported execution plan");
     Plan p;
+    p.prefill_family = !std::memcmp(magic, "IFTOKN06", 8);
     p.shared_pages = !std::memcmp(magic, "IFTOKN05", 8);
     p.physical = std::memcmp(magic, "IFTOKN01", 8) != 0;
     p.context = number();
     p.eos = number();
     p.output = number();
     auto count = number();
-    if (!std::memcmp(magic, "IFTOKN03", 8) || !std::memcmp(magic, "IFTOKN04", 8) || p.shared_pages) p.resident_sequences = number();
-    if (!std::memcmp(magic, "IFTOKN04", 8) || p.shared_pages) p.prefill_tokens = number();
+    if (!std::memcmp(magic, "IFTOKN03", 8) || !std::memcmp(magic, "IFTOKN04", 8) || p.shared_pages || p.prefill_family) p.resident_sequences = number();
+    if (!std::memcmp(magic, "IFTOKN04", 8) || p.shared_pages || p.prefill_family) p.prefill_tokens = number();
     if (!p.prefill_tokens || p.prefill_tokens>16 || (p.prefill_tokens&(p.prefill_tokens-1)) || p.prefill_tokens>p.context)
       throw std::runtime_error("prefill token capacity");
+    if(p.prefill_family) {
+      auto shared=number(), variants=number();
+      if(shared>1 || !variants || variants>4)throw std::runtime_error("prefill family header");
+      p.shared_pages=shared;
+      uint32_t previous=1;
+      for(uint32_t i=0;i<variants;++i) {
+        auto n=number();
+        if(n<=previous || n>p.prefill_tokens || (n&(n-1)))throw std::runtime_error("exact prefill variant bounds/order");
+        p.prefill_variants.push_back(n);previous=n;
+      }
+      if(previous!=p.prefill_tokens)throw std::runtime_error("prefill family maximum");
+    } else if(p.prefill_tokens>1) p.prefill_variants.push_back(p.prefill_tokens);
     if (!p.resident_sequences || p.resident_sequences > 64)
       throw std::runtime_error("resident sequence capacity");
     if (!p.context || p.context > 65536 || p.eos >= 151552 || !count ||

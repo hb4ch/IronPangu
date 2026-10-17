@@ -20,6 +20,11 @@ fn viewer_uses_compiled_prefill_and_page_policy() {
     assert_eq!(data["program"]["shared_pages"],true);
     assert_eq!(data["serving_envelope"][0][1]["max_tokens"],4);
     assert_eq!(data["serving_envelope"][0][1]["phase"],"prefill");
+    let family=program.with_prefill_variants(vec![2,4,8,16]).unwrap();
+    let html=inferfabric_compiler::token_view::render_with_program(&graph,&physical,&family).unwrap();
+    let data:serde_json::Value=serde_json::from_str(html.split("id=\"plan-data\">").nth(1).unwrap().split("</script>").next().unwrap()).unwrap();
+    assert_eq!(data["serving_envelope"][0].as_array().unwrap().len(),5);
+    assert_eq!(data["recipes"][0]["prefill_variants"].as_array().unwrap().len(),4);
 }
 
 #[test]

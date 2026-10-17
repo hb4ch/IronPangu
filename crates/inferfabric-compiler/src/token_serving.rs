@@ -16,8 +16,8 @@ pub fn program_envelope(graph:&Graph,ranks:usize,program:&crate::token_program::
             state.retention=Retention::SlidingWindow{max_query_tokens:program.prefill_tokens as u32};
         }
     }
-    if program.prefill_tokens>1 {
-        let count=program.prefill_tokens as u32;
+    for count in program.prefill_counts() {
+        let count=count as u32;
         variants.push(Variant{id:format!("packed_prefill_{count}_v1"),phase:Phase::Prefill,
             max_sequences:1,max_tokens:count,max_query_tokens:count,max_context:program.max_context as u32,
             numerical_class:format!("packed_prefill_{count}_v1"),graph_capable:true,packed:true});

@@ -103,9 +103,13 @@ struct Decoder {
   resident::PreparedWeightViews weight_views;
   std::vector<std::unique_ptr<inferfabric::PreparedKernel>> pending_kernels;
   aclmdlRI decode_graph = nullptr;
-  aclmdlRI prefill_graph = nullptr;
-  V prefill_output;
-  std::vector<std::unique_ptr<inferfabric::PreparedKernel>> prefill_kernels;
+  struct PrefillGraph {
+    aclmdlRI handle=nullptr;
+    V output;
+    std::vector<std::unique_ptr<inferfabric::PreparedKernel>> kernels;
+  };
+  std::map<uint32_t,PrefillGraph> prefill_graphs;
+  bool graphs_sealed=false;
   V graph_output;
   std::vector<std::unique_ptr<inferfabric::PreparedKernel>> graph_kernels;
   std::unique_ptr<DeviceTensor> token_index, position_index, cache_position, zero_cache_position,
@@ -1241,7 +1245,7 @@ struct Decoder {
   }
   void set_chunk_inputs(const std::vector<uint32_t> &tokens, int pos) {
     auto count=tokens.size();
-    if((count!=1 && count!=program.prefill_tokens) || pos<0 || size_t(pos)+count>program.context)
+    if((count!=1 && !program.supports_prefill(count)) || pos<0 || size_t(pos)+count>program.context)
       throw std::runtime_error("compiled token chunk bounds");
     for(auto id:tokens)if(id>=vocabulary())throw std::runtime_error("chunk token vocabulary");
     active_tokens=count;active_row=0;current_position=pos;
@@ -1286,6 +1290,7 @@ struct Decoder {
     V output;
     if (decode && std::getenv("INFERFABRIC_DECODE_GRAPH")) {
       if (!decode_graph) {
+        if(graphs_sealed)throw std::runtime_error("unprepared decode graph");
         decode_graph = execution.capture("token_decode", [&] {
           pending_kernels.clear();
           graph_output = execute_token();
@@ -1301,18 +1306,27 @@ struct Decoder {
   }
   // A request boundary is explicit control work. All preceding work has completed.
   V prefill(const std::vector<uint32_t> &tokens,int pos,bool replay=true) {
-    if(tokens.size()!=program.prefill_tokens || tokens.size()<=1)throw std::runtime_error("prefill variant size");
+    if(!program.supports_prefill(tokens.size()) || tokens.size()<=1)throw std::runtime_error("prefill variant size");
     set_chunk_inputs(tokens,pos);execution.begin_step(pos);
     V output;
     if(replay) {
-      if(!prefill_graph) {
-        prefill_graph=execution.capture("packed_prefill",[&]{ pending_kernels.clear();prefill_output=execute_token(); });
-        prefill_kernels=std::move(pending_kernels);
+      auto &variant=prefill_graphs[uint32_t(tokens.size())];
+      if(!variant.handle) {
+        if(graphs_sealed)throw std::runtime_error("unprepared prefill graph");
+        auto name=program.prefill_family ? "packed_prefill_"+std::to_string(tokens.size()) : "packed_prefill";
+        variant.handle=execution.capture(name.c_str(),[&]{ pending_kernels.clear();variant.output=execute_token(); });
+        variant.kernels=std::move(pending_kernels);
       }
-      execution.replay(prefill_graph);output=prefill_output;
+      execution.replay(variant.handle);output=variant.output;
     } else output=execute_token();
     execution.end_step();
     return output.view((tokens.size()-1)*vocabulary(),vocabulary());
+  }
+  void seal_graphs() {
+    if(std::getenv("INFERFABRIC_DECODE_GRAPH") && !decode_graph)throw std::runtime_error("decode graph preparation missing");
+    for(auto count:program.prefill_variants)
+      if(!prefill_graphs.count(count) || !prefill_graphs.at(count).handle)throw std::runtime_error("prefill family preparation missing");
+    graphs_sealed=true;
   }
   template<class F> void each_row(F f) {
     struct Restore { Decoder &d;int pos;uint32_t row;~Restore(){d.current_position=pos;d.active_row=row;} } restore{*this,current_position,active_row};

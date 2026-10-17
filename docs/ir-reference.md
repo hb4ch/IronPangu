@@ -169,3 +169,23 @@ Native physical IR must add implementation bundles, target/toolchain locks, spec
 `inferfabric_compiler::model_inspect::Inspection { stage, plan, groups }` is an inspection projection, not an executable IR. `plan` preserves the entire checkpoint-bound `bound::Plan`; each `Group { name, kind, nodes }` references original node indices exactly once. The canonical Qwen input-normalization bindings define layer boundaries, followed by the final normalization/head group. No operation is fused, removed or synthesized. SVG tensor edges and producer/consumer indices are derived from SSA operands; weight and state references remain explicit selectable bindings. The projection is JSON embedded in a self-contained HTML artifact.
 
 [Qwen3.5-2B's complete typed IR and viewer](validation/2026-09-08-qwen-plan/README.md) provide a full-model reference in addition to the small CPU physical-plan dumps. A typed tensor shape is not an allocation or a measured peak; native physical details remain a separate pending IR export.
+## Exact prefill family binary extension
+
+`IFTOKN06` preserves the version-4 instruction encoding and extends its header.
+After the eight-byte magic, all integers are little-endian `u32`: context, EOS,
+output instruction, instruction count, resident count, maximum prefill width,
+shared-page flag, variant count, then the exact widths. The instruction stream
+follows immediately. The flag is 0 or 1. There are 1–4 strictly increasing widths
+chosen from 2, 4, 8, 16, and the last must equal maximum prefill width. Decode's
+single-token entry is separate. Readers reject malformed lists before loading
+weights; versions 2–5 retain their existing bytes and exact-size semantics.
+
+`device-program.json` records `prefill_variants`; `serving.json` carries a separate
+exact invocation and numerical-class identity per width. An empty/absent family
+field means the older single-size contract. The native ABI returns a bit mask
+with bit `n` set only for declared width `n`; Rust checks this against the manifest.
+Each instruction recipe exposes `prefill_variants`, including invocation shapes,
+API repetition and assembly-copy counts. Persistent state/control shapes and
+offsets stay sized for the family maximum. Every graph, retained output and output
+invocation participates in workspace discovery and frozen-arena preparation before
+readiness. The executor rejects missing graphs after preparation is sealed.

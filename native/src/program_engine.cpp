@@ -92,14 +92,15 @@ struct Engine {
         warm = decoder.token(0, 2, true);
         decoder.emit(warm, 0, false);
         warm = {};
-        if(program.prefill_tokens>1) {
-          std::vector<uint32_t> chunk(program.prefill_tokens,0);
+        for(auto count:program.prefill_variants) {
+          std::vector<uint32_t> chunk(count,0);
           for(int pass=0;pass<3;++pass) {
             decoder.reset_request();
             auto logits=decoder.prefill(chunk,0,pass==2);
-            decoder.emit(logits,int(program.prefill_tokens)-1,false);
+            decoder.emit(logits,int(count)-1,false);
           }
         }
+        decoder.seal_graphs();
         if (const char *dir = std::getenv("INFERFABRIC_PREPARED_AUDIT_DIR")) {
           std::filesystem::create_directories(dir);
           std::ofstream audit(std::filesystem::path(dir) / ("rank-" + std::to_string(rank) + ".json"));
@@ -267,6 +268,9 @@ extern "C" int inferfabric_program_close(void *p) {
 extern "C" int inferfabric_program_prefill_capacity(void *p,uint32_t *count) {
   return call([&]{if(!count)throw std::runtime_error("null prefill capacity");*count=engine(p).program.prefill_tokens;});
 }
+extern "C" int inferfabric_program_prefill_variants(void *p,uint32_t *mask) {
+  return call([&]{if(!mask)throw std::runtime_error("null prefill variants");*mask=0;for(auto n:engine(p).program.prefill_variants)*mask|=uint32_t(1)<<n;});
+}
 extern "C" int inferfabric_program_shared_pages(void *p,uint32_t *enabled) {
   return call([&]{if(!enabled)throw std::runtime_error("null page policy output");*enabled=engine(p).program.shared_pages?1:0;});
 }
@@ -290,7 +294,7 @@ extern "C" int inferfabric_program_bind_state(void *p,uint32_t rank,uint32_t log
 extern "C" int inferfabric_program_prefill(void *p,const uint32_t *tokens,uint32_t count,uint32_t position,uint32_t sample,uint32_t *output) {
   return call([&]{
     auto &e=engine(p);
-    if(!tokens || !output || sample>1 || count<=1 || count!=e.program.prefill_tokens ||
+    if(!tokens || !output || sample>1 || count<=1 || !e.program.supports_prefill(count) ||
        position!=e.next_positions[e.active_resident] || position>e.program.context || count>e.program.context-position)
       throw std::runtime_error("invalid program prefill shape/position/output");
     for(uint32_t i=0;i<count;++i)if(tokens[i]>=e.vocabulary)throw std::runtime_error("invalid prefill token");

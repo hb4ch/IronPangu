@@ -227,11 +227,15 @@ def main():
         for rank in range(len(manifest['identity']['devices'])):
             audit = json.loads((args.output/'prepared'/f'rank-{rank}.json').read_text())
             transfers = json.loads((args.output/'transfers'/f'rank-{rank}.json').read_text())
-            packed = [g for g in audit['graphs'] if g['name']=='packed_prefill']
+            program = json.loads((args.plan/'device-program.json').read_text())
+            names = {f'packed_prefill_{n}' for n in program.get('prefill_variants', [])} or ({'packed_prefill'} if program['prefill_tokens']>1 else set())
+            packed = [g for g in audit['graphs'] if g['name'].startswith('packed_prefill')]
+            if len(packed)!=len(names) or {g['name'] for g in packed} != names:
+                raise RuntimeError('HTTP prepared graphs differ from the declared family')
             replays = sum(g['replays'] for g in packed)
-            if args.expect_prefill=='packed' and (len(packed)!=1 or replays<=1):
+            if args.expect_prefill=='packed' and replays<=len(names):
                 raise RuntimeError('HTTP did not exercise packed prefill beyond warmup')
-            if args.expect_prefill=='serial' and replays>1:
+            if args.expect_prefill=='serial' and replays>len(names):
                 raise RuntimeError('HTTP exceeded serial-only prefill budget')
             report['prefill_graph_replays'].append(replays)
             if not audit['arena']['frozen'] or not audit['workspace']['planned'] or audit['workspace']['growth_allocations']:

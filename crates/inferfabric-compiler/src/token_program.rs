@@ -26,6 +26,9 @@ pub struct Program {
     /// Resident histories, independent of the one-token invocation batch size.
     pub resident_sequences: usize,
     pub prefill_tokens: usize,
+    /// Explicit exact shapes. Empty preserves the legacy single-size contract.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub prefill_variants: Vec<usize>,
     #[serde(default)]
     pub shared_pages: bool,
     pub eos: usize,
@@ -144,7 +147,7 @@ fn emit(
 pub fn lower(graph: &Graph, inventory: Option<&Inventory>) -> Result<Program> {
     let types = graph.validate()?;
     let mut p = Program {
-        format: "inferfabric.token-program.v2".into(), max_context: graph.max_context, resident_sequences: 1, prefill_tokens: 1, shared_pages: false,
+        format: "inferfabric.token-program.v2".into(), max_context: graph.max_context, resident_sequences: 1, prefill_tokens: 1, prefill_variants: vec![], shared_pages: false,
         eos: graph.eos, output: 0, instructions: vec![], conversions_shared: 0, copies_eliminated: 0,
         limitations: vec!["Per-token vendor composites are expanded into declared API invocations, explicit casts, packing and initialization of outputs. Parameter/state preparation remains a declared initialization recipe; vendor-internal kernel launches are opaque. Hardware preparation binds fixed arena slots; this is not a cost-optimized arena packing.".into()],
     };
@@ -699,6 +702,16 @@ pub fn lower(graph: &Graph, inventory: Option<&Inventory>) -> Result<Program> {
 }
 
 impl Program {
+    pub fn prefill_counts(&self) -> Vec<usize> {
+        if !self.prefill_variants.is_empty() {self.prefill_variants.clone()}
+        else if self.prefill_tokens>1 {vec![self.prefill_tokens]} else {vec![]}
+    }
+    pub fn with_prefill_variants(mut self, counts: Vec<usize>) -> Result<Self> {
+        self.prefill_tokens=*counts.last().ok_or_else(||invalid("empty prefill variant family"))?;
+        self.prefill_variants=counts;
+        let residents=self.resident_sequences;
+        self.with_resident_sequences(residents)
+    }
     pub fn with_shared_pages(mut self, enabled: bool) -> Result<Self> {
         self.shared_pages=enabled;
         let count=self.resident_sequences;
@@ -706,17 +719,23 @@ impl Program {
     }
     pub fn with_prefill_tokens(mut self, count: usize) -> Result<Self> {
         self.prefill_tokens = count;
+        self.prefill_variants.clear();
         let residents = self.resident_sequences;
         self.with_resident_sequences(residents)
     }
     pub fn with_resident_sequences(mut self, count: usize) -> Result<Self> {
         self.resident_sequences = count;
-        self.format = if self.shared_pages { "inferfabric.token-program.v5" } else if self.prefill_tokens > 1 { "inferfabric.token-program.v4" } else if count == 1 { "inferfabric.token-program.v2" } else { "inferfabric.token-program.v3" }.into();
+        self.format = if !self.prefill_variants.is_empty() { "inferfabric.token-program.v6" } else if self.shared_pages { "inferfabric.token-program.v5" } else if self.prefill_tokens > 1 { "inferfabric.token-program.v4" } else if count == 1 { "inferfabric.token-program.v2" } else { "inferfabric.token-program.v3" }.into();
         self.validate()?;
         Ok(self)
     }
     pub fn validate(&self) -> Result<()> {
-        if self.format != if self.shared_pages { "inferfabric.token-program.v5" } else if self.prefill_tokens > 1 { "inferfabric.token-program.v4" } else if self.resident_sequences == 1 { "inferfabric.token-program.v2" } else { "inferfabric.token-program.v3" }
+        if self.prefill_variants.len()>4 || self.prefill_variants.iter().any(|n| !matches!(n,2|4|8|16)) ||
+            self.prefill_variants.windows(2).any(|v|v[0]>=v[1]) ||
+            self.prefill_variants.last().is_some_and(|&n|n!=self.prefill_tokens) {
+            return Err(invalid("invalid exact prefill variant family"));
+        }
+        if self.format != if !self.prefill_variants.is_empty() { "inferfabric.token-program.v6" } else if self.shared_pages { "inferfabric.token-program.v5" } else if self.prefill_tokens > 1 { "inferfabric.token-program.v4" } else if self.resident_sequences == 1 { "inferfabric.token-program.v2" } else { "inferfabric.token-program.v3" }
             || !matches!(self.prefill_tokens, 1 | 2 | 4 | 8 | 16)
             || self.prefill_tokens > self.max_context
             || ((self.prefill_tokens > 1 || self.shared_pages) && self.instructions.iter().any(|i| i.op == "cache_quantize_append"))
@@ -777,7 +796,7 @@ impl Program {
         if self.instructions.iter().any(|i| i.kernel == "unbound") {
             return Err(invalid("cannot execute unbound kernel selection"));
         }
-        let mut b = if self.shared_pages { b"IFTOKN05" } else if self.prefill_tokens > 1 { b"IFTOKN04" } else if self.resident_sequences == 1 { b"IFTOKN02" } else { b"IFTOKN03" }.to_vec();
+        let mut b = if !self.prefill_variants.is_empty() { b"IFTOKN06" } else if self.shared_pages { b"IFTOKN05" } else if self.prefill_tokens > 1 { b"IFTOKN04" } else if self.resident_sequences == 1 { b"IFTOKN02" } else { b"IFTOKN03" }.to_vec();
         for n in [
             self.max_context,
             self.eos,
@@ -788,6 +807,11 @@ impl Program {
         }
         if self.resident_sequences != 1 || self.prefill_tokens > 1 || self.shared_pages { num(&mut b, self.resident_sequences); }
         if self.prefill_tokens > 1 || self.shared_pages { num(&mut b, self.prefill_tokens); }
+        if !self.prefill_variants.is_empty() {
+            num(&mut b,usize::from(self.shared_pages));
+            num(&mut b,self.prefill_variants.len());
+            for &count in &self.prefill_variants {num(&mut b,count);}
+        }
         for i in &self.instructions {
             num(&mut b, i.kind);
             num(&mut b, i.width);
@@ -813,6 +837,23 @@ impl Program {
 /// Inspection metadata for backend recipes, separate from executable instructions.
 /// A vendor API may enqueue several device kernels; do not label it a measured launch.
 pub fn recipes(p: &Program, graph: &Graph) -> Vec<serde_json::Value> {
+    let mut result = recipes_for_query(p, graph, p.prefill_tokens);
+    if !p.prefill_variants.is_empty() {
+        for recipe in &mut result { recipe["prefill_variants"] = serde_json::json!([]); }
+        for &count in &p.prefill_variants {
+            for (recipe, variant) in result.iter_mut().zip(recipes_for_query(p, graph, count)) {
+                recipe["prefill_variants"].as_array_mut().unwrap().push(serde_json::json!({
+                    "packed_prefill":variant["packed_prefill"], "value_fields":variant["value_fields"]
+                }));
+            }
+        }
+    }
+    result
+}
+
+// Storage remains sized for the maximum prepared shape, independently of the
+// invocation's query count. This includes cache retention and control offsets.
+fn recipes_for_query(p: &Program, graph: &Graph, query_tokens: usize) -> Vec<serde_json::Value> {
     let cache_controls: BTreeMap<_, _> = p.instructions.iter()
         .filter(|i| matches!(i.op.as_str(), "cache_c8_norm_rope_append" | "cache_norm_rope_append" | "cache_append" | "index_cache_append"))
         .enumerate().map(|(slot, i)| (i.name.as_str(), slot * 16 * p.prefill_tokens)).collect();
@@ -958,16 +999,16 @@ pub fn recipes(p: &Program, graph: &Graph) -> Vec<serde_json::Value> {
         if matches!(i.op.as_str(), "mome" | "mome_inplace") {
             fields.push(serde_json::json!({"name":"recurrent_history","dtype":"bf16","shape":[p.resident_sequences,2,i.width],"binding":"shared device resident-slot control selects one history; other slots remain untouched"}));
         }
-        if p.prefill_tokens>1 {
+        if query_tokens>1 {
             for field in &mut fields {
                 let name=field["name"].as_str().unwrap_or("");
                 let shape=field.get("shape").and_then(serde_json::Value::as_array).cloned();
                 if let Some(mut shape)=shape {
                     if i.kind==0 && name=="value" && i.op!="sink_normalize" {
-                        shape.insert(0,serde_json::json!(p.prefill_tokens));
+                        shape.insert(0,serde_json::json!(query_tokens));
                     } else if matches!(name,"selected_indices"|"expert_ids"|"scores"|"packed_rows"|"inverse_indices"|"quantized"|"scales"|"quantized_rows"|"causal_indices"|"kv_length"|"physical_append_position")
                         && let Some(n)=shape.first().and_then(serde_json::Value::as_u64) {
-                        shape[0]=serde_json::json!(n*p.prefill_tokens as u64);
+                        shape[0]=serde_json::json!(n*query_tokens as u64);
                     }
                     field["prefill_shape"]=serde_json::json!(shape);
                 }
@@ -980,14 +1021,14 @@ pub fn recipes(p: &Program, graph: &Graph) -> Vec<serde_json::Value> {
         let batched = batched_index || batched_attention || batched_window || batched_rotary;
         let per_query = !batched && matches!(i.op.as_str(), "mome"|"mome_inplace"|"query_project"|"query_rotary_extract"|"rope"|"rope_bf16"|"rope_f32"|"mla_query"|"mla_value"|"index_cache_append"|"cache_append"|"cache_norm_rope_append"|"cache_c8_norm_rope_append"|"latent_attention"|"indexed_packed_attention"|"sparse_index"|"packed_latent_attention"|"attention_metadata"|"packed_attention_metadata");
         let assembly = !batched && matches!(i.op.as_str(), "repeat"|"slice"|"query_project"|"query_rotary_extract"|"rope"|"rope_bf16"|"rope_f32"|"mla_query"|"mla_value"|"mome"|"latent_attention"|"indexed_packed_attention"|"sparse_index"|"packed_latent_attention");
-        let packed = if p.prefill_tokens > 1 { serde_json::json!({
-            "tokens":p.prefill_tokens,
+        let packed = if query_tokens > 1 { serde_json::json!({
+            "tokens":query_tokens,
             "schedule":if i.op=="sink_normalize" {"shared initialization constant"} else if per_query {"ordered per-query calls"} else {"token matrix"},
-            "api_repetitions":if per_query {p.prefill_tokens} else {1},
+            "api_repetitions":if per_query {query_tokens} else {1},
             "causal_alignment":if batched_window {Some("one TND sequence; total query count and final chunk KV length; per-row causal window from declared pre_tokens; one shared metadata buffer per window")} else if batched_index || batched_attention {Some("one TND sequence; total query count and final chunk KV length; all chunk keys appended before selection/attention; each attention row consumes its own causal indices")} else {None},
             "coefficient_layout":if batched_rotary {Some("BF16 [tokens,1,1,64] cosine/sine; one absolute position per token; broadcast across heads")} else {None},
-            "output_elements":if i.kind==0 {Some(i.width*if i.op=="sink_normalize" {1} else {p.prefill_tokens})} else {None},
-            "assembly_copies":if assembly {p.prefill_tokens} else if i.op=="gather" {8*p.prefill_tokens} else {0},
+            "output_elements":if i.kind==0 {Some(i.width*if i.op=="sink_normalize" {1} else {query_tokens})} else {None},
+            "assembly_copies":if assembly {query_tokens} else if i.op=="gather" {8*query_tokens} else {0},
             "assembly_api":"aclrtMemcpyAsync device-to-device",
             "assembly_layout":if i.op=="gather" {"rank-major to token-major"} else {"contiguous token rows"},
             "control_row_stride_bytes":16,

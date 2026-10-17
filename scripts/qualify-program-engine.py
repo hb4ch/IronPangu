@@ -142,10 +142,19 @@ def main():
             raise RuntimeError('residency violation')
         prepared = json.loads((args.output / 'prepared' / f'rank-{rank}.json').read_text())
         if args.packed_prefill:
-            chunk = json.loads((args.plan / 'device-program.json').read_text())['prefill_tokens']
-            expected_chunks = sum(len(c['input_ids']) // chunk for c in cases)
-            graphs = [g for g in prepared['graphs'] if g['name'] == 'packed_prefill']
-            if chunk <= 1 or not expected_chunks or len(graphs) != 1 or graphs[0]['replays'] != expected_chunks + 1:
+            program = json.loads((args.plan / 'device-program.json').read_text())
+            family = program.get('prefill_variants', [])
+            counts = family or [program['prefill_tokens']]
+            expected = {f'packed_prefill_{n}' if family else 'packed_prefill': 1 for n in counts}
+            for case in cases:
+                remaining = len(case['input_ids'])
+                for n in reversed(counts):
+                    name = f'packed_prefill_{n}' if family else 'packed_prefill'
+                    expected[name] += remaining // n
+                    remaining %= n
+            graphs = [g for g in prepared['graphs'] if g['name'].startswith('packed_prefill')]
+            actual = {g['name']: g['replays'] for g in graphs}
+            if min(counts) <= 1 or sum(expected.values())<=len(expected) or len(graphs)!=len(expected) or actual != expected:
                 raise RuntimeError('packed prefill graph did not execute every expected chunk')
         if not args.prepare and (not prepared['workspace']['planned'] or prepared['workspace']['growth_allocations']):
             raise RuntimeError('workspace growth or missing fixed plan')

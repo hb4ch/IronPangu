@@ -88,7 +88,7 @@ pub fn manifest(bundle: &Path) -> Result<Manifest> {
     prefill_capacity(&m)?;
     Ok(m)
 }
-/// Only the two concrete native invocation contracts are accepted, not arbitrary batches.
+/// Only declared exact native shapes are accepted, not arbitrary batches.
 pub fn prefill_capacity(m: &Manifest) -> Result<u32> {
     m.validate()?;
     for s in &m.states {
@@ -100,7 +100,7 @@ pub fn prefill_capacity(m: &Manifest) -> Result<u32> {
         }
     }
     if m.variants.is_empty()
-        || m.variants.len() > 2
+        || m.variants.len() > 5
         || m.variants[0].id != "serial_token_v1"
         || m.variants[0].phase != Phase::Decode
         || m.variants[0].max_sequences != 1
@@ -112,9 +112,10 @@ pub fn prefill_capacity(m: &Manifest) -> Result<u32> {
     {
         return Err(invalid("unsupported program engine serving envelope"));
     }
-    if let Some(v) = m.variants.get(1) {
+    let mut maximum=1;
+    for v in m.variants.iter().skip(1) {
         let count = v.max_tokens;
-        if !matches!(count, 2 | 4 | 8 | 16)
+        if !matches!(count, 2 | 4 | 8 | 16) || count<=maximum
             || v.id != format!("packed_prefill_{count}_v1")
             || v.phase != Phase::Prefill
             || v.max_sequences != 1
@@ -126,10 +127,9 @@ pub fn prefill_capacity(m: &Manifest) -> Result<u32> {
         {
             return Err(invalid("unsupported packed prefill contract"));
         }
-        Ok(count)
-    } else {
-        Ok(1)
+        maximum=count;
     }
+    Ok(maximum)
 }
 pub struct Engine {
     _library: Library,
@@ -139,6 +139,7 @@ pub struct Engine {
     token_fn: Token,
     prefill_fn: Option<Prefill>,
     prefill_tokens: u32,
+    prefill_variants: Vec<u32>,
     error: Error,
     bind_pages_fn: Option<BindPages>,
     select_resident_fn: Option<Resident>,
@@ -190,6 +191,7 @@ impl Engine {
                     .ok()
                     .map(|f| *f),
                 prefill_tokens: prefill_capacity(&contract)?,
+                prefill_variants: contract.variants.iter().skip(1).map(|v|v.max_tokens).collect(),
                 bind_state_fn: lib
                     .get::<BindState>(b"inferfabric_program_bind_state\0")
                     .ok()
@@ -251,6 +253,12 @@ impl Engine {
                     "native prefill capacity differs from serving manifest",
                 ));
             }
+            let mut mask=if chunk>1 {1u32<<chunk} else {0};
+            if let Ok(variants)=result._library.get::<Capacity>(b"inferfabric_program_prefill_variants\0") {
+                result.check(variants(result.ptr,&mut mask))?;
+            }
+            let expected=result.prefill_variants.iter().fold(0,|bits,n|bits|(1u32<<n));
+            if mask!=expected {return Err(invalid("native exact prefill variants differ from serving manifest"));}
             let mut shared = 0;
             if let Ok(policy) = result
                 ._library
@@ -447,20 +455,24 @@ impl Engine {
     pub fn prefill_capacity(&self) -> u32 {
         self.prefill_tokens
     }
+    pub fn prefill_chunk(&self, limit: u32) -> u32 {
+        self.prefill_variants.iter().rev().copied().find(|&n|n<=limit).unwrap_or(1)
+    }
     pub fn prefill(&mut self, tokens: &[u32], position: u32, sample: bool) -> Result<Option<u32>> {
-        if tokens.len() != self.prefill_tokens as usize || tokens.len() <= 1 {
+        let count=u32::try_from(tokens.len()).map_err(|_|invalid("prefill count overflow"))?;
+        if !self.prefill_variants.contains(&count) {
             return Err(invalid("prefill must match the compiled chunk width"));
         }
         let prefill = self
             .prefill_fn
             .ok_or_else(|| invalid("backend has no packed prefill entry point"))?;
         let mut output = 0;
-        let ticket = self.begin_invocation(position, self.prefill_tokens)?;
+        let ticket = self.begin_invocation(position, count)?;
         let status = unsafe {
             prefill(
                 self.ptr,
                 tokens.as_ptr(),
-                self.prefill_tokens,
+                count,
                 position,
                 sample.into(),
                 &mut output,
@@ -510,6 +522,15 @@ mod tests {
         m.variants.push(v);
         assert_eq!(prefill_capacity(&m).unwrap(), 4);
         let valid = m.clone();
+        for count in [8,16] {
+            let mut v=m.variants[1].clone();
+            v.id=format!("packed_prefill_{count}_v1");v.numerical_class=v.id.clone();
+            v.max_tokens=count;v.max_query_tokens=count;m.variants.push(v);
+        }
+        assert_eq!(prefill_capacity(&m).unwrap(),16);
+        m.variants.swap(1,2);
+        assert!(prefill_capacity(&m).is_err());
+        m=valid.clone();
         let state=m.states.iter_mut().find(|s|matches!(s.storage,Storage::Pages{..})).unwrap();
         state.retention=inferfabric_ir::serving::Retention::SlidingWindow{max_query_tokens:4};
         state.window_tokens=Some(512);state.checkpoint_supported=false;

@@ -6,6 +6,37 @@ use inferfabric_dsl::{authoring::ModelDefinition, definition};
 use inferfabric_ir::initialization::{DType, Instruction};
 use std::collections::BTreeMap;
 #[test]
+fn prefill_family_preserves_maximum_storage_and_encodes_exact_shapes() {
+    let ModelDefinition::Execution {graph,..}=definition(include_str!("../../../examples/openpangu/92b-tp8-ep8-c8-learned.inferfabric")).unwrap() else {panic!()};
+    let base=inferfabric_compiler::token_program::lower(&graph,None).unwrap();
+    for counts in [vec![],vec![1],vec![3],vec![4,2],vec![2,2],vec![2,32]] {
+        assert!(base.clone().with_prefill_variants(counts).is_err());
+    }
+    let p=base.with_prefill_variants(vec![2,4,8,16]).unwrap().with_shared_pages(true).unwrap();
+    let (bound_graph,_,inventory)=fixture();
+    let bound=inferfabric_compiler::token_program::lower(&bound_graph,Some(&inventory)).unwrap()
+        .with_prefill_variants(vec![2,4,8,16]).unwrap().with_shared_pages(true).unwrap();
+    let bytes=bound.encode().unwrap();
+    assert_eq!(&bytes[..8],b"IFTOKN06");
+    assert_eq!(bytes[32..56].chunks_exact(4).map(|x|u32::from_le_bytes(x.try_into().unwrap())).collect::<Vec<_>>(),vec![1,4,2,4,8,16]);
+    let recipes=inferfabric_compiler::token_program::recipes(&p,&graph);
+    for (i,r) in p.instructions.iter().zip(recipes) {
+        for (v,count) in r["prefill_variants"].as_array().unwrap().iter().zip([2,4,8,16]) {
+            assert_eq!(v["packed_prefill"]["tokens"],count);
+            assert_eq!(v["packed_prefill"]["control_bank_bytes"],r["packed_prefill"]["control_bank_bytes"]);
+            for (f,max) in v["value_fields"].as_array().unwrap().iter().zip(r["value_fields"].as_array().unwrap()) {
+                assert_eq!(f["shape"],max["shape"]);
+                assert_eq!(f["byte_offset"],max["byte_offset"]);
+            }
+            if i.op=="rope_bf16" {
+                assert_eq!(v["value_fields"][0]["prefill_shape"],serde_json::json!([count,i.width]));
+                assert_eq!(v["packed_prefill"]["api_repetitions"],1);
+            }
+        }
+    }
+    assert_eq!(&bound.with_prefill_tokens(4).unwrap().encode().unwrap()[..8],b"IFTOKN05");
+}
+#[test]
 fn bf16_rotary_batches_position_rows_without_assembly() {
     let ModelDefinition::Execution {graph,..}=definition(include_str!("../../../examples/openpangu/92b-tp8-ep8-c8-learned.inferfabric")).unwrap() else {panic!()};
     for count in [2,4,16] {

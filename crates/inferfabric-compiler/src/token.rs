@@ -364,8 +364,16 @@ pub fn write_bundle_with_page_policy(
     graph: &Graph, topology: &OpenPanguParallel, inventory: &Inventory,
     output: &std::path::Path, resident_sequences: usize, prefill_tokens: usize, shared_pages: bool,
 ) -> Result<()> {
+    write_bundle_with_variants(graph,topology,inventory,output,resident_sequences,prefill_tokens,shared_pages,&[])
+}
+pub fn write_bundle_with_variants(
+    graph: &Graph, topology: &OpenPanguParallel, inventory: &Inventory,
+    output: &std::path::Path, resident_sequences: usize, prefill_tokens: usize, shared_pages: bool,
+    prefill_variants: &[usize],
+) -> Result<()> {
     let plans = initialization_plans(graph, topology, inventory)?;
-    let program = crate::token_program::lower(graph, Some(inventory))?.with_resident_sequences(resident_sequences)?.with_prefill_tokens(prefill_tokens)?.with_shared_pages(shared_pages)?;
+    let mut program = crate::token_program::lower(graph, Some(inventory))?.with_resident_sequences(resident_sequences)?.with_prefill_tokens(prefill_tokens)?.with_shared_pages(shared_pages)?;
+    if !prefill_variants.is_empty() {program=program.with_prefill_variants(prefill_variants.to_vec())?;}
     let binary = program.encode()?;
     let physical = crate::token_physical::lower(graph, &topology.devices)?;
     let mut serving = crate::token_serving::lower(graph, &physical, &binary, &inventory.metadata_sha256)?;
@@ -375,8 +383,8 @@ pub fn write_bundle_with_page_policy(
     if graph.max_context>512 {
         serving.limitations.push("Context above 512 is experimental and unqualified. The native engine requires INFERFABRIC_EXPERIMENTAL_LONG_CONTEXT=1 for qualification runs; compilation does not grant long-context output correctness or production admission.".into());
     }
-    if prefill_tokens > 1 {
-        serving.limitations.push("Packed prefill uses an exact compiled chunk width, batched tokenwise operators and ordered per-query attention/convolution. Numerical equivalence and hardware readiness require independent qualification; no prefix reuse across numerical classes is granted.".into());
+    if program.prefill_tokens > 1 {
+        serving.limitations.push("Packed prefill accepts only explicitly compiled exact chunk sizes. Every size requires graph/workspace/arena preparation and independent numerical qualification; no prefix reuse across numerical classes is granted.".into());
     }
     serving.validate()?;
     if output.exists() {
