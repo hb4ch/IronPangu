@@ -1,0 +1,948 @@
+{
+  "status": "failed_before_eos",
+  "process": {
+    "completed": true,
+    "timed_out": false,
+    "returncode": 0,
+    "timeout_seconds": 1800,
+    "elapsed_seconds": 485.9172932682559
+  },
+  "scope": "Normal EOS, 12 requests, repeated Chinese request diverged before EOS. Resource success is not numerical qualification.",
+  "diagnostic_samples": {
+    "uncaptured4k-v2-discovery": [
+      {
+        "request": 2,
+        "case": "chinese",
+        "generation_step": 0,
+        "step": 13,
+        "token": 8255,
+        "logit": 180,
+        "top5": [
+          {
+            "token": 8255,
+            "logprob": -0.00014757
+          },
+          {
+            "token": 29396,
+            "logprob": -10.0001
+          },
+          {
+            "token": 334,
+            "logprob": -11.0001
+          },
+          {
+            "token": 1064,
+            "logprob": -11.0001
+          },
+          {
+            "token": 4223,
+            "logprob": -11.0001
+          }
+        ]
+      },
+      {
+        "request": 2,
+        "case": "chinese",
+        "generation_step": 2,
+        "step": 15,
+        "token": 33949,
+        "logit": 138,
+        "top5": [
+          {
+            "token": 33949,
+            "logprob": -0.12711
+          },
+          {
+            "token": 17721,
+            "logprob": -2.12711
+          },
+          {
+            "token": 13209,
+            "logprob": -9.12711
+          },
+          {
+            "token": 12734,
+            "logprob": -10.6271
+          },
+          {
+            "token": 51195,
+            "logprob": -11.6271
+          }
+        ]
+      },
+      {
+        "request": 2,
+        "case": "chinese",
+        "generation_step": 5,
+        "step": 18,
+        "token": 13209,
+        "logit": 128,
+        "top5": [
+          {
+            "token": 13209,
+            "logprob": -0.397854
+          },
+          {
+            "token": 60872,
+            "logprob": -1.89785
+          },
+          {
+            "token": 125074,
+            "logprob": -2.89785
+          },
+          {
+            "token": 18460,
+            "logprob": -3.39785
+          },
+          {
+            "token": 57161,
+            "logprob": -3.39785
+          }
+        ]
+      },
+      {
+        "request": 6,
+        "case": "chinese",
+        "generation_step": 0,
+        "step": 13,
+        "token": 8255,
+        "logit": 180,
+        "top5": [
+          {
+            "token": 8255,
+            "logprob": -0.00014757
+          },
+          {
+            "token": 29396,
+            "logprob": -10.0001
+          },
+          {
+            "token": 334,
+            "logprob": -11.0001
+          },
+          {
+            "token": 1064,
+            "logprob": -11.0001
+          },
+          {
+            "token": 4223,
+            "logprob": -11.0001
+          }
+        ]
+      },
+      {
+        "request": 6,
+        "case": "chinese",
+        "generation_step": 2,
+        "step": 15,
+        "token": 33949,
+        "logit": 138,
+        "top5": [
+          {
+            "token": 33949,
+            "logprob": -0.12711
+          },
+          {
+            "token": 17721,
+            "logprob": -2.12711
+          },
+          {
+            "token": 13209,
+            "logprob": -9.12711
+          },
+          {
+            "token": 12734,
+            "logprob": -10.6271
+          },
+          {
+            "token": 51195,
+            "logprob": -11.6271
+          }
+        ]
+      },
+      {
+        "request": 6,
+        "case": "chinese",
+        "generation_step": 5,
+        "step": 18,
+        "token": 13209,
+        "logit": 128,
+        "top5": [
+          {
+            "token": 13209,
+            "logprob": -0.397854
+          },
+          {
+            "token": 60872,
+            "logprob": -1.89785
+          },
+          {
+            "token": 125074,
+            "logprob": -2.89785
+          },
+          {
+            "token": 18460,
+            "logprob": -3.39785
+          },
+          {
+            "token": 57161,
+            "logprob": -3.39785
+          }
+        ]
+      },
+      {
+        "request": 10,
+        "case": "chinese",
+        "generation_step": 0,
+        "step": 13,
+        "token": 8255,
+        "logit": 180,
+        "top5": [
+          {
+            "token": 8255,
+            "logprob": -0.00014757
+          },
+          {
+            "token": 29396,
+            "logprob": -10.0001
+          },
+          {
+            "token": 334,
+            "logprob": -11.0001
+          },
+          {
+            "token": 1064,
+            "logprob": -11.0001
+          },
+          {
+            "token": 4223,
+            "logprob": -11.0001
+          }
+        ]
+      },
+      {
+        "request": 10,
+        "case": "chinese",
+        "generation_step": 2,
+        "step": 15,
+        "token": 33949,
+        "logit": 138,
+        "top5": [
+          {
+            "token": 33949,
+            "logprob": -0.12711
+          },
+          {
+            "token": 17721,
+            "logprob": -2.12711
+          },
+          {
+            "token": 13209,
+            "logprob": -9.12711
+          },
+          {
+            "token": 12734,
+            "logprob": -10.6271
+          },
+          {
+            "token": 51195,
+            "logprob": -11.6271
+          }
+        ]
+      },
+      {
+        "request": 10,
+        "case": "chinese",
+        "generation_step": 5,
+        "step": 18,
+        "token": 13209,
+        "logit": 128,
+        "top5": [
+          {
+            "token": 13209,
+            "logprob": -0.397854
+          },
+          {
+            "token": 60872,
+            "logprob": -1.89785
+          },
+          {
+            "token": 125074,
+            "logprob": -2.89785
+          },
+          {
+            "token": 18460,
+            "logprob": -3.39785
+          },
+          {
+            "token": 57161,
+            "logprob": -3.39785
+          }
+        ]
+      }
+    ],
+    "sequence-mome-discovery": [
+      {
+        "request": 2,
+        "case": "chinese",
+        "generation_step": 0,
+        "step": 13,
+        "token": 8255,
+        "logit": 177,
+        "top5": [
+          {
+            "token": 8255,
+            "logprob": -0.000123851
+          },
+          {
+            "token": 29396,
+            "logprob": -10.0001
+          },
+          {
+            "token": 3110,
+            "logprob": -11.0001
+          },
+          {
+            "token": 4223,
+            "logprob": -11.0001
+          },
+          {
+            "token": 334,
+            "logprob": -12.0001
+          }
+        ]
+      },
+      {
+        "request": 2,
+        "case": "chinese",
+        "generation_step": 2,
+        "step": 15,
+        "token": 33949,
+        "logit": 148,
+        "top5": [
+          {
+            "token": 33949,
+            "logprob": -0.314136
+          },
+          {
+            "token": 17721,
+            "logprob": -1.31414
+          },
+          {
+            "token": 13209,
+            "logprob": -7.31414
+          },
+          {
+            "token": 12734,
+            "logprob": -9.31414
+          },
+          {
+            "token": 670,
+            "logprob": -11.3141
+          }
+        ]
+      },
+      {
+        "request": 2,
+        "case": "chinese",
+        "generation_step": 5,
+        "step": 18,
+        "token": 13209,
+        "logit": 134,
+        "top5": [
+          {
+            "token": 13209,
+            "logprob": -0.846478
+          },
+          {
+            "token": 60872,
+            "logprob": -0.846478
+          },
+          {
+            "token": 125074,
+            "logprob": -2.84648
+          },
+          {
+            "token": 18460,
+            "logprob": -3.84648
+          },
+          {
+            "token": 57161,
+            "logprob": -3.84648
+          }
+        ]
+      },
+      {
+        "request": 6,
+        "case": "chinese",
+        "generation_step": 0,
+        "step": 13,
+        "token": 8255,
+        "logit": 176,
+        "top5": [
+          {
+            "token": 8255,
+            "logprob": -0.000257578
+          },
+          {
+            "token": 29396,
+            "logprob": -9.00026
+          },
+          {
+            "token": 4223,
+            "logprob": -10.0003
+          },
+          {
+            "token": 1064,
+            "logprob": -11.0003
+          },
+          {
+            "token": 3110,
+            "logprob": -11.0003
+          }
+        ]
+      },
+      {
+        "request": 6,
+        "case": "chinese",
+        "generation_step": 2,
+        "step": 15,
+        "token": 33949,
+        "logit": 144,
+        "top5": [
+          {
+            "token": 33949,
+            "logprob": -0.315462
+          },
+          {
+            "token": 17721,
+            "logprob": -1.31546
+          },
+          {
+            "token": 13209,
+            "logprob": -6.31546
+          },
+          {
+            "token": 12734,
+            "logprob": -9.31546
+          },
+          {
+            "token": 9439,
+            "logprob": -10.3155
+          }
+        ]
+      },
+      {
+        "request": 6,
+        "case": "chinese",
+        "generation_step": 5,
+        "step": 18,
+        "token": 13209,
+        "logit": 131,
+        "top5": [
+          {
+            "token": 13209,
+            "logprob": -0.49423
+          },
+          {
+            "token": 60872,
+            "logprob": -1.49423
+          },
+          {
+            "token": 125074,
+            "logprob": -2.49423
+          },
+          {
+            "token": 57161,
+            "logprob": -3.49423
+          },
+          {
+            "token": 18460,
+            "logprob": -3.99423
+          }
+        ]
+      },
+      {
+        "request": 10,
+        "case": "chinese",
+        "generation_step": 0,
+        "step": 13,
+        "token": 8255,
+        "logit": 176,
+        "top5": [
+          {
+            "token": 8255,
+            "logprob": -0.000162588
+          },
+          {
+            "token": 3110,
+            "logprob": -10.0002
+          },
+          {
+            "token": 29396,
+            "logprob": -10.0002
+          },
+          {
+            "token": 334,
+            "logprob": -12.0002
+          },
+          {
+            "token": 1064,
+            "logprob": -12.0002
+          }
+        ]
+      },
+      {
+        "request": 10,
+        "case": "chinese",
+        "generation_step": 2,
+        "step": 15,
+        "token": 33949,
+        "logit": 139,
+        "top5": [
+          {
+            "token": 33949,
+            "logprob": -0.313709
+          },
+          {
+            "token": 17721,
+            "logprob": -1.31371
+          },
+          {
+            "token": 13209,
+            "logprob": -8.31371
+          },
+          {
+            "token": 12734,
+            "logprob": -9.31371
+          },
+          {
+            "token": 9439,
+            "logprob": -10.3137
+          }
+        ]
+      },
+      {
+        "request": 10,
+        "case": "chinese",
+        "generation_step": 5,
+        "step": 18,
+        "token": 13209,
+        "logit": 133,
+        "top5": [
+          {
+            "token": 13209,
+            "logprob": -0.257422
+          },
+          {
+            "token": 60872,
+            "logprob": -2.25742
+          },
+          {
+            "token": 18460,
+            "logprob": -3.25742
+          },
+          {
+            "token": 125074,
+            "logprob": -3.25742
+          },
+          {
+            "token": 57161,
+            "logprob": -4.25742
+          }
+        ]
+      }
+    ],
+    "prefill-lifetime-discovery": [
+      {
+        "request": 2,
+        "case": "chinese",
+        "generation_step": 0,
+        "step": 13,
+        "token": 8255,
+        "logit": 183,
+        "top5": [
+          {
+            "token": 8255,
+            "logprob": -0.000259247
+          },
+          {
+            "token": 29396,
+            "logprob": -9.00026
+          },
+          {
+            "token": 334,
+            "logprob": -11.0003
+          },
+          {
+            "token": 1064,
+            "logprob": -11.0003
+          },
+          {
+            "token": 4223,
+            "logprob": -11.0003
+          }
+        ]
+      },
+      {
+        "request": 2,
+        "case": "chinese",
+        "generation_step": 2,
+        "step": 15,
+        "token": 33949,
+        "logit": 150,
+        "top5": [
+          {
+            "token": 33949,
+            "logprob": -0.128082
+          },
+          {
+            "token": 17721,
+            "logprob": -2.12808
+          },
+          {
+            "token": 13209,
+            "logprob": -7.12808
+          },
+          {
+            "token": 12734,
+            "logprob": -9.12808
+          },
+          {
+            "token": 9439,
+            "logprob": -10.1281
+          }
+        ]
+      },
+      {
+        "request": 2,
+        "case": "chinese",
+        "generation_step": 5,
+        "step": 18,
+        "token": 13209,
+        "logit": 140,
+        "top5": [
+          {
+            "token": 13209,
+            "logprob": -0.475437
+          },
+          {
+            "token": 60872,
+            "logprob": -1.47544
+          },
+          {
+            "token": 18460,
+            "logprob": -3.47544
+          },
+          {
+            "token": 57161,
+            "logprob": -3.47544
+          },
+          {
+            "token": 125074,
+            "logprob": -3.47544
+          }
+        ]
+      },
+      {
+        "request": 6,
+        "case": "chinese",
+        "generation_step": 0,
+        "step": 13,
+        "token": 8255,
+        "logit": 178,
+        "top5": [
+          {
+            "token": 8255,
+            "logprob": -0.000136009
+          },
+          {
+            "token": 29396,
+            "logprob": -10.0001
+          },
+          {
+            "token": 334,
+            "logprob": -11.0001
+          },
+          {
+            "token": 1064,
+            "logprob": -11.0001
+          },
+          {
+            "token": 3110,
+            "logprob": -11.0001
+          }
+        ]
+      },
+      {
+        "request": 6,
+        "case": "chinese",
+        "generation_step": 2,
+        "step": 15,
+        "token": 33949,
+        "logit": 144,
+        "top5": [
+          {
+            "token": 33949,
+            "logprob": -0.31409
+          },
+          {
+            "token": 17721,
+            "logprob": -1.31409
+          },
+          {
+            "token": 13209,
+            "logprob": -7.31409
+          },
+          {
+            "token": 9439,
+            "logprob": -10.3141
+          },
+          {
+            "token": 12734,
+            "logprob": -10.3141
+          }
+        ]
+      },
+      {
+        "request": 6,
+        "case": "chinese",
+        "generation_step": 5,
+        "step": 18,
+        "token": 13209,
+        "logit": 136,
+        "top5": [
+          {
+            "token": 13209,
+            "logprob": -0.582265
+          },
+          {
+            "token": 60872,
+            "logprob": -1.58226
+          },
+          {
+            "token": 57161,
+            "logprob": -2.58226
+          },
+          {
+            "token": 125074,
+            "logprob": -2.58226
+          },
+          {
+            "token": 18460,
+            "logprob": -3.58226
+          }
+        ]
+      },
+      {
+        "request": 10,
+        "case": "chinese",
+        "generation_step": 0,
+        "step": 13,
+        "token": 8255,
+        "logit": 178,
+        "top5": [
+          {
+            "token": 8255,
+            "logprob": -0.000222777
+          },
+          {
+            "token": 334,
+            "logprob": -10.0002
+          },
+          {
+            "token": 1064,
+            "logprob": -10.0002
+          },
+          {
+            "token": 29396,
+            "logprob": -10.0002
+          },
+          {
+            "token": 3110,
+            "logprob": -12.0002
+          }
+        ]
+      },
+      {
+        "request": 10,
+        "case": "chinese",
+        "generation_step": 2,
+        "step": 15,
+        "token": 33949,
+        "logit": 151,
+        "top5": [
+          {
+            "token": 33949,
+            "logprob": -0.315552
+          },
+          {
+            "token": 17721,
+            "logprob": -1.31555
+          },
+          {
+            "token": 13209,
+            "logprob": -6.31555
+          },
+          {
+            "token": 9439,
+            "logprob": -9.31555
+          },
+          {
+            "token": 12734,
+            "logprob": -9.31555
+          }
+        ]
+      },
+      {
+        "request": 10,
+        "case": "chinese",
+        "generation_step": 5,
+        "step": 18,
+        "token": 60872,
+        "logit": 144,
+        "top5": [
+          {
+            "token": 60872,
+            "logprob": -0.50323
+          },
+          {
+            "token": 13209,
+            "logprob": -1.50323
+          },
+          {
+            "token": 125074,
+            "logprob": -2.50323
+          },
+          {
+            "token": 18460,
+            "logprob": -3.50323
+          },
+          {
+            "token": 57161,
+            "logprob": -3.50323
+          }
+        ]
+      }
+    ]
+  },
+  "ranks": [
+    {
+      "rank": 0,
+      "retained_invocations": 480,
+      "transient_invocations": 0,
+      "peak_transient_invocations": 377008,
+      "transient_invocation_preparations": 913378,
+      "activation_host_transfers": 0,
+      "graphs": [
+        {
+          "name": "token_decode",
+          "replays": 103
+        }
+      ]
+    },
+    {
+      "rank": 1,
+      "retained_invocations": 480,
+      "transient_invocations": 0,
+      "peak_transient_invocations": 377008,
+      "transient_invocation_preparations": 913378,
+      "activation_host_transfers": 0,
+      "graphs": [
+        {
+          "name": "token_decode",
+          "replays": 103
+        }
+      ]
+    },
+    {
+      "rank": 2,
+      "retained_invocations": 480,
+      "transient_invocations": 0,
+      "peak_transient_invocations": 377008,
+      "transient_invocation_preparations": 913378,
+      "activation_host_transfers": 0,
+      "graphs": [
+        {
+          "name": "token_decode",
+          "replays": 103
+        }
+      ]
+    },
+    {
+      "rank": 3,
+      "retained_invocations": 480,
+      "transient_invocations": 0,
+      "peak_transient_invocations": 377008,
+      "transient_invocation_preparations": 913378,
+      "activation_host_transfers": 0,
+      "graphs": [
+        {
+          "name": "token_decode",
+          "replays": 103
+        }
+      ]
+    },
+    {
+      "rank": 4,
+      "retained_invocations": 480,
+      "transient_invocations": 0,
+      "peak_transient_invocations": 377008,
+      "transient_invocation_preparations": 913378,
+      "activation_host_transfers": 0,
+      "graphs": [
+        {
+          "name": "token_decode",
+          "replays": 103
+        }
+      ]
+    },
+    {
+      "rank": 5,
+      "retained_invocations": 480,
+      "transient_invocations": 0,
+      "peak_transient_invocations": 377008,
+      "transient_invocation_preparations": 913378,
+      "activation_host_transfers": 0,
+      "graphs": [
+        {
+          "name": "token_decode",
+          "replays": 103
+        }
+      ]
+    },
+    {
+      "rank": 6,
+      "retained_invocations": 480,
+      "transient_invocations": 0,
+      "peak_transient_invocations": 377008,
+      "transient_invocation_preparations": 913378,
+      "activation_host_transfers": 0,
+      "graphs": [
+        {
+          "name": "token_decode",
+          "replays": 103
+        }
+      ]
+    },
+    {
+      "rank": 7,
+      "retained_invocations": 480,
+      "transient_invocations": 0,
+      "peak_transient_invocations": 377008,
+      "transient_invocation_preparations": 913378,
+      "activation_host_transfers": 0,
+      "graphs": [
+        {
+          "name": "token_decode",
+          "replays": 103
+        }
+      ]
+    }
+  ],
+  "artifacts": {
+    "native-build-prefill-lifetime/program_engine_probe": "d8817d8c98c42bc7e3a216d42d3571748ae16fb1640c74dc2ad422d16b0e436a",
+    "native-build-prefill-lifetime/libinferfabric_program.so": "f981d6e9c8c30e26f7a08a05046481f6b9d1e6db084eeeafd8cd6c8819e42f68",
+    "uncaptured4k-prefill-lifetime-source/execution.bin": "b16edec8f5a21bfb1f696c9f9f17f9bc7d299106eca8e3255c0e31581d60bb8e"
+  }
+}

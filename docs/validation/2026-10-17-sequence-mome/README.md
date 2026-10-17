@@ -1,5 +1,9 @@
 # Sequence MoME: full-model regression
 
+Subsequent investigation found an unsafe input/output scratch alias and repeated
+logit drift in this implementation. The passing sampled tokens below do not
+establish robustness; see the [alias investigation](../2026-10-17-mome-alias-investigation/README.md).
+
 The native 92B TP8/EP8 engine completed cleanly and matched all 123 reference
 output tokens across 12 requests. The launcher left `ACLNN_CACHE_LIMIT` unset,
 exercising the engine's default of zero before ACL initialization. The engine
