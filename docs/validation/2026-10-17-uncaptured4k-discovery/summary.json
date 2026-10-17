@@ -1,0 +1,576 @@
+{
+  "status": "failed_teardown",
+  "process": {
+    "completed": true,
+    "timed_out": false,
+    "returncode": -11,
+    "timeout_seconds": 1800,
+    "elapsed_seconds": 850.0576766789891
+  },
+  "scope": "Two zero-input 4096-query preparation forwards, then independent-reference prompts 12/15/14/529 tokens repeated three times. No 64K numerical qualification.",
+  "artifacts": {
+    "native-build-uncaptured/libinferfabric_program.so": "5715937dc80fe5b83006cecf94ae9842c44b718ade41537b61a246e703210f97",
+    "native-build-uncaptured/program_engine_probe": "810da875f0978f8a56b410b40267ec227f805ead1e327cf35434912ab0319d31",
+    "uncaptured4k-source/execution.bin": "b16edec8f5a21bfb1f696c9f9f17f9bc7d299106eca8e3255c0e31581d60bb8e",
+    "batched16-preparation-reference.json": "3a05e7ac9bb3a2e4432dc71717262771d35cd817b8d506d303f3d4b0777b926d"
+  },
+  "requests": [
+    {
+      "request": 0,
+      "case": "arithmetic",
+      "prompt_tokens": 12,
+      "expected_ids": [
+        16,
+        520,
+        220,
+        16,
+        292,
+        220,
+        17,
+        148902
+      ],
+      "actual_ids": [
+        16,
+        520,
+        220,
+        16,
+        292,
+        220,
+        17,
+        148902
+      ],
+      "full_match": true,
+      "ttft_ms": 2120.184,
+      "tpot_ms": 24.979285714285716
+    },
+    {
+      "request": 1,
+      "case": "geography",
+      "prompt_tokens": 15,
+      "expected_ids": [
+        1114,
+        11786,
+        336,
+        17320,
+        405,
+        21072,
+        13,
+        148902
+      ],
+      "actual_ids": [
+        1114,
+        11786,
+        336,
+        17320,
+        405,
+        21072,
+        13,
+        148902
+      ],
+      "full_match": true,
+      "ttft_ms": 1830.852,
+      "tpot_ms": 25.177285714285716
+    },
+    {
+      "request": 2,
+      "case": "chinese",
+      "prompt_tokens": 14,
+      "expected_ids": [
+        8255,
+        541,
+        33949,
+        65826,
+        305,
+        13209,
+        83005,
+        40889,
+        462,
+        24820,
+        95922,
+        689,
+        109259,
+        6951,
+        122559,
+        380,
+        148902
+      ],
+      "actual_ids": [
+        8255,
+        541,
+        33949,
+        65826,
+        305,
+        13209,
+        83005,
+        40889,
+        462,
+        24820,
+        95922,
+        689,
+        109259,
+        6951,
+        122559,
+        380,
+        148902
+      ],
+      "full_match": true,
+      "ttft_ms": 1597.107,
+      "tpot_ms": 25.0735
+    },
+    {
+      "request": 3,
+      "case": "access-code-529",
+      "prompt_tokens": 529,
+      "expected_ids": [
+        22,
+        18,
+        16,
+        24,
+        148902,
+        148900,
+        148900,
+        1114
+      ],
+      "actual_ids": [
+        22,
+        18,
+        16,
+        24,
+        148902,
+        148900,
+        148900,
+        1114
+      ],
+      "full_match": true,
+      "ttft_ms": 51627.686,
+      "tpot_ms": 24.488714285714284
+    },
+    {
+      "request": 4,
+      "case": "arithmetic",
+      "prompt_tokens": 12,
+      "expected_ids": [
+        16,
+        520,
+        220,
+        16,
+        292,
+        220,
+        17,
+        148902
+      ],
+      "actual_ids": [
+        16,
+        520,
+        220,
+        16,
+        292,
+        220,
+        17,
+        148902
+      ],
+      "full_match": true,
+      "ttft_ms": 1277.339,
+      "tpot_ms": 23.883
+    },
+    {
+      "request": 5,
+      "case": "geography",
+      "prompt_tokens": 15,
+      "expected_ids": [
+        1114,
+        11786,
+        336,
+        17320,
+        405,
+        21072,
+        13,
+        148902
+      ],
+      "actual_ids": [
+        1114,
+        11786,
+        336,
+        17320,
+        405,
+        21072,
+        13,
+        148902
+      ],
+      "full_match": true,
+      "ttft_ms": 1690.501,
+      "tpot_ms": 24.214
+    },
+    {
+      "request": 6,
+      "case": "chinese",
+      "prompt_tokens": 14,
+      "expected_ids": [
+        8255,
+        541,
+        33949,
+        65826,
+        305,
+        13209,
+        83005,
+        40889,
+        462,
+        24820,
+        95922,
+        689,
+        109259,
+        6951,
+        122559,
+        380,
+        148902
+      ],
+      "actual_ids": [
+        8255,
+        541,
+        33949,
+        65826,
+        305,
+        13209,
+        83005,
+        40889,
+        462,
+        24820,
+        95922,
+        689,
+        109259,
+        6951,
+        122559,
+        380,
+        148902
+      ],
+      "full_match": true,
+      "ttft_ms": 1612.725,
+      "tpot_ms": 23.674875
+    },
+    {
+      "request": 7,
+      "case": "access-code-529",
+      "prompt_tokens": 529,
+      "expected_ids": [
+        22,
+        18,
+        16,
+        24,
+        148902,
+        148900,
+        148900,
+        1114
+      ],
+      "actual_ids": [
+        22,
+        18,
+        16,
+        24,
+        148902,
+        148900,
+        148900,
+        1114
+      ],
+      "full_match": true,
+      "ttft_ms": 44760.738,
+      "tpot_ms": 23.533714285714286
+    },
+    {
+      "request": 8,
+      "case": "arithmetic",
+      "prompt_tokens": 12,
+      "expected_ids": [
+        16,
+        520,
+        220,
+        16,
+        292,
+        220,
+        17,
+        148902
+      ],
+      "actual_ids": [
+        16,
+        520,
+        220,
+        16,
+        292,
+        220,
+        17,
+        148902
+      ],
+      "full_match": true,
+      "ttft_ms": 1367.526,
+      "tpot_ms": 23.948428571428572
+    },
+    {
+      "request": 9,
+      "case": "geography",
+      "prompt_tokens": 15,
+      "expected_ids": [
+        1114,
+        11786,
+        336,
+        17320,
+        405,
+        21072,
+        13,
+        148902
+      ],
+      "actual_ids": [
+        1114,
+        11786,
+        336,
+        17320,
+        405,
+        21072,
+        13,
+        148902
+      ],
+      "full_match": true,
+      "ttft_ms": 1576.934,
+      "tpot_ms": 23.93257142857143
+    },
+    {
+      "request": 10,
+      "case": "chinese",
+      "prompt_tokens": 14,
+      "expected_ids": [
+        8255,
+        541,
+        33949,
+        65826,
+        305,
+        13209,
+        83005,
+        40889,
+        462,
+        24820,
+        95922,
+        689,
+        109259,
+        6951,
+        122559,
+        380,
+        148902
+      ],
+      "actual_ids": [
+        8255,
+        541,
+        33949,
+        65826,
+        305,
+        13209,
+        83005,
+        40889,
+        462,
+        24820,
+        95922,
+        689,
+        109259,
+        6951,
+        122559,
+        380,
+        148902
+      ],
+      "full_match": true,
+      "ttft_ms": 1485.795,
+      "tpot_ms": 22.739562499999998
+    },
+    {
+      "request": 11,
+      "case": "access-code-529",
+      "prompt_tokens": 529,
+      "expected_ids": [
+        22,
+        18,
+        16,
+        24,
+        148902,
+        148900,
+        148900,
+        1114
+      ],
+      "actual_ids": [
+        22,
+        18,
+        16,
+        24,
+        148902,
+        148900,
+        148900,
+        1114
+      ],
+      "full_match": true,
+      "ttft_ms": 39555.752,
+      "tpot_ms": 23.533
+    }
+  ],
+  "ranks": [
+    {
+      "rank": 0,
+      "arena_bytes": 38253633024,
+      "workspace_peak_bytes": 159221248,
+      "workspace_growth_allocations": 6,
+      "graphs": [
+        {
+          "name": "token_decode",
+          "replays": 112
+        }
+      ],
+      "activation_host_transfers": 0,
+      "mome": {
+        "name": "aclnnAiInfraFusedCausalConv1d",
+        "repeatable": false,
+        "preparations": 1366890,
+        "replays": 0
+      }
+    },
+    {
+      "rank": 1,
+      "arena_bytes": 38253633024,
+      "workspace_peak_bytes": 159221248,
+      "workspace_growth_allocations": 6,
+      "graphs": [
+        {
+          "name": "token_decode",
+          "replays": 112
+        }
+      ],
+      "activation_host_transfers": 0,
+      "mome": {
+        "name": "aclnnAiInfraFusedCausalConv1d",
+        "repeatable": false,
+        "preparations": 1366890,
+        "replays": 0
+      }
+    },
+    {
+      "rank": 2,
+      "arena_bytes": 38253633024,
+      "workspace_peak_bytes": 159221248,
+      "workspace_growth_allocations": 6,
+      "graphs": [
+        {
+          "name": "token_decode",
+          "replays": 112
+        }
+      ],
+      "activation_host_transfers": 0,
+      "mome": {
+        "name": "aclnnAiInfraFusedCausalConv1d",
+        "repeatable": false,
+        "preparations": 1366890,
+        "replays": 0
+      }
+    },
+    {
+      "rank": 3,
+      "arena_bytes": 38253633024,
+      "workspace_peak_bytes": 159221248,
+      "workspace_growth_allocations": 6,
+      "graphs": [
+        {
+          "name": "token_decode",
+          "replays": 112
+        }
+      ],
+      "activation_host_transfers": 0,
+      "mome": {
+        "name": "aclnnAiInfraFusedCausalConv1d",
+        "repeatable": false,
+        "preparations": 1366890,
+        "replays": 0
+      }
+    },
+    {
+      "rank": 4,
+      "arena_bytes": 38253633024,
+      "workspace_peak_bytes": 159221248,
+      "workspace_growth_allocations": 6,
+      "graphs": [
+        {
+          "name": "token_decode",
+          "replays": 112
+        }
+      ],
+      "activation_host_transfers": 0,
+      "mome": {
+        "name": "aclnnAiInfraFusedCausalConv1d",
+        "repeatable": false,
+        "preparations": 1366890,
+        "replays": 0
+      }
+    },
+    {
+      "rank": 5,
+      "arena_bytes": 38253633024,
+      "workspace_peak_bytes": 159221248,
+      "workspace_growth_allocations": 6,
+      "graphs": [
+        {
+          "name": "token_decode",
+          "replays": 112
+        }
+      ],
+      "activation_host_transfers": 0,
+      "mome": {
+        "name": "aclnnAiInfraFusedCausalConv1d",
+        "repeatable": false,
+        "preparations": 1366890,
+        "replays": 0
+      }
+    },
+    {
+      "rank": 6,
+      "arena_bytes": 38253633024,
+      "workspace_peak_bytes": 159221248,
+      "workspace_growth_allocations": 6,
+      "graphs": [
+        {
+          "name": "token_decode",
+          "replays": 112
+        }
+      ],
+      "activation_host_transfers": 0,
+      "mome": {
+        "name": "aclnnAiInfraFusedCausalConv1d",
+        "repeatable": false,
+        "preparations": 1366890,
+        "replays": 0
+      }
+    },
+    {
+      "rank": 7,
+      "arena_bytes": 38253633024,
+      "workspace_peak_bytes": 159221248,
+      "workspace_growth_allocations": 6,
+      "graphs": [
+        {
+          "name": "token_decode",
+          "replays": 112
+        }
+      ],
+      "activation_host_transfers": 0,
+      "mome": {
+        "name": "aclnnAiInfraFusedCausalConv1d",
+        "repeatable": false,
+        "preparations": 1366890,
+        "replays": 0
+      }
+    }
+  ],
+  "stderr": "free(): invalid pointer\n",
+  "crash_frames": [
+    {
+      "library": "libnnopbase.so",
+      "offset": "0x178568",
+      "function": "op::internal::OpExecCache::OldCacheClear()"
+    },
+    {
+      "library": "libnnopbase.so",
+      "offset": "0x17d59c",
+      "function": "op::internal::OpExecCache::Finalize()"
+    }
+  ]
+}

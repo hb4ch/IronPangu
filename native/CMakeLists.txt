@@ -205,6 +205,11 @@ if(EXISTS "${IF_CACHE_KERNEL_LIBRARY}")
 endif()
 
 # The persistent serving engine and diagnostic client share the same executor.
+add_executable(router_lifetime_probe probes/router_lifetime_probe.cpp)
+target_include_directories(router_lifetime_probe PRIVATE include "${ACL_INCLUDE}")
+target_link_libraries(router_lifetime_probe PRIVATE "${ACL_LIBRARY}" "${OPAPI_LIBRARY}" "${NNOPBASE_LIBRARY}" dl)
+target_compile_options(router_lifetime_probe PRIVATE -Wall -Wextra -Werror)
+
 if(TARGET openpangu_decode)
   set_target_properties(inferfabric_initialization inferfabric_initialization_acl inferfabric_compiled_kernel PROPERTIES POSITION_INDEPENDENT_CODE ON)
   add_library(inferfabric_program SHARED src/program_engine.cpp)
