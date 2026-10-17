@@ -9,6 +9,10 @@ pub enum Error {
     Unsupported { message: String },
     #[error("generation backend: {message}")]
     Backend { message: String },
+    #[error("generation backend overloaded: {message}")]
+    Overloaded { message: String },
+    #[error("generation backend unavailable: {message}")]
+    Unavailable { message: String },
     #[error("generate request `{request_id}` has an empty prompt_token_ids")]
     EmptyPromptTokenIds { request_id: String },
     #[error("engine-core error")]

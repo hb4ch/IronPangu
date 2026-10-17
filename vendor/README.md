@@ -12,6 +12,7 @@ Local adaptations:
 - Backend sampling defaults are merged before request lowering, preserving explicit fields and checkpoint hints.
 - `vllm-text` / `vllm-chat`: metadata independent of an engine-core connection; optional administration client; request-error classification.
 - `vllm-server`: `serve_with_backend`; existing routes, chat processing and SSE implementation retained. Engine-core-only administration returns an explicit unsupported error for the local backend.
+- Typed backend admission overload/unavailability map through completion and chat submission to HTTP 503 with distinct error codes and `Retry-After: 1`. Runtime failures remain HTTP 500; errors after streaming begins retain the existing SSE error handling.
 - Cargo package workspace anchors keep this snapshot separate from InferFabric's core workspace.
 
 The original Rust workspace includes command, managed-engine and Python-binding packages. They are not dependencies of `frontend/Cargo.toml` and are not built or launched by InferFabric. The deployed server uses the Rust HF/Jinja/tokenizer path with language-only configuration. No Python engine, interpreter embedding, or managed launcher is used. The Rust engine-core protocol crate remains a type dependency; the in-process path creates no engine-core connection.

@@ -20,6 +20,8 @@ pub enum ApiError {
     JsonParseError { message: String },
     /// An unexpected internal failure happened before streaming started.
     ServerError { message: String },
+    /// Admission was rejected before streaming because the backend cannot accept work.
+    ServiceUnavailable { message: String, code: &'static str },
 }
 
 impl ApiError {
@@ -29,6 +31,7 @@ impl ApiError {
             Self::InvalidRequest { .. } => StatusCode::BAD_REQUEST,
             Self::ModelNotFound { .. } => StatusCode::NOT_FOUND,
             Self::ServerError { .. } => StatusCode::INTERNAL_SERVER_ERROR,
+            Self::ServiceUnavailable { .. } => StatusCode::SERVICE_UNAVAILABLE,
             Self::JsonParseError { .. } => StatusCode::BAD_REQUEST,
         }
     }
@@ -55,6 +58,12 @@ impl ApiError {
                 param: None,
                 code: Some("server_error".to_string()),
             },
+            Self::ServiceUnavailable { message, code } => ErrorDetail {
+                message: message.clone(),
+                error_type: "server_error".to_string(),
+                param: None,
+                code: Some((*code).to_string()),
+            },
             Self::JsonParseError { message } => ErrorDetail {
                 message: message.clone(),
                 error_type: "invalid_request_error".to_string(),
@@ -69,14 +78,31 @@ impl ApiError {
 
 impl IntoResponse for ApiError {
     fn into_response(self) -> Response {
-        (self.status_code(), Json(self.to_error_response())).into_response()
+        let retryable = matches!(self, Self::ServiceUnavailable { .. });
+        let mut response = (self.status_code(), Json(self.to_error_response())).into_response();
+        if retryable {
+            response.headers_mut().insert(axum::http::header::RETRY_AFTER, axum::http::HeaderValue::from_static("1"));
+        }
+        response
     }
 }
 
 /// Classify a text-pipeline submit failure: request validation failures are
 /// the client's fault and map to HTTP 400, mirroring the Python frontend.
 /// Everything else stays an internal 500.
+/// Typed admission overload/unavailability are the exception: these map to
+/// retryable HTTP 503 before the remaining validation/failure classification.
 pub fn text_submit_error(context: &'static str, error: vllm_text::Error) -> ApiError {
+    if let vllm_text::Error::Llm(llm) = &error {
+        let code = match llm {
+            vllm_llm::Error::Overloaded { .. } => Some("server_overloaded"),
+            vllm_llm::Error::Unavailable { .. } => Some("backend_unavailable"),
+            _ => None,
+        };
+        if let Some(code) = code {
+            return service_unavailable!(code = code, "{}: {}", context, error.to_report_string());
+        }
+    }
     if error.is_request_validation_error() {
         return invalid_request!("{error}");
     }
@@ -86,6 +112,9 @@ pub fn text_submit_error(context: &'static str, error: vllm_text::Error) -> ApiE
 /// Like [`text_submit_error`], for the chat pipeline (which both wraps the
 /// text errors and raises its own prompt-length variant).
 pub fn chat_submit_error(context: &'static str, error: vllm_chat::Error) -> ApiError {
+    if let vllm_chat::Error::Text(text) = error {
+        return text_submit_error(context, text);
+    }
     if error.is_request_validation_error() {
         return invalid_request!("{error}");
     }
@@ -95,6 +124,83 @@ pub fn chat_submit_error(context: &'static str, error: vllm_chat::Error) -> ApiE
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn typed_admission_errors_are_retryable_for_completion_and_chat() {
+        let mut actual = Vec::new();
+        for chat in [false, true] {
+            for overloaded in [false, true] {
+                let llm = if overloaded {
+                    vllm_llm::Error::Overloaded { message: "queue full".into() }
+                } else {
+                    vllm_llm::Error::Unavailable { message: "stopped".into() }
+                };
+                let text = vllm_text::Error::Llm(llm);
+                let error = if chat { chat_submit_error("submit", vllm_chat::Error::Text(text)) }
+                    else { text_submit_error("submit", text) };
+                let payload = error.to_error_response();
+                let response = error.into_response();
+                actual.push((chat, response.status().as_u16(), payload.error.error_type,
+                    payload.error.code, response.headers().get(axum::http::header::RETRY_AFTER).cloned()));
+            }
+        }
+        expect_test::expect![[r#"
+            [
+                (
+                    false,
+                    503,
+                    "server_error",
+                    Some(
+                        "backend_unavailable",
+                    ),
+                    Some(
+                        "1",
+                    ),
+                ),
+                (
+                    false,
+                    503,
+                    "server_error",
+                    Some(
+                        "server_overloaded",
+                    ),
+                    Some(
+                        "1",
+                    ),
+                ),
+                (
+                    true,
+                    503,
+                    "server_error",
+                    Some(
+                        "backend_unavailable",
+                    ),
+                    Some(
+                        "1",
+                    ),
+                ),
+                (
+                    true,
+                    503,
+                    "server_error",
+                    Some(
+                        "server_overloaded",
+                    ),
+                    Some(
+                        "1",
+                    ),
+                ),
+            ]
+        "#]].assert_debug_eq(&actual);
+    }
+
+    #[test]
+    fn ordinary_backend_failure_is_not_reported_as_retryable_admission() {
+        let error = text_submit_error("submit", vllm_text::Error::Llm(vllm_llm::Error::Backend { message: "kernel failed".into() }));
+        let response = error.into_response();
+        assert_eq!(response.status(), StatusCode::INTERNAL_SERVER_ERROR);
+        assert!(!response.headers().contains_key(axum::http::header::RETRY_AFTER));
+    }
 
     #[test]
     fn prompt_too_long_maps_to_invalid_request() {

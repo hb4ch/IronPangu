@@ -12,6 +12,7 @@ import re
 from pathlib import Path
 import signal
 import subprocess
+import threading
 import time
 import urllib.error
 import urllib.request
@@ -27,7 +28,10 @@ def main():
     p.add_argument('--max-num-batched-tokens', type=int)
     p.add_argument('--expect-prefill', choices=('packed','serial'), help='verify actual graph use, excluding startup warmup')
     p.add_argument('--resident-cases', type=Path, help='serial oracle fixtures for concurrent long-prefill/short-decode qualification')
+    p.add_argument('--check-overload', action='store_true', help='Burst long streaming requests beyond admission capacity, check 503/retry metadata and recovery')
     args = p.parse_args()
+    if args.check_overload and (not args.resident_cases or not args.max_num_seqs):
+        p.error('--check-overload requires --resident-cases and --max-num-seqs')
     args.output.mkdir(parents=True, exist_ok=False)
     cases = json.loads(args.cases.read_text())
     tokenizer = Tokenizer.from_file(str(args.checkpoint / 'tokenizer.json'))
@@ -151,12 +155,61 @@ def main():
                     raise
             else:
                 raise RuntimeError('context overflow was silently accepted')
+            overload = None
+            if args.check_overload:
+                long_case = max(json.loads(args.resident_cases.read_text()), key=lambda c:len(c['input_ids']))
+                count = args.max_num_seqs * 8
+                start = threading.Barrier(count)
+                body = json.dumps(dict(model='inferfabric-program', prompt=long_case['input_ids'],
+                    max_tokens=len(long_case['output_ids']), temperature=0, stream=True, ignore_eos=True)).encode()
+                def submit_burst(_):
+                    start.wait(timeout=30)
+                    req = urllib.request.Request(url+'/v1/completions', data=body, headers={'Content-Type':'application/json'})
+                    try:
+                        response = urllib.request.urlopen(req, timeout=300)
+                        return response.status, dict(response.headers), None, response
+                    except urllib.error.HTTPError as error:
+                        with error:
+                            return error.code, dict(error.headers), json.load(error), None
+                responses = []
+                try:
+                    with concurrent.futures.ThreadPoolExecutor(max_workers=count) as pool:
+                        for future in concurrent.futures.as_completed([pool.submit(submit_burst,i) for i in range(count)]):
+                            responses.append(future.result())
+                    accepted = sum(status==200 for status,_,_,_ in responses)
+                    rejected = [r for r in responses if r[0]!=200]
+                    if not accepted or not rejected:
+                        raise RuntimeError('burst did not exercise both acceptance and overload')
+                    for status,headers,payload,_ in rejected:
+                        headers = {k.lower():v for k,v in headers.items()}
+                        if status!=503 or headers.get('retry-after')!='1' or payload['error']['code']!='server_overloaded':
+                            raise RuntimeError(f'incorrect overload response: {status} {headers} {payload}')
+                    overload = dict(submitted=count,accepted=accepted,rejected=len(rejected),status=503,
+                                    error_code='server_overloaded',retry_after_seconds=1)
+                finally:
+                    for _,_,_,response in responses:
+                        if response is not None: response.close()
+                # Accepted streams are deliberately disconnected; then verify a
+                # fresh request after their queued work has observed cancellation.
+                deadline = time.monotonic()+30
+                while True:
+                    try:
+                        text, _ = request(cases[0])
+                        break
+                    except urllib.error.HTTPError as error:
+                        if error.code!=503 or time.monotonic()>=deadline: raise
+                        error.close()
+                        time.sleep(0.1)
+                if text!=tokenizer.decode(cases[0]['output_ids'],skip_special_tokens=True):
+                    raise RuntimeError('output changed after overload/disconnect recovery')
+                overload['recovery_output_correct'] = True
             report = dict(frontend='vLLM Rust 0.25.1', mode='resident request scheduler; compiled prefill and serial decode',
                           full_fixture_text=True, sse_agreement=True, queued_isolation=True,
                           disconnect_recovery=True, unsupported_sampling_rejected=True, results=results,
                           concurrent_requests=len(concurrent_cases), mixed_residents=mixed,
                           context_overflow_rejected=True,
                           max_num_seqs=args.max_num_seqs, max_num_batched_tokens=args.max_num_batched_tokens)
+            if overload is not None: report['overload'] = overload
         finally:
             if server.poll() is None:
                 server.send_signal(signal.SIGTERM)

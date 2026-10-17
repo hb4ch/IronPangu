@@ -130,6 +130,14 @@ and all eight frozen/residency audits pass. The larger-context short regression
 also exposes a preserved post-EOS difference. These results do not raise the
 production admission limit or establish concurrent 16K serving readiness.
 
+[Typed admission overload](validation/2026-10-17-overload/README.md) now returns
+retryable HTTP 503 with distinct queue-full/backend-unavailable codes through
+the vLLM Rust completion/chat submission paths. A real sixteen-request NPU burst
+accepts eight queued streams and rejects eight with the expected retry metadata;
+disconnect recovery returns correct output and final page occupancy is zero.
+All 305 upstream server and 17 frontend tests pass. This closes the basic overload
+response gap; sustained pressure, slow-client and rank-failure soaks remain open.
+
 ### Next contract: a prepared prefill variant family
 
 The current executable supports decode and one exact prefill size. The existing
@@ -230,7 +238,7 @@ This is the next implementation plan for OpenPangu V2 92B, followed by independe
 
 | Area | Evidence today | Gap to close |
 |---|---|---|
-| HTTP frontend | Pinned vLLM 0.25.1 Rust frontend serving the generic 92B executable; streaming, concurrent requests and cancellation qualified | Stochastic 92B sampling, overload policy and failure/slow-client soak |
+| HTTP frontend | Pinned vLLM 0.25.1 Rust frontend serving the generic 92B executable; streaming, concurrent requests, cancellation and retryable queue-overload responses qualified | Stochastic 92B sampling, sustained overload and failure/slow-client soak |
 | 92B execution | Full 46-layer TP8/EP8 device-resident decoder; persistent resident states, prepared invocations and ACLGraph | Multi-request batched decode and longer-context model qualification |
 | Scheduler | Continuous admission; actual token-budgeted four-token prefill chunks and serial decode, rotating resident progress | Larger efficient chunks, batched kernels and pressure-aware admission |
 | KV | Shared physical page ownership, partial page tables, all-rank reservation and completion-safe reclamation; packed C8 consumption | Configurable pool budget, long-context tables, learned index cache, SWA recycling and prefix sharing |
@@ -660,5 +668,6 @@ budget. [Full NPU HTTP evidence](validation/2026-10-17-resident-http/README.md)
 verifies six concurrent requests and short-request completion during a 504-token
 prompt, with isolated cancellation/reset and all-rank frozen/residency checks.
 The long prompt's approximately 9.9-second TTFT still requires packed prefill;
-HTTP overload currently maps to a generic backend 500 and needs a retryable
-status before the production gate.
+HTTP overload initially mapped to a generic backend 500. The later
+[typed admission implementation](validation/2026-10-17-overload/README.md) supplies
+retryable 503 responses; sustained overload qualification remains a production gate.

@@ -206,7 +206,7 @@ impl GenerationBackend for Backend {
     }
     async fn generate(&self, req: GenerateRequest) -> Result<GenerateOutputStream> {
         if !self.metadata().healthy {
-            return Err(error("native engine is not ready"));
+            return Err(Error::Unavailable { message: "native engine is not ready".into() });
         }
         crate::native_sampling::validate(&req)?;
         if self.program_mode { program_worker::validate(&req)?; }
@@ -224,7 +224,10 @@ impl GenerationBackend for Backend {
                 tx,
                 cancel: cancel.clone(),
             })
-            .map_err(|_| error("native engine stopped or busy"))?;
+            .map_err(|e| match e {
+                mpsc::error::TrySendError::Full(_) => Error::Overloaded { message: "native admission queue is full; retry later".into() },
+                mpsc::error::TrySendError::Closed(_) => Error::Unavailable { message: "native engine has stopped".into() },
+            })?;
         active.insert(id.clone(), cancel.clone());
         Ok(GenerateOutputStream::from_stream(id, Output { rx, cancel }))
     }
@@ -273,6 +276,41 @@ fn validate_capacity_for(req: &GenerateRequest, context: usize, vocab: u32) -> R
 #[cfg(test)]
 mod tests {
     use super::*;
+    fn request(id: &str) -> GenerateRequest {
+        GenerateRequest {
+            request_id: id.into(), prompt_token_ids: vec![1],
+            sampling_params: serde_json::from_value(serde_json::json!({"temperature":0,"max_tokens":16})).unwrap(),
+            mm_features: None, arrival_time: None, cache_salt: None, trace_headers: None,
+            priority: 0, data_parallel_rank: None, reasoning_parser_kwargs: None, lora_request: None,
+        }
+    }
+    #[tokio::test]
+    async fn admission_distinguishes_full_closed_and_unhealthy_without_leaking_ids() {
+        let (tx, mut rx) = mpsc::channel(1);
+        let backend = Backend {
+            tx, active: Arc::new(Mutex::new(std::collections::BTreeMap::new())),
+            stop: Arc::new(AtomicBool::new(false)), healthy: Arc::new(AtomicBool::new(true)),
+            finished: tokio::sync::Mutex::new(None), context: 128, vocab: 248320,
+            program_mode: true, defaults: program_defaults().unwrap(),
+        };
+        let first = backend.generate(request("first")).await.unwrap();
+        assert!(matches!(backend.generate(request("retry")).await, Err(Error::Overloaded { .. })));
+        assert_eq!(backend.active.lock().unwrap().len(), 1);
+        assert!(!backend.active.lock().unwrap().contains_key("retry"));
+        let accepted = rx.recv().await.unwrap();
+        drop(first);
+        assert!(accepted.cancel.load(Ordering::Acquire));
+        backend.active.lock().unwrap().remove("first");
+        let second = backend.generate(request("retry")).await.unwrap();
+        assert!(backend.active.lock().unwrap().contains_key("retry"));
+        drop(second);
+        drop(rx);
+        assert!(matches!(backend.generate(request("closed")).await, Err(Error::Unavailable { .. })));
+        assert!(!backend.active.lock().unwrap().contains_key("closed"));
+        backend.healthy.store(false, Ordering::Release);
+        assert!(matches!(backend.generate(request("unhealthy")).await, Err(Error::Unavailable { .. })));
+        assert!(!backend.active.lock().unwrap().contains_key("unhealthy"));
+    }
     #[test]
     fn program_defaults_match_unsigned_protocol() {
         let defaults = program_defaults().unwrap();
