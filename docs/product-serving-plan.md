@@ -122,6 +122,14 @@ is bit-exact across all supported chunk sizes and graph replay. Sixteen-token
 4K TTFT improves another 9.52%, to 14.24 seconds, with unchanged arena/workspace;
 HTTP/residency checks pass. Existing post-EOS reference differences remain open.
 
+The [16K positional experiment](validation/2026-10-17-retrieval16/README.md)
+retrieves all nine early/middle/late answers correctly and matches through EOS.
+Forced continuation parity fails after EOS in every case. Baseline TTFT is
+63.44–63.57 seconds and TPOT 20.27–20.29 ms; planned workspace remains unchanged
+and all eight frozen/residency audits pass. The larger-context short regression
+also exposes a preserved post-EOS difference. These results do not raise the
+production admission limit or establish concurrent 16K serving readiness.
+
 ### Next contract: a prepared prefill variant family
 
 The current executable supports decode and one exact prefill size. The existing
