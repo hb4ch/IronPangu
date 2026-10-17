@@ -1,0 +1,186 @@
+[
+  {
+    "rank": 0,
+    "audit_sha256": "e00c3e55404a16b53347c20f52fed707c4599cd21ca08d511ec99bea05c98522",
+    "device_bytes": 12408118336,
+    "frozen": true,
+    "workspace_planned": true,
+    "workspace_bytes": 130916352,
+    "workspace_growth_allocations": 0,
+    "graph": [
+      {
+        "name": "token_decode",
+        "replays": 214
+      }
+    ],
+    "retained_step_count": 30,
+    "steps_with_allocations": 0,
+    "steps_with_internal_fences": 0,
+    "hbm": {
+      "rank": 0,
+      "hbm_used_bytes": 33789046784,
+      "hbm_growth_bytes": 33356947456
+    }
+  },
+  {
+    "rank": 1,
+    "audit_sha256": "e00c3e55404a16b53347c20f52fed707c4599cd21ca08d511ec99bea05c98522",
+    "device_bytes": 12408118336,
+    "frozen": true,
+    "workspace_planned": true,
+    "workspace_bytes": 130916352,
+    "workspace_growth_allocations": 0,
+    "graph": [
+      {
+        "name": "token_decode",
+        "replays": 214
+      }
+    ],
+    "retained_step_count": 30,
+    "steps_with_allocations": 0,
+    "steps_with_internal_fences": 0,
+    "hbm": {
+      "rank": 1,
+      "hbm_used_bytes": 33526411264,
+      "hbm_growth_bytes": 33346920448
+    }
+  },
+  {
+    "rank": 2,
+    "audit_sha256": "e00c3e55404a16b53347c20f52fed707c4599cd21ca08d511ec99bea05c98522",
+    "device_bytes": 12408118336,
+    "frozen": true,
+    "workspace_planned": true,
+    "workspace_bytes": 130916352,
+    "workspace_growth_allocations": 0,
+    "graph": [
+      {
+        "name": "token_decode",
+        "replays": 214
+      }
+    ],
+    "retained_step_count": 30,
+    "steps_with_allocations": 0,
+    "steps_with_internal_fences": 0,
+    "hbm": {
+      "rank": 2,
+      "hbm_used_bytes": 33787514880,
+      "hbm_growth_bytes": 33355096064
+    }
+  },
+  {
+    "rank": 3,
+    "audit_sha256": "e00c3e55404a16b53347c20f52fed707c4599cd21ca08d511ec99bea05c98522",
+    "device_bytes": 12408118336,
+    "frozen": true,
+    "workspace_planned": true,
+    "workspace_bytes": 130916352,
+    "workspace_growth_allocations": 0,
+    "graph": [
+      {
+        "name": "token_decode",
+        "replays": 214
+      }
+    ],
+    "retained_step_count": 30,
+    "steps_with_allocations": 0,
+    "steps_with_internal_fences": 0,
+    "hbm": {
+      "rank": 3,
+      "hbm_used_bytes": 33528823808,
+      "hbm_growth_bytes": 33346846720
+    }
+  },
+  {
+    "rank": 4,
+    "audit_sha256": "e00c3e55404a16b53347c20f52fed707c4599cd21ca08d511ec99bea05c98522",
+    "device_bytes": 12408118336,
+    "frozen": true,
+    "workspace_planned": true,
+    "workspace_bytes": 130916352,
+    "workspace_growth_allocations": 0,
+    "graph": [
+      {
+        "name": "token_decode",
+        "replays": 214
+      }
+    ],
+    "retained_step_count": 30,
+    "steps_with_allocations": 0,
+    "steps_with_internal_fences": 0,
+    "hbm": {
+      "rank": 4,
+      "hbm_used_bytes": 33797054464,
+      "hbm_growth_bytes": 33351770112
+    }
+  },
+  {
+    "rank": 5,
+    "audit_sha256": "e00c3e55404a16b53347c20f52fed707c4599cd21ca08d511ec99bea05c98522",
+    "device_bytes": 12408118336,
+    "frozen": true,
+    "workspace_planned": true,
+    "workspace_bytes": 130916352,
+    "workspace_growth_allocations": 0,
+    "graph": [
+      {
+        "name": "token_decode",
+        "replays": 214
+      }
+    ],
+    "retained_step_count": 30,
+    "steps_with_allocations": 0,
+    "steps_with_internal_fences": 0,
+    "hbm": {
+      "rank": 5,
+      "hbm_used_bytes": 33514356736,
+      "hbm_growth_bytes": 33344856064
+    }
+  },
+  {
+    "rank": 6,
+    "audit_sha256": "e00c3e55404a16b53347c20f52fed707c4599cd21ca08d511ec99bea05c98522",
+    "device_bytes": 12408118336,
+    "frozen": true,
+    "workspace_planned": true,
+    "workspace_bytes": 130916352,
+    "workspace_growth_allocations": 0,
+    "graph": [
+      {
+        "name": "token_decode",
+        "replays": 214
+      }
+    ],
+    "retained_step_count": 30,
+    "steps_with_allocations": 0,
+    "steps_with_internal_fences": 0,
+    "hbm": {
+      "rank": 6,
+      "hbm_used_bytes": 33781215232,
+      "hbm_growth_bytes": 33355337728
+    }
+  },
+  {
+    "rank": 7,
+    "audit_sha256": "e00c3e55404a16b53347c20f52fed707c4599cd21ca08d511ec99bea05c98522",
+    "device_bytes": 12408118336,
+    "frozen": true,
+    "workspace_planned": true,
+    "workspace_bytes": 130916352,
+    "workspace_growth_allocations": 0,
+    "graph": [
+      {
+        "name": "token_decode",
+        "replays": 214
+      }
+    ],
+    "retained_step_count": 30,
+    "steps_with_allocations": 0,
+    "steps_with_internal_fences": 0,
+    "hbm": {
+      "rank": 7,
+      "hbm_used_bytes": 33525534720,
+      "hbm_growth_bytes": 33346809856
+    }
+  }
+]

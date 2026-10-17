@@ -7,7 +7,7 @@
 namespace {
 thread_local std::string last_error;
 std::atomic<bool> owned{false};
-enum class Command { Reset, Token, Stop };
+enum class Command { Reset, Token, BindPages };
 struct Engine {
   std::string bundle, checkpoint;
   inferfabric::execution::Plan program;
@@ -22,6 +22,8 @@ struct Engine {
   uint32_t input = 0, position = 0, sample = 0, output = 0;
   uint32_t next_position = 0;
   uint32_t vocabulary = 0;
+  std::string binding_component;
+  std::vector<int32_t> binding_pages;
   bool preparation;
   bool stopping = false, acl_initialized = false;
   std::string failure;
@@ -104,6 +106,8 @@ struct Engine {
           }
           uint32_t next = 0;
           if (cmd == Command::Reset) decoder.reset_request();
+          else if (cmd == Command::BindPages && rank == token)
+            decoder.bind_cache_pages(binding_component, binding_pages);
           else if (cmd == Command::Token) {
             auto logits = decoder.token(int(token), int(pos), true);
             if (want) next = uint32_t(decoder.emit(logits, int(pos), false));
@@ -184,6 +188,16 @@ extern "C" int inferfabric_program_open(const char *bundle, const char *checkpoi
 }
 extern "C" int inferfabric_program_reset(void *p) {
   return call([&] { auto &e = engine(p); e.submit(Command::Reset); e.next_position = 0; });
+}
+extern "C" int inferfabric_program_bind_pages(void *p, uint32_t rank, const char *component, const int32_t *pages, uint32_t count) {
+  return call([&] {
+    auto &e=engine(p);
+    if (e.next_position || rank>=e.loads.size() || !component || !pages || !count || count>32)
+      throw std::runtime_error("invalid page binding arguments");
+    e.binding_component=component;
+    e.binding_pages.assign(pages,pages+count);
+    e.submit(Command::BindPages,rank);
+  });
 }
 extern "C" int inferfabric_program_info(void *p, uint32_t *context, uint32_t *vocabulary, uint32_t *eos) {
   return call([&] { auto &e = engine(p); if (!context || !vocabulary || !eos) throw std::runtime_error("null info output");

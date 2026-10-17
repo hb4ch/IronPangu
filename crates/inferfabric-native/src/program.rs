@@ -13,6 +13,7 @@ type Open = unsafe extern "C" fn(*const c_char, *const c_char, u32, *mut *mut c_
 type Close = unsafe extern "C" fn(*mut c_void) -> i32;
 type Token = unsafe extern "C" fn(*mut c_void, u32, u32, u32, *mut u32) -> i32;
 type Error = unsafe extern "C" fn() -> *const c_char;
+type BindPages = unsafe extern "C" fn(*mut c_void, u32, *const c_char, *const i32, u32) -> i32;
 pub fn manifest(bundle: &Path) -> Result<Manifest> {
     let m: Manifest = serde_json::from_slice(&std::fs::read(bundle.join("serving.json"))?)
         .map_err(|e| invalid(e.to_string()))?;
@@ -41,6 +42,7 @@ pub struct Engine {
     reset_fn: Close,
     token_fn: Token,
     error: Error,
+    bind_pages_fn: Option<BindPages>,
     _thread: PhantomData<Rc<()>>,
 }
 impl Engine {
@@ -81,6 +83,7 @@ impl Engine {
                 reset_fn: symbol!("inferfabric_program_reset", Close),
                 token_fn: symbol!("inferfabric_program_token", Token),
                 error: symbol!("inferfabric_program_error", Error),
+                bind_pages_fn: lib.get::<BindPages>(b"inferfabric_program_bind_pages\0").ok().map(|f| *f),
                 ptr: std::ptr::null_mut(),
                 _thread: PhantomData,
                 _library: lib,
@@ -115,6 +118,14 @@ impl Engine {
     }
     pub fn reset(&mut self) -> Result<()> {
         self.check(unsafe { (self.reset_fn)(self.ptr) })
+    }
+    /// Update device page metadata after reset; no cache content or graph address moves.
+    pub fn bind_pages(&mut self, rank: u32, component: &str, pages: &[u32]) -> Result<()> {
+        let bind = self.bind_pages_fn.ok_or_else(|| invalid("backend does not support page bindings"))?;
+        let component = CString::new(component).map_err(|_| invalid("component contains NUL"))?;
+        let pages = pages.iter().map(|&p| i32::try_from(p).map_err(|_| invalid("page ID overflow"))).collect::<Result<Vec<_>>>()?;
+        let count = u32::try_from(pages.len()).map_err(|_| invalid("page table length overflow"))?;
+        self.check(unsafe { bind(self.ptr, rank, component.as_ptr(), pages.as_ptr(), count) })
     }
     pub fn token(&mut self, token: u32, position: u32, sample: bool) -> Result<Option<u32>> {
         let mut output = 0;

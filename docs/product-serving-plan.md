@@ -268,3 +268,19 @@ hardware paging readiness: the persistent C ABI still uses its serial fixed-stat
 bindings. Next connect these resources to preallocated native state and stable
 device tables, then qualify multi-sequence decode. Borrowing certifies ownership
 only; numerical checkpoint completeness and immutability remain separate S6 gates.
+
+### Implementation record: S2 native cache page binding
+
+The persistent ABI and Rust adapter now accept explicit physical instruction page
+bindings after reset. Native BF16/C8 append positions and attention reads share
+the same per-component/rank mapping; graph storage addresses remain fixed. Viewer
+recipes expose the block table and physical append-position metadata. Full 92B
+NPU execution with independently shuffled tables matches all 99 short-fixture
+tokens, with zero activation host transfers and workspace growth. See
+[evidence and limitations](validation/2026-10-17-page-bindings/README.md).
+
+This still uses one request's storage. Remaining S2 work includes native shared
+pool allocation, multiple recurrent slots, batch metadata staging, longer page
+boundary probes and true multi-sequence kernels. Per-component uploads increased
+short-prompt TPOT to 20.16–20.50 ms; consolidate those into stable batch metadata
+buffers before performance acceptance. No S3–S7 completion is implied.

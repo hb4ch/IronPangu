@@ -11,6 +11,7 @@ import json
 import os
 from pathlib import Path
 import statistics
+import random
 import subprocess
 
 
@@ -19,6 +20,7 @@ def main():
     for name in ('binary', 'plan', 'checkpoint', 'cases', 'output'):
         p.add_argument('--' + name, required=True, type=Path)
     p.add_argument('--prepare', action='store_true')
+    p.add_argument('--permuted-pages', action='store_true', help='qualify rank/component-specific noncontiguous device cache bindings')
     args = p.parse_args()
     args.output.mkdir(parents=True, exist_ok=False)
     cases = json.loads(args.cases.read_text()) * 3
@@ -30,6 +32,28 @@ def main():
     env.pop('INFERFABRIC_PREPARE_ARENA', None)
     if args.prepare:
         env['INFERFABRIC_PREPARE_ARENA'] = '1'
+    if args.permuted_pages:
+        manifest = json.loads((args.plan / 'serving.json').read_text())
+        executable = json.loads((args.plan / 'device-program.json').read_text())['instructions']
+        randomizer = random.Random(1729)
+        lines = []
+        for state in manifest['states']:
+            storage = state['storage']
+            if storage['kind'] != 'pages':
+                continue
+            lowered = [i for i in executable if i['logical_node'] == state['logical_node'] and i['op'] in ('cache_append', 'cache_norm_rope_append', 'cache_c8_norm_rope_append')]
+            if len(lowered) != 1:
+                raise RuntimeError('state does not map to exactly one executable cache binding')
+            component = lowered[0]['name']
+            for rank in state['ranks']:
+                pages = list(range(state['capacity_tokens'] // storage['page_tokens']))
+                randomizer.shuffle(pages)
+                lines.append(f"{rank} {component} " + ' '.join(map(str, pages)) + '\n')
+        binding_file = args.output / 'page-bindings.txt'
+        binding_file.write_text(''.join(lines))
+        env['INFERFABRIC_PAGE_BINDINGS'] = str(binding_file.resolve())
+    else:
+        env.pop('INFERFABRIC_PAGE_BINDINGS', None)
     with (args.output / 'stderr.log').open('w') as err:
         result = subprocess.run([str(args.binary.resolve()), str(args.plan), str(args.checkpoint), str(requests)],
                                 env=env, stdout=subprocess.PIPE, stderr=err, text=True, timeout=1800)
@@ -58,6 +82,7 @@ def main():
     report = dict(format='inferfabric.persistent-program-qualification.v1', requests=len(cases),
                   output_tokens=expected_total, exact_fixture_tokens=True,
                   fixture_sha256=hashlib.sha256(args.cases.read_bytes()).hexdigest(),
+                  permuted_pages=args.permuted_pages,
                   scope='one loaded TP8/EP8 group, serial token graph; no packed prefill or long-context claim',
                   measurements=measurements)
     (args.output / 'results.json').write_text(json.dumps(report, indent=2) + '\n')

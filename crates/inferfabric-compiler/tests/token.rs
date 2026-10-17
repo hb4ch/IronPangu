@@ -243,4 +243,16 @@ fn serving_state_is_derived_from_expanded_operators() {
     assert_eq!(states.iter().filter(|s| matches!(s.storage, Storage::Pages { row_bytes: 656, page_tokens: 32, .. })).count(), 16);
     assert_eq!(states.iter().filter(|s| matches!(s.storage, Storage::Pages { row_bytes: 1152, page_tokens: 16, .. })).count(), 30);
     assert!(states.iter().all(|s| !s.checkpoint_supported && s.ranks.len() == 8));
+    let program = inferfabric_compiler::token_program::lower(&graph, None).unwrap();
+    let recipes = inferfabric_compiler::token_program::recipes(&program, &graph);
+    for state in states.iter().filter(|s| matches!(s.storage, Storage::Pages { .. })) {
+        let lowered: Vec<_> = program.instructions.iter().enumerate().filter(|(_, i)|
+            i.logical_node == state.logical_node && matches!(i.op.as_str(), "cache_append" | "cache_norm_rope_append" | "cache_c8_norm_rope_append")).collect();
+        assert_eq!(lowered.len(), 1, "cache state must have one executable binding");
+        let fields = recipes[lowered[0].0]["value_fields"].as_array().unwrap();
+        assert!(fields.iter().any(|f| f["name"] == "device_block_table"));
+        let append = fields.iter().find(|f| f["name"] == "physical_append_position").unwrap();
+        let Storage::Pages { page_tokens, .. } = state.storage else { unreachable!() };
+        assert_eq!(append["page_tokens"], page_tokens);
+    }
 }

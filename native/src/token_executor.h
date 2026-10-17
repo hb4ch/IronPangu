@@ -610,7 +610,7 @@ struct Decoder {
     aclOpExecutor *executor = nullptr;
     checked(prepared::query("aclnnInplaceIndexCopy", false,
                             aclnnInplaceIndexCopyGetWorkspaceSize, cache.t, 0,
-                            position_index->tensor, source.t, &bytes,
+                            state.append_index.tensor, source.t, &bytes,
                             &executor),
             "cache device index prepare");
     run(aclnnInplaceIndexCopy, bytes, executor);
@@ -644,7 +644,7 @@ struct Decoder {
     checked(prepared::query("aclnnAiInfraKvRmsNormRopeCache", false,
                             aclnnAiInfraKvRmsNormRopeCacheGetWorkspaceSize,
                             kv.t, norm_weight.t, rotary_cos_bf16->tensor,
-                            rotary_sin_bf16->tensor, cache_position->tensor,
+                            rotary_sin_bf16->tensor, ptr->append_position.tensor,
                             nullptr, ptr->key.tensor, nullptr, nullptr,
                             nullptr, nullptr, nullptr, 1e-5, cache_mode,
                             rotary_mode, quant_mode, true, rope_out.tensor, latent_out.tensor,
@@ -1145,6 +1145,12 @@ struct Decoder {
     if (pos < 0 || pos >= int(program.context) || id < 0 || uint32_t(id) >= vocabulary())
       throw std::runtime_error("token/context bound");
     current_position = pos;
+    for (auto &entry : attention_states) {
+      auto &state = *entry.second;
+      auto physical = state.page_binding.append(uint32_t(pos));
+      resident::control_upload(state.append_position, std::vector<int64_t>{int64_t(physical)});
+      resident::control_upload(state.append_index, std::vector<int32_t>{int32_t(physical)});
+    }
     resident::control_upload(*token_index, std::vector<int32_t>{id});
     resident::control_upload(*position_index, std::vector<int32_t>{pos});
     resident::control_upload(*cache_position, std::vector<int64_t>{pos});
@@ -1197,6 +1203,20 @@ struct Decoder {
     execution.complete();
     current_position = -1;
     execution.clear_step_history();
+  }
+  void bind_cache_pages(const std::string &name, const std::vector<int32_t> &pages) {
+    if (current_position != -1) throw std::runtime_error("page binding requires a reset request");
+    auto found = attention_states.find(name);
+    if (found == attention_states.end()) throw std::runtime_error("unknown cache state binding");
+    auto &state = *found->second;
+    if (state.cache_bits != 16 && !state.packed_c8)
+      throw std::runtime_error("row-quantized cache paging is not implemented");
+    if (pages.size()>32) throw std::runtime_error("device block table capacity");
+    state.page_binding.bind(pages);
+    std::vector<int32_t> table(32,0);
+    std::copy(pages.begin(),pages.end(),table.begin());
+    resident::control_upload(state.table,table);
+    // No graph pointer changes: only declared control metadata is updated.
   }
   // Runtime dispatch is defined separately from kernel implementations.
 #include "token_dispatch.inc"

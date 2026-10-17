@@ -1,5 +1,7 @@
 cmake_minimum_required(VERSION 3.16)
 project(inferfabric_acl LANGUAGES CXX)
+add_executable(page_binding_test probes/page_binding_test.cpp)
+target_compile_options(page_binding_test PRIVATE -Wall -Wextra -Werror -UNDEBUG)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CANN_ROOT "/usr/local/Ascend/cann" CACHE PATH "Qualified CANN installation")

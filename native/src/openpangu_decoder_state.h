@@ -1,5 +1,6 @@
 #pragma once
 #include "openpangu_ops.h"
+#include "page_binding.h"
 namespace pangu {
 struct MomeState {
   openpangu::DeviceTensor input, weight, state, starts, slots, computed, out;
@@ -18,18 +19,24 @@ struct AttentionState {
       sinkvalue, out;
   unsigned cache_bits, cache_capacity;
   bool packed_c8;
+  inferfabric::state::PageBinding page_binding;
+  openpangu::DeviceTensor append_position, append_index;
   std::unique_ptr<openpangu::DeviceTensor> scales;
   explicit AttentionState(unsigned bits=16, unsigned capacity=512, bool packed=false)
       : query({1, 6, 576}, ACL_BF16, 2), key(packed?std::vector<int64_t>{capacity/32,32,1,656}:(bits==16?std::vector<int64_t>{32,16,1,576}:std::vector<int64_t>{int64_t(capacity)*576*bits/8}), packed?ACL_INT8:(bits==16?ACL_BF16:ACL_UINT8), bits==16?2:1),
         value({1, 16, 1, 512}, ACL_BF16, 2), indices({1, 1, 512}, ACL_INT32, 4),
         table({1, 32}, ACL_INT32, 4), qlen({1}, ACL_INT32, 4),
         klen({1}, ACL_INT32, 4), sink({128, 1, 576}, ACL_BF16, 2),
-        sinkvalue({128, 1, 512}, ACL_BF16, 2), out({1, 6, 512}, ACL_BF16, 2), cache_bits(bits), cache_capacity(bits==16?512:capacity), packed_c8(packed) {
+        sinkvalue({128, 1, 512}, ACL_BF16, 2), out({1, 6, 512}, ACL_BF16, 2), cache_bits(bits), cache_capacity(bits==16?512:capacity), packed_c8(packed),
+        page_binding(packed?32:16,bits==16?512:capacity,(bits==16?512:capacity)/(packed?32:16)),
+        append_position({1},ACL_INT64,8), append_index({1},ACL_INT32,4) {
     if(bits!=16 && !packed)scales=std::make_unique<openpangu::DeviceTensor>(std::vector<int64_t>{capacity},ACL_FLOAT,4);
     std::vector<int32_t> blocks(32);
     for (int i = 0; i < 32; ++i)
       blocks[i] = i;
     table.upload(blocks);
+    append_position.upload(std::vector<int64_t>{0});
+    append_index.upload(std::vector<int32_t>{0});
     qlen.upload(std::vector<int32_t>{1});
     value.upload(std::vector<uint16_t>(16 * 512, 0));
     sinkvalue.upload(std::vector<uint16_t>(128 * 512, 0));

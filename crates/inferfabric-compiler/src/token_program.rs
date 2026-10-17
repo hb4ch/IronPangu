@@ -815,7 +815,7 @@ pub fn recipes(p: &Program, graph: &Graph) -> Vec<serde_json::Value> {
             "mome_inplace" => "Once before replay: transpose convolution weights and initialize recurrent state and control indices.",
             _ => "No parameter/state copy recipe in this instruction.",
         };
-        let fields:Vec<serde_json::Value>=match i.kind {
+        let mut fields:Vec<serde_json::Value>=match i.kind {
             0=>vec![serde_json::json!({"name":"value","dtype":i.dtype,"shape":[i.width]})],
             2=>vec![serde_json::json!({"name":"expert_ids","dtype":"int32","shape":[8]}),serde_json::json!({"name":"scores","dtype":"f32","shape":[8]})],
             3=>vec![serde_json::json!({"name":"packed_rows","dtype":"bf16","shape":[8,i.width]}),serde_json::json!({"name":"groups","dtype":"int64","shape":[32]}),serde_json::json!({"name":"inverse_indices","dtype":"int32","shape":[8]})],
@@ -827,6 +827,10 @@ pub fn recipes(p: &Program, graph: &Graph) -> Vec<serde_json::Value> {
             7=>vec![serde_json::json!({"name":"metadata_effect","dtype":"int32","shape":[1024]})],
             _=>vec![],
         };
+        if matches!(i.op.as_str(), "cache_c8_norm_rope_append" | "cache_norm_rope_append" | "cache_append") {
+            fields.push(serde_json::json!({"name":"device_block_table","dtype":"int32","shape":[1,32],"role":"control_input","binding":"component/rank physical page IDs; stable device address"}));
+            fields.push(serde_json::json!({"name":"physical_append_position","dtype":if i.op=="cache_append" {"int32"} else {"int64"},"shape":[1],"role":"control_input","binding":"block_table[logical_position / page_tokens] * page_tokens + logical_position % page_tokens","page_tokens":if i.op=="cache_c8_norm_rope_append" {32} else {16}}));
+        }
         serde_json::json!({"preparation":preparation,"value_fields":fields,"apis":apis,"internal":internal,"materialization":materialization,"placement":placement,"communication":communication,
             "granularity":if i.op=="sink_normalize" {"initialization recipe"} else {"instruction"}})
     }).collect()
