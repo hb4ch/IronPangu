@@ -191,7 +191,8 @@ V execute_token() {
         // TND causal alignment uses the final KV length and total query count.
         // All chunk keys have already been appended on this stream.
         result=SelectedIndices{state.select_quantized(q.values,q.scales,tensor(1),
-            prefix(*packed_length,{1},(active_tokens-1)*sizeof(int32_t)),active_tokens)};
+            sequence_lengths(false),active_tokens,batch_sequences?sequence_ends(false):nullptr,
+            batch_sequences?sequence_table(std::get<IndexCacheRef>(input(2)).name,state.table):nullptr)};
       } else result=SelectedIndices{row_values(n.width,[&](uint32_t row){
         return state.select_indices(row_tensor(0,row),row_tensor(1,row),control_row(*packed_length));
       })};

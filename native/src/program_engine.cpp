@@ -8,7 +8,7 @@
 namespace {
 thread_local std::string last_error;
 std::atomic<bool> owned{false};
-enum class Command { Reset, Token, Prefill, BindPages, SelectResident, ResetResident, PlanStateCopy, ExecuteStateCopy };
+enum class Command { Reset, Token, Prefill, Batch, BindPages, SelectResident, ResetResident, PlanStateCopy, ExecuteStateCopy };
 struct Engine {
   std::string bundle, checkpoint;
   inferfabric::execution::Plan program;
@@ -24,6 +24,8 @@ struct Engine {
   uint32_t active_resident = 0;
   std::vector<uint32_t> next_positions;
   std::vector<uint32_t> chunk_tokens;
+  std::vector<inferfabric::execution::SequenceSlice> batch_members;
+  std::vector<uint32_t> batch_sample_rows,batch_outputs;
   uint32_t vocabulary = 0;
   std::string binding_component;
   std::vector<int32_t> binding_pages;
@@ -148,6 +150,7 @@ struct Engine {
             seen = generation; cmd = command; token = input; pos = position; want = sample;
           }
           uint32_t next = 0;
+          std::vector<uint32_t> next_batch;
           if (cmd == Command::Reset) decoder.reset_request();
           else if (cmd == Command::SelectResident) decoder.select_resident(token,int(pos)-1);
           else if (cmd == Command::ResetResident) decoder.reset_resident(token);
@@ -163,10 +166,13 @@ struct Engine {
             auto logits=decoder.prefill(chunk_tokens,int(pos),!program.uncaptured_prefill);
             if(want)next=uint32_t(decoder.emit(logits,int(pos+chunk_tokens.size()-1),output_diagnostics));
             else decoder.execution.complete();
+          } else if(cmd == Command::Batch) {
+            auto logits=decoder.sequence_batch(chunk_tokens,batch_members);
+            next_batch=decoder.emit_rows(logits,batch_sample_rows);
           }
           {
             std::lock_guard<std::mutex> lock(mutex);
-            if (rank == 0) output = next;
+            if (rank == 0) {output = next;if(cmd==Command::Batch)batch_outputs=std::move(next_batch);}
             ++finished;
             changed.notify_all();
           }
@@ -346,5 +352,32 @@ extern "C" int inferfabric_program_prefill(void *p,const uint32_t *tokens,uint32
     e.chunk_tokens.assign(tokens,tokens+count);
     *output=e.submit(Command::Prefill,0,position,sample);
     e.next_positions[e.active_resident]+=count;
+  });
+}
+extern "C" int inferfabric_program_batch(void *p,const IFProgramSequenceV1 *sequences,uint32_t sequence_count,
+    const uint32_t *tokens,uint32_t token_count,uint32_t *outputs,uint32_t output_capacity,uint32_t *output_count) {
+  return call([&]{
+    auto &e=engine(p);
+    if(!e.preparation)throw std::runtime_error("multi-sequence arena qualification pending; preparation mode required");
+    if(!sequences || !tokens || !output_count || !sequence_count || sequence_count>e.program.resident_sequences ||
+       !token_count || token_count>e.program.prefill_tokens || !e.program.uncaptured_prefill)
+      throw std::runtime_error("invalid sequence batch arguments");
+    std::vector<inferfabric::execution::SequenceSlice> members;
+    for(uint32_t i=0;i<sequence_count;++i) {
+      const auto &s=sequences[i];
+      if(s.sample>1 || s.resident>=e.next_positions.size() || s.position!=e.next_positions[s.resident])
+        throw std::runtime_error("invalid sequence continuation");
+      members.push_back({s.resident,s.position,s.token_count,s.sample!=0});
+    }
+    auto batch=inferfabric::execution::SequenceBatch::make(members,e.program.resident_sequences,e.program.prefill_tokens,e.program.context);
+    if(batch.positions.size()!=token_count || batch.sample_rows.size()>output_capacity || (!outputs && !batch.sample_rows.empty()))
+      throw std::runtime_error("batch token/output extent");
+    for(uint32_t i=0;i<token_count;++i)if(tokens[i]>=e.vocabulary)throw std::runtime_error("invalid batch token");
+    e.batch_members=std::move(members);e.batch_sample_rows=batch.sample_rows;e.chunk_tokens.assign(tokens,tokens+token_count);
+    e.submit(Command::Batch);
+    if(e.batch_outputs.size()!=batch.sample_rows.size())throw std::runtime_error("batch sampler output count");
+    for(size_t i=0;i<e.batch_outputs.size();++i)outputs[i]=e.batch_outputs[i];
+    for(const auto &s:e.batch_members)e.next_positions[s.resident]+=s.tokens;
+    *output_count=e.batch_outputs.size();
   });
 }

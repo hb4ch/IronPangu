@@ -1,0 +1,18 @@
+{
+  "passed": true,
+  "requests": 21,
+  "exact_tokens_through_first_eos": 159,
+  "multi_sequence_output_records": 156,
+  "max_batch_tokens": 4089,
+  "activation_host_transfers": [
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0
+  ],
+  "scope": "prepared native TP8/EP8 packed multi-sequence forward, serial frontend not involved"
+}

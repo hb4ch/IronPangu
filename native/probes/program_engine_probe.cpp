@@ -173,6 +173,35 @@ int main(int argc, char **argv) {
         live[slot].request=requests.size();
         if(admitted<requests.size())admit(slot);
       }
+      if(std::getenv("INFERFABRIC_SEQUENCE_BATCH"))while(completed<requests.size()) {
+        std::vector<IFProgramSequenceV1> members;std::vector<uint32_t> tokens;
+        for(unsigned slot=0;slot<residents && tokens.size()<chunk;++slot) {
+          auto &r=live[slot];if(r.request>=requests.size())continue;
+          const auto &request=requests[r.request];
+          bool prefill=r.position<request.prompt.size();
+          uint32_t count=prefill?std::min(size_t(chunk)-tokens.size(),request.prompt.size()-r.position):1;
+          bool sample=r.position+count>=request.prompt.size();
+          members.push_back({slot,r.position,count,uint32_t(sample)});
+          if(prefill)tokens.insert(tokens.end(),request.prompt.begin()+r.position,request.prompt.begin()+r.position+count);
+          else tokens.push_back(r.next);
+        }
+        std::vector<uint32_t> outputs(members.size());uint32_t count=0;
+        check(inferfabric_program_batch(engine,members.data(),members.size(),tokens.data(),tokens.size(),outputs.data(),outputs.size(),&count));
+        size_t sampled=0;std::vector<unsigned> retired;
+        for(const auto &member:members) {
+          auto &r=live[member.resident];r.position+=member.token_count;
+          if(!member.sample)continue;
+          if(sampled>=count)throw std::runtime_error("batch missing sample");
+          r.next=outputs[sampled++];auto now=std::chrono::steady_clock::now();
+          auto us=std::chrono::duration_cast<std::chrono::microseconds>(now-r.previous).count();
+          std::cout<<"{\"request\":"<<r.request<<",\"resident\":"<<member.resident<<",\"step\":"<<r.generated
+                   <<",\"token\":"<<r.next<<",\"batch_sequences\":"<<members.size()<<",\"batch_tokens\":"<<tokens.size()<<",\"elapsed_us\":"<<us<<"}"<<std::endl;
+          r.previous=now;
+          if(++r.generated==requests[r.request].steps){++completed;r.request=requests.size();retired.push_back(member.resident);}
+        }
+        if(sampled!=count)throw std::runtime_error("batch unexpected sample");
+        for(auto slot:retired)if(admitted<requests.size())admit(slot);
+      }
       while(completed<requests.size())for(unsigned slot=0;slot<residents;++slot) {
         auto &r=live[slot];
         if(r.request>=requests.size())continue;

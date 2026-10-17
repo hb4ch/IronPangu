@@ -42,6 +42,14 @@ int inferfabric_program_bind_state(void *engine, uint32_t rank, uint32_t logical
                                   const int32_t *pages, uint32_t count);
 int inferfabric_program_prefill(void *engine, const uint32_t *tokens, uint32_t count,
                                uint32_t position, uint32_t sample, uint32_t *output);
+// Packed sequence extension. Tokens concatenate in sequence order; one output
+// per sample=1 member, also in sequence order. No activation crosses this ABI.
+typedef struct IFProgramSequenceV1 {
+  uint32_t resident, position, token_count, sample;
+} IFProgramSequenceV1;
+int inferfabric_program_batch(void *engine,const IFProgramSequenceV1 *sequences,uint32_t sequence_count,
+                             const uint32_t *tokens,uint32_t token_count,
+                             uint32_t *outputs,uint32_t output_capacity,uint32_t *output_count);
 int inferfabric_program_close(void *engine);
 const char *inferfabric_program_error(void);
 #ifdef __cplusplus

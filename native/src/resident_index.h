@@ -90,7 +90,8 @@ struct IndexState {
     };
     append(keys,key,128,ACL_INT8);append(*scales,scale,1,ACL_FLOAT16);
   }
-  Tensor select_quantized(const Tensor &query,const Tensor &query_scale,const Tensor &weights,aclTensor *length,uint32_t rows){
+  Tensor select_quantized(const Tensor &query,const Tensor &query_scale,const Tensor &weights,aclTensor *length,uint32_t rows,
+                          aclTensor *batch_ends=nullptr,aclTensor *batch_table=nullptr){
     if(!rows || rows>query_length.bytes/sizeof(int32_t) || !quantized || query.dtype()!=ACL_INT8 || query.size()!=size_t(rows)*3072 || query_scale.dtype()!=ACL_FLOAT16 || query_scale.size()!=size_t(rows)*24 || weights.dtype()!=ACL_FLOAT16 || weights.size()!=size_t(rows)*24)
       throw std::runtime_error("quantized sparse index operands");
     auto &context=*prepared::active;
@@ -98,7 +99,8 @@ struct IndexState {
     quant_index(
       context.descriptor(query.data(),{rows,24,128},ACL_INT8),keys.tensor,
       context.descriptor(weights.data(),{rows,24},ACL_FLOAT16),context.descriptor(query_scale.data(),{rows,24},ACL_FLOAT16),
-      scales->tensor,context.descriptor(static_cast<int32_t *>(query_length.data)+rows-1,{1},ACL_INT32),length,table.tensor,out.tensor);
+      scales->tensor,batch_ends?batch_ends:context.descriptor(static_cast<int32_t *>(query_length.data)+rows-1,{1},ACL_INT32),
+      length,batch_table?batch_table:table.tensor,out.tensor);
     return Tensor::alias(out,ACL_INT32);
   }
 };

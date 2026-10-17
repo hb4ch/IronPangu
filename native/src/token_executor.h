@@ -125,6 +125,10 @@ struct Decoder {
   std::set<uint32_t> metadata_enqueued;
   std::unique_ptr<DeviceTensor> packed_indices, packed_length, packed_query_lengths;
   std::unique_ptr<DeviceTensor> mome_query_starts;
+  uint32_t batch_sequences=0;
+  std::unique_ptr<DeviceTensor> batch_starts,batch_slots,batch_positions,batch_ends32,batch_lengths32,
+      batch_ends64,batch_lengths64;
+  std::map<std::string,std::unique_ptr<DeviceTensor>> batch_tables;
   int rank;
   int current_position = -1;
   std::map<std::string, std::unique_ptr<openpangu::Router>> routers;
@@ -139,6 +143,20 @@ struct Decoder {
   std::unique_ptr<DeviceTensor> resident_index;
   uint32_t active_resident = 0;
   uint32_t active_tokens = 1, active_row = 0;
+  aclTensor *sequence_ends(bool wide) {
+    if(batch_sequences)return prefix(wide?*batch_ends64:*batch_ends32,{batch_sequences});
+    return wide?prefix(*query_length64,{1},(active_tokens-1)*sizeof(int64_t)):
+      prefix(*packed_query_lengths,{1},(active_tokens-1)*sizeof(int32_t));
+  }
+  aclTensor *sequence_lengths(bool wide) {
+    if(batch_sequences)return prefix(wide?*batch_lengths64:*batch_lengths32,{batch_sequences});
+    return wide?prefix(*sequence_length64,{1},(active_tokens-1)*sizeof(int64_t)):
+      prefix(*packed_length,{1},(active_tokens-1)*sizeof(int32_t));
+  }
+  aclTensor *sequence_table(const std::string &name,DeviceTensor &single) {
+    if(!batch_sequences)return single.tensor;
+    return prefix(*batch_tables.at(name),{batch_sequences,int64_t(single.bytes/sizeof(int32_t))});
+  }
   aclTensor *prefix(DeviceTensor &x, const std::vector<int64_t> &shape, size_t offset=0) {
     size_t bytes=resident::element_bytes(x.type);
     for(auto dimension:shape) { if(dimension<=0 || size_t(dimension)>x.bytes/bytes)throw std::runtime_error("prepared prefix bounds"); bytes*=dimension; }
@@ -472,8 +490,10 @@ struct Decoder {
     if (position != current_position)
       throw std::runtime_error("position input mismatch");
     resident::causal_convolution(input_view.t,s.weight.tensor,s.state.tensor,
-        queries>1?mome_query_starts->tensor:s.starts.tensor,resident_index->tensor,
-        control_row(*position_index),sequence_scratch?sequence_scratch->tensor:s.out.tensor,queries);
+        batch_sequences?prefix(*batch_starts,{batch_sequences+1}):(queries>1?mome_query_starts->tensor:s.starts.tensor),
+        batch_sequences?prefix(*batch_slots,{batch_sequences}):resident_index->tensor,
+        batch_sequences?prefix(*batch_positions,{batch_sequences}):control_row(*position_index),
+        sequence_scratch?sequence_scratch->tensor:s.out.tensor,queries);
     return inplace ? x : result(s.input);
   }
   struct HC {
@@ -812,9 +832,8 @@ struct Decoder {
     auto *sink_values=weight_views.get(state.sink.data,128*576,{128,1,512},{576,576,1},ACL_BF16);
     if(selected && (selected->dtype()!=ACL_INT32 || selected->size()!=size_t(active_tokens)*2048))throw std::runtime_error("selected index storage");
     auto *indices=selected?execution.descriptor(selected->data(),{active_tokens,1,2048},ACL_INT32):prefix(*packed_indices,{active_tokens,1,512});
-    resident::packed_attention(q.t,state.key.tensor,indices,state.table.tensor,
-        prefix(*packed_query_lengths,{1},(active_tokens-1)*sizeof(int32_t)),
-        prefix(*packed_length,{1},(active_tokens-1)*sizeof(int32_t)),state.sink.tensor,sink_values,out.tensor);
+    resident::packed_attention(q.t,state.key.tensor,indices,sequence_table(name,state.table),
+        sequence_ends(false),sequence_lengths(false),state.sink.tensor,sink_values,out.tensor);
     return result(out);
   }
   void prepare_attention_metadata(uint32_t window,bool cleared = false) {
@@ -822,8 +841,7 @@ struct Decoder {
     auto &metadata=*attention_metadata.at(window);
     if(!cleared) execution.zero(metadata.data, metadata.bytes);
     resident::window_metadata(
-        prefix(*query_length64,{1},(active_tokens-1)*sizeof(int64_t)),
-        prefix(*sequence_length64,{1},(active_tokens-1)*sizeof(int64_t)),
+        sequence_ends(true),sequence_lengths(true),
         window,cube_cores,vector_cores,metadata.tensor);
     metadata_enqueued.insert(window);
   }
@@ -869,9 +887,8 @@ struct Decoder {
         {128, 1, 64}, {576, 576, 1}, ACL_BF16);
     DeviceTensor output({active_tokens, 6, 512}, ACL_BF16,2);
     resident::window_attention(q,keys.value,values.value,attention_mask->tensor,
-        prefix(*query_length64,{1},(active_tokens-1)*sizeof(int64_t)),
-        prefix(*sequence_length64,{1},(active_tokens-1)*sizeof(int64_t)),
-        state.table.tensor,qr,rope_cache.get(),attention_metadata.at(window)->tensor,
+        sequence_ends(true),sequence_lengths(true),
+        sequence_table(state_name,state.table),qr,rope_cache.get(),attention_metadata.at(window)->tensor,
         sink,sink_rope,window,output.tensor);
     return result(output);
   }
@@ -1224,6 +1241,30 @@ struct Decoder {
     for (const auto &node : program.nodes) if (node.op == "embedding") return node.integer("vocab");
     throw std::runtime_error("missing embedding vocabulary contract");
   }
+  std::vector<uint32_t> emit_rows(const V &logits,const std::vector<uint32_t> &rows) {
+    if(rows.empty()){execution.complete();return {};}
+    V selected(rows.size(),ACL_INT64),peers(rows.size()*8,ACL_INT64);
+    for(size_t i=0;i<rows.size();++i) {
+      if(uint64_t(rows[i]+1)*vocabulary()>logits.size())throw std::runtime_error("sample row bounds");
+      auto row=cast(logits.view(size_t(rows[i])*vocabulary(),vocabulary()),ACL_FLOAT,true);
+      auto out=selected.view(i,1);uint64_t bytes=0;aclOpExecutor *executor=nullptr;
+      checked(prepared::query("batch_argmax",false,aclnnArgMaxGetWorkspaceSize,
+          row.tensor(),0,true,out.tensor(),&bytes,&executor),"batch argmax prepare");
+      run(aclnnArgMax,bytes,executor);
+    }
+    checked(HcclAllGather(selected.data(),peers.data(),rows.size(),HCCL_DATA_TYPE_INT64,comm,stream),"batch token consensus");
+    auto *host=static_cast<int64_t *>(execution.output_host(peers.bytes()));
+    {resident::TransferScope boundary(resident::TransferRole::RequestOutput);
+      checked(aclrtMemcpyAsync(host,peers.bytes(),peers.data(),peers.bytes(),ACL_MEMCPY_DEVICE_TO_HOST,stream),"batch output IDs");}
+    execution.complete();pending_kernels.clear();
+    std::vector<uint32_t> output(rows.size());
+    for(size_t i=0;i<rows.size();++i) {
+      if(host[i]<0 || host[i]>=vocabulary())throw std::runtime_error("batch output token bounds");
+      for(size_t rank=1;rank<8;++rank)if(host[rank*rows.size()+i]!=host[i])throw std::runtime_error("batch rank token disagreement");
+      output[i]=uint32_t(host[i]);
+    }
+    return output;
+  }
   aclTensor *cache_append_descriptor(const std::string &name, aclDataType dtype, uint32_t rows=1) {
     if(dtype!=ACL_INT64 && dtype!=ACL_INT32)throw std::runtime_error("cache control dtype");
     auto offset=cache_control_offsets.at(name)+active_row*16+(dtype==ACL_INT32?8:0);
@@ -1240,8 +1281,13 @@ struct Decoder {
     const auto batch=inferfabric::execution::SequenceBatch::make(
         {{active_resident,uint32_t(pos),uint32_t(count),false}},
         program.resident_sequences,program.prefill_tokens,program.context);
+    batch_sequences=0;
+    set_input_rows(tokens,batch,pos);
+  }
+  void set_input_rows(const std::vector<uint32_t> &tokens,const inferfabric::execution::SequenceBatch &batch,int pos) {
+    const auto count=tokens.size();
     active_tokens=count;active_row=0;current_position=pos;
-    if(mome_query_starts)resident::control_upload(*mome_query_starts,batch.starts);
+    if(mome_query_starts && !batch_sequences)resident::control_upload(*mome_query_starts,batch.starts);
     std::vector<int32_t> ids(program.prefill_tokens,0), positions(program.prefill_tokens,0);
     std::vector<int64_t> positions64(program.prefill_tokens,0), lengths(program.prefill_tokens,0);
     Host c(program.prefill_tokens*64,0), sn(program.prefill_tokens*64,0);
@@ -1251,9 +1297,13 @@ struct Decoder {
       positions64[row]=position;lengths[row]=batch.lengths[row];
       for(const auto &entry:cache_control_offsets) {
         auto state=attention_states.find(entry.first);
-        uint64_t physical=state==attention_states.end()?uint64_t(position):state->second->append(position);
+        uint64_t physical=uint64_t(position);
+        if(state!=attention_states.end()) {
+          const auto &s=*state->second;
+          physical=s.page_binding.append(batch.row_residents[row],s.logical_context?position%s.cache_capacity:position);
+        }
         auto index=index_states.find(entry.first);
-        if(index!=index_states.end())physical=index->second->pages.append(position);
+        if(index!=index_states.end())physical=index->second->pages.append(batch.row_residents[row],position);
         if(physical>INT32_MAX)throw std::runtime_error("physical append position overflow");
         int64_t wide=int64_t(physical);int32_t narrow=int32_t(physical);
         std::memcpy(cache_control_host.data()+entry.second+row*16,&wide,sizeof(wide));
@@ -1275,6 +1325,52 @@ struct Decoder {
   void set_token_inputs(int id,int pos) {
     if(id<0)throw std::runtime_error("negative token");
     set_chunk_inputs({uint32_t(id)},pos);
+  }
+
+  // One packed forward, not a loop over resident forwards. Caller validates
+  // continuation positions and owns completion before reclaiming any state.
+  V sequence_batch(const std::vector<uint32_t> &tokens,
+                   const std::vector<inferfabric::execution::SequenceSlice> &sequences) {
+    if(!program.uncaptured_prefill)throw std::runtime_error("sequence batch requires uncaptured packed plan");
+    auto batch=inferfabric::execution::SequenceBatch::make(sequences,
+        program.resident_sequences,program.prefill_tokens,program.context);
+    if(tokens.size()!=batch.positions.size())throw std::runtime_error("batch token extent");
+    for(auto id:tokens)if(id>=vocabulary())throw std::runtime_error("batch token vocabulary");
+    for(const auto &n:program.nodes)if(n.op=="mome" ||
+        (n.op=="sparse_index" && program.nodes[n.inputs[0]].kind!=5) || n.op=="cache_quantize_append")
+      throw std::runtime_error("sequence batch has unsupported unsegmented operator: "+n.op);
+    // All states must have been instantiated during preparation, before any
+    // batch control can name their allocation or page ownership.
+    for(const auto &entry:cache_control_offsets)
+      if(!attention_states.count(entry.first) && !index_states.count(entry.first))
+        throw std::runtime_error("sequence batch state not prepared");
+    prepared::Context::BoundedBuffers bounded(execution,true);
+    auto ensure=[&](std::unique_ptr<DeviceTensor> &tensor,aclDataType dtype,uint32_t count){
+      if(!tensor)tensor=std::make_unique<DeviceTensor>(std::vector<int64_t>{count},dtype,resident::element_bytes(dtype));
+    };
+    auto capacity=program.resident_sequences;
+    ensure(batch_starts,ACL_INT32,capacity+1);ensure(batch_slots,ACL_INT32,capacity);
+    ensure(batch_positions,ACL_INT32,capacity);ensure(batch_ends32,ACL_INT32,capacity);
+    ensure(batch_lengths32,ACL_INT32,capacity);ensure(batch_ends64,ACL_INT64,capacity);ensure(batch_lengths64,ACL_INT64,capacity);
+    // Pad uploads to fixed allocation extents; descriptors expose only live rows.
+    auto upload32=[&](DeviceTensor &tensor,std::vector<int32_t> data){data.resize(tensor.bytes/4,0);resident::control_upload(tensor,data);};
+    auto upload64=[&](DeviceTensor &tensor,const std::vector<int32_t> &data){
+      std::vector<int64_t> wide(data.begin(),data.end());wide.resize(tensor.bytes/8,0);resident::control_upload(tensor,wide);};
+    upload32(*batch_starts,batch.starts);upload32(*batch_slots,batch.residents);
+    upload32(*batch_positions,batch.prior_lengths);upload32(*batch_ends32,batch.query_ends);
+    upload32(*batch_lengths32,batch.kv_lengths);upload64(*batch_ends64,batch.query_ends);upload64(*batch_lengths64,batch.kv_lengths);
+    auto table=[&](const std::string &name,const state::ResidentPages &pages,uint32_t columns,bool ring){
+      auto data=pages.batch_table(batch.residents,columns,ring);
+      auto &dest=batch_tables[name];if(!dest)dest=std::make_unique<DeviceTensor>(std::vector<int64_t>{capacity,columns},ACL_INT32,4);
+      upload32(*dest,std::move(data));
+    };
+    for(const auto &entry:attention_states)table(entry.first,entry.second->page_binding,entry.second->table.bytes/4,entry.second->logical_context!=0);
+    for(const auto &entry:index_states)table(entry.first,entry.second->pages,entry.second->table.bytes/4,false);
+    batch_sequences=sequences.size();
+    struct Restore {Decoder &d;~Restore(){d.batch_sequences=0;}} restore{*this};
+    set_input_rows(tokens,batch,batch.positions.front());
+    execution.begin_step(batch.positions.front(),tokens.size(),true);
+    auto output=execute_token();execution.end_step();return output;
   }
 
   V token(int id, int pos, bool decode = false) {
