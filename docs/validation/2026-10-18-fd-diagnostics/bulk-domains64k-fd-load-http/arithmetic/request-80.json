@@ -1,0 +1,23 @@
+{
+  "format": "inferfabric.completed-arithmetic.v1",
+  "sequence": 80,
+  "resident": 0,
+  "history": {
+    "version": 1,
+    "spans": [
+      {
+        "start": 0,
+        "end": 12,
+        "query_tokens": 12,
+        "numerical_class": "uncaptured_prefill_4096_v1:sequence-batch-v1:d858a143d30f76d3168789a644eb1082a65023d9abbbf964e13261b67ea199e3:member=0"
+      },
+      {
+        "start": 12,
+        "end": 13,
+        "query_tokens": 1,
+        "numerical_class": "uncaptured_prefill_4096_v1:sequence-batch-v1:d8bc7bf366c9f2e79d82244878630626f4592a77b8a5e2240195ad58d732b319:member=0"
+      }
+    ]
+  },
+  "imported_tokens": 0
+}

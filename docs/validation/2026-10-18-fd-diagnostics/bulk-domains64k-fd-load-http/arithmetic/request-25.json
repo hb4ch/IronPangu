@@ -1,0 +1,17 @@
+{
+  "format": "inferfabric.completed-arithmetic.v1",
+  "sequence": 25,
+  "resident": 1,
+  "history": {
+    "version": 1,
+    "spans": [
+      {
+        "start": 0,
+        "end": 529,
+        "query_tokens": 529,
+        "numerical_class": "uncaptured_prefill_4096_v1:sequence-batch-v1:5b955bd53ac185633eda4e7ab5a8e771a2a370c6dca1bbeb4891a45878043650:member=0"
+      }
+    ]
+  },
+  "imported_tokens": 0
+}
