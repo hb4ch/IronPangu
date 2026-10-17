@@ -61,8 +61,35 @@ the serving fix remain open.
 The subsequent [between-wave stack diagnostic](validation/2026-10-18-allocation-stacks/README.md)
 drains normally and attributes most sampled retained bytes to CANN `BlockCache`,
 with a smaller HCCL task-history contribution. The latter has bounded FIFO
-retention. CANN pool-free versus still-referenced metadata remains unresolved;
-the RSS gate still fails and no runtime fix has been promoted.
+retention. The [pool-client trace](validation/2026-10-18-pool-ownership/README.md)
+then distinguished returned pool clients from retained libc backing blocks and
+identified surviving empty descriptors inside the vendor attention/cache APIs.
+
+The [owned API adapters](validation/2026-10-18-owned-opapi/README.md) fix those
+paths without changing device kernels or attention output flags. Full 92B
+discovery/fixed/frozen qualification passes; 24 HTTP waves produce 120 correct
+EOS-scoped results and drain normally. RSS still grows 336.7 MiB, above the
+unchanged 128 MiB gate, although the final nine waves add only 0.86 MiB. This
+short plateau is insufficient to claim a long-term bound.
+[Current-library 64K qualification](validation/2026-10-18-owned-opapi64k/README.md)
+now passes native and HTTP output, mixed scheduling, cancellation and prefix
+isolation/eviction. Observed mixed HTTP long TTFT is 29.75–30.78 seconds; warm
+61,440-token prefix reuse is 2.99–3.86 seconds. Four pure single-sequence native
+decode batches have median 23.39 ms; this is a small timing sample, not a serving
+SLO. The existing arena and device-residency contract hold. Attribution and
+bounding of remaining host retention remain the next foundation gate.
+
+Host metadata lifetime is part of gate 1's resource contract. A follow-up must
+distinguish permanent weight/state/graph descriptors from descriptors belonging
+to an uncaptured forward. The latter must cover its output sampling and
+consensus work through the existing owning-stream completion; a lexical scope
+ending when `execute_token` returns is too short. Destroy dependent invocations
+before their descriptors, and retain explicit owners for tensors that escape
+into persistent state or weight-layout caches. Audit ordinary and strided
+descriptors separately, including live/peak transient counts and retained
+entries. Do not clear the current raw-pointer caches indiscriminately: both
+`DeviceTensor` and `PreparedWeightViews` retain pointers into them. This is a
+pending ownership change, not evidence that it explains all residual RSS growth.
 
 Validation proceeds from focused shape/lifetime checks to a short full-model
 HTTP regression, then longer-context qualification. Re-run costly full-model

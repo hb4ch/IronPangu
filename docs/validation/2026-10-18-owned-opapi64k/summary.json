@@ -1,0 +1,161 @@
+{
+  "native": {
+    "passed": true,
+    "stage": "frozen",
+    "exact_output_tokens": 39,
+    "requests": 6,
+    "arena_bytes": [
+      40492359704,
+      40492359704,
+      40492359704,
+      40492359704,
+      40492359704,
+      40492359704,
+      40492359704,
+      40492359704
+    ],
+    "workspace_bytes": [
+      159221248,
+      159221248,
+      159221248,
+      159221248,
+      159221248,
+      159221248,
+      159221248,
+      159221248
+    ],
+    "activation_host_transfers": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ]
+  },
+  "chunk_geometry": [
+    [
+      4096,
+      4096,
+      4096,
+      4096,
+      4096,
+      4096,
+      4096,
+      4096,
+      4096,
+      4096,
+      4096,
+      4096,
+      4096,
+      4096,
+      4096,
+      4080
+    ],
+    [
+      12
+    ],
+    [
+      4,
+      4094,
+      4094,
+      4094,
+      4094,
+      4083,
+      4094,
+      4094,
+      4088,
+      4095,
+      4095,
+      4095,
+      4095,
+      4096,
+      4096,
+      4096,
+      4096,
+      17
+    ],
+    [
+      12
+    ],
+    [
+      4095,
+      4095,
+      4095,
+      4095,
+      4095,
+      4084,
+      4095,
+      4095,
+      4095,
+      4095,
+      4095,
+      4095,
+      4095,
+      4096,
+      4096,
+      4096,
+      8
+    ],
+    [
+      12
+    ]
+  ],
+  "pure_decode_batch_latency": [
+    {
+      "sequences": 1,
+      "batches": 4,
+      "median_ms": 23.3935,
+      "min_ms": 22.981,
+      "max_ms": 27.933
+    }
+  ],
+  "mixed_http": [
+    {
+      "case": "retrieval-65536-early",
+      "long_ttft_ms": 30269.943533930928,
+      "short_ttft_ms": 2282.692057080567
+    },
+    {
+      "case": "retrieval-65536-middle",
+      "long_ttft_ms": 29749.207877088338,
+      "short_ttft_ms": 2052.356699015945
+    },
+    {
+      "case": "retrieval-65536-late",
+      "long_ttft_ms": 30775.18618805334,
+      "short_ttft_ms": 2094.972729217261
+    }
+  ],
+  "prefix": [
+    {
+      "mode": "cold-a",
+      "cached_tokens": 0,
+      "ttft_ms": 43903.81020773202
+    },
+    {
+      "mode": "warm-a",
+      "cached_tokens": 61440,
+      "ttft_ms": 3857.8302320092916
+    },
+    {
+      "mode": "cold-b",
+      "cached_tokens": 0,
+      "ttft_ms": 32747.364067006856
+    },
+    {
+      "mode": "warm-b",
+      "cached_tokens": 61440,
+      "ttft_ms": 2990.1267923414707
+    },
+    {
+      "mode": "evicted-a",
+      "cached_tokens": 0,
+      "ttft_ms": 35610.88366108015
+    }
+  ],
+  "qualification": "through first EOS; all eight rank invariants pass; host RSS stability remains a separate failed gate",
+  "timing_scope": "native decode includes sampling/consensus and output completion; mixed prefill excluded; not SSE text-chunk intervals"
+}
