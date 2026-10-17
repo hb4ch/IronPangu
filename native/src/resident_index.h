@@ -46,11 +46,10 @@ struct IndexState {
   void select(uint32_t slot){pages.select(slot);upload_table();}
   void bind(const std::vector<int32_t> &ids){pages.bind(ids);upload_table();}
   void clear(uint32_t slot,bool active){
-    for(auto page:pages.pages(slot)) {
-      size_t bytes=64*128*(quantized?1:2);
-      prepared::active->zero(static_cast<uint8_t *>(keys.data)+size_t(page)*bytes,bytes);
-      if(quantized)prepared::active->zero(static_cast<uint8_t *>(scales->data)+size_t(page)*64*2,64*2);
-    }
+    auto key_spans=state::page_spans(pages.pages(slot),64*128*(quantized?1:2),keys.bytes);
+    auto scale_spans=quantized?state::page_spans(pages.pages(slot),64*2,scales->bytes):std::vector<state::PageSpan>{};
+    for(const auto &span:key_spans)prepared::active->zero(static_cast<uint8_t *>(keys.data)+span.offset,span.bytes);
+    for(const auto &span:scale_spans)prepared::active->zero(static_cast<uint8_t *>(scales->data)+span.offset,span.bytes);
     if(shared)pages.release(slot);
     if(active)upload_table();
   }

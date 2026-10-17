@@ -127,7 +127,9 @@ V execute_token() {
       result = sum(tensor(0), n.attrs.count("dtype") && n.text("dtype") == "bf16");
     else if (n.op == "mome" || n.op == "mome_inplace") {
       if(n.op=="mome_inplace") {
-        each_row([&](uint32_t row){mome(row_tensor(0,row),weight(),current_position,n.name,true);});
+        if(program.uncaptured_prefill && active_tokens>1)
+          mome(tensor(0),weight(),current_position,n.name,true,active_tokens);
+        else each_row([&](uint32_t row){mome(row_tensor(0,row),weight(),current_position,n.name,true);});
         result=tensor(0);
       } else result=row_values(n.width,[&](uint32_t row){return mome(row_tensor(0,row),weight(),current_position,n.name,false);});
     }

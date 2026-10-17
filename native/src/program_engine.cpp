@@ -36,6 +36,17 @@ struct Engine {
 
   Engine(const char *path, const char *weights, bool prepare) : bundle(path), checkpoint(weights),
       program(inferfabric::execution::Plan::read(bundle + "/execution.bin")), preparation(prepare) {
+    if(program.uncaptured_prefill) {
+      // CANN 9.1's implicit executor-cache teardown crashed after the full
+      // variable-query regression. Our explicit repeatable invocations and
+      // decode graphs retain their own lifetime; disable only the vendor cache.
+      const char *cache=std::getenv("ACLNN_CACHE_LIMIT");
+      if(cache && std::string(cache)!="0")
+        throw std::runtime_error("uncaptured prefill requires ACLNN_CACHE_LIMIT=0; nonzero vendor cache is unqualified");
+      if(!cache && setenv("ACLNN_CACHE_LIMIT","0",0)!=0)
+        throw std::runtime_error("cannot configure uncaptured operator cache policy");
+      std::cerr<<"program uncaptured prefill ACLNN_CACHE_LIMIT=0\n";
+    }
     inferfabric::execution::validate_kernels(program);
     const char *experimental=std::getenv("INFERFABRIC_EXPERIMENTAL_LONG_CONTEXT");
     if(program.context>512 && (!experimental || std::string(experimental)!="1"))

@@ -13,6 +13,26 @@ namespace inferfabric::state {
 struct StateCopyRange {
   uint64_t source, destination, bytes;
 };
+struct PageSpan { uint64_t offset, bytes; };
+// Reset is independent of logical page order. Coalesce physically contiguous
+// owned pages only; validate the whole map before any device work is submitted.
+inline std::vector<PageSpan> page_spans(const std::vector<int32_t> &pages,
+                                      uint64_t page_bytes,uint64_t field_bytes) {
+  if(!page_bytes || !field_bytes || field_bytes%page_bytes)
+    throw std::runtime_error("page span field layout");
+  auto ordered=pages;
+  std::sort(ordered.begin(),ordered.end());
+  for(size_t i=0;i<ordered.size();++i)
+    if(ordered[i]<0 || uint64_t(ordered[i])>=field_bytes/page_bytes || (i && ordered[i]==ordered[i-1]))
+      throw std::runtime_error("page span bounds/alias");
+  std::vector<PageSpan> spans;
+  for(auto page:ordered) {
+    const uint64_t offset=uint64_t(page)*page_bytes;
+    if(!spans.empty() && spans.back().offset+spans.back().bytes==offset)spans.back().bytes+=page_bytes;
+    else spans.push_back({offset,page_bytes});
+  }
+  return spans;
+}
 // Host metadata for a stable device block table. Cache rows never visit the host.
 class PageBinding {
   uint32_t page_tokens_, logical_tokens_, physical_pages_;

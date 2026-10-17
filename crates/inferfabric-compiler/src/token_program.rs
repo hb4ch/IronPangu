@@ -1022,6 +1022,9 @@ fn recipes_for_query(p: &Program, graph: &Graph, query_tokens: usize) -> Vec<ser
         }
         if matches!(i.op.as_str(), "mome" | "mome_inplace") {
             fields.push(serde_json::json!({"name":"recurrent_history","dtype":"bf16","shape":[p.resident_sequences,2,i.width],"binding":"shared device resident-slot control selects one history; other slots remain untouched"}));
+            if p.uncaptured_prefill && i.op=="mome_inplace" {
+                fields.push(serde_json::json!({"name":"mome_query_starts","dtype":"int32","shape":[2],"role":"shared_control_input","values":"[0, actual_query_tokens]","binding":"one packed sequence, num_computed_tokens is its absolute start position"}));
+            }
         }
         if query_tokens>1 {
             for field in &mut fields {
@@ -1042,14 +1045,15 @@ fn recipes_for_query(p: &Program, graph: &Graph, query_tokens: usize) -> Vec<ser
         let batched_attention = matches!(i.op.as_str(),"indexed_packed_attention"|"packed_latent_attention"|"latent_attention");
         let batched_window = matches!(i.op.as_str(),"latent_attention"|"attention_metadata");
         let batched_rotary = i.op=="rope_bf16";
-        let batched = batched_index || batched_attention || batched_window || batched_rotary;
+        let batched_mome = p.uncaptured_prefill && i.op=="mome_inplace";
+        let batched = batched_index || batched_attention || batched_window || batched_rotary || batched_mome;
         let per_query = !batched && matches!(i.op.as_str(), "mome"|"mome_inplace"|"query_project"|"query_rotary_extract"|"rope"|"rope_bf16"|"rope_f32"|"mla_query"|"mla_value"|"index_cache_append"|"cache_append"|"cache_norm_rope_append"|"cache_c8_norm_rope_append"|"latent_attention"|"indexed_packed_attention"|"sparse_index"|"packed_latent_attention"|"attention_metadata"|"packed_attention_metadata");
         let assembly = !batched && matches!(i.op.as_str(), "repeat"|"slice"|"query_project"|"query_rotary_extract"|"rope"|"rope_bf16"|"rope_f32"|"mla_query"|"mla_value"|"mome"|"latent_attention"|"indexed_packed_attention"|"sparse_index"|"packed_latent_attention");
         let packed = if query_tokens > 1 { serde_json::json!({
             "tokens":query_tokens,
             "schedule":if i.op=="sink_normalize" {"shared initialization constant"} else if per_query {"ordered per-query calls"} else {"token matrix"},
             "api_repetitions":if per_query {query_tokens} else {1},
-            "causal_alignment":if batched_window {Some("one TND sequence; total query count and final chunk KV length; per-row causal window from declared pre_tokens; one shared metadata buffer per window")} else if batched_index || batched_attention {Some("one TND sequence; total query count and final chunk KV length; all chunk keys appended before selection/attention; each attention row consumes its own causal indices")} else {None},
+            "causal_alignment":if batched_mome {Some("one causal sequence per resident; query starts [0,T], computed tokens = absolute chunk start; update two-row recurrent history once after the sequence")} else if batched_window {Some("one TND sequence; total query count and final chunk KV length; per-row causal window from declared pre_tokens; one shared metadata buffer per window")} else if batched_index || batched_attention {Some("one TND sequence; total query count and final chunk KV length; all chunk keys appended before selection/attention; each attention row consumes its own causal indices")} else {None},
             "coefficient_layout":if batched_rotary {Some("BF16 [tokens,1,1,64] cosine/sine; one absolute position per token; broadcast across heads")} else {None},
             "output_elements":if i.kind==0 {Some(i.width*if i.op=="sink_normalize" {1} else {query_tokens})} else {None},
             "assembly_copies":if assembly {query_tokens} else if i.op=="gather" {8*query_tokens} else {0},

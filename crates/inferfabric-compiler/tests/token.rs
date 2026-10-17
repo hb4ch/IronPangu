@@ -22,10 +22,15 @@ fn uncaptured_prefill_is_a_bounded_envelope_not_a_graph_family() {
     assert_eq!(variants.len(), 2);
     assert_eq!(variants[1].id, "uncaptured_prefill_4096_v1");
     assert!(!variants[1].graph_capable);
-    for recipe in inferfabric_compiler::token_program::recipes(&plan, &graph) {
+    for (instruction,recipe) in plan.instructions.iter().zip(inferfabric_compiler::token_program::recipes(&plan, &graph)) {
         assert_eq!(recipe["prefill_execution"]["mode"], "uncaptured");
         assert_eq!(recipe["prefill_execution"]["capture_allowed"], false);
         assert_eq!(recipe["prefill_execution"]["variable_query_tokens"], true);
+        if instruction.op=="mome_inplace" {
+            assert_eq!(recipe["packed_prefill"]["api_repetitions"],1);
+            assert_eq!(recipe["packed_prefill"]["assembly_copies"],0);
+            assert!(recipe["value_fields"].as_array().unwrap().iter().any(|f|f["name"]=="mome_query_starts" && f["shape"]==serde_json::json!([2])));
+        }
     }
     let mut invalid = plan.clone();
     invalid.prefill_tokens = 8192;

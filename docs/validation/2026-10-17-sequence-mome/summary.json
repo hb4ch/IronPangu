@@ -1,0 +1,555 @@
+{
+  "status": "passed_limited_regression",
+  "scope": "Two zero-input 4096-query warmups plus reference prompts 12/15/14/529 repeated three times. Discovery only. No real 4K/64K prompt qualification.",
+  "cache_policy": "Wrapper unsets ACLNN_CACHE_LIMIT; engine defaults it to zero before ACL initialization.",
+  "process": {
+    "completed": true,
+    "timed_out": false,
+    "returncode": 0,
+    "timeout_seconds": 1800,
+    "elapsed_seconds": 499.8534122342244
+  },
+  "results": {
+    "format": "inferfabric.persistent-program-qualification.v1",
+    "requests": 12,
+    "output_tokens": 123,
+    "exact_fixture_tokens": true,
+    "fixture_sha256": "3a05e7ac9bb3a2e4432dc71717262771d35cd817b8d506d303f3d4b0777b926d",
+    "permuted_pages": true,
+    "binding_limit_rejections": 0,
+    "interleaved_residents": false,
+    "packed_prefill": true,
+    "copied_prefix_tokens": null,
+    "scope": "one loaded TP8/EP8 group, compiled packed prefill and serial decode; no long-context claim",
+    "measurements": [
+      {
+        "request": 0,
+        "case": "arithmetic",
+        "prompt_tokens": 12,
+        "output_tokens": 8,
+        "tpot_ms": 24.074428571428573,
+        "engine_ttft_ms": 1658.191
+      },
+      {
+        "request": 1,
+        "case": "geography",
+        "prompt_tokens": 15,
+        "output_tokens": 8,
+        "tpot_ms": 23.865714285714287,
+        "engine_ttft_ms": 1210.163
+      },
+      {
+        "request": 2,
+        "case": "chinese",
+        "prompt_tokens": 14,
+        "output_tokens": 17,
+        "tpot_ms": 23.76225,
+        "engine_ttft_ms": 1153.629
+      },
+      {
+        "request": 3,
+        "case": "access-code-529",
+        "prompt_tokens": 529,
+        "output_tokens": 8,
+        "tpot_ms": 23.98057142857143,
+        "engine_ttft_ms": 26261.236
+      },
+      {
+        "request": 4,
+        "case": "arithmetic",
+        "prompt_tokens": 12,
+        "output_tokens": 8,
+        "tpot_ms": 23.998285714285714,
+        "engine_ttft_ms": 766.172
+      },
+      {
+        "request": 5,
+        "case": "geography",
+        "prompt_tokens": 15,
+        "output_tokens": 8,
+        "tpot_ms": 24.687,
+        "engine_ttft_ms": 826.054
+      },
+      {
+        "request": 6,
+        "case": "chinese",
+        "prompt_tokens": 14,
+        "output_tokens": 17,
+        "tpot_ms": 23.4841875,
+        "engine_ttft_ms": 769.998
+      },
+      {
+        "request": 7,
+        "case": "access-code-529",
+        "prompt_tokens": 529,
+        "output_tokens": 8,
+        "tpot_ms": 23.649,
+        "engine_ttft_ms": 22819.395
+      },
+      {
+        "request": 8,
+        "case": "arithmetic",
+        "prompt_tokens": 12,
+        "output_tokens": 8,
+        "tpot_ms": 23.72885714285714,
+        "engine_ttft_ms": 749.375
+      },
+      {
+        "request": 9,
+        "case": "geography",
+        "prompt_tokens": 15,
+        "output_tokens": 8,
+        "tpot_ms": 23.378714285714285,
+        "engine_ttft_ms": 753.459
+      },
+      {
+        "request": 10,
+        "case": "chinese",
+        "prompt_tokens": 14,
+        "output_tokens": 17,
+        "tpot_ms": 22.8968125,
+        "engine_ttft_ms": 716.297
+      },
+      {
+        "request": 11,
+        "case": "access-code-529",
+        "prompt_tokens": 529,
+        "output_tokens": 8,
+        "tpot_ms": 23.67857142857143,
+        "engine_ttft_ms": 7032.666
+      }
+    ]
+  },
+  "artifacts": {
+    "native-build-sequence-mome/libinferfabric_program.so": "50be2b846484286cc2dde0effe5d23443af34dd4d1d698bc0262fa12c0f7756d",
+    "native-build-sequence-mome/program_engine_probe": "f16da96efe1410534cd759e5572fc40c4017cb651b9bd173d861064378c973d2",
+    "uncaptured4k-mome-source/execution.bin": "b16edec8f5a21bfb1f696c9f9f17f9bc7d299106eca8e3255c0e31581d60bb8e",
+    "batched16-preparation-reference.json": "3a05e7ac9bb3a2e4432dc71717262771d35cd817b8d506d303f3d4b0777b926d"
+  },
+  "ranks": [
+    {
+      "rank": 0,
+      "frozen": false,
+      "arena_bytes": 38253633536,
+      "workspace_peak_bytes": 159221248,
+      "graphs": [
+        {
+          "name": "token_decode",
+          "replays": 112
+        }
+      ],
+      "uncaptured_prefill_forwards": 14,
+      "uncaptured_prefill_tokens": 9902,
+      "mome": {
+        "name": "aclnnAiInfraFusedCausalConv1d",
+        "repeatable": false,
+        "preparations": 2346,
+        "replays": 0
+      },
+      "transfers": {
+        "format": "inferfabric.transfer-audit.v1",
+        "activation_host_transfers": 0,
+        "rejected": 0,
+        "boundaries": [
+          {
+            "role": "control_input",
+            "h2d_calls": 2463,
+            "h2d_bytes": 880802068,
+            "d2h_calls": 0,
+            "d2h_bytes": 0
+          },
+          {
+            "role": "parameter_preparation",
+            "h2d_calls": 505,
+            "h2d_bytes": 207457084,
+            "d2h_calls": 598,
+            "d2h_bytes": 152775396
+          },
+          {
+            "role": "request_output",
+            "h2d_calls": 0,
+            "h2d_bytes": 0,
+            "d2h_calls": 504,
+            "d2h_bytes": 18144
+          }
+        ]
+      },
+      "memory": {
+        "rank": 0,
+        "hbm_used_bytes": 61224296448,
+        "hbm_growth_bytes": 60794126336
+      }
+    },
+    {
+      "rank": 1,
+      "frozen": false,
+      "arena_bytes": 38253633536,
+      "workspace_peak_bytes": 159221248,
+      "graphs": [
+        {
+          "name": "token_decode",
+          "replays": 112
+        }
+      ],
+      "uncaptured_prefill_forwards": 14,
+      "uncaptured_prefill_tokens": 9902,
+      "mome": {
+        "name": "aclnnAiInfraFusedCausalConv1d",
+        "repeatable": false,
+        "preparations": 2346,
+        "replays": 0
+      },
+      "transfers": {
+        "format": "inferfabric.transfer-audit.v1",
+        "activation_host_transfers": 0,
+        "rejected": 0,
+        "boundaries": [
+          {
+            "role": "control_input",
+            "h2d_calls": 2463,
+            "h2d_bytes": 880802068,
+            "d2h_calls": 0,
+            "d2h_bytes": 0
+          },
+          {
+            "role": "parameter_preparation",
+            "h2d_calls": 505,
+            "h2d_bytes": 207457084,
+            "d2h_calls": 598,
+            "d2h_bytes": 152775396
+          },
+          {
+            "role": "request_output",
+            "h2d_calls": 0,
+            "h2d_bytes": 0,
+            "d2h_calls": 126,
+            "d2h_bytes": 8064
+          }
+        ]
+      },
+      "memory": {
+        "rank": 1,
+        "hbm_used_bytes": 60964720640,
+        "hbm_growth_bytes": 60787490816
+      }
+    },
+    {
+      "rank": 2,
+      "frozen": false,
+      "arena_bytes": 38253633536,
+      "workspace_peak_bytes": 159221248,
+      "graphs": [
+        {
+          "name": "token_decode",
+          "replays": 112
+        }
+      ],
+      "uncaptured_prefill_forwards": 14,
+      "uncaptured_prefill_tokens": 9902,
+      "mome": {
+        "name": "aclnnAiInfraFusedCausalConv1d",
+        "repeatable": false,
+        "preparations": 2346,
+        "replays": 0
+      },
+      "transfers": {
+        "format": "inferfabric.transfer-audit.v1",
+        "activation_host_transfers": 0,
+        "rejected": 0,
+        "boundaries": [
+          {
+            "role": "control_input",
+            "h2d_calls": 2463,
+            "h2d_bytes": 880802068,
+            "d2h_calls": 0,
+            "d2h_bytes": 0
+          },
+          {
+            "role": "parameter_preparation",
+            "h2d_calls": 505,
+            "h2d_bytes": 207457084,
+            "d2h_calls": 598,
+            "d2h_bytes": 152775396
+          },
+          {
+            "role": "request_output",
+            "h2d_calls": 0,
+            "h2d_bytes": 0,
+            "d2h_calls": 126,
+            "d2h_bytes": 8064
+          }
+        ]
+      },
+      "memory": {
+        "rank": 2,
+        "hbm_used_bytes": 61225979904,
+        "hbm_growth_bytes": 60792926208
+      }
+    },
+    {
+      "rank": 3,
+      "frozen": false,
+      "arena_bytes": 38253633536,
+      "workspace_peak_bytes": 159221248,
+      "graphs": [
+        {
+          "name": "token_decode",
+          "replays": 112
+        }
+      ],
+      "uncaptured_prefill_forwards": 14,
+      "uncaptured_prefill_tokens": 9902,
+      "mome": {
+        "name": "aclnnAiInfraFusedCausalConv1d",
+        "repeatable": false,
+        "preparations": 2346,
+        "replays": 0
+      },
+      "transfers": {
+        "format": "inferfabric.transfer-audit.v1",
+        "activation_host_transfers": 0,
+        "rejected": 0,
+        "boundaries": [
+          {
+            "role": "control_input",
+            "h2d_calls": 2463,
+            "h2d_bytes": 880802068,
+            "d2h_calls": 0,
+            "d2h_bytes": 0
+          },
+          {
+            "role": "parameter_preparation",
+            "h2d_calls": 505,
+            "h2d_bytes": 207457084,
+            "d2h_calls": 598,
+            "d2h_bytes": 152775396
+          },
+          {
+            "role": "request_output",
+            "h2d_calls": 0,
+            "h2d_bytes": 0,
+            "d2h_calls": 126,
+            "d2h_bytes": 8064
+          }
+        ]
+      },
+      "memory": {
+        "rank": 3,
+        "hbm_used_bytes": 60965691392,
+        "hbm_growth_bytes": 60787449856
+      }
+    },
+    {
+      "rank": 4,
+      "frozen": false,
+      "arena_bytes": 38253633536,
+      "workspace_peak_bytes": 159221248,
+      "graphs": [
+        {
+          "name": "token_decode",
+          "replays": 112
+        }
+      ],
+      "uncaptured_prefill_forwards": 14,
+      "uncaptured_prefill_tokens": 9902,
+      "mome": {
+        "name": "aclnnAiInfraFusedCausalConv1d",
+        "repeatable": false,
+        "preparations": 2346,
+        "replays": 0
+      },
+      "transfers": {
+        "format": "inferfabric.transfer-audit.v1",
+        "activation_host_transfers": 0,
+        "rejected": 0,
+        "boundaries": [
+          {
+            "role": "control_input",
+            "h2d_calls": 2463,
+            "h2d_bytes": 880802068,
+            "d2h_calls": 0,
+            "d2h_bytes": 0
+          },
+          {
+            "role": "parameter_preparation",
+            "h2d_calls": 505,
+            "h2d_bytes": 207457084,
+            "d2h_calls": 598,
+            "d2h_bytes": 152775396
+          },
+          {
+            "role": "request_output",
+            "h2d_calls": 0,
+            "h2d_bytes": 0,
+            "d2h_calls": 126,
+            "d2h_bytes": 8064
+          }
+        ]
+      },
+      "memory": {
+        "rank": 4,
+        "hbm_used_bytes": 61234749440,
+        "hbm_growth_bytes": 60792573952
+      }
+    },
+    {
+      "rank": 5,
+      "frozen": false,
+      "arena_bytes": 38253633536,
+      "workspace_peak_bytes": 159221248,
+      "graphs": [
+        {
+          "name": "token_decode",
+          "replays": 112
+        }
+      ],
+      "uncaptured_prefill_forwards": 14,
+      "uncaptured_prefill_tokens": 9902,
+      "mome": {
+        "name": "aclnnAiInfraFusedCausalConv1d",
+        "repeatable": false,
+        "preparations": 2346,
+        "replays": 0
+      },
+      "transfers": {
+        "format": "inferfabric.transfer-audit.v1",
+        "activation_host_transfers": 0,
+        "rejected": 0,
+        "boundaries": [
+          {
+            "role": "control_input",
+            "h2d_calls": 2463,
+            "h2d_bytes": 880802068,
+            "d2h_calls": 0,
+            "d2h_bytes": 0
+          },
+          {
+            "role": "parameter_preparation",
+            "h2d_calls": 505,
+            "h2d_bytes": 207457084,
+            "d2h_calls": 598,
+            "d2h_bytes": 152775396
+          },
+          {
+            "role": "request_output",
+            "h2d_calls": 0,
+            "h2d_bytes": 0,
+            "d2h_calls": 126,
+            "d2h_bytes": 8064
+          }
+        ]
+      },
+      "memory": {
+        "rank": 5,
+        "hbm_used_bytes": 60951719936,
+        "hbm_growth_bytes": 60786196480
+      }
+    },
+    {
+      "rank": 6,
+      "frozen": false,
+      "arena_bytes": 38253633536,
+      "workspace_peak_bytes": 159221248,
+      "graphs": [
+        {
+          "name": "token_decode",
+          "replays": 112
+        }
+      ],
+      "uncaptured_prefill_forwards": 14,
+      "uncaptured_prefill_tokens": 9902,
+      "mome": {
+        "name": "aclnnAiInfraFusedCausalConv1d",
+        "repeatable": false,
+        "preparations": 2346,
+        "replays": 0
+      },
+      "transfers": {
+        "format": "inferfabric.transfer-audit.v1",
+        "activation_host_transfers": 0,
+        "rejected": 0,
+        "boundaries": [
+          {
+            "role": "control_input",
+            "h2d_calls": 2463,
+            "h2d_bytes": 880802068,
+            "d2h_calls": 0,
+            "d2h_bytes": 0
+          },
+          {
+            "role": "parameter_preparation",
+            "h2d_calls": 505,
+            "h2d_bytes": 207457084,
+            "d2h_calls": 598,
+            "d2h_bytes": 152775396
+          },
+          {
+            "role": "request_output",
+            "h2d_calls": 0,
+            "h2d_bytes": 0,
+            "d2h_calls": 126,
+            "d2h_bytes": 8064
+          }
+        ]
+      },
+      "memory": {
+        "rank": 6,
+        "hbm_used_bytes": 61218074624,
+        "hbm_growth_bytes": 60792999936
+      }
+    },
+    {
+      "rank": 7,
+      "frozen": false,
+      "arena_bytes": 38253633536,
+      "workspace_peak_bytes": 159221248,
+      "graphs": [
+        {
+          "name": "token_decode",
+          "replays": 112
+        }
+      ],
+      "uncaptured_prefill_forwards": 14,
+      "uncaptured_prefill_tokens": 9902,
+      "mome": {
+        "name": "aclnnAiInfraFusedCausalConv1d",
+        "repeatable": false,
+        "preparations": 2346,
+        "replays": 0
+      },
+      "transfers": {
+        "format": "inferfabric.transfer-audit.v1",
+        "activation_host_transfers": 0,
+        "rejected": 0,
+        "boundaries": [
+          {
+            "role": "control_input",
+            "h2d_calls": 2463,
+            "h2d_bytes": 880802068,
+            "d2h_calls": 0,
+            "d2h_bytes": 0
+          },
+          {
+            "role": "parameter_preparation",
+            "h2d_calls": 505,
+            "h2d_bytes": 207457084,
+            "d2h_calls": 598,
+            "d2h_bytes": 152775396
+          },
+          {
+            "role": "request_output",
+            "h2d_calls": 0,
+            "h2d_bytes": 0,
+            "d2h_calls": 126,
+            "d2h_bytes": 8064
+          }
+        ]
+      },
+      "memory": {
+        "rank": 7,
+        "hbm_used_bytes": 60967948288,
+        "hbm_growth_bytes": 60786388992
+      }
+    }
+  ]
+}

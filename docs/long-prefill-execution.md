@@ -82,8 +82,8 @@ the physical plan rather than hiding it in the executor.
 
 The superseded graph-prefill qualification and its dependent queued runs were
 stopped on 2026-10-17. Their partial measurements are not a completed release
-gate. The current executable still has exact small-prefill shapes and cannot
-yet claim this 4K variable-tail contract.
+gate. The new executable supports the uncaptured 4K envelope and variable tails;
+full long-context qualification remains incomplete.
 
 Implemented foundations:
 
@@ -113,7 +113,14 @@ mixed decode fairness, cache publication without an extra split, and rejection o
 incompatible arithmetic/mode contracts. The ARM frontend is cross-built locally;
 the complete candidate native library builds in the remote Docker container.
 
+The first NPU capacity-discovery run matched all reference outputs but failed
+during operator-cache teardown. A subsequent cache-disabled run completed cleanly
+and matched all 123 generated tokens across 12 requests; see the
+[scoped NPU evidence](validation/2026-10-17-uncaptured4k-cache-disabled/README.md).
+Both runs used two 4,096-query zero-input warmups; their actual reference prompts
+were at most 529 tokens. They do not qualify a real 4K or 64K prompt.
+
 Still required: qualify the maximum-shape arena against actual operator allocation
-traces and variable tails, and verify full 92B NPU output and performance. The first
-NPU capacity-discovery run is in progress; it is not a passed release gate. The
-allocator and scheduler tests are not full-model memory or numerical evidence.
+traces and variable tails, and verify full long-context 92B NPU output and
+performance. The allocator and scheduler tests are not full-model memory or
+numerical evidence. Production context remains gated at 512 tokens.

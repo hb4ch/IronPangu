@@ -2,7 +2,7 @@
 """Bind measured per-rank slots to a new immutable execution bundle.
 
 Run after a full prepared audit in the same backend binary. This preserves the
-qualified exact-size/LIFO reuse policy; it does not claim optimal packing.
+backend's instruction-scoped lease policy; it does not claim optimal packing.
 """
 import argparse
 import hashlib
@@ -81,7 +81,7 @@ def bind(plan, audits, output):
     metadata = {
         "format": "inferfabric.bound-arena.v1",
         "execution_sha256": hashlib.sha256(program).hexdigest(),
-        "policy": "fixed disjoint slots; exact-size LIFO lease reuse on owning stream",
+        "policy": "fixed disjoint slots on owning stream; instruction-bound eligible leases; exact-size LIFO for captured execution, smallest sufficient capacity (LIFO ties) for uncaptured prefill; fail on exhaustion",
         "scope": "prepared tensors and vendor workspace; checkpoint allocations separate",
         "ranks": arenas,
     }

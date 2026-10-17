@@ -118,6 +118,7 @@ struct Decoder {
   int64_t cube_cores = 0, vector_cores = 0;
   std::set<uint32_t> metadata_enqueued;
   std::unique_ptr<DeviceTensor> packed_indices, packed_length, packed_query_lengths;
+  std::unique_ptr<DeviceTensor> mome_query_starts;
   int rank;
   int current_position = -1;
   std::map<std::string, std::unique_ptr<openpangu::Router>> routers;
@@ -180,6 +181,8 @@ struct Decoder {
       cache_control_host.resize(cache_control_offsets.size()*16*program.prefill_tokens,0);
       cache_controls=std::make_unique<DeviceTensor>(std::vector<int64_t>{int64_t(cache_control_host.size())},ACL_UINT8,1);
     }
+    if(program.uncaptured_prefill)
+      mome_query_starts=std::make_unique<DeviceTensor>(std::vector<int64_t>{2},ACL_INT32,4);
     token_index =
         std::make_unique<DeviceTensor>(std::vector<int64_t>{program.prefill_tokens}, ACL_INT32, 4);
     position_index =
@@ -436,21 +439,24 @@ struct Decoder {
     return y;
   }
   V mome(V x, const std::string &name, int position,
-         const std::string &state_name, bool inplace = false) {
+         const std::string &state_name, bool inplace = false, uint32_t queries = 1) {
+    if(!queries || x.size()%queries || (queries>1 && (!inplace || !mome_query_starts || queries!=active_tokens)))
+      throw std::runtime_error("MoME sequence envelope");
+    const auto channels=x.size()/queries;
     auto &ptr = mome_states[state_name];
     if (!ptr) {
       resident::TransferScope constants(resident::TransferRole::ControlInput);
-      ptr = std::make_unique<MomeState>(x.size(), program.resident_sequences);
+      ptr = std::make_unique<MomeState>(channels, program.resident_sequences);
       auto &source = cpu(name + ".weight");
       std::vector<uint16_t> weight(source.size());
-      for (size_t j = 0; j < x.size(); ++j)
+      for (size_t j = 0; j < channels; ++j)
         for (int tap = 0; tap < 3; ++tap)
-          weight[tap * x.size() + j] = tobf(source[j * 3 + tap]);
+          weight[tap * channels + j] = tobf(source[j * 3 + tap]);
       resident::parameter_upload(ptr->weight, weight);
     }
     auto &s = *ptr;
     if (!inplace) to_device(s.input, x);
-    View input_view(inplace ? x.data() : s.input.data, {1, int64_t(x.size())}, ACL_BF16);
+    View input_view(inplace ? x.data() : s.input.data, {queries, int64_t(channels)}, ACL_BF16);
     if (position != current_position)
       throw std::runtime_error("position input mismatch");
     uint64_t bytes = 0;
@@ -458,9 +464,9 @@ struct Decoder {
     checked(prepared::query("aclnnAiInfraFusedCausalConv1d", false,
                             aclnnAiInfraFusedCausalConv1dGetWorkspaceSize,
                             input_view.t, s.weight.tensor, s.state.tensor,
-                            s.starts.tensor, resident_index->tensor, nullptr, nullptr,
+                            queries>1 ? mome_query_starts->tensor : s.starts.tensor, resident_index->tensor, nullptr, nullptr,
                             nullptr, control_row(*position_index), nullptr, nullptr,
-                            nullptr, 0, -1, 0, 1, 1, 128, 1, true, s.out.tensor,
+                            nullptr, 0, -1, 0, queries, 1, 128, 1, true, queries>1 ? input_view.t : s.out.tensor,
                             &bytes, &e),
             "MoME prepare");
     run(aclnnAiInfraFusedCausalConv1d, bytes, e);
@@ -1249,6 +1255,7 @@ struct Decoder {
       throw std::runtime_error("compiled token chunk bounds");
     for(auto id:tokens)if(id>=vocabulary())throw std::runtime_error("chunk token vocabulary");
     active_tokens=count;active_row=0;current_position=pos;
+    if(mome_query_starts)resident::control_upload(*mome_query_starts,std::vector<int32_t>{0,int32_t(count)});
     std::vector<int32_t> ids(program.prefill_tokens,0), positions(program.prefill_tokens,0);
     std::vector<int64_t> positions64(program.prefill_tokens,0), lengths(program.prefill_tokens,0);
     Host c(program.prefill_tokens*64,0), sn(program.prefill_tokens*64,0);
@@ -1389,8 +1396,8 @@ struct Decoder {
       if(program.shared_pages) {
         auto page_tokens=state.packed_c8?32:16;
         auto page_bytes=state.key.bytes/(state.physical_capacity/page_tokens);
-        for(auto page:state.page_binding.pages(slot))
-          execution.zero(static_cast<uint8_t *>(state.key.data)+size_t(page)*page_bytes,page_bytes);
+        for(const auto &span:inferfabric::state::page_spans(state.page_binding.pages(slot),page_bytes,state.key.bytes))
+          execution.zero(static_cast<uint8_t *>(state.key.data)+span.offset,span.bytes);
         state.page_binding.release(slot);
         if(slot==active_resident)upload_page_table(state);
       } else {
