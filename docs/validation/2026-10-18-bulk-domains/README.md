@@ -52,3 +52,40 @@ reference, output prefix `bulk-domains8k`. The resulting bundle is
 comparison. Frozen raw tokens, process result and all resource audits are
 preserved; earlier stages retain their gate summaries. The previous comparison
 is `../2026-10-18-output-rows/output-rows8k-frozen`.
+
+
+## 64K vLLM Rust HTTP qualification
+
+The completed HTTP run passes through-first-EOS references for early/middle/late
+retrieval prompts (65,520 input tokens), SSE/collected agreement, queued isolation,
+disconnect recovery, short-request progress, context overflow, prefix salt
+isolation and eviction, and graceful shutdown. Serving configuration is
+`max_num_seqs=2`, `max_num_batched_tokens=4096`; the compiled resident capacity is
+three. It executes 405,921 input tokens with 38 admissions and six mixed ticks;
+all input histories are accounted for and shared-page occupancy drains to zero.
+
+Mixed long-request TTFT: **11.751 / 11.695 / 11.714 seconds**. Mixed short-request
+TTFT: **739 / 759 / 763 ms**; all short requests finish before their long peer.
+Short SSE text-chunk intervals are **508–547 ms**, not isolated token TPOT.
+Continuous batching makes progress, but a decode request sharing a bulk forward
+still experiences its chunk execution latency. This remains an optimization gap.
+The preceding candidate's separate run had long TTFT 33.985–49.693 seconds and
+short TTFT 1.313–3.080 seconds; this is a historical comparison, not a controlled
+alternating trial.
+
+Cold-prefix TTFT is 9.529 seconds for salt A, 11.063 seconds for salt B, and
+11.052 seconds after eviction. Warm TTFT is 2.074 / 2.014 seconds with 61,440
+cached tokens and a 4,080-token suffix. Two hits restore 122,880 tokens; six
+snapshots are published and no cache entries remain after shutdown. Snapshot
+copies remain device-to-device: 6,952,009,728 bytes in 1600 copies per rank over
+the full run. No prefill graph replays occur. All rank resource and residency
+checks pass. Long-context native TPOT is measured separately.
+
+Reproduction: same frozen bundle/library and environment, HCCL port 44000,
+`qualify-program-http.py`, unchanged `inferfabric-server-apc-device-zero` vLLM Rust
+frontend, `batched16-preparation-reference.json`,
+`retrieval-64k-reference.json`, `device-zero-apc-prefix64-case.json`, port 18085,
+packed prefill, first-EOS and arithmetic-history checks, 300-second request
+inactivity timeout. Raw evidence is `bulk-domains64k-http/`; `results.json` is the
+terminal completed report. Intermediate `*-progress.json` files are not terminal
+status records.
