@@ -12,6 +12,7 @@
 #include <time.h>
 #include <unistd.h>
 #include "sampled_allocations.h"
+#include "cann_pool_trace.h"
 
 namespace {
 std::atomic<bool> stopping{false};

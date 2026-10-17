@@ -1,0 +1,21 @@
+{
+  "/usr/local/Ascend/cann/lib64/libnnopbase.so": {
+    "sha256": "308dda461704a6e5f70de6e0eac4495e9829b9cec3328563b75a5b382c6e438b",
+    "addresses": [
+      "0x1398c0",
+      "0xf95a4",
+      "0xf9574",
+      "0x139ab0"
+    ],
+    "symbols": "aclTensor::aclTensor(long const*, unsigned long, aclDataType, long const*, long, aclFormat, long const*, unsigned long, void*)\n??:?\naclCreateTensor\n??:?\naclCreateTensor\n??:?\naclTensor::aclTensor(long const*, unsigned long, aclDataType, long const*, long, aclFormat, long const*, unsigned long, void*)\n??:?\n"
+  },
+  "/usr/local/Ascend/ascend-toolkit/vendors/omni_custom_transformer/op_api/lib/libcust_opapi.so": {
+    "sha256": "aa73d7fd12f51d172c171ff4e7a36c05dc4c1c3183f69f6e0cdadecd06642d3b",
+    "addresses": [
+      "0x953a0",
+      "0x96584",
+      "0x13214c"
+    ],
+    "symbols": "AiInfraFusedInferAttentionSinkCreateMaxSumPlaceholder\n??:?\naclnnAiInfraFusedInferAttentionSinkGetWorkspaceSize\n??:?\naclnnAiInfraKvRmsNormRopeCacheGetWorkspaceSize\n??:?\n"
+  }
+}

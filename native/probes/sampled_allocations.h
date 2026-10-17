@@ -18,37 +18,37 @@ extern "C" void *__libc_memalign(size_t,size_t);
 
 namespace sampled {
 constexpr size_t shards=32, capacity=2048, depth=12;
-struct Entry { void *pointer; size_t bytes; uint64_t serial; int frames; void *stack[depth]; };
+struct Entry { void *pointer; size_t bytes; uint64_t serial; unsigned kind; int frames; void *stack[depth]; };
 struct Shard { pthread_mutex_t mutex=PTHREAD_MUTEX_INITIALIZER; Entry entries[capacity]{}; };
 inline Shard table[shards];
 inline std::atomic<bool> enabled{false};
 inline std::atomic<uint64_t> serial{0}, dropped{0};
 inline unsigned rate=1024;
-inline thread_local unsigned countdown=0;
+inline thread_local unsigned countdown[2]{};
 inline thread_local bool internal=false;
 inline size_t hash(void *p) {
   auto x=reinterpret_cast<uintptr_t>(p)>>4;
   x^=x>>23; x*=0x2127599bf4325c37ULL; return x^(x>>47);
 }
-inline void forget(void *p) {
+inline void forget(void *p,unsigned kind=0) {
   if(!p || !enabled.load(std::memory_order_relaxed)) return;
-  const auto h=hash(p);auto &s=table[h%shards];
+  const auto h=hash(p)^kind;auto &s=table[h%shards];
   pthread_mutex_lock(&s.mutex);
   for(size_t j=0;j<capacity;++j) {
     auto &e=s.entries[(h/shards+j)%capacity];
     if(!e.pointer) break;
-    if(e.pointer==p){e.pointer=reinterpret_cast<void *>(1);break;}
+    if(e.pointer==p && e.kind==kind){e.pointer=reinterpret_cast<void *>(1);break;}
   }
   pthread_mutex_unlock(&s.mutex);
 }
-inline void record(void *p,size_t bytes) {
+inline void record(void *p,size_t bytes,unsigned kind=0) {
   if(!p || internal || !enabled.load(std::memory_order_relaxed)) return;
-  if(countdown){--countdown;return;}
-  countdown=rate-1;
+  if(countdown[kind]){--countdown[kind];return;}
+  countdown[kind]=rate-1;
   internal=true;
-  Entry next{};next.pointer=p;next.bytes=bytes;next.serial=++serial;
+  Entry next{};next.pointer=p;next.bytes=bytes;next.serial=++serial;next.kind=kind;
   next.frames=backtrace(next.stack,depth);
-  const auto h=hash(p);auto &s=table[h%shards];
+  const auto h=hash(p)^kind;auto &s=table[h%shards];
   pthread_mutex_lock(&s.mutex);
   size_t slot=capacity;
   for(size_t j=0;j<capacity;++j) {
@@ -75,7 +75,7 @@ inline void snapshot(FILE *out,long long time_ns) {
     pthread_mutex_unlock(&s.mutex);
     for(size_t j=0;j<count;++j) {
       const auto &e=copy[j];
-      fprintf(out,"allocation %llu %zu",(unsigned long long)e.serial,e.bytes);
+      fprintf(out,"allocation %llu %zu kind=%s",(unsigned long long)e.serial,e.bytes,e.kind?"cann-client":"libc");
       for(int i=0;i<e.frames;++i) {
         Dl_info info{};
         if(dladdr(e.stack[i],&info) && info.dli_fbase)
@@ -101,7 +101,7 @@ extern "C" void *realloc(void *p,size_t n) {
   if(next || n==0)for(size_t j=0;j<sampled::capacity;++j) {
     auto &e=s.entries[(h/sampled::shards+j)%sampled::capacity];
     if(!e.pointer)break;
-    if(e.pointer==p){e.pointer=reinterpret_cast<void *>(1);break;}
+    if(e.pointer==p && e.kind==0){e.pointer=reinterpret_cast<void *>(1);break;}
   }
   pthread_mutex_unlock(&s.mutex);
   if(next)sampled::record(next,n);

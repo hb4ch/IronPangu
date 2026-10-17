@@ -20,7 +20,11 @@ def parse(text):
             if current is None or len(words)<4:raise ValueError('allocation outside snapshot')
             identity=int(words[1]);size=int(words[2])
             if identity in current['entries'] or size<0:raise ValueError('invalid allocation identity/size')
-            current['entries'][identity]=(size,tuple(words[3:]))
+            kind='libc';frames=words[3:]
+            if frames[0].startswith('kind='):
+                kind=frames.pop(0).split('=',1)[1]
+            if kind not in ('libc','cann-client') or not frames:raise ValueError('invalid allocation kind/stack')
+            current['entries'][identity]=(size,kind,tuple(frames))
         elif words==['end']:
             if current is None:raise ValueError('end without snapshot')
             result.append(current);current=None
@@ -35,14 +39,15 @@ def compare(first,last):
         raise ValueError('incompatible sample windows')
     totals=defaultdict(lambda:[0,0,0,0])
     for offset,snapshot in ((0,first),(2,last)):
-        for size,stack in snapshot['entries'].values():
-            totals[stack][offset]+=size;totals[stack][offset+1]+=1
-    rows=[dict(stack=list(stack),initial_bytes=v[0],initial_count=v[1],final_bytes=v[2],final_count=v[3],
-               byte_growth=v[2]-v[0],count_growth=v[3]-v[1]) for stack,v in totals.items()]
+        for size,kind,stack in snapshot['entries'].values():
+            totals[(kind,stack)][offset]+=size;totals[(kind,stack)][offset+1]+=1
+    rows=[dict(kind=kind,stack=list(stack),initial_bytes=v[0],initial_count=v[1],final_bytes=v[2],final_count=v[3],
+               byte_growth=v[2]-v[0],count_growth=v[3]-v[1]) for (kind,stack),v in totals.items()]
     rows.sort(key=lambda row:row['byte_growth'],reverse=True)
     return dict(rate=first['rate'],first_time_ns=first['time_ns'],last_time_ns=last['time_ns'],
                 scope='unscaled sampled live allocations; not exact total heap size or proof of leaks',
-                sampled_byte_growth=sum(r['byte_growth'] for r in rows),stacks=rows)
+                sampled_byte_growth={kind:sum(r['byte_growth'] for r in rows if r['kind']==kind)
+                                     for kind in ('libc','cann-client')},stacks=rows)
 
 
 def main():

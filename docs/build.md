@@ -546,3 +546,22 @@ The report preserves module-relative return addresses for `addr2line -f -C` and
 reports unscaled sampled bytes/counts. It must not be interpreted as exact byte
 attribution or proof that a growing vendor pool is unbounded. The additional
 metadata and locking make this an offline diagnostic only.
+
+For the qualified CANN 9.1 installation, the probe also interposes its exported
+`op::internal::Allocate/DeAllocate` functions. `kind=cann-client` records track
+objects checked out from the vendor pool; `kind=libc` records track backing
+allocations. The two byte totals overlap and must never be added. The diagnostic
+resolves and forwards to the installed functions without reading private block
+headers or changing pool policy. This is version-specific offline tooling,
+not an execution dependency or a supported vendor API contract. Source the CANN
+environment and add `--cann` to `test-host-allocator-probe.py` to verify a known
+pool-object allocation/return; this test does not select an NPU device.
+
+`host_metadata_probe` is a separate small NPU executable built by CMake. Its
+`ordinary`, `repeatable`, `retained` and `released` modes repeat the 4096-row
+strided BF16 column-slice/Cast path for 17 batches of 128 calls, without model
+weights. Ordinary executors follow vendor automatic destruction; repeatable
+executors are explicitly destroyed after the existing batch stream completion.
+The other modes compare retaining input/output descriptors with releasing them
+after each batch. It reports glibc counters, not model correctness or production
+latency. Run it only inside the NPU container with the normal CANN environment.

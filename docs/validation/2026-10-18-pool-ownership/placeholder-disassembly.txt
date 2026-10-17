@@ -1,0 +1,130 @@
+
+/usr/local/Ascend/ascend-toolkit/vendors/omni_custom_transformer/op_api/lib/libcust_opapi.so:     file format elf64-littleaarch64
+
+
+Disassembly of section .text:
+
+00000000000952f0 <AiInfraFusedInferAttentionSinkCreateMaxSumPlaceholder@@Base+0xdc>:
+   952f0:	d101c3ff 	sub	sp, sp, #0x70
+   952f4:	d0000943 	adrp	x3, 1bf000 <_Z18ReportErrorMessageIJRA27_KcPS0_S3_EEvS3_S3_DpOT_@@Base+0xf5140>
+   952f8:	a9057bfd 	stp	x29, x30, [sp, #80]
+   952fc:	910143fd 	add	x29, sp, #0x50
+   95300:	f947a463 	ldr	x3, [x3, #3912]
+   95304:	f90033f3 	str	x19, [sp, #96]
+   95308:	aa0203f3 	mov	x19, x2
+   9530c:	f9400062 	ldr	x2, [x3]
+   95310:	f90027e2 	str	x2, [sp, #72]
+   95314:	d2800002 	mov	x2, #0x0                   	// #0
+   95318:	72001c1f 	tst	w0, #0xff
+   9531c:	540001a0 	b.eq	95350 <AiInfraFusedInferAttentionSinkCreateMaxSumPlaceholder@@Base+0x13c>  // b.none
+   95320:	f9000261 	str	x1, [x19]
+   95324:	d0000940 	adrp	x0, 1bf000 <_Z18ReportErrorMessageIJRA27_KcPS0_S3_EEvS3_S3_DpOT_@@Base+0xf5140>
+   95328:	f947a400 	ldr	x0, [x0, #3912]
+   9532c:	f94027e1 	ldr	x1, [sp, #72]
+   95330:	f9400002 	ldr	x2, [x0]
+   95334:	eb020021 	subs	x1, x1, x2
+   95338:	d2800002 	mov	x2, #0x0                   	// #0
+   9533c:	54000401 	b.ne	953bc <AiInfraFusedInferAttentionSinkCreateMaxSumPlaceholder@@Base+0x1a8>  // b.any
+   95340:	a9457bfd 	ldp	x29, x30, [sp, #80]
+   95344:	f94033f3 	ldr	x19, [sp, #96]
+   95348:	9101c3ff 	add	sp, sp, #0x70
+   9534c:	d65f03c0 	ret
+   95350:	d2800100 	mov	x0, #0x8                   	// #8
+   95354:	a9037fff 	stp	xzr, xzr, [sp, #48]
+   95358:	f90023ff 	str	xzr, [sp, #64]
+   9535c:	97fe3b45 	bl	24070 <_Znwm@plt>
+   95360:	9100a3e1 	add	x1, sp, #0x28
+   95364:	91002008 	add	x8, x0, #0x8
+   95368:	f90003e1 	str	x1, [sp]
+   9536c:	d2801fe9 	mov	x9, #0xff                  	// #255
+   95370:	f900001f 	str	xzr, [x0]
+   95374:	d2800027 	mov	x7, #0x1                   	// #1
+   95378:	aa0003e6 	mov	x6, x0
+   9537c:	aa0003e3 	mov	x3, x0
+   95380:	aa0703e1 	mov	x1, x7
+   95384:	52800045 	mov	w5, #0x2                   	// #2
+   95388:	d2800004 	mov	x4, #0x0                   	// #0
+   9538c:	52800002 	mov	w2, #0x0                   	// #0
+   95390:	f9000fe0 	str	x0, [sp, #24]
+   95394:	a90283e9 	stp	x9, x0, [sp, #40]
+   95398:	a903a3e8 	stp	x8, x8, [sp, #56]
+   9539c:	97fe3d11 	bl	247e0 <aclCreateTensor@plt>
+   953a0:	f9000260 	str	x0, [x19]
+   953a4:	f9401be0 	ldr	x0, [sp, #48]
+   953a8:	b4fffbe0 	cbz	x0, 95324 <AiInfraFusedInferAttentionSinkCreateMaxSumPlaceholder@@Base+0x110>
+   953ac:	f94023e1 	ldr	x1, [sp, #64]
+   953b0:	cb000021 	sub	x1, x1, x0
+   953b4:	97fe3dc7 	bl	24ad0 <_ZdlPvm@plt>
+   953b8:	17ffffdb 	b	95324 <AiInfraFusedInferAttentionSinkCreateMaxSumPlaceholder@@Base+0x110>
+   953bc:	97fe42b9 	bl	25ea0 <__stack_chk_fail@plt>
+   953c0:	aa0003f3 	mov	x19, x0
+   953c4:	9100c3e0 	add	x0, sp, #0x30
+   953c8:	97fe410e 	bl	25800 <_ZNSt12_Vector_baseIlSaIlEED2Ev@plt>
+   953cc:	aa1303e0 	mov	x0, x19
+   953d0:	97fe3ed8 	bl	24f30 <_Unwind_Resume@plt>
+   953d4:	17fffffb 	b	953c0 <AiInfraFusedInferAttentionSinkCreateMaxSumPlaceholder@@Base+0x1ac>
+
+/usr/local/Ascend/ascend-toolkit/vendors/omni_custom_transformer/op_api/lib/libcust_opapi.so:     file format elf64-littleaarch64
+
+
+Disassembly of section .text:
+
+0000000000131cb8 <aclnnAiInfraKvRmsNormRopeCacheGetWorkspaceSize@@Base+0x294>:
+  131cb8:	b40021f5 	cbz	x21, 1320f4 <aclnnAiInfraKvRmsNormRopeCacheGetWorkspaceSize@@Base+0x6d0>
+  131cbc:	aa1503e0 	mov	x0, x21
+  131cc0:	97fbccbc 	bl	24fb0 <_ZNK9aclTensor12GetViewShapeEv@plt>
+  131cc4:	aa0003f8 	mov	x24, x0
+  131cc8:	aa1503e0 	mov	x0, x21
+  131ccc:	97fbcdd1 	bl	25410 <_ZNK9aclTensor15GetStorageShapeEv@plt>
+  131cd0:	aa0003f7 	mov	x23, x0
+  131cd4:	aa1503e0 	mov	x0, x21
+  131cd8:	97fbd0fa 	bl	260c0 <_ZNK9aclTensor14GetViewStridesEv@plt>
+  131cdc:	aa0003f6 	mov	x22, x0
+  131ce0:	aa1503e0 	mov	x0, x21
+  131ce4:	97fbcc67 	bl	24e80 <_ZNK9aclTensor13GetViewOffsetEv@plt>
+  131ce8:	aa0003e5 	mov	x5, x0
+  131cec:	aa1603e4 	mov	x4, x22
+  131cf0:	aa1703e3 	mov	x3, x23
+  131cf4:	aa1803e2 	mov	x2, x24
+  131cf8:	aa1503e1 	mov	x1, x21
+  131cfc:	aa1c03e0 	mov	x0, x28
+  131d00:	97fbcbe8 	bl	24ca0 <_ZN13aclOpExecutor10CreateViewEPK9aclTensorRKN4gert5ShapeES6_RKN2op8internal11SmallVectorIlLm25ENS8_13PoolAllocatorIlEEEEl@plt>
+  131d04:	aa0003f8 	mov	x24, x0
+  131d08:	b4003f60 	cbz	x0, 1324f4 <aclnnAiInfraKvRmsNormRopeCacheGetWorkspaceSize@@Base+0xad0>
+
+/usr/local/Ascend/ascend-toolkit/vendors/omni_custom_transformer/op_api/lib/libcust_opapi.so:     file format elf64-littleaarch64
+
+
+Disassembly of section .text:
+
+00000000001320f4 <aclnnAiInfraKvRmsNormRopeCacheGetWorkspaceSize@@Base+0x6d0>:
+  1320f4:	d2800100 	mov	x0, #0x8                   	// #8
+  1320f8:	a916ffff 	stp	xzr, xzr, [sp, #360]
+  1320fc:	f900bfff 	str	xzr, [sp, #376]
+  132100:	97fbc7dc 	bl	24070 <_Znwm@plt>
+  132104:	aa0003e1 	mov	x1, x0
+  132108:	91002002 	add	x2, x0, #0x8
+  13210c:	f9406fe0 	ldr	x0, [sp, #216]
+  132110:	a9168be1 	stp	x1, x2, [sp, #360]
+  132114:	f900003f 	str	xzr, [x1]
+  132118:	f900bfe2 	str	x2, [sp, #376]
+  13211c:	97fbc7a9 	bl	23fc0 <_ZNK9aclTensor11GetDataTypeEv@plt>
+  132120:	a9569fe6 	ldp	x6, x7, [sp, #360]
+  132124:	f90003ff 	str	xzr, [sp]
+  132128:	2a0003e2 	mov	w2, w0
+  13212c:	52800045 	mov	w5, #0x2                   	// #2
+  132130:	d2800004 	mov	x4, #0x0                   	// #0
+  132134:	d2800003 	mov	x3, #0x0                   	// #0
+  132138:	cb0600e7 	sub	x7, x7, x6
+  13213c:	aa0603e0 	mov	x0, x6
+  132140:	9343fce7 	asr	x7, x7, #3
+  132144:	aa0703e1 	mov	x1, x7
+  132148:	97fbc9a6 	bl	247e0 <aclCreateTensor@plt>
+  13214c:	f940b7e1 	ldr	x1, [sp, #360]
+  132150:	aa0003f8 	mov	x24, x0
+  132154:	b4ffddc1 	cbz	x1, 131d0c <aclnnAiInfraKvRmsNormRopeCacheGetWorkspaceSize@@Base+0x2e8>
+  132158:	f940bfe2 	ldr	x2, [sp, #376]
+  13215c:	aa0103e0 	mov	x0, x1
+  132160:	cb010041 	sub	x1, x2, x1
+  132164:	97fbca5b 	bl	24ad0 <_ZdlPvm@plt>
+  132168:	17fffee9 	b	131d0c <aclnnAiInfraKvRmsNormRopeCacheGetWorkspaceSize@@Base+0x2e8>

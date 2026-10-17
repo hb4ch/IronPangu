@@ -14,6 +14,7 @@ import time
 def main():
     parser=argparse.ArgumentParser(description=__doc__)
     parser.add_argument('library',type=Path)
+    parser.add_argument('--cann',action='store_true',help='Also verify CANN 9.1 pool-client ownership with no device selection')
     args=parser.parse_args()
     with tempfile.TemporaryDirectory() as directory:
         output=Path(directory)/'allocations.jsonl'
@@ -70,6 +71,25 @@ def main():
             if child.wait(timeout=10)!=0:raise RuntimeError('probe intercepted frontend sigwait shutdown')
         finally:
             if child.poll() is None:child.kill();child.wait()
+        if args.cann:
+            stacks=Path(directory)/'cann-stacks.txt'
+            env.update(INFERFABRIC_HOST_ALLOCATOR_AUDIT=str(Path(directory)/'cann.jsonl'),
+                       INFERFABRIC_HOST_ALLOCATION_STACKS=str(stacks),
+                       INFERFABRIC_HOST_ALLOCATION_START=str(Path(directory)/'cann-start'))
+            code=('import ctypes,time,pathlib,sys; '
+                  'acl=ctypes.CDLL("libascendcl.so",mode=ctypes.RTLD_GLOBAL); assert acl.aclInit(None)==0; '
+                  'pool=ctypes.CDLL("libnnopbase.so",mode=ctypes.RTLD_GLOBAL); api=ctypes.CDLL(None); '
+                  'alloc=api._ZN2op8internal8AllocateEm; alloc.argtypes=[ctypes.c_size_t]; alloc.restype=ctypes.c_void_p; '
+                  'free=api._ZN2op8internal10DeAllocateEPv; free.argtypes=[ctypes.c_void_p]; '
+                  'pathlib.Path(sys.argv[1]).touch(); '
+                  'time.sleep(2.3); p=alloc(4093); assert p; time.sleep(2.3); free(p); time.sleep(2.3); '
+                  'assert acl.aclFinalize()==0')
+            subprocess.run([sys.executable,'-c',code,env['INFERFABRIC_HOST_ALLOCATION_START']],env=env,check=True)
+            snapshots=stacks.read_text().split('snapshot ')[1:]
+            live=[any(line.startswith('allocation ') and line.split()[2:4]==['4093','kind=cann-client']
+                      for line in s.splitlines()) for s in snapshots]
+            if not any(live) or live[-1] or any('dropped=0\n' not in s for s in snapshots):
+                raise RuntimeError('CANN pool-client allocate/free ownership was not observed')
         print('PASS: allocation/release, output ownership, helper isolation and sigwait shutdown')
 
 
