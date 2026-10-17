@@ -15,6 +15,8 @@ import statistics
 def compare(cases, records, repetitions, eos):
     if repetitions < 1 or not cases:
         raise ValueError('empty reference or invalid repetitions')
+    if any(c.get('qualification', {}).get('output_is_placeholder') for c in cases):
+        raise ValueError('placeholder outputs are not a reference; run the independent reference first')
     groups = {i: [] for i in range(len(cases) * repetitions)}
     for row in records:
         if 'request' not in row:

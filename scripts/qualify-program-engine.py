@@ -30,6 +30,8 @@ def main():
     args = p.parse_args()
     args.output.mkdir(parents=True, exist_ok=False)
     cases = json.loads(args.cases.read_text()) * 3
+    if any(c.get('qualification', {}).get('output_is_placeholder') for c in cases):
+        raise ValueError('placeholder outputs are not a reference; run the independent reference first')
     requests = args.output / 'requests.txt'
     requests.write_text(''.join(f"{len(c['output_ids'])} " + ' '.join(map(str, c['input_ids'])) + '\n' for c in cases))
     env = dict(os.environ, INFERFABRIC_DECODE_GRAPH='1',

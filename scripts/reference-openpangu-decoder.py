@@ -37,6 +37,8 @@ if __name__ == '__main__':
         ids=case['input_ids']
         out=model.generate([{'prompt_token_ids':ids}],SamplingParams(temperature=0,max_tokens=len(case['output_ids']) if args.cases else 32,ignore_eos=bool(args.cases),logprobs=5))[0].outputs[0]
         results.append({'case':case.get('case',case.get('prompt')),'input_ids':ids,'output_ids':list(out.token_ids),'text':out.text,'logprobs':[{str(k):{'logprob':v.logprob,'rank':v.rank} for k,v in row.items()} for row in out.logprobs]})
+        if 'qualification' in case:
+            results[-1]['qualification'] = dict(case['qualification'], output_is_placeholder=False)
         if not args.cases:
             results[-1]['prompt']=case['prompt']
         print(json.dumps(results[-1],ensure_ascii=False),flush=True)

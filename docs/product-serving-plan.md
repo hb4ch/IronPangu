@@ -100,6 +100,66 @@ four-token TTFT improves another 12.56–12.76%. The increased workspace is plan
 before binding and all residency/arena audits pass. Larger full-model chunks,
 per-query recurrent/projection work and latency-budget scheduling remain open.
 
+### Next contract: a prepared prefill variant family
+
+The current executable supports decode and one exact prefill size. The existing
+`prefill_tokens` field is not permission to invoke every smaller shape. Introduce
+an explicit, versioned list of legal query counts, retaining the maximum count
+only as a storage bound. Keep old bundles' exact-shape behavior. Each variant
+needs its own numerical-class identity, tensor shapes, kernel recipes and cost
+record in the physical plan/viewer; do not advertise an unprepared shape.
+
+One engine must share weights, resident state and workspace across the family.
+Use separate graph handles, retained outputs and custom-kernel lifetimes per
+shape, with stable addresses. Discovery must exercise every shape and its output
+invocation before computing the maximum shared workspace. Repeat that complete
+preparation order before frozen-arena binding; account for all retained graph
+outputs. Startup must fail if any declared variant lacks prepared storage or
+exceeds the plan. A new shape must never trigger live capture/allocation fallback.
+
+Expose the exact supported counts through the native ABI and validate them
+against the manifest in Rust. Choose only legal counts fitting the remaining
+prompt, round token budget and context. For an isolated prefill, choose the
+largest qualified variant. With pending decode work, use measured upper-tail
+invocation latency to bound decode delay, choosing a smaller prepared variant
+when needed. Account for each admitted invocation's actual input tokens. A
+latency bound smaller than every available invocation must be reported as
+unachievable, not presented as a hard guarantee. Serial decode remains explicit
+until multi-sequence kernels are implemented.
+
+Qualification must alternate shapes on the same residents, exercise nonaligned
+page/window boundaries, cancel and reuse slots, and check independent outputs
+at the selected chunk boundaries. Preserve shape-dependent numerical differences
+as failures. Measure isolated TTFT separately from mixed-workload TTFT and
+per-token decode latency; streamed text chunks are not necessarily single tokens.
+This contract is planned, not yet implemented by the fixed-size engine.
+
+### Reproducible 64K retrieval ladder
+
+`scripts/make-long-context-cases.py` produces deterministic early/middle/late
+retrieval inputs at 8,192, 16,384, 32,768 and 65,536 **total** tokens, reserving
+16 tokens for generation by default. Each case records its exact needle token
+span and expected textual answer. Answers vary across cases. Record the emitted
+tokenizer/input hashes with the reference configuration. For example, inside the
+reference container:
+
+```sh
+python3 scripts/make-long-context-cases.py --tokenizer /models/92B/tokenizer.json \
+  --output retrieval-8k-input.json --contexts 8192
+bash scripts/reference-openpangu-decoder.sh --cases retrieval-8k-input.json \
+  --output retrieval-8k-reference.json --max-model-len 8192 \
+  --max-num-batched-tokens 16 --kv-cache-dtype int8_ds_mla
+```
+
+Generated `output_ids` are length placeholders, not expected tokens. The native
+qualifier/comparator reject marked placeholders; the offline reference preserves
+the case metadata and marks its generated outputs as non-placeholder. Check
+reference answer correctness as well as native/reference token parity. A shared
+wrong answer does not pass retrieval qualification. This suite is a baseline,
+not a substitute for diverse reasoning, boundary numerical tests, concurrent
+serving and pressure/cancellation soaks. Advance each context level only with
+its own full-model results; operator-level 64K coverage does not qualify serving.
+
 Experimental learned-index execution now includes explicit INT8 index queries/keys
 and FP16 scales/head weights in the [physical plan](learned-index-quantization.md).
 Its [C8 reference boundary comparison](validation/2026-10-17-learned-index-int8/README.md)
