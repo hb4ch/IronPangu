@@ -23,4 +23,8 @@ a stable speedup. This milestone establishes the descriptor reduction and
 small-fixture correctness, not the production latency target.
 
 Remote pipeline `lazy-row4k` completed with status 0, HCCL port 62600.
-The 8K mixed-request regression is a separate follow-up and is not claimed here.
+The subsequent `lazy-row8k` frozen-only regression passed all 39 output tokens
+across six interleaved requests, including three 8176-token prompts and short
+arithmetic peers. `mixed8k-summary.json` records unchanged frozen resources and
+zero activation transfers; `mixed8k-trace.json` records actual chunk geometry
+and separate pure-decode timings. This does not replace HTTP or 64K regression.
