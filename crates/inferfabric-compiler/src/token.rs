@@ -347,6 +347,7 @@ pub fn write_bundle(
     let program = crate::token_program::lower(graph, Some(inventory))?;
     let binary = program.encode()?;
     let physical = crate::token_physical::lower(graph, &topology.devices)?;
+    let serving = crate::token_serving::lower(graph, &physical, &binary, &inventory.metadata_sha256)?;
     if output.exists() {
         return Err(invalid(
             "token bundle output already exists; choose a new directory",
@@ -383,6 +384,8 @@ pub fn write_bundle(
             )?;
         }
         crate::write_atomic(&staging.join("execution.bin"), &binary)?;
+        crate::write_atomic(&staging.join("serving.json"),
+            &serde_json::to_vec_pretty(&serving).map_err(|e| invalid(e.to_string()))?)?;
         crate::write_atomic(
             &staging.join("device-program.json"),
             &serde_json::to_vec_pretty(&program).map_err(|e| invalid(e.to_string()))?,

@@ -216,9 +216,31 @@ fn bundle_publication_is_complete_and_refuses_overwrite() {
     let physical: inferfabric_plan::physical::Plan =
         serde_json::from_slice(&std::fs::read(output.join("physical.json")).unwrap()).unwrap();
     inferfabric_plan::physical::verify(&physical).unwrap();
+    let serving: inferfabric_ir::serving::Manifest = serde_json::from_slice(
+        &std::fs::read(output.join("serving.json")).unwrap()).unwrap();
+    serving.validate().unwrap();
+    assert_eq!(serving.identity.checkpoint_metadata_sha256, inventory.metadata_sha256);
+    assert_eq!(serving.variants[0].max_tokens, 1);
+    assert!(serving.qualification.is_none());
     assert!(
         inferfabric_compiler::token::write_bundle(&graph, &parallel, &inventory, &output).is_err()
     );
     assert_eq!(std::fs::read_dir(&root).unwrap().count(), 1);
     std::fs::remove_dir_all(root).unwrap();
+}
+
+#[test]
+fn serving_state_is_derived_from_expanded_operators() {
+    let ModelDefinition::Execution { graph, parallel } = definition(include_str!(
+        "../../../examples/openpangu/92b-tp8-ep8-c8.inferfabric"
+    )).unwrap() else { panic!() };
+    let (variants, states) = inferfabric_compiler::token_serving::envelope(&graph, parallel.devices.len()).unwrap();
+    assert_eq!(variants[0].max_tokens, 1);
+    assert!(!variants[0].packed);
+    assert_eq!(states.len(), 46 * 4);
+    use inferfabric_ir::serving::Storage;
+    assert_eq!(states.iter().filter(|s| matches!(s.storage, Storage::Slot { .. })).count(), 46 * 3);
+    assert_eq!(states.iter().filter(|s| matches!(s.storage, Storage::Pages { row_bytes: 656, page_tokens: 32, .. })).count(), 16);
+    assert_eq!(states.iter().filter(|s| matches!(s.storage, Storage::Pages { row_bytes: 1152, page_tokens: 16, .. })).count(), 30);
+    assert!(states.iter().all(|s| !s.checkpoint_supported && s.ranks.len() == 8));
 }
