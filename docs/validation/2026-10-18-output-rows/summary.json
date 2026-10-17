@@ -1,0 +1,74 @@
+{
+  "library_sha256": "584ed7e498833498438553126fd9308a7cf5070a540ff5acd8604cde894b2ecf",
+  "execution_sha256": "4260ad065d0ab512b5ac964b7b5b27bd3ea96e69ac7aa4aaf044c30b2c5b1bf8",
+  "logical_graph_equals_previous": true,
+  "metadata": [
+    {
+      "rank": "rank-0",
+      "descriptors": 9919,
+      "strided": 516,
+      "transient_descriptors": 0,
+      "live_transient_descriptors": 0,
+      "transient_invocations": 0
+    },
+    {
+      "rank": "rank-1",
+      "descriptors": 9919,
+      "strided": 516,
+      "transient_descriptors": 0,
+      "live_transient_descriptors": 0,
+      "transient_invocations": 0
+    },
+    {
+      "rank": "rank-2",
+      "descriptors": 9919,
+      "strided": 516,
+      "transient_descriptors": 0,
+      "live_transient_descriptors": 0,
+      "transient_invocations": 0
+    },
+    {
+      "rank": "rank-3",
+      "descriptors": 9919,
+      "strided": 516,
+      "transient_descriptors": 0,
+      "live_transient_descriptors": 0,
+      "transient_invocations": 0
+    },
+    {
+      "rank": "rank-4",
+      "descriptors": 9919,
+      "strided": 516,
+      "transient_descriptors": 0,
+      "live_transient_descriptors": 0,
+      "transient_invocations": 0
+    },
+    {
+      "rank": "rank-5",
+      "descriptors": 9919,
+      "strided": 516,
+      "transient_descriptors": 0,
+      "live_transient_descriptors": 0,
+      "transient_invocations": 0
+    },
+    {
+      "rank": "rank-6",
+      "descriptors": 9919,
+      "strided": 516,
+      "transient_descriptors": 0,
+      "live_transient_descriptors": 0,
+      "transient_invocations": 0
+    },
+    {
+      "rank": "rank-7",
+      "descriptors": 9919,
+      "strided": 516,
+      "transient_descriptors": 0,
+      "live_transient_descriptors": 0,
+      "transient_invocations": 0
+    }
+  ],
+  "previous_arena_bytes": 40492359704,
+  "arena_bytes": 38009938432,
+  "saved_bytes_per_rank": 2482421272
+}

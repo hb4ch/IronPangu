@@ -379,6 +379,7 @@ pub fn write_bundle_with_variants(
         return Err(invalid("uncaptured prefill cannot include a captured shape family"));
     }
     if !prefill_variants.is_empty() {program=program.with_prefill_variants(prefill_variants.to_vec())?;}
+    if std::env::var_os("INFERFABRIC_EXPERIMENTAL_OUTPUT_ROWS").is_some() { program = program.with_output_rows()?; }
     let binary = program.encode()?;
     let physical = crate::token_physical::lower(graph, &topology.devices)?;
     let mut serving = crate::token_serving::lower(graph, &physical, &binary, &inventory.metadata_sha256)?;

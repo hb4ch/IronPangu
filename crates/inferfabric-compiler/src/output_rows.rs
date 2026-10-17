@@ -32,7 +32,7 @@ fn independent(node: &Instruction) -> bool {
 
 fn suffix_step(nodes: &[Instruction], uses: &[usize], end: usize) -> Option<usize> {
     let n = &nodes[end];
-    if independent(n) {
+    if independent(n) && nodes[n.inputs[0]].kind == 0 {
         return Some(end);
     }
     // Rank-major storage is not itself token-row storage. Only move this

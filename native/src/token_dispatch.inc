@@ -18,10 +18,30 @@ static std::string expert_name(std::string pattern, int expert) {
 }
 V execute_token() {
   metadata_enqueued.clear();
+  const auto full_tokens=active_tokens;
+  struct RestoreRows {uint32_t &rows;uint32_t original;~RestoreRows(){rows=original;}} restore_rows{active_tokens,full_tokens};
   std::vector<std::unique_ptr<Value>> values(program.nodes.size());
   auto remaining = program.uses;
   for (size_t i = 0; i < program.nodes.size(); ++i) {
     const auto &n = program.nodes[i];
+    if(compact_output_active && i==program.output_row_first) {
+      // This selection and its exact device-copy implementation are declared
+      // in IFTOKN08. The prefix has already performed every state update.
+      execution.instruction(int64_t(i),true,false);
+      if(output_sample_rows.empty()){execution.instruction(-1);return {};}
+      const auto &source=std::get<V>(*values.at(program.output_row_source));
+      const size_t width=program.output_row_width;
+      if(source.size()!=width*full_tokens)throw std::runtime_error("output row source extent");
+      V selected(width*output_sample_rows.size(),source.dtype());
+      for(size_t row=0;row<output_sample_rows.size();++row) {
+        auto input=output_sample_rows[row];
+        if(input>=full_tokens)throw std::runtime_error("output selection row bounds");
+        resident::copy(static_cast<uint8_t *>(selected.data())+row*width*resident::element_bytes(source.dtype()),
+          static_cast<uint8_t *>(source.data())+input*width*resident::element_bytes(source.dtype()),width*resident::element_bytes(source.dtype()));
+      }
+      values[program.output_row_source]=std::make_unique<Value>(std::move(selected));
+      active_tokens=output_sample_rows.size();
+    }
     execution.instruction(int64_t(i),
         n.op=="copy" || n.op=="repeat" || n.op=="repeat_heads" || n.op=="concat" || n.op=="expert_pack" ||
         (active_tokens>1 && (n.op=="gather" || n.op=="slice" || n.op=="query_project" || n.op=="query_rotary_extract" || n.op=="rope_f32" || n.op=="rope" || n.op=="mla_query" || n.op=="mla_value" || n.op=="mome" || (n.op=="sparse_index" && program.nodes[n.inputs[0]].kind!=5))),

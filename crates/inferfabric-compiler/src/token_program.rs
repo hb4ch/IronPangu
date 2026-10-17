@@ -36,6 +36,8 @@ pub struct Program {
     pub shared_pages: bool,
     pub eos: usize,
     pub output: usize,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub output_rows: Option<crate::output_rows::OutputRows>,
     pub instructions: Vec<Instruction>,
     pub conversions_shared: usize,
     pub copies_eliminated: usize,
@@ -153,7 +155,7 @@ pub fn lower(graph: &Graph, inventory: Option<&Inventory>) -> Result<Program> {
     let types = graph.validate()?;
     let mut p = Program {
         format: "inferfabric.token-program.v2".into(), max_context: graph.max_context, resident_sequences: 1, prefill_tokens: 1, uncaptured_prefill: false, prefill_variants: vec![], shared_pages: false,
-        eos: graph.eos, output: 0, instructions: vec![], conversions_shared: 0, copies_eliminated: 0,
+        eos: graph.eos, output: 0, output_rows: None, instructions: vec![], conversions_shared: 0, copies_eliminated: 0,
         limitations: vec!["Per-token vendor composites are expanded into declared API invocations, explicit casts, packing and initialization of outputs. Parameter/state preparation remains a declared initialization recipe; vendor-internal kernel launches are opaque. Hardware preparation binds fixed arena slots; this is not a cost-optimized arena packing.".into()],
     };
     let mut outputs = vec![];
@@ -707,6 +709,12 @@ pub fn lower(graph: &Graph, inventory: Option<&Inventory>) -> Result<Program> {
 }
 
 impl Program {
+    pub fn with_output_rows(mut self) -> Result<Self> {
+        if !self.uncaptured_prefill { return Err(invalid("compact output rows require uncaptured prefill")); }
+        self.output_rows = Some(crate::output_rows::plan(&self.instructions, self.output)?.ok_or_else(|| invalid("no safe output suffix"))?);
+        let residents = self.resident_sequences;
+        self.with_resident_sequences(residents)
+    }
     pub fn with_uncaptured_prefill(mut self) -> Result<Self> {
         self.uncaptured_prefill = true;
         self.prefill_tokens = 4096;
@@ -798,11 +806,16 @@ impl Program {
     }
     pub fn with_resident_sequences(mut self, count: usize) -> Result<Self> {
         self.resident_sequences = count;
-        self.format = if self.uncaptured_prefill { "inferfabric.token-program.v7" } else if !self.prefill_variants.is_empty() { "inferfabric.token-program.v6" } else if self.shared_pages { "inferfabric.token-program.v5" } else if self.prefill_tokens > 1 { "inferfabric.token-program.v4" } else if count == 1 { "inferfabric.token-program.v2" } else { "inferfabric.token-program.v3" }.into();
+        self.format = if self.output_rows.is_some() { "inferfabric.token-program.v8" } else if self.uncaptured_prefill { "inferfabric.token-program.v7" } else if !self.prefill_variants.is_empty() { "inferfabric.token-program.v6" } else if self.shared_pages { "inferfabric.token-program.v5" } else if self.prefill_tokens > 1 { "inferfabric.token-program.v4" } else if count == 1 { "inferfabric.token-program.v2" } else { "inferfabric.token-program.v3" }.into();
         self.validate()?;
         Ok(self)
     }
     pub fn validate(&self) -> Result<()> {
+        if let Some(rows) = &self.output_rows {
+            if !self.uncaptured_prefill || crate::output_rows::plan(&self.instructions, self.output)?.as_ref() != Some(rows) {
+                return Err(invalid("output row plan does not match the proven suffix"));
+            }
+        }
         if self.uncaptured_prefill && (self.prefill_tokens != 4096 || !self.prefill_variants.is_empty()) {
             return Err(invalid("uncaptured prefill requires a 4096-token envelope without captured variants"));
         }
@@ -811,7 +824,7 @@ impl Program {
             self.prefill_variants.last().is_some_and(|&n|n!=self.prefill_tokens) {
             return Err(invalid("invalid exact prefill variant family"));
         }
-        if self.format != if self.uncaptured_prefill { "inferfabric.token-program.v7" } else if !self.prefill_variants.is_empty() { "inferfabric.token-program.v6" } else if self.shared_pages { "inferfabric.token-program.v5" } else if self.prefill_tokens > 1 { "inferfabric.token-program.v4" } else if self.resident_sequences == 1 { "inferfabric.token-program.v2" } else { "inferfabric.token-program.v3" }
+        if self.format != if self.output_rows.is_some() { "inferfabric.token-program.v8" } else if self.uncaptured_prefill { "inferfabric.token-program.v7" } else if !self.prefill_variants.is_empty() { "inferfabric.token-program.v6" } else if self.shared_pages { "inferfabric.token-program.v5" } else if self.prefill_tokens > 1 { "inferfabric.token-program.v4" } else if self.resident_sequences == 1 { "inferfabric.token-program.v2" } else { "inferfabric.token-program.v3" }
             || (!self.uncaptured_prefill && !matches!(self.prefill_tokens, 1 | 2 | 4 | 8 | 16 | 32))
             || self.prefill_tokens > self.max_context
             || ((self.prefill_tokens > 1 || self.shared_pages) && self.instructions.iter().any(|i| i.op == "cache_quantize_append"))
@@ -877,7 +890,7 @@ impl Program {
         if self.instructions.iter().any(|i| i.kernel == "unbound") {
             return Err(invalid("cannot execute unbound kernel selection"));
         }
-        let mut b = if self.uncaptured_prefill { b"IFTOKN07" } else if !self.prefill_variants.is_empty() { b"IFTOKN06" } else if self.shared_pages { b"IFTOKN05" } else if self.prefill_tokens > 1 { b"IFTOKN04" } else if self.resident_sequences == 1 { b"IFTOKN02" } else { b"IFTOKN03" }.to_vec();
+        let mut b = if self.output_rows.is_some() { b"IFTOKN08" } else if self.uncaptured_prefill { b"IFTOKN07" } else if !self.prefill_variants.is_empty() { b"IFTOKN06" } else if self.shared_pages { b"IFTOKN05" } else if self.prefill_tokens > 1 { b"IFTOKN04" } else if self.resident_sequences == 1 { b"IFTOKN02" } else { b"IFTOKN03" }.to_vec();
         for n in [
             self.max_context,
             self.eos,
@@ -893,6 +906,9 @@ impl Program {
             num(&mut b,usize::from(self.shared_pages));
             num(&mut b,self.prefill_variants.len());
             for &count in &self.prefill_variants {num(&mut b,count);}
+        }
+        if let Some(rows) = &self.output_rows {
+            for value in [rows.source, rows.source_width, rows.first, rows.last] { num(&mut b, value); }
         }
         for i in &self.instructions {
             num(&mut b, i.kind);
@@ -920,7 +936,24 @@ impl Program {
 /// A vendor API may enqueue several device kernels; do not label it a measured launch.
 pub fn recipes(p: &Program, graph: &Graph) -> Vec<serde_json::Value> {
     let mut result = recipes_for_query(p, graph, p.prefill_tokens);
-    for recipe in &mut result {
+    for (id, recipe) in result.iter_mut().enumerate() {
+        if let Some(rows) = &p.output_rows {
+            if id >= rows.first && id <= rows.last {
+                recipe["output_rows"] = serde_json::json!({
+                    "domain":"request_sample_rows", "max_rows":p.resident_sequences,
+                    "empty":"skip this proven output suffix; state prefix still executes",
+                    "selection":if id==rows.first {Some(rows)} else {None},
+                    "decode":"unchanged fixed sequence rows; compact selection only for uncaptured prefill",
+                });
+                if let Some(fields)=recipe["value_fields"].as_array_mut() {
+                    for field in fields {
+                        if let Some(shape)=field["prefill_shape"].as_array_mut() {
+                            let axis=usize::from(p.instructions[id].op=="gather_heads"); if axis<shape.len() {shape[axis]=serde_json::json!("sample_rows");}
+                        }
+                    }
+                }
+            }
+        }
         recipe["prefill_execution"] = serde_json::json!({
             "mode": if p.uncaptured_prefill {"uncaptured"} else {"exact_graph"},
             "max_query_tokens": p.prefill_tokens,

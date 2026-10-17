@@ -1,0 +1,11 @@
+{
+  "returncode": 0,
+  "elapsed_seconds": 117.4402062962763,
+  "command": [
+    "/data/p00603624/inferfabric/openpangu92/native-build-output-rows/program_engine_probe",
+    "/data/p00603624/inferfabric/openpangu92/output-rows8k-frozen-plan",
+    "/models/92B",
+    "/data/p00603624/inferfabric/openpangu92/device-zero-apc8k-fixture/requests.txt"
+  ],
+  "preparation": false
+}

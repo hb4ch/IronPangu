@@ -223,3 +223,31 @@ completions; a later allocation has a fresh generation even when page IDs repeat
 The `sealed_bytes` usage counter is a subset of occupied bytes. This token proves
 ownership/completion constraints, not that the device holds a complete model
 checkpoint. Native snapshot and restore operations remain a separate contract.
+
+## Compact request-output rows: token program v8
+
+`IFTOKN08` extends the uncaptured-prefill v7 header. After the shared-page flag,
+four little-endian u32 values encode `source`, `source_width`, `first`, and `last`.
+The ordinary instruction stream follows unchanged. JSON `output_rows` additionally
+names the row domain (`request_sample_rows`), selection implementation
+(`ordered_device_row_copy`) and empty-row behavior. The header is part of the
+execution digest; older readers must reject it rather than ignoring the contract.
+
+The compiler proves a contiguous unary output suffix ending at the program output.
+The source remains a full-token tensor. For uncaptured execution, ordered sample
+indices select device rows into compact storage before the suffix; its operations
+use the compact row count. With zero requested rows the full prefix executes and
+only this suffix is skipped. Returned logits use compact member order, not original
+packed offsets. Fixed-count decode graphs retain their normal row mapping.
+
+Unknown/stateful operations and compound quantized values are boundaries. A
+rank-major `gather_heads` and its matching `head_to_token` conversion move together;
+selection may not split the layout pair. Neither runtime nor optimizer may drop
+state updates or replace reduction precision. Native loading checks the range,
+source shape, unary dependencies and approved operation/layout sequence.
+
+Preparation must cover all sampled-row counts through resident capacity before
+binding memory. The viewer exposes selection and dynamic row axes in each affected
+recipe. This candidate is enabled at compilation by
+`INFERFABRIC_EXPERIMENTAL_OUTPUT_ROWS=1`; NPU qualification, not successful
+compilation alone, determines whether a generated bundle is accepted for serving.

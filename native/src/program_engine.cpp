@@ -143,13 +143,20 @@ struct Engine {
           if(max_sequences>1) {
             // Bound control tables and extend temporaries with all resident
             // rows present, without ever capturing an extend graph.
-            decoder.reset_request();
-            std::vector<uint32_t> tokens(program.prefill_tokens,0);
-            std::vector<inferfabric::execution::SequenceSlice> members;
-            for(uint32_t slot=0;slot<max_sequences;++slot)
-              members.push_back({slot,0,slot==0?program.prefill_tokens-max_sequences+1:1,false});
-            auto logits=decoder.sequence_batch(tokens,members,false);
-            decoder.execution.complete();
+            const auto sample_variants=program.compact_output_rows?max_sequences:0;
+            for(uint32_t sampled=0;sampled<=sample_variants;++sampled)for(uint32_t pass=0;pass<(program.compact_output_rows?2u:1u);++pass) {
+              decoder.reset_request();
+              std::vector<uint32_t> tokens(program.prefill_tokens,0),rows;
+              std::vector<inferfabric::execution::SequenceSlice> members;
+              uint32_t end=0;
+              for(uint32_t slot=0;slot<max_sequences;++slot) {
+                auto count=slot==0?program.prefill_tokens-max_sequences+1:1;
+                end+=count;members.push_back({slot,0,count,slot<sampled});
+                if(slot<sampled)rows.push_back(end-1);
+              }
+              auto logits=decoder.sequence_batch(tokens,members,false);
+              decoder.emit_rows(logits,rows);
+            }
           }
         }
         decoder.seal_graphs();
@@ -191,7 +198,7 @@ struct Engine {
             if (want) next = uint32_t(decoder.emit(logits, int(pos), output_diagnostics));
             else decoder.execution.complete();
           } else if(cmd == Command::Prefill) {
-            auto logits=decoder.prefill(chunk_tokens,int(pos),!program.uncaptured_prefill);
+            auto logits=decoder.prefill(chunk_tokens,int(pos),!program.uncaptured_prefill,want!=0);
             if(want)next=uint32_t(decoder.emit(logits,int(pos+chunk_tokens.size()-1),output_diagnostics));
             else decoder.execution.complete();
           } else if(cmd == Command::Batch) {

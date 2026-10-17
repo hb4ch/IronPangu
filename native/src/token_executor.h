@@ -128,6 +128,8 @@ struct Decoder {
   std::unique_ptr<DeviceTensor> packed_indices, packed_length, packed_query_lengths;
   std::unique_ptr<DeviceTensor> mome_query_starts;
   uint32_t batch_sequences=0;
+  bool compact_output_active=false;
+  std::vector<uint32_t> output_sample_rows;
   std::unique_ptr<DeviceTensor> batch_starts,batch_slots,batch_positions,batch_ends32,batch_lengths32,
       batch_ends64,batch_lengths64;
   std::map<std::string,std::unique_ptr<DeviceTensor>> batch_tables;
@@ -1267,8 +1269,9 @@ struct Decoder {
     if(rows.empty()){execution.complete();pending_kernels.clear();return {};}
     V selected(rows.size(),ACL_INT64),peers(rows.size()*8,ACL_INT64);
     for(size_t i=0;i<rows.size();++i) {
-      if(uint64_t(rows[i]+1)*vocabulary()>logits.size())throw std::runtime_error("sample row bounds");
-      auto row=cast(logits.view(size_t(rows[i])*vocabulary(),vocabulary()),ACL_FLOAT,true);
+      const auto output_row=compact_output_active?uint32_t(i):rows[i];
+      if(uint64_t(output_row+1)*vocabulary()>logits.size())throw std::runtime_error("sample row bounds");
+      auto row=cast(logits.view(size_t(output_row)*vocabulary(),vocabulary()),ACL_FLOAT,true);
       auto out=selected.view(i,1);uint64_t bytes=0;aclOpExecutor *executor=nullptr;
       checked(prepared::query("batch_argmax",false,aclnnArgMaxGetWorkspaceSize,
           row.tensor(),0,true,out.tensor(),&bytes,&executor),"batch argmax prepare");
@@ -1367,6 +1370,8 @@ struct Decoder {
       if(!attention_states.count(entry.first) && !index_states.count(entry.first))
         throw std::runtime_error("sequence batch state not prepared");
     const bool decode=std::all_of(sequences.begin(),sequences.end(),[](const auto &s){return s.tokens==1;});
+    compact_output_active=program.compact_output_rows && !decode;
+    output_sample_rows=batch.sample_rows;
     prepared::Context::BoundedBuffers bounded(execution,!decode);
     auto ensure=[&](std::unique_ptr<DeviceTensor> &tensor,aclDataType dtype,uint32_t count){
       if(!tensor)tensor=std::make_unique<DeviceTensor>(std::vector<int64_t>{count},dtype,resident::element_bytes(dtype));
@@ -1408,6 +1413,7 @@ struct Decoder {
   }
 
   V token(int id, int pos, bool decode = false) {
+    compact_output_active=false;
     set_token_inputs(id, pos);
     execution.begin_step(pos);
     V output;
@@ -1428,7 +1434,9 @@ struct Decoder {
     return output;
   }
   // A request boundary is explicit control work. All preceding work has completed.
-  V prefill(const std::vector<uint32_t> &tokens,int pos,bool replay=true) {
+  V prefill(const std::vector<uint32_t> &tokens,int pos,bool replay=true,bool sample=true) {
+    compact_output_active=program.compact_output_rows;
+    output_sample_rows=sample?std::vector<uint32_t>{uint32_t(tokens.size()-1)}:std::vector<uint32_t>{};
     if(!program.supports_prefill(tokens.size()) || tokens.size()<=1)throw std::runtime_error("prefill variant size");
     if(program.uncaptured_prefill && replay)throw std::runtime_error("uncaptured prefill forbids graph replay");
     prepared::Context::BoundedBuffers bounded(execution,program.uncaptured_prefill);
@@ -1445,6 +1453,7 @@ struct Decoder {
       execution.replay(variant.handle);output=variant.output;
     } else output=execute_token();
     execution.end_step();
+    if(compact_output_active)return output;
     return output.view((tokens.size()-1)*vocabulary(),vocabulary());
   }
   void seal_graphs() {

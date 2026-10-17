@@ -6,6 +6,25 @@ use inferfabric_dsl::{authoring::ModelDefinition, definition};
 use inferfabric_ir::initialization::{DType, Instruction};
 use std::collections::BTreeMap;
 #[test]
+fn compact_output_rows_are_encoded_and_verified() {
+    let (mut graph, _, inventory) = fixture();
+    graph.max_context = 65536;
+    let plan = inferfabric_compiler::token_program::lower(&graph, Some(&inventory)).unwrap()
+        .with_resident_sequences(3).unwrap().with_uncaptured_prefill().unwrap();
+    let plan=plan.with_output_rows().unwrap();
+    let bytes = plan.encode().unwrap();
+    assert_eq!(&bytes[..8], b"IFTOKN08");
+    let rows = plan.output_rows.as_ref().unwrap();
+    assert_eq!(u32::from_le_bytes(bytes[36..40].try_into().unwrap()) as usize, rows.source);
+    assert_eq!(u32::from_le_bytes(bytes[44..48].try_into().unwrap()) as usize, rows.first);
+    let recipes = inferfabric_compiler::token_program::recipes(&plan, &graph);
+    assert_eq!(recipes[rows.first]["output_rows"]["domain"], "request_sample_rows");
+    assert!(recipes[rows.first-1]["output_rows"].is_null());
+    let mut invalid = plan.clone();
+    invalid.output_rows.as_mut().unwrap().first -= 1;
+    assert!(invalid.encode().is_err());
+}
+#[test]
 fn uncaptured_head_projection_has_explicit_layout_and_stable_ssa() {
     let ModelDefinition::Execution {mut graph,..}=definition(include_str!("../../../examples/openpangu/92b-tp8-ep8-c8-learned.inferfabric")).unwrap() else {panic!()};
     graph.max_context=4096;

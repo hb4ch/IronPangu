@@ -92,3 +92,26 @@ source's AIV_ONLY enum into the installed communicator ABI.
 ### Implemented legality analysis (not enabled in execution yet)
 
 `inferfabric_compiler::output_rows::plan` now proves a conservative contiguous output suffix and returns its source, bounds and explicit request-sample row domain. Unknown/stateful operations stay in the full-token prefix; nonterminal outputs are not transformed. Rank-major gather plus token-layout conversion must move together. Three local legality tests and the real 92B learned-C8 DSL lowering test pass. The current binary and executor remain unchanged: serialization, viewer presentation, compact runtime row mapping, preparation coverage and NPU qualification are still required before this optimization is enabled.
+
+### Executable candidate: IFTOKN08
+
+Compilation with `INFERFABRIC_EXPERIMENTAL_OUTPUT_ROWS=1` now emits an explicit
+`output_rows` contract in the physical program and a versioned IFTOKN08 header
+(source ID/width, first and last suffix instructions). Both compiler validation
+and native loading reject unsafe suffixes. This is an opt-in candidate undergoing
+NPU qualification; existing default bundles still use the qualified format.
+
+The uncaptured executor performs declared ordered device row copies before the
+suffix, switches its tensor extent to requested sample rows, and returns compact
+logits in member order. Empty sample lists finish the full state-updating prefix
+and skip only that suffix. Pure decode keeps fixed sequence rows and existing
+graphs. Quantized compound inputs are not treated as plain row tensors: the
+planner stops before an unsafe boundary rather than reinterpreting their storage.
+
+Preparation covers zero through resident-capacity sampled rows before freezing
+workspace/arena. Viewer recipe details expose the selection and dynamic row axis,
+including the rank-major gather/layout pair. Local compiler tests, cross-build,
+native Docker build and the viewer regression pass. The full NPU discovery,
+fixed-workspace and frozen-arena qualification is still required before acceptance.
+
+The [three-stage native qualification](validation/2026-10-18-output-rows/README.md) now passes 39/39 tokens per stage with the executable candidate. Frozen arena reservation falls by 2,482,421,272 bytes per rank. 64K HTTP/APC and a post-change collective capture remain pending; the compilation opt-in stays in place.

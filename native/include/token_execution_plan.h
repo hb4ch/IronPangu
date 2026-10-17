@@ -42,6 +42,8 @@ struct Plan {
     for(auto variant:prefill_variants)if(variant==count)return true;
     return false;
   }
+  bool compact_output_rows = false;
+  uint32_t output_row_source=0,output_row_width=0,output_row_first=0,output_row_last=0;
   bool shared_pages = false;
   std::vector<Node> nodes;
   std::vector<uint32_t> uses;
@@ -67,10 +69,11 @@ struct Plan {
       return v;
     };
     char magic[8];
-    if (!s.read(magic, 8) || (std::memcmp(magic, "IFTOKN01", 8) && std::memcmp(magic, "IFTOKN02", 8) && std::memcmp(magic, "IFTOKN03", 8) && std::memcmp(magic, "IFTOKN04", 8) && std::memcmp(magic, "IFTOKN05", 8) && std::memcmp(magic, "IFTOKN06", 8) && std::memcmp(magic, "IFTOKN07", 8)))
+    if (!s.read(magic, 8) || (std::memcmp(magic, "IFTOKN01", 8) && std::memcmp(magic, "IFTOKN02", 8) && std::memcmp(magic, "IFTOKN03", 8) && std::memcmp(magic, "IFTOKN04", 8) && std::memcmp(magic, "IFTOKN05", 8) && std::memcmp(magic, "IFTOKN06", 8) && std::memcmp(magic, "IFTOKN07", 8) && std::memcmp(magic, "IFTOKN08", 8)))
       throw std::runtime_error("missing/unsupported execution plan");
     Plan p;
-    p.uncaptured_prefill = !std::memcmp(magic, "IFTOKN07", 8);
+    p.compact_output_rows = !std::memcmp(magic, "IFTOKN08", 8);
+    p.uncaptured_prefill = !std::memcmp(magic, "IFTOKN07", 8) || p.compact_output_rows;
     p.prefill_family = !std::memcmp(magic, "IFTOKN06", 8);
     p.shared_pages = !std::memcmp(magic, "IFTOKN05", 8);
     p.physical = std::memcmp(magic, "IFTOKN01", 8) != 0;
@@ -103,6 +106,11 @@ struct Plan {
     if (!p.context || p.context > 65536 || p.eos >= 151552 || !count ||
         count > 10000 || p.output >= count)
       throw std::runtime_error("token plan bounds");
+    if(p.compact_output_rows) {
+      p.output_row_source=number();p.output_row_width=number();p.output_row_first=number();p.output_row_last=number();
+      if(p.output_row_source>=p.output_row_first || p.output_row_first>=count || p.output_row_last!=p.output || p.output!=count-1)
+        throw std::runtime_error("compact output range" );
+    }
     p.uses.resize(count);
     std::set<std::string> names;
     for (uint32_t i = 0; i < count; ++i) {
@@ -145,6 +153,21 @@ struct Plan {
     if (s.peek() != EOF || p.nodes[p.output].kind != 0 ||
         p.nodes[p.output].width != 151552)
       throw std::runtime_error("invalid plan output/trailing data");
+    if(p.compact_output_rows) {
+      if(p.nodes[p.output_row_source].kind!=0 || p.nodes[p.output_row_source].width!=p.output_row_width || !p.output_row_width)
+        throw std::runtime_error("compact output source");
+      for(uint32_t i=p.output_row_first;i<=p.output_row_last;++i) {
+        const auto &n=p.nodes[i];
+        if(n.kind!=0 || n.inputs.size()!=1 || n.inputs[0]!=(i==p.output_row_first?p.output_row_source:i-1))
+          throw std::runtime_error("compact output dependency");
+        bool ordinary=n.op=="norm" || n.op=="linear" || n.op=="gather" || n.op=="cast" || n.op=="copy";
+        bool pair=n.op=="gather_heads" && i<p.output_row_last && p.nodes[i+1].op=="head_to_token" &&
+          n.width==p.nodes[i+1].width && n.attrs.count("heads") && p.nodes[i+1].attrs.count("heads") &&
+          n.text("heads")==p.nodes[i+1].text("heads");
+        bool layout=n.op=="head_to_token" && i>p.output_row_first && p.nodes[i-1].op=="gather_heads";
+        if(!ordinary && !pair && !layout)throw std::runtime_error("unsafe compact output operation");
+      }
+    }
     ++p.uses[p.output];
     std::set<uint32_t> live{p.output};
     for (uint32_t i = count; i-- > 0;)
