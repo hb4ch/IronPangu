@@ -14,6 +14,9 @@ struct SequenceSlice {
 };
 struct SequenceBatch {
   std::vector<int32_t> starts{0}, residents, positions, row_residents;
+  // TND attention consumes cumulative query ends and per-sequence KV lengths;
+  // convolution consumes each sequence's incoming position instead.
+  std::vector<int32_t> query_ends, prior_lengths, kv_lengths;
   std::vector<int64_t> lengths;
   std::vector<uint32_t> sample_rows, sample_residents;
 
@@ -44,6 +47,9 @@ struct SequenceBatch {
         out.lengths.push_back(int64_t(s.position)+row+1);
       }
       out.starts.push_back(int32_t(out.positions.size()));
+      out.query_ends.push_back(int32_t(out.positions.size()));
+      out.prior_lengths.push_back(int32_t(s.position));
+      out.kv_lengths.push_back(int32_t(s.position+s.tokens));
       if(s.sample) {
         out.sample_rows.push_back(uint32_t(out.positions.size()-1));
         out.sample_residents.push_back(s.resident);

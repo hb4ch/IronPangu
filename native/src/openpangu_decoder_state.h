@@ -43,15 +43,7 @@ struct AttentionState {
     return page_binding.append(logical_context?position%cache_capacity:position);
   }
   std::vector<int32_t> blocks() const {
-    const auto &pages=page_binding.pages();
-    auto owned=cache_capacity/(packed_c8?32:16);
-    if(pages.size()>owned)throw std::runtime_error("cache owned-page capacity");
-    std::vector<int32_t> result(table.bytes/sizeof(int32_t),0);
-    for(size_t i=0;i<result.size();++i) {
-      auto index=logical_context?i%owned:i;
-      if(index<pages.size())result[i]=pages[index];
-    }
-    return result;
+    return page_binding.table(table.bytes/sizeof(int32_t),logical_context!=0);
   }
 };
 } // namespace pangu

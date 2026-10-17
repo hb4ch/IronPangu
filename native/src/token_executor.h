@@ -2,6 +2,7 @@
 #include "cache_quantization.h"
 #include "sequence_batch.h"
 #include "resident_convolution.h"
+#include "resident_packed_attention.h"
 // Device-resident execution of a validated generic token program.
 // No activation or routing value has a host representation.
 #include "ascend_token_contract.h"
@@ -808,18 +809,11 @@ struct Decoder {
     View q(query.data(),{active_tokens,6,576},ACL_BF16);
     DeviceTensor out({active_tokens,6,512},ACL_BF16,2);
     auto *sink_values=weight_views.get(state.sink.data,128*576,{128,1,512},{576,576,1},ACL_BF16);
-    char layout[]="TND",cache_layout[]="PA_BSND";
-    uint64_t bytes=0;aclOpExecutor *e=nullptr;
     if(selected && (selected->dtype()!=ACL_INT32 || selected->size()!=size_t(active_tokens)*2048))throw std::runtime_error("selected index storage");
     auto *indices=selected?execution.descriptor(selected->data(),{active_tokens,1,2048},ACL_INT32):prefix(*packed_indices,{active_tokens,1,512});
-    checked(prepared::query("aclnnAiInfraKvQuantSparseFlashAttention",false,
-        aclnnAiInfraKvQuantSparseFlashAttentionGetWorkspaceSize,
-        q.t,state.key.tensor,state.key.tensor,indices,nullptr,nullptr,
-        state.table.tensor,prefix(*packed_query_lengths,{1},(active_tokens-1)*sizeof(int32_t)),
-        prefix(*packed_length,{1},(active_tokens-1)*sizeof(int32_t)),state.sink.tensor,sink_values,
-        1/std::sqrt(192.0),2,2,1,layout,cache_layout,3,INT64_MAX,INT64_MAX,2,1,128,64,
-        out.tensor,&bytes,&e),"packed C8 attention prepare");
-    run(aclnnAiInfraKvQuantSparseFlashAttention,bytes,e);
+    resident::packed_attention(q.t,state.key.tensor,indices,state.table.tensor,
+        prefix(*packed_query_lengths,{1},(active_tokens-1)*sizeof(int32_t)),
+        prefix(*packed_length,{1},(active_tokens-1)*sizeof(int32_t)),state.sink.tensor,sink_values,out.tensor);
     return result(out);
   }
   void prepare_attention_metadata(uint32_t window,bool cleared = false) {

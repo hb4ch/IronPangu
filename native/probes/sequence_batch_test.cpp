@@ -10,6 +10,9 @@ int main() {
   auto b=SequenceBatch::make({{3,100,1,true},{0,4096,4096,false},{2,7,3,true}},4,4100,8192);
   assert((b.starts==std::vector<int32_t>{0,1,4097,4100}));
   assert((b.residents==std::vector<int32_t>{3,0,2}));
+  assert((b.query_ends==std::vector<int32_t>{1,4097,4100}));
+  assert((b.prior_lengths==std::vector<int32_t>{100,4096,7}));
+  assert((b.kv_lengths==std::vector<int32_t>{101,8192,10}));
   assert((b.sample_rows==std::vector<uint32_t>{0,4099}));
   assert((b.sample_residents==std::vector<uint32_t>{3,2}));
   for(size_t i=0;i<b.positions.size();++i) {
@@ -40,6 +43,15 @@ int main() {
       assert(address==uint64_t(b.row_residents[row])*8192+b.positions[row]);
     }
     assert(pages.append(0)==selected);
+    auto tables=pages.batch_table(b.residents,512,false);
+    for(size_t seq=0;seq<3;++seq)for(uint32_t page=0;page<512;++page)
+      assert(tables[seq*512+page]==b.residents[seq]*512+int32_t(page));
+    auto ring=pages.batch_table(b.residents,1025,true);
+    for(size_t seq=0;seq<3;++seq)for(uint32_t page=0;page<1025;++page)
+      assert(ring[seq*1025+page]==b.residents[seq]*512+int32_t(page%512));
+    reject([&]{pages.batch_table({0,0},512,false);});
+    reject([&]{pages.batch_table({-1},512,false);});
+    reject([&]{pages.batch_table({0},511,false);});
     reject([&]{pages.append(4,0);});
     if(shared) {
       pages.release(2);

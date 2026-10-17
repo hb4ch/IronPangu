@@ -129,6 +129,35 @@ public:
     return shared_?shared_pages_[slot]:slots_[slot].pages();
   }
   const std::vector<int32_t> &pages() const { return pages(active_); }
+  std::vector<int32_t> table(uint32_t slot,uint32_t entries,bool ring) const {
+    const auto &owned=pages(slot);
+    if(!entries || (!ring && entries!=pages_per_slot_))
+      throw std::runtime_error("resident table extent");
+    std::vector<int32_t> result(entries,0);
+    for(uint32_t i=0;i<entries;++i) {
+      const auto ordinal=ring?i%pages_per_slot_:i;
+      if(ordinal<owned.size())result[i]=owned[ordinal];
+    }
+    return result;
+  }
+  std::vector<int32_t> table(uint32_t entries,bool ring) const {
+    return table(active_,entries,ring);
+  }
+  std::vector<int32_t> batch_table(const std::vector<int32_t> &residents,
+                                 uint32_t entries,bool ring) const {
+    if(residents.empty() || residents.size()>slots_.size())
+      throw std::runtime_error("resident batch table count");
+    std::set<int32_t> seen;
+    for(auto slot:residents)
+      if(slot<0 || uint32_t(slot)>=slots_.size() || !seen.insert(slot).second)
+        throw std::runtime_error("resident batch table slot");
+    std::vector<int32_t> result;
+    for(auto slot:residents) {
+      auto row=table(uint32_t(slot),entries,ring);
+      result.insert(result.end(),row.begin(),row.end());
+    }
+    return result;
+  }
   std::vector<StateCopyRange> copy_plan(uint32_t source, uint32_t destination,
                                       uint32_t completed_tokens, bool windowed,
                                       uint64_t field_bytes) const {
