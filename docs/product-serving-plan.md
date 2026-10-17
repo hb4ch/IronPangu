@@ -100,6 +100,13 @@ four-token TTFT improves another 12.56–12.76%. The increased workspace is plan
 before binding and all residency/arena audits pass. Larger full-model chunks,
 per-query recurrent/projection work and latency-budget scheduling remain open.
 
+The [updated sixteen-token qualification](validation/2026-10-17-window16/README.md)
+passes all 123 short/529-token preparation and frozen outputs. Its 4,088-token
+TTFT improves to 15.74 seconds and TPOT is 20.06 ms. The previous 3,072-token
+post-EOS difference remains, so the long fixture still fails. Concurrent 4K HTTP
+passes its unchanged reference; short-peer TTFT improves to 1.08 seconds but is
+still delayed by fixed-size chunks. All rank resource/residency audits pass.
+
 ### Next contract: a prepared prefill variant family
 
 The current executable supports decode and one exact prefill size. The existing

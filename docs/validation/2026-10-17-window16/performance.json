@@ -1,0 +1,32 @@
+[
+  {
+    "case": "access-code-2049",
+    "native_identical_to_previous_chunk16": true,
+    "before_ttft_ms": 12808.125333333333,
+    "after_ttft_ms": 7958.508333333333,
+    "ttft_reduction_percent": 37.86359731645349,
+    "current_chunk4_ttft_ms": 15294.150333333333,
+    "chunk4_to_16_reduction_percent": 47.963710569864716,
+    "after_tpot_ms": 20.053285714285714
+  },
+  {
+    "case": "access-code-3072",
+    "native_identical_to_previous_chunk16": true,
+    "before_ttft_ms": 19192.843666666668,
+    "after_ttft_ms": 11762.102666666666,
+    "ttft_reduction_percent": 38.71620656664548,
+    "current_chunk4_ttft_ms": 22760.469666666668,
+    "chunk4_to_16_reduction_percent": 48.3222321906099,
+    "after_tpot_ms": 20.068809523809524
+  },
+  {
+    "case": "access-code-4088",
+    "native_identical_to_previous_chunk16": true,
+    "before_ttft_ms": 25684.914666666667,
+    "after_ttft_ms": 15742.540666666666,
+    "ttft_reduction_percent": 38.70900148600845,
+    "current_chunk4_ttft_ms": 30265.066333333332,
+    "chunk4_to_16_reduction_percent": 47.98445014697308,
+    "after_tpot_ms": 20.06352380952381
+  }
+]
