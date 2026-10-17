@@ -47,3 +47,44 @@ waits to communication improvements when rank readiness changed.
 ## Current completion-scoped backend
 
 The [new 4K capture](validation/2026-10-18-current-prefill-profile/README.md) passes all 39 fixture tokens with the current frozen backend. Its 3.01-second profiled batch still shows large inclusive HCCL/notify intervals after device zero and metadata-lifetime fixes. Inspect actual collective implementation selection and host expansion before further kernel changes; waiting intervals alone do not prove bandwidth saturation. Keep the 4K uncaptured quantum and validate a targeted change on the smaller fixture before repeating 64K.
+
+## Next implementation: explicit output-row demand
+
+The current capture's `collectives.json` reports, on every rank, 92 FP32
+AllReduces of 10,485,760 elements (40 MiB input each), and one BF16 AllGather of
+77,594,624 elements (148 MiB input). The captured middle prefill has no sampling
+rows. Source confirms that `execute_token` nevertheless executes every output
+node, including the vocabulary projection and gather, before `emit_rows` sees an
+empty row list. This is a concrete output-demand gap, independent of the remaining
+AllReduce bottleneck. Removing it alone is not expected to remove the whole delay.
+
+Implement this as a generic compiler/runtime contract, not a model-name check or
+an executor-only skip:
+
+1. Add an explicit request-output row domain to IR. The scheduler supplies packed
+   sample-row indices in deterministic member order. Full-token state updates
+   remain mandatory effect roots even when no output rows are requested.
+2. Identify the row-independent output suffix using declared operator effects and
+   row semantics. Insert a physical row-selection operation at its boundary and
+   annotate downstream shapes with the sampled-row extent. Reject unsafe movement
+   across attention, recurrence, routing, reductions across tokens or state writes.
+   Default unknown operators to non-movable. Do not change reduction dtype/order.
+3. Zero sample rows skip only the proven output suffix. Final prefill and mixed
+   batches evaluate that suffix for precisely the requested rows. Return a compact
+   logits row mapping; sampling must not use the original packed token offsets.
+4. Reserve control buffers, selected hidden rows and output workspaces before arena
+   binding. Preparation must cover sample counts 0 through resident capacity and
+   mixed tails. Decode graph row counts and pointers remain stable; long prefill
+   stays uncaptured. The physical plan/viewer must show selection, row extents and
+   the skipped output collective, with no hidden casts/copies.
+5. Test compiler legality with stateful/unknown-op rejection, then native empty,
+   final and mixed sample-row cases against independent full-model references.
+   Verify intermediate prefill has no vocabulary collective using the audit tool;
+   measure the same uninstrumented 8K fixture before extending to the 64K gate.
+
+The local HCCL source's A3 selector limits ordinary AIV by per-rank payload (1 MiB
+in its op-base path). A 40 MiB reduction over eight ranks exceeds that threshold.
+This is a possible explanation for the earlier environment-only AIV result, not
+proof of the installed binary's selection. Its profiler label is RING-RING-NHR;
+that label does not identify an executor class. Do not silently force a newer
+source's AIV_ONLY enum into the installed communicator ABI.

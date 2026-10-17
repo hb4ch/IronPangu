@@ -35,3 +35,5 @@ mixed prefill/decode scheduling and the necessary long-context regression.
 Do not repeatedly run the full 64K suite while a smaller fixture reproduces
 the issue. Keep the production execution library, frozen-plan fingerprints,
 reference outputs and resource audits paired in each recorded milestone.
+
+Use `scripts/summarize-serving-collectives.py --root TRACE --output FILE` to record profiler-reported algorithm labels, dtypes, element counts and per-call input payloads from every exported HCCL table. Payload is not link traffic; unknown dtype byte sizes remain null. This exposes redundant output collectives separately from timing and supports checking planned sample-row pruning.

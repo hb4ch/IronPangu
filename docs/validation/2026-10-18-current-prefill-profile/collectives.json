@@ -1,0 +1,202 @@
+{
+  "format": "inferfabric.serving-collectives.v1",
+  "devices": [
+    {
+      "table": "/data/p00603624/inferfabric/openpangu92/metadata-prefill-profile/PROF_000001_20261018051511265_00660429ALOGKCQJ/device_0/sqlite/hccl_single_device.db",
+      "sha256": "b58cff94b09dba2ab5247c5f1895ec1c483f8ca3df4f118d305b1427818df576",
+      "collectives": [
+        {
+          "operation": "hcom_allGather_",
+          "algorithm": "RING-RING-NHR",
+          "dtype": "BFP16",
+          "elements_per_call": 77594624,
+          "rank_count": 8,
+          "calls": 1,
+          "input_bytes_per_call": 155189248
+        },
+        {
+          "operation": "hcom_allReduce_",
+          "algorithm": "RING-RING-NHR",
+          "dtype": "FP32",
+          "elements_per_call": 10485760,
+          "rank_count": 8,
+          "calls": 92,
+          "input_bytes_per_call": 41943040
+        }
+      ]
+    },
+    {
+      "table": "/data/p00603624/inferfabric/openpangu92/metadata-prefill-profile/PROF_000001_20261018051511265_00660429ALOGKCQJ/device_1/sqlite/hccl_single_device.db",
+      "sha256": "4bb20db4e466f3cf7a82c5e1834c143298a3740c8065b7e358c8ded18d3b1ff5",
+      "collectives": [
+        {
+          "operation": "hcom_allGather_",
+          "algorithm": "RING-RING-NHR",
+          "dtype": "BFP16",
+          "elements_per_call": 77594624,
+          "rank_count": 8,
+          "calls": 1,
+          "input_bytes_per_call": 155189248
+        },
+        {
+          "operation": "hcom_allReduce_",
+          "algorithm": "RING-RING-NHR",
+          "dtype": "FP32",
+          "elements_per_call": 10485760,
+          "rank_count": 8,
+          "calls": 92,
+          "input_bytes_per_call": 41943040
+        }
+      ]
+    },
+    {
+      "table": "/data/p00603624/inferfabric/openpangu92/metadata-prefill-profile/PROF_000001_20261018051511265_00660429ALOGKCQJ/device_2/sqlite/hccl_single_device.db",
+      "sha256": "9dfde55e7b20b36209d646d17614fbb89cdbebd522e46338f97420b99e9becb8",
+      "collectives": [
+        {
+          "operation": "hcom_allGather_",
+          "algorithm": "RING-RING-NHR",
+          "dtype": "BFP16",
+          "elements_per_call": 77594624,
+          "rank_count": 8,
+          "calls": 1,
+          "input_bytes_per_call": 155189248
+        },
+        {
+          "operation": "hcom_allReduce_",
+          "algorithm": "RING-RING-NHR",
+          "dtype": "FP32",
+          "elements_per_call": 10485760,
+          "rank_count": 8,
+          "calls": 92,
+          "input_bytes_per_call": 41943040
+        }
+      ]
+    },
+    {
+      "table": "/data/p00603624/inferfabric/openpangu92/metadata-prefill-profile/PROF_000001_20261018051511265_00660429ALOGKCQJ/device_3/sqlite/hccl_single_device.db",
+      "sha256": "fe569862231a72d1f059c4ae0a8d8053ad64ce0b2595b8940a83064cf895a3c9",
+      "collectives": [
+        {
+          "operation": "hcom_allGather_",
+          "algorithm": "RING-RING-NHR",
+          "dtype": "BFP16",
+          "elements_per_call": 77594624,
+          "rank_count": 8,
+          "calls": 1,
+          "input_bytes_per_call": 155189248
+        },
+        {
+          "operation": "hcom_allReduce_",
+          "algorithm": "RING-RING-NHR",
+          "dtype": "FP32",
+          "elements_per_call": 10485760,
+          "rank_count": 8,
+          "calls": 92,
+          "input_bytes_per_call": 41943040
+        }
+      ]
+    },
+    {
+      "table": "/data/p00603624/inferfabric/openpangu92/metadata-prefill-profile/PROF_000001_20261018051511265_00660429ALOGKCQJ/device_4/sqlite/hccl_single_device.db",
+      "sha256": "a786f93b7eb7ccb29868067d41c3c7b2481de8edc1c848b84c07556cc54cd56f",
+      "collectives": [
+        {
+          "operation": "hcom_allGather_",
+          "algorithm": "RING-RING-NHR",
+          "dtype": "BFP16",
+          "elements_per_call": 77594624,
+          "rank_count": 8,
+          "calls": 1,
+          "input_bytes_per_call": 155189248
+        },
+        {
+          "operation": "hcom_allReduce_",
+          "algorithm": "RING-RING-NHR",
+          "dtype": "FP32",
+          "elements_per_call": 10485760,
+          "rank_count": 8,
+          "calls": 92,
+          "input_bytes_per_call": 41943040
+        }
+      ]
+    },
+    {
+      "table": "/data/p00603624/inferfabric/openpangu92/metadata-prefill-profile/PROF_000001_20261018051511265_00660429ALOGKCQJ/device_5/sqlite/hccl_single_device.db",
+      "sha256": "94a8103446963836b31c86e8dd76c655392fee712f9e1c100467f9c3601657ae",
+      "collectives": [
+        {
+          "operation": "hcom_allGather_",
+          "algorithm": "RING-RING-NHR",
+          "dtype": "BFP16",
+          "elements_per_call": 77594624,
+          "rank_count": 8,
+          "calls": 1,
+          "input_bytes_per_call": 155189248
+        },
+        {
+          "operation": "hcom_allReduce_",
+          "algorithm": "RING-RING-NHR",
+          "dtype": "FP32",
+          "elements_per_call": 10485760,
+          "rank_count": 8,
+          "calls": 92,
+          "input_bytes_per_call": 41943040
+        }
+      ]
+    },
+    {
+      "table": "/data/p00603624/inferfabric/openpangu92/metadata-prefill-profile/PROF_000001_20261018051511265_00660429ALOGKCQJ/device_6/sqlite/hccl_single_device.db",
+      "sha256": "1413bbac4dd1fa96fc8e7460efed5cf72e68a71538a26928b9afe30da6e11092",
+      "collectives": [
+        {
+          "operation": "hcom_allGather_",
+          "algorithm": "RING-RING-NHR",
+          "dtype": "BFP16",
+          "elements_per_call": 77594624,
+          "rank_count": 8,
+          "calls": 1,
+          "input_bytes_per_call": 155189248
+        },
+        {
+          "operation": "hcom_allReduce_",
+          "algorithm": "RING-RING-NHR",
+          "dtype": "FP32",
+          "elements_per_call": 10485760,
+          "rank_count": 8,
+          "calls": 92,
+          "input_bytes_per_call": 41943040
+        }
+      ]
+    },
+    {
+      "table": "/data/p00603624/inferfabric/openpangu92/metadata-prefill-profile/PROF_000001_20261018051511265_00660429ALOGKCQJ/device_7/sqlite/hccl_single_device.db",
+      "sha256": "2cb46f20ad0a55eea9a8c1d32ff05d00d4ae245d51566f667841bf581067754e",
+      "collectives": [
+        {
+          "operation": "hcom_allGather_",
+          "algorithm": "RING-RING-NHR",
+          "dtype": "BFP16",
+          "elements_per_call": 77594624,
+          "rank_count": 8,
+          "calls": 1,
+          "input_bytes_per_call": 155189248
+        },
+        {
+          "operation": "hcom_allReduce_",
+          "algorithm": "RING-RING-NHR",
+          "dtype": "FP32",
+          "elements_per_call": 10485760,
+          "rank_count": 8,
+          "calls": 92,
+          "input_bytes_per_call": 41943040
+        }
+      ]
+    }
+  ],
+  "caveats": [
+    "Algorithms are profiler-reported labels, not proof of a particular executor implementation.",
+    "Input payload bytes are not measured link traffic or critical-path time.",
+    "Unknown dtype sizes are null, never zero."
+  ]
+}
