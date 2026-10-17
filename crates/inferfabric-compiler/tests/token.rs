@@ -313,3 +313,15 @@ fn packed_prefill_has_versioned_bounds_and_explicit_materialization() {
         }
     }
 }
+
+#[test]
+fn shared_page_policy_is_executable_and_preserves_variant_widths() {
+    let (graph,_,inventory)=fixture();
+    let p=inferfabric_compiler::token_program::lower(&graph,Some(&inventory)).unwrap()
+        .with_resident_sequences(2).unwrap().with_prefill_tokens(4).unwrap().with_shared_pages(true).unwrap();
+    let binary=p.encode().unwrap();
+    assert_eq!(&binary[..8],b"IFTOKN05");
+    assert_eq!(u32::from_le_bytes(binary[24..28].try_into().unwrap()),2);
+    assert_eq!(u32::from_le_bytes(binary[28..32].try_into().unwrap()),4);
+    assert_eq!(&p.with_shared_pages(false).unwrap().encode().unwrap()[..8],b"IFTOKN04");
+}

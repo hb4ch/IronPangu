@@ -3,6 +3,7 @@ fn manifest() -> Manifest {
     Manifest {
         version: VERSION,
         resident_sequences: 1,
+        shared_pages: false,
         identity: Identity {
             program_sha256: "a".repeat(64),
             checkpoint_metadata_sha256: "b".repeat(64),

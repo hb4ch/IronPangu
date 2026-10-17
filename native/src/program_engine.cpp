@@ -100,6 +100,7 @@ struct Engine {
           if (!audit) throw std::runtime_error("preparation audit write");
         }
         decoder.reset_request();
+        decoder.release_preparation_pages();
         uint64_t seen = 0;
         {
           std::lock_guard<std::mutex> lock(mutex);
@@ -250,6 +251,25 @@ extern "C" int inferfabric_program_close(void *p) {
 }
 extern "C" int inferfabric_program_prefill_capacity(void *p,uint32_t *count) {
   return call([&]{if(!count)throw std::runtime_error("null prefill capacity");*count=engine(p).program.prefill_tokens;});
+}
+extern "C" int inferfabric_program_shared_pages(void *p,uint32_t *enabled) {
+  return call([&]{if(!enabled)throw std::runtime_error("null page policy output");*enabled=engine(p).program.shared_pages?1:0;});
+}
+extern "C" int inferfabric_program_bind_state(void *p,uint32_t rank,uint32_t logical_node,const int32_t *pages,uint32_t count) {
+  return call([&]{
+    auto &e=engine(p);
+    const inferfabric::execution::Node *found=nullptr;
+    for(const auto &n:e.program.nodes)
+      if(n.logical_node==logical_node && (n.op=="cache_append" || n.op=="cache_norm_rope_append" || n.op=="cache_c8_norm_rope_append")) {
+        if(found)throw std::runtime_error("ambiguous cache state binding");
+        found=&n;
+      }
+    if(!found || !e.program.shared_pages)throw std::runtime_error("unregistered shared cache state");
+    if(e.next_positions[e.active_resident] || rank>=e.loads.size() || !pages || !count || count>32)
+      throw std::runtime_error("invalid shared page binding");
+    e.binding_component=found->name;e.binding_pages.assign(pages,pages+count);
+    e.submit(Command::BindPages,rank);
+  });
 }
 extern "C" int inferfabric_program_prefill(void *p,const uint32_t *tokens,uint32_t count,uint32_t position,uint32_t sample,uint32_t *output) {
   return call([&]{

@@ -20,13 +20,13 @@ struct AttentionState {
   bool packed_c8;
   inferfabric::state::ResidentPages page_binding;
   std::unique_ptr<openpangu::DeviceTensor> scales;
-  explicit AttentionState(unsigned bits=16, unsigned capacity=512, bool packed=false, unsigned residents=1)
+  explicit AttentionState(unsigned bits=16, unsigned capacity=512, bool packed=false, unsigned residents=1, bool shared=false)
       : query({1, 6, 576}, ACL_BF16, 2), key(packed?std::vector<int64_t>{residents*capacity/32,32,1,656}:(bits==16?std::vector<int64_t>{residents*32,16,1,576}:std::vector<int64_t>{int64_t(capacity)*576*bits/8}), packed?ACL_INT8:(bits==16?ACL_BF16:ACL_UINT8), bits==16?2:1),
         value({1, 16, 1, 512}, ACL_BF16, 2), indices({1, 1, 512}, ACL_INT32, 4),
         table({1, 32}, ACL_INT32, 4), qlen({1}, ACL_INT32, 4),
         klen({1}, ACL_INT32, 4), sink({128, 1, 576}, ACL_BF16, 2),
         sinkvalue({128, 1, 512}, ACL_BF16, 2), out({1, 6, 512}, ACL_BF16, 2), cache_bits(bits), cache_capacity(bits==16?512:capacity), physical_capacity(cache_capacity*residents), packed_c8(packed),
-        page_binding(packed?32:16,cache_capacity,residents) {
+        page_binding(packed?32:16,cache_capacity,residents,shared) {
     if(residents>1 && bits!=16 && !packed)throw std::runtime_error("resident row-quantized cache unsupported");
     if(bits!=16 && !packed)scales=std::make_unique<openpangu::DeviceTensor>(std::vector<int64_t>{capacity},ACL_FLOAT,4);
     std::vector<int32_t> blocks(32);

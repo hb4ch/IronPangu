@@ -26,6 +26,8 @@ pub struct Program {
     /// Resident histories, independent of the one-token invocation batch size.
     pub resident_sequences: usize,
     pub prefill_tokens: usize,
+    #[serde(default)]
+    pub shared_pages: bool,
     pub eos: usize,
     pub output: usize,
     pub instructions: Vec<Instruction>,
@@ -142,7 +144,7 @@ fn emit(
 pub fn lower(graph: &Graph, inventory: Option<&Inventory>) -> Result<Program> {
     let types = graph.validate()?;
     let mut p = Program {
-        format: "inferfabric.token-program.v2".into(), max_context: graph.max_context, resident_sequences: 1, prefill_tokens: 1,
+        format: "inferfabric.token-program.v2".into(), max_context: graph.max_context, resident_sequences: 1, prefill_tokens: 1, shared_pages: false,
         eos: graph.eos, output: 0, instructions: vec![], conversions_shared: 0, copies_eliminated: 0,
         limitations: vec!["Per-token vendor composites are expanded into declared API invocations, explicit casts, packing and initialization of outputs. Parameter/state preparation remains a declared initialization recipe; vendor-internal kernel launches are opaque. Hardware preparation binds fixed arena slots; this is not a cost-optimized arena packing.".into()],
     };
@@ -646,6 +648,11 @@ pub fn lower(graph: &Graph, inventory: Option<&Inventory>) -> Result<Program> {
 }
 
 impl Program {
+    pub fn with_shared_pages(mut self, enabled: bool) -> Result<Self> {
+        self.shared_pages=enabled;
+        let count=self.resident_sequences;
+        self.with_resident_sequences(count)
+    }
     pub fn with_prefill_tokens(mut self, count: usize) -> Result<Self> {
         self.prefill_tokens = count;
         let residents = self.resident_sequences;
@@ -653,15 +660,15 @@ impl Program {
     }
     pub fn with_resident_sequences(mut self, count: usize) -> Result<Self> {
         self.resident_sequences = count;
-        self.format = if self.prefill_tokens > 1 { "inferfabric.token-program.v4" } else if count == 1 { "inferfabric.token-program.v2" } else { "inferfabric.token-program.v3" }.into();
+        self.format = if self.shared_pages { "inferfabric.token-program.v5" } else if self.prefill_tokens > 1 { "inferfabric.token-program.v4" } else if count == 1 { "inferfabric.token-program.v2" } else { "inferfabric.token-program.v3" }.into();
         self.validate()?;
         Ok(self)
     }
     pub fn validate(&self) -> Result<()> {
-        if self.format != if self.prefill_tokens > 1 { "inferfabric.token-program.v4" } else if self.resident_sequences == 1 { "inferfabric.token-program.v2" } else { "inferfabric.token-program.v3" }
+        if self.format != if self.shared_pages { "inferfabric.token-program.v5" } else if self.prefill_tokens > 1 { "inferfabric.token-program.v4" } else if self.resident_sequences == 1 { "inferfabric.token-program.v2" } else { "inferfabric.token-program.v3" }
             || !matches!(self.prefill_tokens, 1 | 2 | 4 | 8 | 16)
             || self.prefill_tokens > self.max_context
-            || (self.prefill_tokens > 1 && self.instructions.iter().any(|i| i.op == "cache_quantize_append"))
+            || ((self.prefill_tokens > 1 || self.shared_pages) && self.instructions.iter().any(|i| i.op == "cache_quantize_append"))
             || self.resident_sequences == 0 || self.resident_sequences > 64
             || (self.resident_sequences > 1 && self.instructions.iter().any(|i| i.op == "cache_quantize_append"))
             || self.instructions.is_empty()
@@ -718,7 +725,7 @@ impl Program {
         if self.instructions.iter().any(|i| i.kernel == "unbound") {
             return Err(invalid("cannot execute unbound kernel selection"));
         }
-        let mut b = if self.prefill_tokens > 1 { b"IFTOKN04" } else if self.resident_sequences == 1 { b"IFTOKN02" } else { b"IFTOKN03" }.to_vec();
+        let mut b = if self.shared_pages { b"IFTOKN05" } else if self.prefill_tokens > 1 { b"IFTOKN04" } else if self.resident_sequences == 1 { b"IFTOKN02" } else { b"IFTOKN03" }.to_vec();
         for n in [
             self.max_context,
             self.eos,
@@ -727,8 +734,8 @@ impl Program {
         ] {
             num(&mut b, n);
         }
-        if self.resident_sequences != 1 || self.prefill_tokens > 1 { num(&mut b, self.resident_sequences); }
-        if self.prefill_tokens > 1 { num(&mut b, self.prefill_tokens); }
+        if self.resident_sequences != 1 || self.prefill_tokens > 1 || self.shared_pages { num(&mut b, self.resident_sequences); }
+        if self.prefill_tokens > 1 || self.shared_pages { num(&mut b, self.prefill_tokens); }
         for i in &self.instructions {
             num(&mut b, i.kind);
             num(&mut b, i.width);
@@ -862,7 +869,7 @@ pub fn recipes(p: &Program, graph: &Graph) -> Vec<serde_json::Value> {
             if i.op != "cache_c8_norm_rope_append" {
                 fields.push(serde_json::json!({"name":"bf16_cache","dtype":"bf16","shape":[p.resident_sequences*32,16,1,576]}));
             }
-            fields.push(serde_json::json!({"name":"resident_partition","resident_sequences":p.resident_sequences,"logical_capacity_tokens":if i.op=="cache_c8_norm_rope_append" {p.max_context.div_ceil(32)*32} else {512},"ownership":"disjoint fixed page partitions; mappings persist across selection; cross-partition binding rejected"}));
+            fields.push(serde_json::json!({"name":"resident_partition","resident_sequences":p.resident_sequences,"logical_capacity_tokens":if i.op=="cache_c8_norm_rope_append" {p.max_context.div_ceil(32)*32} else {512},"ownership":if p.shared_pages {"shared physical page pool; partial request reservations; exclusive ownership checked at bind; release after rank completion"} else {"disjoint fixed page partitions; mappings persist across selection; cross-partition binding rejected"}}));
             fields.push(serde_json::json!({"name":"device_block_table","dtype":"int32","shape":[1,32],"role":"control_input","binding":"component/rank physical page IDs; stable device address"}));
             fields.push(serde_json::json!({"name":"physical_append_position","dtype":if i.op=="cache_append" {"int32"} else {"int64"},"shape":[1],"role":"control_input","binding":"block_table[logical_position / page_tokens] * page_tokens + logical_position % page_tokens","page_tokens":if i.op=="cache_c8_norm_rope_append" {32} else {16},"staging":"one packed control upload per rank per invocation","control_bank_bytes":cache_controls.len()*16*p.prefill_tokens,"byte_offset":cache_controls[i.name.as_str()]+if i.op=="cache_append" {8} else {0}}));
         }

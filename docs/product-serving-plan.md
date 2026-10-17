@@ -1,13 +1,16 @@
 # Product serving execution and scheduling
 
-Latest implementation evidence: [native four-token packed prefill](validation/2026-10-17-packed-prefill/README.md)
+Latest implementation evidence: [shared-page ownership in native HTTP serving](validation/2026-10-17-shared-pages/README.md),
+[native four-token packed prefill](validation/2026-10-17-packed-prefill/README.md)
 and [Rust HTTP chunk scheduling](validation/2026-10-17-packed-http/README.md).
 The frozen TP8/EP8 path passes full output fixtures and chunk/page-boundary
 continuations through the existing 512-token envelope. HTTP chunk scheduling
 charges actual input tokens to the budget and preserves independent resident
-progress. The 64K release gates below remain open.
+progress. Shared pages are reserved per request across all ranks and reclaimed
+after completion; pool size is still the compiled resident-count times capacity.
+SWA recycling, prefix snapshots and the 64K release gates below remain open.
 
-Date: 2026-10-17. Status: proposed design and implementation sequence; no new serving capability is claimed by this document.
+Date: 2026-10-17. Status: implementation in progress; qualified capabilities and remaining release gates are distinguished below.
 
 This is the next implementation plan for OpenPangu V2 92B, followed by independent 505B qualification. It supersedes the initial Qwen-first serving sequence in `design.md`, while preserving its frontend and device-residency constraints. The first release is a colocated single-node TP=8/EP=8 engine. Disaggregated prefill/decode is a later topology, not a prerequisite for useful serving.
 
@@ -15,11 +18,11 @@ This is the next implementation plan for OpenPangu V2 92B, followed by independe
 
 | Area | Evidence today | Gap to close |
 |---|---|---|
-| HTTP frontend | Pinned vLLM 0.25.1 Rust frontend, native Qwen backend, streaming and sampling validation | Connect the generic executable 92B program to a persistent engine; remove model-specific capability naming |
-| 92B execution | Full 46-layer TP8/EP8 device-resident decoder; prepared invocation and ACLGraph qualification | Persistent multi-request execution, packed token dimension, dynamic request state mappings |
-| Scheduler | Qwen fixed lanes, continuous admission, one token per selected sequence per replay | Shared scheduler policy, real token-budgeted packed prefill, resource-aware admission |
-| KV | Fixed capacity per request; C8 directly consumed by attention | Shared page pools, page-table indirection, ownership and event-safe reclamation |
-| Prefill | Serial token calls | Multi-token causal attention and convolution with correct continuation state |
+| HTTP frontend | Pinned vLLM 0.25.1 Rust frontend serving the generic 92B executable; streaming, concurrent requests and cancellation qualified | Stochastic 92B sampling, overload policy and failure/slow-client soak |
+| 92B execution | Full 46-layer TP8/EP8 device-resident decoder; persistent resident states, prepared invocations and ACLGraph | Multi-request batched decode and longer-context model qualification |
+| Scheduler | Continuous admission; actual token-budgeted four-token prefill chunks and serial decode, rotating resident progress | Larger efficient chunks, batched kernels and pressure-aware admission |
+| KV | Shared physical page ownership, partial page tables, all-rank reservation and completion-safe reclamation; packed C8 consumption | Configurable pool budget, long-context tables, learned index cache, SWA recycling and prefix sharing |
+| Prefill | Four-token packed projection/FFN path with explicit per-query causal attention and convolution; boundary outputs qualified | Larger chunks, efficient attention batching and long-context reference qualification |
 | Prefix cache | No native shared cache | Compressed token radix tree plus complete hybrid-state checkpoints |
 | Performance | Short batch-one context-512 qualification: C8 graph TPOT 17.961 ms, approximately 31.35 GiB HBM/rank | Serving throughput, latency distributions, long-context correctness and memory-pressure qualification |
 

@@ -645,7 +645,7 @@ struct Decoder {
     auto &ptr = attention_states[state_name];
     if (!ptr) {
       resident::TransferScope constants(resident::TransferRole::ControlInput);
-      ptr = std::make_unique<AttentionState>(16,512,false,program.resident_sequences);
+      ptr = std::make_unique<AttentionState>(16,512,false,program.resident_sequences,program.shared_pages);
       prepared::Context::InitializationCopies declared(execution);
       to_device(ptr->sink, sink_values);
     }
@@ -673,7 +673,7 @@ struct Decoder {
     auto &ptr = attention_states[state_name];
     if (!ptr) {
       resident::TransferScope constants(resident::TransferRole::ControlInput);
-      ptr = std::make_unique<AttentionState>(packed?8:16,((program.context+31)/32)*32,packed,program.resident_sequences);
+      ptr = std::make_unique<AttentionState>(packed?8:16,((program.context+31)/32)*32,packed,program.resident_sequences,program.shared_pages);
       prepared::Context::InitializationCopies declared(execution);
       to_device(ptr->sink, sinks);
     }
@@ -1334,8 +1334,17 @@ struct Decoder {
     }
     for(auto &entry:attention_states) {
       auto &state=*entry.second;
-      auto bytes=state.key.bytes/program.resident_sequences;
-      execution.zero(static_cast<uint8_t *>(state.key.data)+slot*bytes,bytes);
+      if(program.shared_pages) {
+        auto page_tokens=state.packed_c8?32:16;
+        auto page_bytes=state.key.bytes/(state.physical_capacity/page_tokens);
+        for(auto page:state.page_binding.pages(slot))
+          execution.zero(static_cast<uint8_t *>(state.key.data)+size_t(page)*page_bytes,page_bytes);
+        state.page_binding.release(slot);
+        if(slot==active_resident)upload_page_table(state);
+      } else {
+        auto bytes=state.key.bytes/program.resident_sequences;
+        execution.zero(static_cast<uint8_t *>(state.key.data)+slot*bytes,bytes);
+      }
       if(state.scales)execution.zero(state.scales->data,state.scales->bytes);
     }
     execution.complete();
@@ -1347,6 +1356,17 @@ struct Decoder {
     std::vector<int32_t> table(32,0);
     std::copy(pages.begin(),pages.end(),table.begin());
     resident::control_upload(state.table,table);
+  }
+  // Preparation uses complete partitions to exercise every shape. Serving starts
+  // with no cache ownership; the external allocator supplies request reservations.
+  void release_preparation_pages() {
+    if(!program.shared_pages)return;
+    for(auto &entry:attention_states) {
+      auto &state=*entry.second;
+      for(uint32_t slot=0;slot<program.resident_sequences;++slot)state.page_binding.release(slot);
+      upload_page_table(state);
+    }
+    execution.complete();
   }
   void bind_cache_pages(const std::string &name, const std::vector<int32_t> &pages) {
     if (current_position != -1) throw std::runtime_error("page binding requires a reset request");

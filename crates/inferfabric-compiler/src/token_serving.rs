@@ -3,6 +3,18 @@ use inferfabric_authoring::execution::{Graph, Type};
 use inferfabric_ir::serving::*;
 use inferfabric_model::{Result, invalid};
 
+pub fn program_envelope(graph:&Graph,ranks:usize,program:&crate::token_program::Program)->Result<(Vec<Variant>,Vec<State>)> {
+    program.validate()?;
+    let (mut variants,states)=envelope(graph,ranks)?;
+    if program.prefill_tokens>1 {
+        let count=program.prefill_tokens as u32;
+        variants.push(Variant{id:format!("packed_prefill_{count}_v1"),phase:Phase::Prefill,
+            max_sequences:1,max_tokens:count,max_query_tokens:count,max_context:program.max_context as u32,
+            numerical_class:format!("packed_prefill_{count}_v1"),graph_capable:true,packed:true});
+    }
+    Ok((variants,states))
+}
+
 pub fn envelope(graph: &Graph, ranks: usize) -> Result<(Vec<Variant>, Vec<State>)> {
     let types = graph.validate()?;
     let context =
@@ -108,7 +120,7 @@ pub fn lower(
         .find(|n| n.op == "embedding")
         .ok_or_else(|| invalid("serving embedding contract"))?
         .integer("vocab")?;
-    let manifest = Manifest { version: VERSION, resident_sequences: 1,
+    let manifest = Manifest { version: VERSION, resident_sequences: 1, shared_pages: false,
         identity: Identity { program_sha256: crate::token_physical::digest(program), checkpoint_metadata_sha256: checkpoint.into(),
             backend_revision: crate::token_physical::digest(&serde_json::to_vec(physical).map_err(|e| invalid(e.to_string()))?),
             devices: physical.ranks.iter().map(|r| r.device).collect() },

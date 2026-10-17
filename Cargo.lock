@@ -133,6 +133,7 @@ dependencies = [
  "inferfabric-compiler",
  "inferfabric-ir",
  "inferfabric-model",
+ "inferfabric-runtime",
  "libloading",
  "serde",
  "serde_json",

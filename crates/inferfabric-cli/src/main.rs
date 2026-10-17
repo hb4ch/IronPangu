@@ -130,10 +130,12 @@ fn run() -> Result<()> {
         {
             let (mut allow_stale, mut resident_sequences) = (false, None);
             let mut prefill_tokens = None;
+            let mut shared_pages = false;
             let mut options = args[4..].iter();
             while let Some(option) = options.next() {
                 match option.as_str() {
                     "--allow-stale-index-size" if !allow_stale => allow_stale = true,
+                    "--shared-pages" if !shared_pages => shared_pages = true,
                     "--resident-sequences" if resident_sequences.is_none() => {
                         let count = options.next().ok_or_else(|| invalid("missing resident sequence count"))?
                             .parse::<usize>().map_err(|_| invalid("invalid resident sequence count"))?;
@@ -158,13 +160,14 @@ fn run() -> Result<()> {
                 Path::new(&args[2]),
                 allow_stale,
             )?;
-            inferfabric_compiler::token::write_bundle_with_resources(
+            inferfabric_compiler::token::write_bundle_with_page_policy(
                 &graph,
                 &parallel,
                 &inventory,
                 Path::new(&args[3]),
                 resident_sequences.unwrap_or(1),
                 prefill_tokens.unwrap_or(1),
+                shared_pages,
             )?;
             println!(
                 "token graph nodes={} ranks={} output={}",
@@ -278,7 +281,7 @@ fn run() -> Result<()> {
         }
         _ => {
             return Err(invalid(
-                "usage: inferfabric compile-token MODEL CHECKPOINT OUTPUT_DIR [--allow-stale-index-size] [--resident-sequences N] [--prefill-tokens 1|2|4|8|16] | plan-openpangu DSL CHECKPOINT OUTPUT.json [--allow-stale-index-size] | bind-openpangu-checkpoint CHECKPOINT_DIR OUTPUT.json [--allow-stale-index-size] | inspect-openpangu CONFIG.json OUTPUT.json | inspect-openpangu-checkpoint CHECKPOINT_DIR OUTPUT.json [--allow-stale-index-size] | explain-model TYPED-PLAN.json --html MODEL.html | plan GRAPH.json OUTPUT.ifplan [--dump-ir DIR] | explain PLAN.ifplan [--html OUTPUT.html] | execute PLAN.ifplan INPUTS.json REPORT.json | npu-model-probe DSL CHECKPOINT LIBRARY DEVICE TOKENS_JSON REPORT | npu-delta-probe LIBRARY DEVICE REPORT | npu-conv-probe CHECKPOINT LIBRARY DEVICE REPORT | npu-layer-probe CHECKPOINT LIBRARY DEVICE REPORT | npu-attention-probe CHECKPOINT LIBRARY DEVICE REPORT | npu-math-probe DSL CHECKPOINT LIBRARY DEVICE REPORT | compile-checkpoint MODEL.inferfabric CHECKPOINT_DIR OUTPUT.json | compile MODEL.inferfabric OUTPUT | inspect ARTIFACT | demo MODEL.inferfabric REQUESTS.json",
+                "usage: inferfabric compile-token MODEL CHECKPOINT OUTPUT_DIR [--allow-stale-index-size] [--resident-sequences N] [--prefill-tokens 1|2|4|8|16] [--shared-pages] | plan-openpangu DSL CHECKPOINT OUTPUT.json [--allow-stale-index-size] | bind-openpangu-checkpoint CHECKPOINT_DIR OUTPUT.json [--allow-stale-index-size] | inspect-openpangu CONFIG.json OUTPUT.json | inspect-openpangu-checkpoint CHECKPOINT_DIR OUTPUT.json [--allow-stale-index-size] | explain-model TYPED-PLAN.json --html MODEL.html | plan GRAPH.json OUTPUT.ifplan [--dump-ir DIR] | explain PLAN.ifplan [--html OUTPUT.html] | execute PLAN.ifplan INPUTS.json REPORT.json | npu-model-probe DSL CHECKPOINT LIBRARY DEVICE TOKENS_JSON REPORT | npu-delta-probe LIBRARY DEVICE REPORT | npu-conv-probe CHECKPOINT LIBRARY DEVICE REPORT | npu-layer-probe CHECKPOINT LIBRARY DEVICE REPORT | npu-attention-probe CHECKPOINT LIBRARY DEVICE REPORT | npu-math-probe DSL CHECKPOINT LIBRARY DEVICE REPORT | compile-checkpoint MODEL.inferfabric CHECKPOINT_DIR OUTPUT.json | compile MODEL.inferfabric OUTPUT | inspect ARTIFACT | demo MODEL.inferfabric REQUESTS.json",
             ));
         }
     }

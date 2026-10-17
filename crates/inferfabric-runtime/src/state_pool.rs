@@ -164,6 +164,26 @@ impl StatePool {
         Ok(self.next)
     }
     pub fn reserve(&mut self, epoch: u64, request: u64, tokens: u32) -> Result<Lease> {
+        self.reserve_inner(epoch, request, tokens, None)
+    }
+    /// Some compiled backends index recurrent state by resident ID while cache
+    /// pages remain shared. Pin every slot component atomically to that ID.
+    pub fn reserve_at_slot(
+        &mut self,
+        epoch: u64,
+        request: u64,
+        tokens: u32,
+        slot: u32,
+    ) -> Result<Lease> {
+        self.reserve_inner(epoch, request, tokens, Some(slot))
+    }
+    fn reserve_inner(
+        &mut self,
+        epoch: u64,
+        request: u64,
+        tokens: u32,
+        slot: Option<u32>,
+    ) -> Result<Lease> {
         self.live(epoch)?;
         if tokens == 0 || self.allocations.values().any(|a| a.request == request) {
             return Err(invalid("empty or duplicate state reservation"));
@@ -184,10 +204,23 @@ impl StatePool {
                     p.key.0, p.key.1
                 )));
             }
+            let units = if p.page_tokens.is_none()
+                && let Some(slot) = slot
+            {
+                if !p.free.contains(&slot) {
+                    return Err(Error::Capacity(format!(
+                        "resident slot {slot} unavailable for {}",
+                        p.key.0
+                    )));
+                }
+                vec![slot]
+            } else {
+                p.free.iter().take(count as usize).copied().collect()
+            };
             bindings.push(Binding {
                 component: p.key.0.clone(),
                 rank: p.key.1,
-                units: p.free.iter().take(count as usize).copied().collect(),
+                units,
                 bytes_per_unit: p.unit_bytes,
             });
         }

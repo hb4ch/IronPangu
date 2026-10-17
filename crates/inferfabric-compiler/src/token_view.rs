@@ -86,7 +86,7 @@ pub fn render_with_program(
     let data = serde_json::to_string(
         &serde_json::json!({"graph":graph,"types":types,"node_metadata":node_metadata,"physical":physical,
             "program":program, "recipes":crate::token_program::recipes(program, graph),
-            "serving_envelope":crate::token_serving::envelope(graph, physical.ranks.len())?,
+            "serving_envelope":crate::token_serving::program_envelope(graph, physical.ranks.len(),program)?,
             "parallel": {
                 "tp":physical.ranks.len(),
                 "ep":if graph.nodes.iter().any(|n| n.op == "expert_linear") { physical.ranks.len() } else { 1 },

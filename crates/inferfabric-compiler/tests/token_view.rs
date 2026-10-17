@@ -9,6 +9,20 @@ fn graph() -> Graph {
 }
 
 #[test]
+fn viewer_uses_compiled_prefill_and_page_policy() {
+    let graph=graph();
+    let physical=inferfabric_compiler::token_physical::lower(&graph,&[0,1,2,3,4,5,6,7]).unwrap();
+    let program=inferfabric_compiler::token_program::lower(&graph,None).unwrap()
+        .with_prefill_tokens(4).unwrap().with_shared_pages(true).unwrap();
+    let html=inferfabric_compiler::token_view::render_with_program(&graph,&physical,&program).unwrap();
+    let json=html.split("id=\"plan-data\">").nth(1).unwrap().split("</script>").next().unwrap();
+    let data:serde_json::Value=serde_json::from_str(json).unwrap();
+    assert_eq!(data["program"]["shared_pages"],true);
+    assert_eq!(data["serving_envelope"][0][1]["max_tokens"],4);
+    assert_eq!(data["serving_envelope"][0][1]["phase"],"prefill");
+}
+
+#[test]
 fn viewer_embeds_validated_types_and_preserves_provenance() {
     let graph = graph();
     let html = render(&graph).unwrap();

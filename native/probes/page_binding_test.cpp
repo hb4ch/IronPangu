@@ -40,4 +40,26 @@ int main() {
     assert(p.append(0)==2*page_tokens);
   }
   std::cout<<"page bindings: fragmented addresses and invalid-update rollback passed\n";
+  for(auto page_tokens:{16u,32u}) {
+    inferfabric::state::ResidentPages p(page_tokens,page_tokens*3,2,true);
+    p.release(0);p.release(1);
+    rejects([&]{p.append(0);});
+    p.bind({5,0});
+    assert(p.append(0)==5*page_tokens);
+    assert(p.append(page_tokens)==0);
+    rejects([&]{p.append(2*page_tokens);});
+    p.select(1);p.bind({4});
+    rejects([&]{p.bind({5});});
+    assert(p.append(0)==4*page_tokens);
+    p.select(0);
+    rejects([&]{p.bind({1,4});}); // no partial release/claim on failure
+    assert(p.append(0)==5*page_tokens);
+    rejects([&]{p.bind({1,1});});
+    rejects([&]{p.bind({6});});
+    rejects([&]{p.bind({});});
+    p.release(0);p.select(1);p.bind({5,0,4});
+    assert(p.append(2*page_tokens)==4*page_tokens);
+    p.release(1);rejects([&]{p.append(0);});
+  }
+  std::cout<<"shared pages: partial reservations, cross-owner rejection and reclamation passed\n";
 }

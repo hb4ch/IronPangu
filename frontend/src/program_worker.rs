@@ -32,6 +32,12 @@ pub(super) trait ResidentEngine {
         Err(inferfabric_model::invalid("packed prefill is unavailable"))
     }
     fn reset(&mut self, slot: u32) -> inferfabric_model::Result<()>;
+    fn admit(&mut self, slot: u32, _tokens: u32) -> inferfabric_model::Result<()> {
+        self.reset(slot)
+    }
+    fn release(&mut self, _slot: u32) -> inferfabric_model::Result<()> {
+        Ok(())
+    }
     fn select(&mut self, slot: u32) -> inferfabric_model::Result<()>;
     fn token(
         &mut self,
@@ -41,6 +47,12 @@ pub(super) trait ResidentEngine {
     ) -> inferfabric_model::Result<Option<u32>>;
 }
 impl ResidentEngine for inferfabric_native::program::Engine {
+    fn admit(&mut self, slot: u32, tokens: u32) -> inferfabric_model::Result<()> {
+        self.prepare_resident(slot, tokens)
+    }
+    fn release(&mut self, slot: u32) -> inferfabric_model::Result<()> {
+        self.release_resident(slot)
+    }
     fn prefill_capacity(&self) -> u32 {
         self.prefill_capacity()
     }
@@ -164,10 +176,11 @@ pub(super) fn run(
     let mut slots: Vec<Option<Running>> = (0..residents).map(|_| None).collect();
     let chunk = engine.prefill_capacity();
     let (mut cursor, mut max_active, mut mixed_ticks, mut consumed) = (0, 0, 0, 0u64);
-    let result: inferfabric_model::Result<()> = (|| {
+    let mut result: inferfabric_model::Result<()> = (|| {
         while !stop.load(Ordering::Acquire) {
             for (index, slot) in slots.iter_mut().enumerate() {
                 if slot.as_ref().is_some_and(|r| cancelled(&r.job)) {
+                    engine.release(index as u32)?;
                     release(slot, active);
                 }
                 while slot.is_none() {
@@ -187,7 +200,14 @@ pub(super) fn run(
                         generated: 0,
                         next: None,
                     });
-                    engine.reset(index as u32)?;
+                    let request = &slot.as_ref().unwrap().job.req;
+                    let tokens = u32::try_from(request.prompt_token_ids.len())
+                        .ok()
+                        .and_then(|n| n.checked_add(request.sampling_params.max_tokens))
+                        .ok_or_else(|| {
+                            inferfabric_model::invalid("request reservation overflow")
+                        })?;
+                    engine.admit(index as u32, tokens)?;
                 }
             }
             let count = slots.iter().flatten().count();
@@ -215,6 +235,7 @@ pub(super) fn run(
                     continue;
                 };
                 if cancelled(&r.job) {
+                    engine.release(index as u32)?;
                     release(&mut slots[index], active);
                     continue;
                 }
@@ -229,6 +250,7 @@ pub(super) fn run(
                 consumed += used as u64;
                 cursor = (index + 1) % residents;
                 if finished {
+                    engine.release(index as u32)?;
                     release(&mut slots[index], active);
                 }
             }
@@ -244,7 +266,8 @@ pub(super) fn run(
         .err()
         .map(ToString::to_string)
         .unwrap_or_else(|| "program worker stopped".into());
-    for slot in &mut slots {
+    for (index,slot) in slots.iter_mut().enumerate() {
+        if slot.is_some() && result.is_ok() {result=engine.release(index as u32);}
         if let Some(r) = slot.as_ref() {
             let _ = r.job.tx.try_send(Err(error(message.clone())));
         }

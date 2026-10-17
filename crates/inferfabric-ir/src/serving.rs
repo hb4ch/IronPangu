@@ -72,6 +72,9 @@ pub struct Manifest {
     /// Storage capacity, not a claim of packed multi-sequence kernel support.
     #[serde(default = "single_resident")]
     pub resident_sequences: u32,
+    /// Shared page ownership; recurrent slots remain indexed by resident ID.
+    #[serde(default)]
+    pub shared_pages: bool,
     pub identity: Identity,
     pub vocab_size: u32,
     pub eos: u32,

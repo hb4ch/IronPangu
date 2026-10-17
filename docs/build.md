@@ -445,3 +445,20 @@ readiness and schedules this variant within the requested token budget. Use
 use beyond startup, or `--expect-prefill serial` with a one-token budget to verify
 the serial control. See [native evidence and timings](validation/2026-10-17-packed-prefill/README.md)
 and [HTTP qualification](validation/2026-10-17-packed-http/README.md).
+
+### Shared page ownership
+
+Add `--shared-pages` to `compile-token` for `IFTOKN05`. The manifest and native
+backend must agree on this policy before HTTP readiness. Rebuild native code and
+prepare a fresh frozen bundle; neither prior binary identities nor prior arenas
+grant readiness for the new executable. Native preparation probes currently need
+`--interleave --permuted-pages` to install their explicit page maps. The HTTP
+worker uses the Rust allocator to reserve partial page maps automatically.
+
+The shared pool retains the compiled physical capacity. Request admission reserves
+prompt plus maximum output tokens across every component/rank, with recurrent
+slots pinned to the resident ID. Completion and cancellation clear only owned
+storage before retirement. `qualify-program-http.py` automatically verifies
+cross-partition bindings and zero remaining occupied ownership for shared bundles.
+This does not yet enable prefix sharing, SWA ring recycling or 64K execution.
+See [shared-page qualification](validation/2026-10-17-shared-pages/README.md).

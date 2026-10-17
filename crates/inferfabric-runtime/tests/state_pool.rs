@@ -6,6 +6,7 @@ fn manifest() -> Manifest {
     Manifest {
         version: VERSION,
         resident_sequences: 4,
+        shared_pages: false,
         identity: Identity {
             program_sha256: "a".repeat(64),
             checkpoint_metadata_sha256: "b".repeat(64),
@@ -78,6 +79,28 @@ fn budgets() -> BTreeMap<(String, u32), u32> {
 }
 fn pool() -> StatePool {
     StatePool::new(&manifest(), 7, budgets()).unwrap()
+}
+
+#[test]
+fn pinned_recurrent_slots_share_pages_without_partial_reservations() {
+    let mut pool=pool();
+    let a=pool.reserve_at_slot(7,1,17,2).unwrap();
+    let bindings=pool.bindings(7,a).unwrap();
+    assert!(bindings.iter().filter(|b|b.component=="history").all(|b|b.units==vec![2]));
+    assert!(bindings.iter().filter(|b|b.component=="kv16").all(|b|b.units==vec![0,1]));
+    let before=pool.usage();
+    assert!(pool.reserve_at_slot(7,2,1,2).is_err());
+    assert_eq!(pool.usage(),before);
+    let b=pool.reserve_at_slot(7,2,1,0).unwrap();
+    assert!(pool.bindings(7,b).unwrap().iter().filter(|b|b.component=="kv16").all(|b|b.units==vec![2]));
+    let ticket=pool.submit(7,&[a],&[]).unwrap();
+    pool.retire(7,a).unwrap();
+    assert!(pool.reserve_at_slot(7,3,1,2).is_err());
+    pool.complete(7,ticket,0).unwrap();pool.complete(7,ticket,1).unwrap();
+    let c=pool.reserve_at_slot(7,3,1,2).unwrap();
+    assert!(pool.bindings(7,c).unwrap().iter().filter(|b|b.component=="kv16").all(|b|b.units==vec![0]));
+    pool.retire(7,b).unwrap();pool.retire(7,c).unwrap();
+    assert!(pool.usage().iter().all(|u|u.occupied_bytes==0));
 }
 
 #[test]

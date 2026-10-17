@@ -1,8 +1,11 @@
 //! Persistent executable-program ABI. The handle stays on its owning worker.
+use inferfabric_ir::serving::Storage;
 use inferfabric_ir::serving::{Manifest, Phase};
 use inferfabric_model::{Result, invalid};
+use inferfabric_runtime::state_pool::{Lease, StatePool, Ticket};
 use libloading::Library;
 use sha2::{Digest, Sha256};
+use std::collections::BTreeMap;
 use std::{
     ffi::{CStr, CString, c_char, c_void},
     marker::PhantomData,
@@ -17,6 +20,60 @@ type Error = unsafe extern "C" fn() -> *const c_char;
 type BindPages = unsafe extern "C" fn(*mut c_void, u32, *const c_char, *const i32, u32) -> i32;
 type Resident = unsafe extern "C" fn(*mut c_void, u32) -> i32;
 type Capacity = unsafe extern "C" fn(*mut c_void, *mut u32) -> i32;
+type BindState = unsafe extern "C" fn(*mut c_void, u32, u32, *const i32, u32) -> i32;
+struct SharedState {
+    pool: StatePool,
+    leases: Vec<Option<Lease>>,
+    cache_nodes: BTreeMap<String, u32>,
+    ranks: u32,
+    next_request: u64,
+    cache_page_limits: BTreeMap<String, u32>,
+    admissions: u64,
+    cross_partition_bindings: u64,
+    peak_occupied_bytes: u64,
+    token_limits: Vec<u32>,
+}
+impl SharedState {
+    fn new(m: &Manifest) -> Result<Self> {
+        let mut capacities = BTreeMap::new();
+        let mut cache_nodes = BTreeMap::new();
+        let mut cache_page_limits = BTreeMap::new();
+        for state in &m.states {
+            let units = match state.storage {
+                Storage::Pages { page_tokens, .. } => {
+                    cache_nodes.insert(
+                        state.id.clone(),
+                        u32::try_from(state.logical_node)
+                            .map_err(|_| invalid("state node overflow"))?,
+                    );
+                    cache_page_limits.insert(state.id.clone(), state.capacity_tokens / page_tokens);
+                    state.capacity_tokens / page_tokens
+                }
+                Storage::Slot { .. } => 1,
+            };
+            for &rank in &state.ranks {
+                capacities.insert(
+                    (state.id.clone(), rank),
+                    units
+                        .checked_mul(m.resident_sequences)
+                        .ok_or_else(|| invalid("pool capacity overflow"))?,
+                );
+            }
+        }
+        Ok(Self {
+            pool: StatePool::new(m, 1, capacities)?,
+            leases: vec![None; m.resident_sequences as usize],
+            cache_nodes,
+            ranks: m.identity.devices.len() as u32,
+            next_request: 0,
+            cache_page_limits,
+            admissions: 0,
+            cross_partition_bindings: 0,
+            peak_occupied_bytes: 0,
+            token_limits: vec![0; m.resident_sequences as usize],
+        })
+    }
+}
 pub fn manifest(bundle: &Path) -> Result<Manifest> {
     let m: Manifest = serde_json::from_slice(&std::fs::read(bundle.join("serving.json"))?)
         .map_err(|e| invalid(e.to_string()))?;
@@ -78,6 +135,9 @@ pub struct Engine {
     bind_pages_fn: Option<BindPages>,
     select_resident_fn: Option<Resident>,
     reset_resident_fn: Option<Resident>,
+    bind_state_fn: Option<BindState>,
+    shared: Option<SharedState>,
+    selected: usize,
     _thread: PhantomData<Rc<()>>,
 }
 impl Engine {
@@ -122,6 +182,16 @@ impl Engine {
                     .ok()
                     .map(|f| *f),
                 prefill_tokens: prefill_capacity(&contract)?,
+                bind_state_fn: lib
+                    .get::<BindState>(b"inferfabric_program_bind_state\0")
+                    .ok()
+                    .map(|f| *f),
+                shared: if contract.shared_pages {
+                    Some(SharedState::new(&contract)?)
+                } else {
+                    None
+                },
+                selected: 0,
                 error: symbol!("inferfabric_program_error", Error),
                 bind_pages_fn: lib
                     .get::<BindPages>(b"inferfabric_program_bind_pages\0")
@@ -173,6 +243,18 @@ impl Engine {
                     "native prefill capacity differs from serving manifest",
                 ));
             }
+            let mut shared = 0;
+            if let Ok(policy) = result
+                ._library
+                .get::<Capacity>(b"inferfabric_program_shared_pages\0")
+            {
+                result.check(policy(result.ptr, &mut shared))?;
+            }
+            if shared != u32::from(contract.shared_pages)
+                || (shared != 0 && (result.bind_state_fn.is_none() || result.select_resident_fn.is_none() || result.reset_resident_fn.is_none()))
+            {
+                return Err(invalid("native page policy differs from serving manifest"));
+            }
             if (context, vocab, eos)
                 != (
                     contract.variants[0].max_context,
@@ -195,6 +277,13 @@ impl Engine {
         Err(invalid(format!("program engine: {message}")))
     }
     pub fn reset(&mut self) -> Result<()> {
+        if let Some(shared) = &self.shared {
+            let count = shared.leases.len();
+            for slot in 0..count {
+                self.reset_resident(slot as u32)?;
+            }
+            return self.select_resident(0);
+        }
         self.check(unsafe { (self.reset_fn)(self.ptr) })
     }
     pub fn select_resident(&mut self, slot: u32) -> Result<()> {
@@ -204,7 +293,9 @@ impl Engine {
         let select = self
             .select_resident_fn
             .ok_or_else(|| invalid("backend does not support resident selection"))?;
-        self.check(unsafe { select(self.ptr, slot) })
+        self.check(unsafe { select(self.ptr, slot) })?;
+        self.selected = slot as usize;
+        Ok(())
     }
     pub fn reset_resident(&mut self, slot: u32) -> Result<()> {
         if slot == 0 && self.reset_resident_fn.is_none() {
@@ -213,7 +304,115 @@ impl Engine {
         let reset = self
             .reset_resident_fn
             .ok_or_else(|| invalid("backend does not support resident reset"))?;
-        self.check(unsafe { reset(self.ptr, slot) })
+        if let Err(e) = self.check(unsafe { reset(self.ptr, slot) }) {
+            if let Some(shared) = &mut self.shared {
+                shared.pool.poison();
+            }
+            return Err(e);
+        }
+        if let Some(shared) = &mut self.shared
+            && let Some(lease) = shared
+                .leases
+                .get_mut(slot as usize)
+                .ok_or_else(|| invalid("resident slot bounds"))?
+                .take()
+        {
+            shared.pool.retire(1, lease)?;
+        }
+        Ok(())
+    }
+    pub fn prepare_resident(&mut self, slot: u32, tokens: u32) -> Result<()> {
+        self.reset_resident(slot)?;
+        self.select_resident(slot)?;
+        let Some(shared) = &mut self.shared else {
+            return Ok(());
+        };
+        shared.next_request = shared
+            .next_request
+            .checked_add(1)
+            .ok_or_else(|| invalid("request generation exhausted"))?;
+        let lease = shared
+            .pool
+            .reserve_at_slot(1, shared.next_request, tokens, slot)?;
+        shared.leases[slot as usize] = Some(lease);
+        shared.token_limits[slot as usize] = tokens;
+        let bindings = shared
+            .pool
+            .bindings(1, lease)?
+            .iter()
+            .filter_map(|b| {
+                shared
+                    .cache_nodes
+                    .get(&b.component)
+                    .map(|&n| (n, b.clone()))
+            })
+            .collect::<Vec<_>>();
+        shared.cross_partition_bindings += bindings
+            .iter()
+            .filter(|(_, b)| {
+                b.units
+                    .iter()
+                    .any(|&p| p / shared.cache_page_limits[&b.component] != slot)
+            })
+            .count() as u64;
+        shared.admissions += 1;
+        shared.peak_occupied_bytes = shared
+            .peak_occupied_bytes
+            .max(shared.pool.usage().iter().map(|u| u.occupied_bytes).sum());
+        let bind = self
+            .bind_state_fn
+            .ok_or_else(|| invalid("missing shared page binding ABI"))?;
+        for (node, b) in bindings {
+            let pages = b
+                .units
+                .iter()
+                .map(|&p| i32::try_from(p).map_err(|_| invalid("page ID overflow")))
+                .collect::<Result<Vec<_>>>()?;
+            if let Err(e) = self
+                .check(unsafe { bind(self.ptr, b.rank, node, pages.as_ptr(), pages.len() as u32) })
+            {
+                self.shared.as_mut().unwrap().pool.poison();
+                return Err(e);
+            }
+        }
+        Ok(())
+    }
+    pub fn release_resident(&mut self, slot: u32) -> Result<()> {
+        if self.shared.is_some() {
+            self.reset_resident(slot)
+        } else {
+            Ok(())
+        }
+    }
+    fn begin_invocation(&mut self, position: u32, count: u32) -> Result<Option<Ticket>> {
+        if let Some(shared) = &mut self.shared {
+            let lease = shared.leases[self.selected]
+                .ok_or_else(|| invalid("resident has no state reservation"))?;
+            if position
+                .checked_add(count)
+                .is_none_or(|end| end > shared.token_limits[self.selected])
+            {
+                return Err(invalid("invocation exceeds request state reservation"));
+            }
+            Ok(Some(shared.pool.submit(1, &[lease], &[])?))
+        } else {
+            Ok(None)
+        }
+    }
+    fn finish_invocation(&mut self, ticket: Option<Ticket>, status: i32) -> Result<()> {
+        let result = self.check(status);
+        if let Some(shared) = &mut self.shared {
+            if result.is_err() {
+                shared.pool.poison();
+            } else if let Some(ticket) = ticket {
+                // The synchronous native ABI returns only after every rank's
+                // owning stream completed. This is not a global device fence.
+                for rank in 0..shared.ranks {
+                    shared.pool.complete(1, ticket, rank)?;
+                }
+            }
+        }
+        result
     }
     /// Update device page metadata after reset; no cache content or graph address moves.
     pub fn bind_pages(&mut self, rank: u32, component: &str, pages: &[u32]) -> Result<()> {
@@ -231,9 +430,10 @@ impl Engine {
     }
     pub fn token(&mut self, token: u32, position: u32, sample: bool) -> Result<Option<u32>> {
         let mut output = 0;
-        self.check(unsafe {
-            (self.token_fn)(self.ptr, token, position, sample.into(), &mut output)
-        })?;
+        let ticket = self.begin_invocation(position, 1)?;
+        let status =
+            unsafe { (self.token_fn)(self.ptr, token, position, sample.into(), &mut output) };
+        self.finish_invocation(ticket, status)?;
         Ok(sample.then_some(output))
     }
     pub fn prefill_capacity(&self) -> u32 {
@@ -247,7 +447,8 @@ impl Engine {
             .prefill_fn
             .ok_or_else(|| invalid("backend has no packed prefill entry point"))?;
         let mut output = 0;
-        self.check(unsafe {
+        let ticket = self.begin_invocation(position, self.prefill_tokens)?;
+        let status = unsafe {
             prefill(
                 self.ptr,
                 tokens.as_ptr(),
@@ -256,12 +457,23 @@ impl Engine {
                 sample.into(),
                 &mut output,
             )
-        })?;
+        };
+        self.finish_invocation(ticket, status)?;
         Ok(sample.then_some(output))
     }
 }
 impl Drop for Engine {
     fn drop(&mut self) {
+        if let Some(shared) = &self.shared {
+            let occupied: u64 = shared.pool.usage().iter().map(|u| u.occupied_bytes).sum();
+            eprintln!(
+                "shared state pool admissions={} cross_partition_bindings={} peak_occupied_bytes={} remaining_occupied_bytes={}",
+                shared.admissions,
+                shared.cross_partition_bindings,
+                shared.peak_occupied_bytes,
+                occupied
+            );
+        }
         if !self.ptr.is_null() {
             unsafe {
                 (self.close)(self.ptr);

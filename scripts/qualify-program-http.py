@@ -194,6 +194,12 @@ def main():
             if int(stats[4]) >= 2 and not int(stats[2]):
                 raise RuntimeError('scheduler did not confirm mixed prefill/decode work')
             report['scheduler'] = dict(zip(('max_active','mixed_ticks','consumed_tokens','token_budget'), map(int,stats.groups())))
+        if manifest.get('shared_pages', False):
+            logs=(args.output/'server.log').read_text()
+            pool=re.search(r'shared state pool admissions=(\d+) cross_partition_bindings=(\d+) peak_occupied_bytes=(\d+) remaining_occupied_bytes=(\d+)',logs)
+            if not pool or not int(pool[1]) or not int(pool[2]) or int(pool[4]):
+                raise RuntimeError('shared pages were not exercised across partitions or were not fully reclaimed')
+            report['shared_pool']=dict(zip(('admissions','cross_partition_bindings','peak_occupied_bytes','remaining_occupied_bytes'),map(int,pool.groups())))
         (args.output / 'results.json').write_text(json.dumps(report, ensure_ascii=False, indent=2)+'\n')
         print(json.dumps(report, ensure_ascii=False))
 
