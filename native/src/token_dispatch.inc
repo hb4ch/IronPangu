@@ -24,7 +24,7 @@ V execute_token() {
     const auto &n = program.nodes[i];
     execution.instruction(int64_t(i),
         n.op=="copy" || n.op=="repeat" || n.op=="concat" || n.op=="expert_pack" ||
-        (active_tokens>1 && (n.op=="gather" || n.op=="slice" || n.op=="query_project" || n.op=="query_rotary_extract" || n.op=="rope_bf16" || n.op=="rope_f32" || n.op=="rope" || n.op=="mla_query" || n.op=="mla_value" || n.op=="mome" || n.op=="latent_attention" || n.op=="packed_latent_attention" || n.op=="indexed_packed_attention" || (n.op=="sparse_index" && program.nodes[n.inputs[0]].kind!=5))),
+        (active_tokens>1 && (n.op=="gather" || n.op=="slice" || n.op=="query_project" || n.op=="query_rotary_extract" || n.op=="rope_bf16" || n.op=="rope_f32" || n.op=="rope" || n.op=="mla_query" || n.op=="mla_value" || n.op=="mome" || n.op=="latent_attention" || (n.op=="sparse_index" && program.nodes[n.inputs[0]].kind!=5))),
         n.op=="cache_c8_norm_rope_append" || n.op=="cache_quantize_append" || n.op=="sink_normalize" || n.op=="cache_append" || n.op=="cache_norm_rope_append" || n.op=="expert_gmm" || (n.op=="linear" && n.kernel=="paired_bf16"));
     inferfabric::profiling::Scope timing(n.op.c_str(), true);
     auto input = [&](size_t j) -> Value & {
@@ -188,11 +188,11 @@ V execute_token() {
       })};
     } else if(n.op=="indexed_packed_attention") {
       const auto &indices=std::get<SelectedIndices>(input(2)).value;
-      result=row_values(n.width,[&](uint32_t row){auto selected=indices.view(row*2048,2048);return attend_packed(row_tensor(0,row),std::get<std::string>(input(1)),&selected);});
+      result=attend_packed(tensor(0),std::get<std::string>(input(1)),&indices);
     } else if(n.op=="packed_attention_metadata") {
       prepare_packed_attention_metadata();result=std::monostate{};
     } else if(n.op=="packed_latent_attention") {
-      result=row_values(n.width,[&](uint32_t row){return attend_packed(row_tensor(0,row),std::get<std::string>(input(1)));});
+      result=attend_packed(tensor(0),std::get<std::string>(input(1)));
     } else if(n.op=="cache_normalize") {
       result=normalize_cache_row(tensor(0),weight());
     } else if(n.op=="cache_quantize_append") {

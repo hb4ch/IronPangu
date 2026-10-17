@@ -1,0 +1,9 @@
+program scheduler configured max_num_seqs=2 max_num_batched_tokens=8 max_model_len=4096; compiled_prefill_tokens=4, decode_tokens=1
+vLLM Rust frontend 0.25.1; inferfabric-program; loopback only
+program scheduler active=1 capacity=2 token_budget=8 prefill_tokens=4 decode_tokens=1
+program scheduler active=2 capacity=2 token_budget=8 prefill_tokens=4 decode_tokens=1
+shutdown signal 15 received; draining frontend
+program scheduler stopped max_active=2 mixed_ticks=25 consumed_tokens=862 token_budget=8 prefill_tokens=4 decode_tokens=1
+shared state pool admissions=17 cross_partition_bindings=2160 peak_occupied_bytes=207659008 remaining_occupied_bytes=0
+frontend stopped; closing native workers
+native workers closed

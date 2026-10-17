@@ -904,6 +904,7 @@ pub fn recipes(p: &Program, graph: &Graph) -> Vec<serde_json::Value> {
             "mhc_pre_project" | "mhc_merge" => "Once before replay: fold scalar checkpoint parameters and upload prepared mHC coefficients.",
             "router_projection" => "Once before replay: transpose/convert checkpoint gate parameters and upload FP32 weights and bias.",
             "mome_inplace" => "Once before replay: transpose convolution weights and initialize recurrent state and control indices.",
+            "packed_attention_metadata" => "Once before replay: upload query counts 1..max_query_tokens as control constants; per-query KV lengths and candidate indices are generated on device.",
             _ => "No parameter/state copy recipe in this instruction.",
         };
         let mut fields:Vec<serde_json::Value>=match i.kind {
@@ -927,6 +928,9 @@ pub fn recipes(p: &Program, graph: &Graph) -> Vec<serde_json::Value> {
         }
         if i.kind==9 {
             fields.push(serde_json::json!({"name":"index_query_lengths","dtype":"int32","shape":[p.prefill_tokens],"role":"initialization_constant","values":"1..max_query_tokens; select count-1 for TND causal alignment"}));
+        }
+        if i.op=="packed_attention_metadata" {
+            fields.push(serde_json::json!({"name":"packed_query_lengths","dtype":"int32","shape":[p.prefill_tokens],"role":"initialization_constant","values":"1..max_query_tokens; select count-1 for TND causal alignment"}));
         }
         if matches!(i.op.as_str(), "cache_c8_norm_rope_append" | "cache_norm_rope_append" | "cache_append") {
             for field in &mut fields {
@@ -966,13 +970,15 @@ pub fn recipes(p: &Program, graph: &Graph) -> Vec<serde_json::Value> {
             }
         }
         let batched_index = i.op=="sparse_index" && p.instructions[i.inputs[0]].kind==5;
-        let per_query = !batched_index && matches!(i.op.as_str(), "mome"|"mome_inplace"|"query_project"|"query_rotary_extract"|"rope"|"rope_bf16"|"rope_f32"|"mla_query"|"mla_value"|"index_cache_append"|"cache_append"|"cache_norm_rope_append"|"cache_c8_norm_rope_append"|"latent_attention"|"indexed_packed_attention"|"sparse_index"|"packed_latent_attention"|"attention_metadata"|"packed_attention_metadata");
-        let assembly = !batched_index && matches!(i.op.as_str(), "repeat"|"slice"|"query_project"|"query_rotary_extract"|"rope"|"rope_bf16"|"rope_f32"|"mla_query"|"mla_value"|"mome"|"latent_attention"|"indexed_packed_attention"|"sparse_index"|"packed_latent_attention");
+        let batched_attention = matches!(i.op.as_str(),"indexed_packed_attention"|"packed_latent_attention");
+        let batched = batched_index || batched_attention;
+        let per_query = !batched && matches!(i.op.as_str(), "mome"|"mome_inplace"|"query_project"|"query_rotary_extract"|"rope"|"rope_bf16"|"rope_f32"|"mla_query"|"mla_value"|"index_cache_append"|"cache_append"|"cache_norm_rope_append"|"cache_c8_norm_rope_append"|"latent_attention"|"indexed_packed_attention"|"sparse_index"|"packed_latent_attention"|"attention_metadata"|"packed_attention_metadata");
+        let assembly = !batched && matches!(i.op.as_str(), "repeat"|"slice"|"query_project"|"query_rotary_extract"|"rope"|"rope_bf16"|"rope_f32"|"mla_query"|"mla_value"|"mome"|"latent_attention"|"indexed_packed_attention"|"sparse_index"|"packed_latent_attention");
         let packed = if p.prefill_tokens > 1 { serde_json::json!({
             "tokens":p.prefill_tokens,
             "schedule":if i.op=="sink_normalize" {"shared initialization constant"} else if per_query {"ordered per-query calls"} else {"token matrix"},
             "api_repetitions":if per_query {p.prefill_tokens} else {1},
-            "causal_alignment":if batched_index {Some("one TND sequence; total query count and final chunk KV length; all chunk keys appended before selection")} else {None},
+            "causal_alignment":if batched {Some("one TND sequence; total query count and final chunk KV length; all chunk keys appended before selection/attention; each attention row consumes its own causal indices")} else {None},
             "output_elements":if i.kind==0 {Some(i.width*if i.op=="sink_normalize" {1} else {p.prefill_tokens})} else {None},
             "assembly_copies":if assembly {p.prefill_tokens} else if i.op=="gather" {8*p.prefill_tokens} else {0},
             "assembly_api":"aclrtMemcpyAsync device-to-device",

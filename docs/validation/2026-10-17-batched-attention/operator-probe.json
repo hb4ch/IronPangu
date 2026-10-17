@@ -1,0 +1,20 @@
+{
+  "scope": "independent CPU packed-cache attention oracle; output reads are diagnostic-only",
+  "cache_rows": 512,
+  "heads": 6,
+  "query_width": 576,
+  "output_width": 512,
+  "sinks": 128,
+  "end_positions": "query_rows-1,31,32,511",
+  "eager_cases_per_shape": 4,
+  "exact_graph_replays_per_shape": 8,
+  "oracle_tolerance": "absolute error <= 0.003 + 0.02 * abs(expected)",
+  "results": [
+    {"query_rows":1,"status":"passed","attention_values_checked":36864,"attention_max_abs_error":0.00120384,"attention_workspace_bytes":93970944},
+    {"query_rows":4,"status":"passed","attention_values_checked":147456,"attention_max_abs_error":0.00130768,"attention_workspace_bytes":99869184},
+    {"query_rows":16,"status":"passed","attention_values_checked":589824,"attention_max_abs_error":0.00146597,"attention_workspace_bytes":108913152}
+  ],
+  "writer_workspace_bytes": 512,
+  "scale_max_abs_error": 2.58313e-9,
+  "quant_max_integer_error": 1
+}

@@ -87,6 +87,15 @@ batched attention plus multiple compiled prefill sizes, with a measured latency
 budget deciding which variant is legal alongside active decodes. Include every
 variant in maximum-workspace discovery and frozen arena binding.
 
+[Batched packed-C8 attention](validation/2026-10-17-batched-attention/README.md)
+now executes one call and no output assembly copies per chunk. The independent
+operator oracle covers 1/4/16 query rows and graph replay; the full four-token
+92B variant preserves all 99 standard and 72 previous long native outputs.
+Measured four-token TTFT improves another 8.25–8.83% without workspace growth or
+activation transfers. The known reference difference remains. BF16 window
+attention and recurrent work still execute per query and are the next batching
+targets; larger full-model variants and latency-budget scheduling remain open.
+
 Experimental learned-index execution now includes explicit INT8 index queries/keys
 and FP16 scales/head weights in the [physical plan](learned-index-quantization.md).
 Its [C8 reference boundary comparison](validation/2026-10-17-learned-index-int8/README.md)

@@ -6,6 +6,32 @@ use inferfabric_dsl::{authoring::ModelDefinition, definition};
 use inferfabric_ir::initialization::{DType, Instruction};
 use std::collections::BTreeMap;
 #[test]
+fn packed_attention_is_one_causal_call_without_assembly() {
+    for source in [include_str!("../../../examples/openpangu/92b-tp8-ep8-c8.inferfabric"),include_str!("../../../examples/openpangu/92b-tp8-ep8-c8-learned.inferfabric")] {
+        let ModelDefinition::Execution {graph,..}=definition(source).unwrap() else {panic!()};
+        for count in [2,4,16] {
+            let p=inferfabric_compiler::token_program::lower(&graph,None).unwrap().with_prefill_tokens(count).unwrap();
+            let recipes=inferfabric_compiler::token_program::recipes(&p,&graph);
+            let mut attentions=0;
+            for (i,r) in p.instructions.iter().zip(&recipes) {
+                if matches!(i.op.as_str(),"indexed_packed_attention"|"packed_latent_attention") {
+                    attentions+=1;
+                    assert_eq!(r["packed_prefill"]["api_repetitions"],1);
+                    assert_eq!(r["packed_prefill"]["assembly_copies"],0);
+                    assert_eq!(r["value_fields"][0]["prefill_shape"],serde_json::json!([count,i.width]));
+                    assert!(r["packed_prefill"]["causal_alignment"].is_string());
+                }
+                if i.op=="packed_attention_metadata" {
+                    let field=r["value_fields"].as_array().unwrap().iter().find(|f|f["name"]=="packed_query_lengths").unwrap();
+                    assert_eq!(field["shape"],serde_json::json!([count]));
+                    assert_eq!(field["prefill_shape"],serde_json::json!([count]));
+                }
+            }
+            assert_eq!(attentions,16);
+        }
+    }
+}
+#[test]
 fn packed_quantized_index_selection_has_no_row_assembly() {
     let source=include_str!("../../../examples/openpangu/92b-tp8-ep8-c8-learned.inferfabric");
     for (source, quantized) in [(source.to_string(),true),(source.replace("cache_dtype = \"int8\"","cache_dtype = \"bf16\""),false)] {

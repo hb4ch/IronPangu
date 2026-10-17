@@ -113,7 +113,7 @@ struct Decoder {
   std::map<uint32_t,std::unique_ptr<DeviceTensor>> attention_metadata;
   int64_t cube_cores = 0, vector_cores = 0;
   std::set<uint32_t> metadata_enqueued;
-  std::unique_ptr<DeviceTensor> packed_indices, packed_length;
+  std::unique_ptr<DeviceTensor> packed_indices, packed_length, packed_query_lengths;
   int rank;
   int current_position = -1;
   std::map<std::string, std::unique_ptr<openpangu::Router>> routers;
@@ -772,6 +772,10 @@ struct Decoder {
     if(!packed_indices) {
       packed_indices=std::make_unique<DeviceTensor>(std::vector<int64_t>{program.prefill_tokens,1,512},ACL_INT32,4);
       packed_length=std::make_unique<DeviceTensor>(std::vector<int64_t>{program.prefill_tokens},ACL_INT32,4);
+      packed_query_lengths=std::make_unique<DeviceTensor>(std::vector<int64_t>{program.prefill_tokens},ACL_INT32,4);
+      std::vector<int32_t> counts(program.prefill_tokens);
+      std::iota(counts.begin(),counts.end(),1);
+      resident::control_upload(*packed_query_lengths,counts);
     }
     execution.require_stream(stream);
     for(uint32_t row=0;row<active_tokens;++row)
@@ -784,22 +788,24 @@ struct Decoder {
   }
   V attend_packed(const V &query,const std::string &name, const V *selected=nullptr) {
     auto &state=*attention_states.at(name);
-    if(!state.packed_c8 || !packed_indices || query.dtype()!=ACL_BF16 || query.size()!=3456)
+    if(!state.packed_c8 || !packed_indices || query.dtype()!=ACL_BF16 || query.size()!=size_t(active_tokens)*3456)
       throw std::runtime_error("packed attention contract");
-    View q(query.data(),{1,6,576},ACL_BF16);
+    View q(query.data(),{active_tokens,6,576},ACL_BF16);
+    DeviceTensor out({active_tokens,6,512},ACL_BF16,2);
     auto *sink_values=weight_views.get(state.sink.data,128*576,{128,1,512},{576,576,1},ACL_BF16);
     char layout[]="TND",cache_layout[]="PA_BSND";
     uint64_t bytes=0;aclOpExecutor *e=nullptr;
-    if(selected && (selected->dtype()!=ACL_INT32 || selected->size()!=2048))throw std::runtime_error("selected index storage");
-    auto *indices=selected?execution.descriptor(selected->data(),{1,1,2048},ACL_INT32):control_row(*packed_indices,{1,1,512});
+    if(selected && (selected->dtype()!=ACL_INT32 || selected->size()!=size_t(active_tokens)*2048))throw std::runtime_error("selected index storage");
+    auto *indices=selected?execution.descriptor(selected->data(),{active_tokens,1,2048},ACL_INT32):prefix(*packed_indices,{active_tokens,1,512});
     checked(prepared::query("aclnnAiInfraKvQuantSparseFlashAttention",false,
         aclnnAiInfraKvQuantSparseFlashAttentionGetWorkspaceSize,
         q.t,state.key.tensor,state.key.tensor,indices,nullptr,nullptr,
-        state.table.tensor,state.qlen.tensor,control_row(*packed_length),state.sink.tensor,sink_values,
+        state.table.tensor,prefix(*packed_query_lengths,{1},(active_tokens-1)*sizeof(int32_t)),
+        prefix(*packed_length,{1},(active_tokens-1)*sizeof(int32_t)),state.sink.tensor,sink_values,
         1/std::sqrt(192.0),2,2,1,layout,cache_layout,3,INT64_MAX,INT64_MAX,2,1,128,64,
-        state.out.tensor,&bytes,&e),"packed C8 attention prepare");
+        out.tensor,&bytes,&e),"packed C8 attention prepare");
     run(aclnnAiInfraKvQuantSparseFlashAttention,bytes,e);
-    return result(state.out);
+    return result(out);
   }
   void prepare_attention_metadata(uint32_t window,bool cleared = false) {
     if (metadata_enqueued.count(window)) return;

@@ -6,8 +6,10 @@
 #include <numeric>
 using openpangu::DeviceTensor;
 using openpangu::Operation;
-int main() {
+int main(int argc,char **argv) {
  try {
+  int rows=argc==2?std::stoi(argv[1]):1;
+  if(argc>2 || (rows!=1 && rows!=2 && rows!=4 && rows!=16))throw std::runtime_error("query count must be 1,2,4,16");
   check(aclInit(nullptr),"init");check(aclrtSetDevice(0),"device");
   {
    aclrtStream stream=nullptr;check(aclrtCreateStream(&stream),"stream");
@@ -42,31 +44,32 @@ int main() {
      if(actual!=expected)throw std::runtime_error("C8 rotary is not expected BF16");
     }
    }
-   DeviceTensor q({1,6,576},ACL_BF16,2),indices({1,1,512},ACL_INT32,4),length({1},ACL_INT32,4),position({1},ACL_INT64,8),qlen({1},ACL_INT32,4),table({1,16},ACL_INT32,4),sink({128,1,576},ACL_BF16,2),sinkvalues({128,1,512},ACL_BF16,2),out({1,6,512},ACL_BF16,2);
-   std::vector<uint16_t> hostq(6*576),hosts(128*576),sv(128*512);std::vector<int32_t> blocks(16);std::iota(blocks.begin(),blocks.end(),0);
+   DeviceTensor q({rows,6,576},ACL_BF16,2),indices({rows,1,512},ACL_INT32,4),length({1},ACL_INT32,4),position({rows},ACL_INT64,8),qlen({1},ACL_INT32,4),table({1,16},ACL_INT32,4),sink({128,1,576},ACL_BF16,2),sinkvalues({128,1,512},ACL_BF16,2),out({rows,6,512},ACL_BF16,2);
+   std::vector<uint16_t> hostq(rows*6*576),hosts(128*576),sv(128*512);std::vector<int32_t> blocks(16);std::iota(blocks.begin(),blocks.end(),0);
    for(size_t i=0;i<hostq.size();++i)hostq[i]=bf16(float(int(i*13%101)-50)/128);
    for(size_t i=0;i<hosts.size();++i)hosts[i]=bf16(float(int(i*19%103)-51)/128);
    for(int r=0;r<128;++r)for(int d=0;d<512;++d)sv[r*512+d]=hosts[r*576+d];
-   q.upload(hostq);sink.upload(hosts);sinkvalues.upload(sv);table.upload(blocks);qlen.upload(std::vector<int32_t>{1});
+   q.upload(hostq);sink.upload(hosts);sinkvalues.upload(sv);table.upload(blocks);qlen.upload(std::vector<int32_t>{rows});
    uint64_t attention_workspace_bytes=0;
    auto prepare=[&](Operation &op){char lq[]="TND",lk[]="PA_BSND";check(aclnnAiInfraKvQuantSparseFlashAttentionGetWorkspaceSize(q.tensor,cache.tensor,cache.tensor,indices.tensor,nullptr,nullptr,table.tensor,qlen.tensor,length.tensor,sink.tensor,sinkvalues.tensor,1/std::sqrt(192.),2,2,1,lq,lk,3,INT64_MAX,INT64_MAX,2,1,128,64,out.tensor,&op.bytes,&op.executor),"packed attention prepare");attention_workspace_bytes=op.bytes;op.allocate();};
-   auto controls=[&](int pos){position.upload(std::vector<int64_t>{pos});};
-   auto metadata=[&](){if_packed_attention_metadata(position.data,indices.data,length.data,512,stream);};
+   auto controls=[&](int pos){std::vector<int64_t> positions(rows);for(int row=0;row<rows;++row)positions[row]=pos-rows+1+row;position.upload(positions);};
+   auto metadata=[&](){for(int row=0;row<rows;++row)if_packed_attention_metadata(static_cast<int64_t *>(position.data)+row,static_cast<int32_t *>(indices.data)+row*512,length.data,512,stream);};
    auto unpack=[&](int r,int d){if(d<512){float scale;std::memcpy(&scale,packed.data()+r*656+640+d/128*4,4);return int(int8_t(packed[r*656+d]))*scale;}uint16_t v;std::memcpy(&v,packed.data()+r*656+512+(d-512)*2,2);return fp32(v);};
    double max_error=0;size_t checked_values=0;
-   auto verify=[&](int pos){auto actual=out.read<uint16_t>();auto ids=indices.read<int32_t>();if(length.read<int32_t>()[0]!=pos+1)throw std::runtime_error("sequence length mismatch");for(int i=0;i<512;++i)if(ids[i]!=(i<=pos?i:-1))throw std::runtime_error("indices mismatch");
+   auto verify=[&](int end){auto actual=out.read<uint16_t>();auto ids=indices.read<int32_t>();if(length.read<int32_t>()[0]!=end+1)throw std::runtime_error("sequence length mismatch");
+    for(int row=0;row<rows;++row){int pos=end-rows+1+row;for(int i=0;i<512;++i)if(ids[row*512+i]!=(i<=pos?i:-1))throw std::runtime_error("indices mismatch");
     for(int h=0;h<6;++h){std::vector<double> scores(pos+1+128);double mx=-1e30,total=0;
-     for(int r=0;r<int(scores.size());++r){double dot=0;for(int d=0;d<576;++d)dot+=fp32(hostq[h*576+d])*(r<=pos?unpack(r,d):fp32(hosts[(r-pos-1)*576+d]));scores[r]=dot/std::sqrt(192.);mx=std::max(mx,scores[r]);}
+     for(int r=0;r<int(scores.size());++r){double dot=0;for(int d=0;d<576;++d)dot+=fp32(hostq[(row*6+h)*576+d])*(r<=pos?unpack(r,d):fp32(hosts[(r-pos-1)*576+d]));scores[r]=dot/std::sqrt(192.);mx=std::max(mx,scores[r]);}
      for(auto &s:scores){s=std::exp(s-mx);total+=s;}
-     for(int d=0;d<512;++d){double expected=0;for(int r=0;r<int(scores.size());++r)expected+=scores[r]/total*(r<=pos?unpack(r,d):fp32(hosts[(r-pos-1)*576+d]));double error=std::abs(fp32(actual[h*512+d])-expected);max_error=std::max(max_error,error);if(!std::isfinite(error)||error>.003+.02*std::abs(expected))throw std::runtime_error("packed attention CPU mismatch");++checked_values;}
-    }
+     for(int d=0;d<512;++d){double expected=0;for(int r=0;r<int(scores.size());++r)expected+=scores[r]/total*(r<=pos?unpack(r,d):fp32(hosts[(r-pos-1)*576+d]));double error=std::abs(fp32(actual[(row*6+h)*512+d])-expected);max_error=std::max(max_error,error);if(!std::isfinite(error)||error>.003+.02*std::abs(expected))throw std::runtime_error("packed attention CPU mismatch row="+std::to_string(row));++checked_values;}
+    }}
    };
    std::vector<std::vector<uint16_t>> eager;
-   for(int pos:{0,31,32,511}){controls(pos);metadata();Operation op;prepare(op);op.run(aclnnAiInfraKvQuantSparseFlashAttention,stream);check(aclrtSynchronizeStream(stream),"attention fence");verify(pos);eager.push_back(out.read<uint16_t>());}
+   for(int pos:{rows-1,31,32,511}){controls(pos);metadata();Operation op;prepare(op);op.run(aclnnAiInfraKvQuantSparseFlashAttention,stream);check(aclrtSynchronizeStream(stream),"attention fence");verify(pos);eager.push_back(out.read<uint16_t>());}
    Operation op;prepare(op);aclmdlRI graph=nullptr;check(aclmdlRICaptureBegin(stream,ACL_MODEL_RI_CAPTURE_MODE_GLOBAL),"capture");metadata();op.run(aclnnAiInfraKvQuantSparseFlashAttention,stream);check(aclmdlRICaptureEnd(stream,&graph),"capture end");
-   for(int pass=0;pass<2;++pass){int i=0;for(int pos:{0,31,32,511}){controls(pos);check(aclmdlRIExecuteAsync(graph,stream),"replay");check(aclrtSynchronizeStream(stream),"replay fence");verify(pos);if(out.read<uint16_t>()!=eager[i++])throw std::runtime_error("packed attention graph mismatch");}}
+   for(int pass=0;pass<2;++pass){int i=0;for(int pos:{rows-1,31,32,511}){controls(pos);check(aclmdlRIExecuteAsync(graph,stream),"replay");check(aclrtSynchronizeStream(stream),"replay fence");verify(pos);if(out.read<uint16_t>()!=eager[i++])throw std::runtime_error("packed attention graph mismatch");}}
    check(aclmdlRIDestroy(graph),"destroy graph");check(aclrtDestroyStream(stream),"destroy stream");
-   std::cout<<"{\"status\":\"passed\",\"cache_rows\":512,\"scale_max_abs_error\":"<<scale_error<<",\"quant_max_integer_error\":"<<quant_error<<",\"attention_values_checked\":"<<checked_values<<",\"attention_max_abs_error\":"<<max_error<<",\"attention_workspace_bytes\":"<<attention_workspace_bytes<<",\"writer_workspace_bytes\":"<<writer.bytes<<"}\n";
+   std::cout<<"{\"status\":\"passed\",\"query_rows\":"<<rows<<",\"cache_rows\":512,\"scale_max_abs_error\":"<<scale_error<<",\"quant_max_integer_error\":"<<quant_error<<",\"attention_values_checked\":"<<checked_values<<",\"attention_max_abs_error\":"<<max_error<<",\"attention_workspace_bytes\":"<<attention_workspace_bytes<<",\"writer_workspace_bytes\":"<<writer.bytes<<"}\n";
   }
   check(aclrtResetDevice(0),"reset");check(aclFinalize(),"finalize");
  }catch(const std::exception &e){std::cerr<<e.what()<<'\n';return 1;}

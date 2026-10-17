@@ -51,6 +51,17 @@ The compiler emits three explicit operations:
    the packed cache directly, with quant modes 2, scale repository mode 1,
    tile size 128, rotary dimension 64 and learned sinks.
 
+Packed prefill executes one attention call for all `T` query rows, with BF16
+query shape `[T,6,576]` and output `[T,6,512]`. Each row supplies its own causal
+index list: 512 generated candidates for the bounded causal path, or 2,048
+learned candidates for `indexed_packed_attention`. The TND query-count scalar
+comes from an initialization-only device array; the KV length comes from the
+final row's device metadata. Metadata generation still runs per query, before
+attention on the same stream. Future rows are excluded by the causal contract
+and each row's index list. Attention outputs directly alias their arena buffer;
+there is no per-query output assembly. The physical recipe/viewer records one
+call, zero assembly copies and the persistent query-count array.
+
 There is no full-cache dequantization instruction, scratch reconstruction, or
 persistent BF16 mirror on this path. Vendor attention performs the necessary
 operand conversion inside the selected kernel. Both execution and preparation
