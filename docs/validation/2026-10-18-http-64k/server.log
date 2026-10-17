@@ -1,0 +1,17 @@
+program scheduler configured max_num_seqs=2 max_num_batched_tokens=4096 max_model_len=65536; compiled_prefill_tokens=4096, decode_tokens=1
+program uncaptured prefill ACLNN_CACHE_LIMIT=0
+program preparation rank=0 phase=load_parameters
+program preparation rank=0 phase=decode
+program preparation rank=0 phase=uncaptured_prefill query_tokens=4096 pass=0
+program preparation rank=0 phase=uncaptured_prefill query_tokens=4096 pass=1
+program preparation rank=0 phase=sequence_decode sequences=1
+program preparation rank=0 phase=sequence_decode sequences=2
+program preparation rank=0 phase=complete
+vLLM Rust frontend 0.25.1; inferfabric-program; loopback only
+program scheduler active=1 capacity=2 token_budget=4096 prefill_tokens=4096 decode_tokens=1
+program scheduler active=2 capacity=2 token_budget=4096 prefill_tokens=4096 decode_tokens=1
+shutdown signal 15 received; draining frontend
+program scheduler stopped max_active=2 mixed_ticks=4 consumed_tokens=201181 token_budget=4096 prefill_tokens=4096 decode_tokens=1
+shared state pool admissions=27 cross_partition_bindings=2160 peak_occupied_bytes=7534288896 remaining_occupied_bytes=0
+frontend stopped; closing native workers
+native workers closed
