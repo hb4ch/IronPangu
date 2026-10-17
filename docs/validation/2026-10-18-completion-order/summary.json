@@ -1,0 +1,37 @@
+{
+  "frontend_sha256": "490e770d7fda80942bf725f85309065f8398f2844d972556b6d8c1547086c67d",
+  "native_sha256": "f71e4b259683fadf6a7887fad9885c26e154273ecfcf1cc2e575bb46288dddb1",
+  "execution_sha256": "9652f83e031201b4b8bb887f73b1f82b42f1c102254a538758544443073935d7",
+  "passed": true,
+  "rss_growth_mib": 71.81640625,
+  "rounds": 24,
+  "completed_reference_requests": 120,
+  "load_seconds": 279.4035799051635,
+  "mixed_long_ttft_ms": [
+    9856.81184893474,
+    9739.531612023711,
+    9758.970218710601
+  ],
+  "mixed_short_ttft_ms": [
+    783.9112128131092,
+    742.2351860441267,
+    750.7595997303724
+  ],
+  "scheduler": {
+    "max_active": 2,
+    "mixed_ticks": 22,
+    "consumed_tokens": 1785397,
+    "token_budget": 4096
+  },
+  "shared_pool": {
+    "admissions": 171,
+    "cross_partition_bindings": 25920,
+    "peak_occupied_bytes": 7534288896,
+    "remaining_occupied_bytes": 0
+  },
+  "final_resources": {
+    "rss_bytes": 6873378816,
+    "threads": 663,
+    "file_descriptors": 76
+  }
+}

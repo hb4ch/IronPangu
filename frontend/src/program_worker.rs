@@ -102,6 +102,7 @@ struct Running {
     generated: u32,
     next: Option<u32>,
     cached_tokens: u32,
+    terminal_output: Option<GenerateOutput>,
 }
 fn cancelled(job: &Job) -> bool {
     job.cancel.load(Ordering::Acquire) || job.tx.is_closed()
@@ -110,6 +111,18 @@ fn release(slot: &mut Option<Running>, active: &Active) {
     if let Some(r) = slot.take() {
         active.lock().unwrap().remove(&r.job.req.request_id);
     }
+}
+// Publish success only after request-owned pages and audit handles are released.
+fn complete(engine: &mut impl ResidentEngine, index: u32, slot: &mut Option<Running>, active: &Active)
+    -> inferfabric_model::Result<()> {
+    engine.release(index)?;
+    if let Some(mut r) = slot.take() {
+        active.lock().unwrap().remove(&r.job.req.request_id);
+        if let Some(output) = r.terminal_output.take() {
+            let _ = r.job.tx.try_send(Ok(output));
+        }
+    }
+    Ok(())
 }
 fn advance(
     engine: &mut impl ResidentEngine,
@@ -181,7 +194,12 @@ fn finish_advance(r:&mut Running,count:usize,next:Option<u32>)->inferfabric_mode
         cached_token_count: r.cached_tokens as usize,
         kv_transfer_params: None,
     };
-    Ok((r.job.tx.try_send(Ok(output)).is_err() || terminal, count))
+    if terminal {
+        r.terminal_output = Some(output);
+        Ok((true, count))
+    } else {
+        Ok((r.job.tx.try_send(Ok(output)).is_err(), count))
+    }
 }
 pub(super) fn run(
     engine: &mut impl ResidentEngine,
@@ -224,6 +242,7 @@ pub(super) fn run(
                         generated: 0,
                         next: None,
                         cached_tokens: 0,
+                        terminal_output: None,
                     });
                     let request = &slot.as_ref().unwrap().job.req;
                     let tokens = u32::try_from(request.prompt_token_ids.len())
@@ -290,7 +309,7 @@ pub(super) fn run(
                         if !finished && !cancelled(&r.job) && (r.position as usize)<r.job.req.prompt_token_ids.len() {
                             engine.checkpoint(index as u32,&r.job.req,r.position)?;
                         }
-                        if finished {engine.release(index as u32)?;release(&mut slots[index],active);}
+                        if finished {complete(engine,index as u32,&mut slots[index],active)?;}
                     }
                     consumed+=tokens as u64;
                 } else {std::thread::sleep(std::time::Duration::from_millis(2));}
@@ -340,8 +359,7 @@ pub(super) fn run(
                 }
                 cursor = (index + 1) % residents;
                 if finished {
-                    engine.release(index as u32)?;
-                    release(&mut slots[index], active);
+                    complete(engine,index as u32,&mut slots[index],active)?;
                 }
             }
             if prefill > 0 && decode > 0 {
@@ -410,6 +428,8 @@ mod tests {
         trace: Vec<(usize, u32)>,
         resets: Vec<u32>,
         fail_at: Option<usize>,
+        fail_release: bool,
+        release_probe: Option<mpsc::Sender<vllm_llm::Result<GenerateOutput>>>,
         cancel_at: Option<(usize, Arc<AtomicBool>)>,
         chunk: u32,
         family: Vec<u32>,
@@ -424,6 +444,11 @@ mod tests {
         batches:Vec<Vec<inferfabric_native::program::BatchInput>>,
     }
     impl ResidentEngine for Fake {
+        fn release(&mut self,_slot:u32)->inferfabric_model::Result<()> {
+            if let Some(tx)=&self.release_probe {assert_eq!(tx.capacity(),32,"terminal published before release");}
+            if self.fail_release {return Err(inferfabric_model::invalid("injected release failure"));}
+            Ok(())
+        }
         fn batch_capacity(&self)->inferfabric_model::Result<u32> {Ok(if self.batched{self.chunk}else{0})}
         fn batch(&mut self,inputs:&[inferfabric_native::program::BatchInput])->inferfabric_model::Result<Vec<Option<u32>>> {
             assert!(self.batched);assert!(inputs.iter().map(|i|i.tokens.len()).sum::<usize>()<=self.chunk as usize);
@@ -514,6 +539,25 @@ mod tests {
             .unwrap()
             .insert(req.request_id.clone(), cancel.clone());
         (Job { req, tx, cancel }, rx)
+    }
+    #[test]
+    fn terminal_response_follows_successful_release_in_both_schedulers() {
+        for batched in [false,true] {
+            for fail_release in [false,true] {
+                let active=Arc::new(Mutex::new(Default::default()));
+                let(tx,mut rx)=mpsc::channel(1);
+                let(job,mut output)=job(request("terminal",vec![1],1),&active);
+                let mut engine=Fake{batched,uncaptured:true,chunk:4,fail_release,release_probe:Some(job.tx.clone()),..Default::default()};
+                tx.try_send(job).unwrap();drop(tx);
+                let result=run(&mut engine,&mut rx,&active,&Arc::new(AtomicBool::new(false)),1,4);
+                assert_eq!(result.is_err(),fail_release);
+                let response=output.try_recv().unwrap();
+                if fail_release {assert!(response.is_err());}
+                else {assert!(response.unwrap().finish_reason.is_some());}
+                assert!(output.try_recv().is_err());
+                assert!(active.lock().unwrap().is_empty());
+            }
+        }
     }
     #[test]
     fn backpressured_request_resumes_without_dropping_tokens_or_blocking_peer() {

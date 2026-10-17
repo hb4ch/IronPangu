@@ -1,0 +1,138 @@
+{
+  "complete": false,
+  "completed": [
+    {
+      "case": "retrieval-65536-early",
+      "long_prompt_tokens": 65520,
+      "short_finished_before_long": true,
+      "cancellation_during_peer_prefill": true,
+      "short_first_output_before_long": true,
+      "short": {
+        "ttft_ms": 783.9112128131092,
+        "request_started_ms_since_run": 97179.26484486088,
+        "first_text_ms_since_run": 97963.17605767399,
+        "text_chunks": 7,
+        "chunk_intervals_ms": [
+          511.5918521769345,
+          516.8319218792021,
+          522.6586051285267,
+          528.4250099211931,
+          533.3906873129308,
+          538.2469347678125
+        ],
+        "total_ms": 4494.17338706553,
+        "usage": {
+          "prompt_tokens": 12,
+          "total_tokens": 20,
+          "completion_tokens": 8
+        }
+      },
+      "long": {
+        "ttft_ms": 9856.81184893474,
+        "request_started_ms_since_run": 96177.59723588824,
+        "first_text_ms_since_run": 106034.40908482298,
+        "text_chunks": 4,
+        "chunk_intervals_ms": [
+          27.39634783938527,
+          24.10305431112647,
+          24.5645958930254
+        ],
+        "total_ms": 10811.778152827173,
+        "usage": {
+          "prompt_tokens": 65520,
+          "total_tokens": 65525,
+          "completion_tokens": 5
+        }
+      }
+    },
+    {
+      "case": "retrieval-65536-middle",
+      "long_prompt_tokens": 65520,
+      "short_finished_before_long": true,
+      "cancellation_during_peer_prefill": true,
+      "short_first_output_before_long": true,
+      "short": {
+        "ttft_ms": 742.2351860441267,
+        "request_started_ms_since_run": 107891.19710866362,
+        "first_text_ms_since_run": 108633.43229470775,
+        "text_chunks": 7,
+        "chunk_intervals_ms": [
+          510.30746195465326,
+          514.5968743599951,
+          521.5397980064154,
+          536.2011678516865,
+          537.2184971347451,
+          542.4264259636402
+        ],
+        "total_ms": 4462.841198313981,
+        "usage": {
+          "prompt_tokens": 12,
+          "total_tokens": 20,
+          "completion_tokens": 8
+        }
+      },
+      "long": {
+        "ttft_ms": 9739.531612023711,
+        "request_started_ms_since_run": 106990.08523486555,
+        "first_text_ms_since_run": 116729.61684688926,
+        "text_chunks": 4,
+        "chunk_intervals_ms": [
+          26.97672601789236,
+          23.67435209453106,
+          24.865240789949894
+        ],
+        "total_ms": 10699.032548815012,
+        "usage": {
+          "prompt_tokens": 65520,
+          "total_tokens": 65525,
+          "completion_tokens": 5
+        }
+      }
+    },
+    {
+      "case": "retrieval-65536-late",
+      "long_prompt_tokens": 65520,
+      "short_finished_before_long": true,
+      "cancellation_during_peer_prefill": true,
+      "short_first_output_before_long": true,
+      "short": {
+        "ttft_ms": 750.7595997303724,
+        "request_started_ms_since_run": 118597.20344794914,
+        "first_text_ms_since_run": 119347.96304767951,
+        "text_chunks": 7,
+        "chunk_intervals_ms": [
+          510.34084102138877,
+          518.659942317754,
+          528.9674466475844,
+          524.9538570642471,
+          556.1865153722465,
+          546.9584777019918
+        ],
+        "total_ms": 4492.44597973302,
+        "usage": {
+          "prompt_tokens": 12,
+          "total_tokens": 20,
+          "completion_tokens": 8
+        }
+      },
+      "long": {
+        "ttft_ms": 9758.970218710601,
+        "request_started_ms_since_run": 117689.95779100806,
+        "first_text_ms_since_run": 127448.92800971866,
+        "text_chunks": 4,
+        "chunk_intervals_ms": [
+          27.397129219025373,
+          25.043741799890995,
+          24.58148915320635
+        ],
+        "total_ms": 10729.395725764334,
+        "usage": {
+          "prompt_tokens": 65520,
+          "total_tokens": 65525,
+          "completion_tokens": 5
+        }
+      }
+    }
+  ],
+  "expected_cases": 3
+}

@@ -1,0 +1,41 @@
+{
+  "format": "inferfabric.completed-arithmetic.v1",
+  "sequence": 14,
+  "resident": 0,
+  "history": {
+    "version": 1,
+    "spans": [
+      {
+        "start": 0,
+        "end": 529,
+        "query_tokens": 529,
+        "numerical_class": "uncaptured_prefill_4096_v1:sequence-batch-v1:f1c506b8b985a4e8d2b5aa5532d0d78adedbdbaf95eace023095ad23ec92b29c:member=1"
+      },
+      {
+        "start": 529,
+        "end": 530,
+        "query_tokens": 1,
+        "numerical_class": "uncaptured_prefill_4096_v1:sequence-batch-v1:ed2d5c2b20f569b722b41b0faa1fc1da6e9044a270c3ae7d3204a5a56e8abd18:member=1"
+      },
+      {
+        "start": 530,
+        "end": 531,
+        "query_tokens": 1,
+        "numerical_class": "uncaptured_prefill_4096_v1:sequence-batch-v1:3773630be6f3f459341490914ac5c95ef6afb5f9a7da05d29464a1f1c61ad1d7:member=1"
+      },
+      {
+        "start": 531,
+        "end": 532,
+        "query_tokens": 1,
+        "numerical_class": "uncaptured_prefill_4096_v1:sequence-batch-v1:86ad641fb9ef44dd7b050100291ec994641b34d6c16756a570e2731452242ae3:member=1"
+      },
+      {
+        "start": 532,
+        "end": 533,
+        "query_tokens": 1,
+        "numerical_class": "uncaptured_prefill_4096_v1:sequence-batch-v1:3f949d7b4d309654b1606724d781340eddda77eb1dc8fa6ac5a214ae6b78f0c3:member=1"
+      }
+    ]
+  },
+  "imported_tokens": 0
+}

@@ -50,6 +50,15 @@ but is transport-layer evidence only: full-model slow-client admission,
 cancellation and memory-pressure qualification remains open. No production
 listener behavior or timeout was changed to make the test pass.
 
+[Completion-order qualification](validation/2026-10-18-completion-order/README.md)
+now passes on the updated frontend: terminal success is sent only after native
+resident release and active-request removal succeed. Injected release failures
+produce errors in both schedulers. The full 24-wave 64K HTTP run passes 120
+reference load/recovery outputs with 71.82 MiB RSS growth, stable threads/FDs and
+complete page reclamation. This establishes a bounded repeated-load gate, not a
+production soak or an explanation of the earlier isolated FD excursion. Prefix
+restore on the updated frontend remains to be requalified.
+
 Non-greedy 92B sampling, wider prefix-cache budgets, broader quality and sustained
 production SLO evidence also remain release gates. Keep experimental long-context
 and bulk-domain qualification explicit until those applicable gates are met.

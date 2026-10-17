@@ -1,0 +1,5398 @@
+{
+  "frontend": "vLLM Rust 0.25.1",
+  "mode": "resident request scheduler; compiled prefill and native decode",
+  "full_fixture_text": false,
+  "sse_agreement": true,
+  "queued_isolation": true,
+  "reference_comparison_scope": "through_first_eos",
+  "fixture_sha256": "3a05e7ac9bb3a2e4432dc71717262771d35cd817b8d506d303f3d4b0777b926d",
+  "resident_fixture_sha256": "238299829f68743966950409c23a010581b01ff3ba4f864a31cd727439c622d0",
+  "request_socket_timeout_seconds": 300,
+  "disconnect_recovery": true,
+  "unsupported_sampling_rejected": true,
+  "results": [
+    {
+      "case": "arithmetic",
+      "text": "1 + 1 = 2",
+      "collected": {
+        "total_ms": 484.6186856739223,
+        "usage": {
+          "prompt_tokens": 12,
+          "total_tokens": 20,
+          "completion_tokens": 8
+        }
+      },
+      "streaming": {
+        "ttft_ms": 253.08294501155615,
+        "request_started_ms_since_run": 89512.92636897415,
+        "first_text_ms_since_run": 89766.0093139857,
+        "text_chunks": 7,
+        "chunk_intervals_ms": [
+          22.83109398558736,
+          22.35698001459241,
+          21.843465976417065,
+          21.839475724846125,
+          21.69901505112648,
+          21.794446278363466
+        ],
+        "total_ms": 422.4512339569628,
+        "usage": {
+          "prompt_tokens": 12,
+          "total_tokens": 20,
+          "completion_tokens": 8
+        }
+      }
+    },
+    {
+      "case": "geography",
+      "text": "The capital of France is Paris.",
+      "collected": {
+        "total_ms": 422.3132631741464,
+        "usage": {
+          "prompt_tokens": 15,
+          "total_tokens": 23,
+          "completion_tokens": 8
+        }
+      },
+      "streaming": {
+        "ttft_ms": 242.050020955503,
+        "request_started_ms_since_run": 90357.78665589169,
+        "first_text_ms_since_run": 90599.83667684719,
+        "text_chunks": 7,
+        "chunk_intervals_ms": [
+          22.843203973025084,
+          22.156687919050455,
+          22.22065906971693,
+          22.06248790025711,
+          22.11198816075921,
+          21.996847819536924
+        ],
+        "total_ms": 412.65518916770816,
+        "usage": {
+          "prompt_tokens": 15,
+          "total_tokens": 23,
+          "completion_tokens": 8
+        }
+      }
+    },
+    {
+      "case": "chinese",
+      "text": "北京是中国的首都，拥有悠久的历史、丰富的文化遗产和现代化的城市风貌。",
+      "collected": {
+        "total_ms": 619.0678188577294,
+        "usage": {
+          "prompt_tokens": 14,
+          "total_tokens": 31,
+          "completion_tokens": 17
+        }
+      },
+      "streaming": {
+        "ttft_ms": 234.67880487442017,
+        "request_started_ms_since_run": 91389.60188487545,
+        "first_text_ms_since_run": 91624.28068974987,
+        "text_chunks": 16,
+        "chunk_intervals_ms": [
+          23.351697251200676,
+          22.436550818383694,
+          22.27893890812993,
+          22.086177952587605,
+          22.162589244544506,
+          22.09058776497841,
+          22.13529823347926,
+          22.1805889159441,
+          22.305330261588097,
+          22.160197608172894,
+          22.104899398982525,
+          22.623691707849503,
+          22.12410792708397,
+          22.130548022687435,
+          22.250240202993155
+        ],
+        "total_ms": 606.1538001522422,
+        "usage": {
+          "prompt_tokens": 14,
+          "total_tokens": 31,
+          "completion_tokens": 17
+        }
+      }
+    },
+    {
+      "case": "access-code-529",
+      "text": "7319",
+      "collected": {
+        "total_ms": 377.09871772676706,
+        "usage": {
+          "prompt_tokens": 529,
+          "total_tokens": 534,
+          "completion_tokens": 5
+        }
+      },
+      "streaming": {
+        "ttft_ms": 255.94812724739313,
+        "request_started_ms_since_run": 92372.92084377259,
+        "first_text_ms_since_run": 92628.86897101998,
+        "text_chunks": 4,
+        "chunk_intervals_ms": [
+          23.838282097131014,
+          23.241616785526276,
+          23.741490207612514
+        ],
+        "total_ms": 375.46358723193407,
+        "usage": {
+          "prompt_tokens": 529,
+          "total_tokens": 534,
+          "completion_tokens": 5
+        }
+      }
+    }
+  ],
+  "concurrent_requests": 8,
+  "mixed_residents": {
+    "case": "retrieval-65536-early",
+    "long_prompt_tokens": 65520,
+    "short_finished_before_long": true,
+    "cancellation_during_peer_prefill": true,
+    "short_first_output_before_long": true,
+    "short": {
+      "ttft_ms": 783.9112128131092,
+      "request_started_ms_since_run": 97179.26484486088,
+      "first_text_ms_since_run": 97963.17605767399,
+      "text_chunks": 7,
+      "chunk_intervals_ms": [
+        511.5918521769345,
+        516.8319218792021,
+        522.6586051285267,
+        528.4250099211931,
+        533.3906873129308,
+        538.2469347678125
+      ],
+      "total_ms": 4494.17338706553,
+      "usage": {
+        "prompt_tokens": 12,
+        "total_tokens": 20,
+        "completion_tokens": 8
+      }
+    },
+    "long": {
+      "ttft_ms": 9856.81184893474,
+      "request_started_ms_since_run": 96177.59723588824,
+      "first_text_ms_since_run": 106034.40908482298,
+      "text_chunks": 4,
+      "chunk_intervals_ms": [
+        27.39634783938527,
+        24.10305431112647,
+        24.5645958930254
+      ],
+      "total_ms": 10811.778152827173,
+      "usage": {
+        "prompt_tokens": 65520,
+        "total_tokens": 65525,
+        "completion_tokens": 5
+      }
+    }
+  },
+  "mixed_resident_cases": [
+    {
+      "case": "retrieval-65536-early",
+      "long_prompt_tokens": 65520,
+      "short_finished_before_long": true,
+      "cancellation_during_peer_prefill": true,
+      "short_first_output_before_long": true,
+      "short": {
+        "ttft_ms": 783.9112128131092,
+        "request_started_ms_since_run": 97179.26484486088,
+        "first_text_ms_since_run": 97963.17605767399,
+        "text_chunks": 7,
+        "chunk_intervals_ms": [
+          511.5918521769345,
+          516.8319218792021,
+          522.6586051285267,
+          528.4250099211931,
+          533.3906873129308,
+          538.2469347678125
+        ],
+        "total_ms": 4494.17338706553,
+        "usage": {
+          "prompt_tokens": 12,
+          "total_tokens": 20,
+          "completion_tokens": 8
+        }
+      },
+      "long": {
+        "ttft_ms": 9856.81184893474,
+        "request_started_ms_since_run": 96177.59723588824,
+        "first_text_ms_since_run": 106034.40908482298,
+        "text_chunks": 4,
+        "chunk_intervals_ms": [
+          27.39634783938527,
+          24.10305431112647,
+          24.5645958930254
+        ],
+        "total_ms": 10811.778152827173,
+        "usage": {
+          "prompt_tokens": 65520,
+          "total_tokens": 65525,
+          "completion_tokens": 5
+        }
+      }
+    },
+    {
+      "case": "retrieval-65536-middle",
+      "long_prompt_tokens": 65520,
+      "short_finished_before_long": true,
+      "cancellation_during_peer_prefill": true,
+      "short_first_output_before_long": true,
+      "short": {
+        "ttft_ms": 742.2351860441267,
+        "request_started_ms_since_run": 107891.19710866362,
+        "first_text_ms_since_run": 108633.43229470775,
+        "text_chunks": 7,
+        "chunk_intervals_ms": [
+          510.30746195465326,
+          514.5968743599951,
+          521.5397980064154,
+          536.2011678516865,
+          537.2184971347451,
+          542.4264259636402
+        ],
+        "total_ms": 4462.841198313981,
+        "usage": {
+          "prompt_tokens": 12,
+          "total_tokens": 20,
+          "completion_tokens": 8
+        }
+      },
+      "long": {
+        "ttft_ms": 9739.531612023711,
+        "request_started_ms_since_run": 106990.08523486555,
+        "first_text_ms_since_run": 116729.61684688926,
+        "text_chunks": 4,
+        "chunk_intervals_ms": [
+          26.97672601789236,
+          23.67435209453106,
+          24.865240789949894
+        ],
+        "total_ms": 10699.032548815012,
+        "usage": {
+          "prompt_tokens": 65520,
+          "total_tokens": 65525,
+          "completion_tokens": 5
+        }
+      }
+    },
+    {
+      "case": "retrieval-65536-late",
+      "long_prompt_tokens": 65520,
+      "short_finished_before_long": true,
+      "cancellation_during_peer_prefill": true,
+      "short_first_output_before_long": true,
+      "short": {
+        "ttft_ms": 750.7595997303724,
+        "request_started_ms_since_run": 118597.20344794914,
+        "first_text_ms_since_run": 119347.96304767951,
+        "text_chunks": 7,
+        "chunk_intervals_ms": [
+          510.34084102138877,
+          518.659942317754,
+          528.9674466475844,
+          524.9538570642471,
+          556.1865153722465,
+          546.9584777019918
+        ],
+        "total_ms": 4492.44597973302,
+        "usage": {
+          "prompt_tokens": 12,
+          "total_tokens": 20,
+          "completion_tokens": 8
+        }
+      },
+      "long": {
+        "ttft_ms": 9758.970218710601,
+        "request_started_ms_since_run": 117689.95779100806,
+        "first_text_ms_since_run": 127448.92800971866,
+        "text_chunks": 4,
+        "chunk_intervals_ms": [
+          27.397129219025373,
+          25.043741799890995,
+          24.58148915320635
+        ],
+        "total_ms": 10729.395725764334,
+        "usage": {
+          "prompt_tokens": 65520,
+          "total_tokens": 65525,
+          "completion_tokens": 5
+        }
+      }
+    }
+  ],
+  "prefix_cases": [],
+  "prefix_branch": null,
+  "prefix_branch_fixture_sha256": null,
+  "prefix_fixture_sha256": null,
+  "context_overflow_rejected": true,
+  "max_num_seqs": 2,
+  "max_num_batched_tokens": 4096,
+  "repeated_load": {
+    "rounds": 24,
+    "concurrency": 4,
+    "completed_reference_requests": 120,
+    "deliberate_disconnects": 24,
+    "elapsed_seconds": 279.4035799051635,
+    "waves": [
+      {
+        "round": 0,
+        "requests": [
+          {
+            "case": "retrieval-65536-early",
+            "ttft_ms": 9874.242757912725,
+            "request_started_ms_since_run": 128420.32481404021,
+            "first_text_ms_since_run": 138294.56757195294,
+            "text_chunks": 4,
+            "chunk_intervals_ms": [
+              26.79781476035714,
+              23.530691396445036,
+              23.555930703878403
+            ],
+            "total_ms": 10846.669299993664,
+            "usage": {
+              "prompt_tokens": 65520,
+              "total_tokens": 65525,
+              "completion_tokens": 5
+            }
+          },
+          {
+            "case": "geography",
+            "ttft_ms": 335.4096198454499,
+            "request_started_ms_since_run": 128425.01873802394,
+            "first_text_ms_since_run": 128760.42835786939,
+            "text_chunks": 7,
+            "chunk_intervals_ms": [
+              28.909710235893726,
+              27.714230585843325,
+              27.702422346919775,
+              27.662540785968304,
+              27.781452052295208,
+              27.55906991660595
+            ],
+            "total_ms": 541.548908688128,
+            "usage": {
+              "prompt_tokens": 15,
+              "total_tokens": 23,
+              "completion_tokens": 8
+            }
+          },
+          {
+            "case": "chinese",
+            "ttft_ms": 335.5096401646733,
+            "request_started_ms_since_run": 128425.28204992414,
+            "first_text_ms_since_run": 128760.79169008881,
+            "text_chunks": 16,
+            "chunk_intervals_ms": [
+              28.603527694940567,
+              27.707641944289207,
+              27.689251117408276,
+              27.668540831655264,
+              27.777832001447678,
+              27.55930135026574,
+              38.637890946120024,
+              248.17522382363677,
+              29.658026061952114,
+              28.564208187162876,
+              28.419896960258484,
+              49.230627715587616,
+              958.5628099739552,
+              511.31151895970106,
+              515.4039980843663
+            ],
+            "total_ms": 3445.724028162658,
+            "usage": {
+              "prompt_tokens": 14,
+              "total_tokens": 31,
+              "completion_tokens": 17
+            }
+          },
+          {
+            "case": "access-code-529",
+            "ttft_ms": 789.0952387824655,
+            "request_started_ms_since_run": 128425.55437190458,
+            "first_text_ms_since_run": 129214.64961068705,
+            "text_chunks": 4,
+            "chunk_intervals_ms": [
+              29.576455242931843,
+              28.564647771418095,
+              28.430365957319736
+            ],
+            "total_ms": 925.0179771333933,
+            "usage": {
+              "prompt_tokens": 529,
+              "total_tokens": 534,
+              "completion_tokens": 5
+            }
+          }
+        ],
+        "recovery": {
+          "ttft_ms": 274.4941860437393,
+          "request_started_ms_since_run": 139582.58062880486,
+          "first_text_ms_since_run": 139857.0748148486,
+          "text_chunks": 7,
+          "chunk_intervals_ms": [
+            23.049696814268827,
+            22.103941068053246,
+            22.184092085808516,
+            22.200550884008408,
+            21.85988938435912,
+            21.829898934811354
+          ],
+          "total_ms": 444.66180307790637,
+          "usage": {
+            "prompt_tokens": 12,
+            "total_tokens": 20,
+            "completion_tokens": 8
+          }
+        },
+        "process_resources": {
+          "rss_bytes": 6798073856,
+          "peak_rss_bytes": 6798073856,
+          "threads": 663,
+          "file_descriptors": 76,
+          "fd_targets": {
+            "0": "pipe:[358824326]",
+            "1": "/data/p00603624/inferfabric/openpangu92/release-order64k-load-http/server.log",
+            "2": "/data/p00603624/inferfabric/openpangu92/release-order64k-load-http/server.log",
+            "3": "anon_inode:[eventpoll]",
+            "4": "anon_inode:[eventfd]",
+            "5": "anon_inode:[eventpoll]",
+            "6": "socket:[358930688]",
+            "7": "socket:[358930689]",
+            "8": "socket:[358930688]",
+            "9": "/dev/davinci_manager",
+            "10": "/dev/davinci_manager",
+            "11": "/dev/davinci_manager",
+            "12": "/dev/hisi_hdc",
+            "13": "/dev/hisi_hdc",
+            "14": "/dev/hisi_hdc",
+            "15": "/dev/hisi_hdc",
+            "16": "/dev/davinci_manager",
+            "17": "/dev/davinci_manager",
+            "18": "/dev/davinci_manager",
+            "19": "/dev/davinci_manager",
+            "20": "/dev/davinci_manager",
+            "21": "socket:[358913222]",
+            "23": "/dev/hisi_hdc",
+            "24": "/dev/hisi_hdc",
+            "25": "/dev/hisi_hdc",
+            "26": "/dev/hisi_hdc",
+            "27": "/dev/hisi_hdc",
+            "28": "/dev/hisi_hdc",
+            "29": "/dev/hisi_hdc",
+            "30": "/dev/davinci_manager",
+            "31": "/dev/hisi_hdc",
+            "32": "/dev/hisi_hdc",
+            "33": "/dev/hisi_hdc",
+            "34": "/dev/hisi_hdc",
+            "35": "/dev/hisi_hdc",
+            "36": "/dev/hisi_hdc",
+            "37": "/dev/hisi_hdc",
+            "38": "/dev/hisi_hdc",
+            "39": "/dev/hisi_hdc",
+            "40": "/dev/hisi_hdc",
+            "41": "/dev/hisi_hdc",
+            "42": "/dev/hisi_hdc",
+            "43": "/dev/hisi_hdc",
+            "44": "/dev/hisi_hdc",
+            "45": "/dev/davinci_manager",
+            "46": "/dev/davinci_manager",
+            "47": "/dev/davinci_manager",
+            "48": "/dev/davinci_manager",
+            "49": "/dev/davinci_manager",
+            "50": "/dev/davinci_manager",
+            "51": "/dev/davinci_manager",
+            "52": "/dev/davinci_manager",
+            "53": "/dev/davinci_manager",
+            "54": "/dev/davinci_manager",
+            "55": "/dev/davinci_manager",
+            "56": "/dev/davinci_manager",
+            "57": "/dev/davinci_manager",
+            "58": "/dev/davinci_manager",
+            "59": "/dev/davinci_manager",
+            "60": "/dev/davinci_manager",
+            "61": "/dev/davinci_manager",
+            "62": "/dev/davinci_manager",
+            "63": "/dev/davinci_manager",
+            "64": "/dev/davinci_manager",
+            "65": "/dev/hisi_hdc",
+            "66": "anon_inode:[eventpoll]",
+            "67": "anon_inode:[eventfd]",
+            "68": "/dev/hisi_hdc",
+            "69": "/dev/hisi_hdc",
+            "70": "anon_inode:[eventpoll]",
+            "71": "socket:[358930688]",
+            "78": "/dev/hisi_hdc",
+            "83": "/dev/hisi_hdc",
+            "88": "/dev/hisi_hdc",
+            "93": "/dev/hisi_hdc",
+            "94": "/dev/hisi_hdc"
+          },
+          "socket_states": {
+            "358913222": {
+              "protocol": "tcp",
+              "state_hex": "0A"
+            }
+          }
+        },
+        "resource_sample_time_ns": 1792276552651941448
+      },
+      {
+        "round": 1,
+        "requests": [
+          {
+            "case": "retrieval-65536-middle",
+            "ttft_ms": 9906.71857399866,
+            "request_started_ms_since_run": 140034.07142171636,
+            "first_text_ms_since_run": 149940.78999571502,
+            "text_chunks": 4,
+            "chunk_intervals_ms": [
+              26.641594246029854,
+              23.938524071127176,
+              23.922993801534176
+            ],
+            "total_ms": 10870.782474987209,
+            "usage": {
+              "prompt_tokens": 65520,
+              "total_tokens": 65525,
+              "completion_tokens": 5
+            }
+          },
+          {
+            "case": "chinese",
+            "ttft_ms": 319.3228617310524,
+            "request_started_ms_since_run": 140038.97400805727,
+            "first_text_ms_since_run": 140358.29686978832,
+            "text_chunks": 16,
+            "chunk_intervals_ms": [
+              28.59823824837804,
+              27.452878654003143,
+              27.464040089398623,
+              27.57412102073431,
+              27.19647716730833,
+              27.18614786863327,
+              40.86796706542373,
+              253.96845676004887,
+              29.197223018854856,
+              28.29131530597806,
+              28.078244999051094,
+              51.3804629445076,
+              967.8665590472519,
+              514.560982119292,
+              521.058838814497
+            ],
+            "total_ms": 3458.601100835949,
+            "usage": {
+              "prompt_tokens": 14,
+              "total_tokens": 31,
+              "completion_tokens": 17
+            }
+          },
+          {
+            "case": "access-code-529",
+            "ttft_ms": 779.5417793095112,
+            "request_started_ms_since_run": 140039.10974878818,
+            "first_text_ms_since_run": 140818.6515280977,
+            "text_chunks": 4,
+            "chunk_intervals_ms": [
+              29.12021055817604,
+              28.29729625955224,
+              28.0756838619709
+            ],
+            "total_ms": 916.5416550822556,
+            "usage": {
+              "prompt_tokens": 529,
+              "total_tokens": 534,
+              "completion_tokens": 5
+            }
+          },
+          {
+            "case": "arithmetic",
+            "ttft_ms": 318.90307925641537,
+            "request_started_ms_since_run": 140039.34245975688,
+            "first_text_ms_since_run": 140358.2455390133,
+            "text_chunks": 7,
+            "chunk_intervals_ms": [
+              28.6179487593472,
+              27.431119233369827,
+              27.48807007446885,
+              27.575469575822353,
+              27.16568810865283,
+              27.268138248473406
+            ],
+            "total_ms": 525.4009710624814,
+            "usage": {
+              "prompt_tokens": 12,
+              "total_tokens": 20,
+              "completion_tokens": 8
+            }
+          }
+        ],
+        "recovery": {
+          "ttft_ms": 285.7835479080677,
+          "request_started_ms_since_run": 151228.43364998698,
+          "first_text_ms_since_run": 151514.21719789505,
+          "text_chunks": 7,
+          "chunk_intervals_ms": [
+            23.21152901276946,
+            22.67948491498828,
+            22.316162008792162,
+            22.1345410682261,
+            22.28373195976019,
+            22.01639022678137
+          ],
+          "total_ms": 457.85128977149725,
+          "usage": {
+            "prompt_tokens": 12,
+            "total_tokens": 20,
+            "completion_tokens": 8
+          }
+        },
+        "process_resources": {
+          "rss_bytes": 6804234240,
+          "peak_rss_bytes": 6804234240,
+          "threads": 663,
+          "file_descriptors": 76,
+          "fd_targets": {
+            "0": "pipe:[358824326]",
+            "1": "/data/p00603624/inferfabric/openpangu92/release-order64k-load-http/server.log",
+            "2": "/data/p00603624/inferfabric/openpangu92/release-order64k-load-http/server.log",
+            "3": "anon_inode:[eventpoll]",
+            "4": "anon_inode:[eventfd]",
+            "5": "anon_inode:[eventpoll]",
+            "6": "socket:[358930688]",
+            "7": "socket:[358930689]",
+            "8": "socket:[358930688]",
+            "9": "/dev/davinci_manager",
+            "10": "/dev/davinci_manager",
+            "11": "/dev/davinci_manager",
+            "12": "/dev/hisi_hdc",
+            "13": "/dev/hisi_hdc",
+            "14": "/dev/hisi_hdc",
+            "15": "/dev/hisi_hdc",
+            "16": "/dev/davinci_manager",
+            "17": "/dev/davinci_manager",
+            "18": "/dev/davinci_manager",
+            "19": "/dev/davinci_manager",
+            "20": "/dev/davinci_manager",
+            "21": "socket:[358913222]",
+            "23": "/dev/hisi_hdc",
+            "24": "/dev/hisi_hdc",
+            "25": "/dev/hisi_hdc",
+            "26": "/dev/hisi_hdc",
+            "27": "/dev/hisi_hdc",
+            "28": "/dev/hisi_hdc",
+            "29": "/dev/hisi_hdc",
+            "30": "/dev/davinci_manager",
+            "31": "/dev/hisi_hdc",
+            "32": "/dev/hisi_hdc",
+            "33": "/dev/hisi_hdc",
+            "34": "/dev/hisi_hdc",
+            "35": "/dev/hisi_hdc",
+            "36": "/dev/hisi_hdc",
+            "37": "/dev/hisi_hdc",
+            "38": "/dev/hisi_hdc",
+            "39": "/dev/hisi_hdc",
+            "40": "/dev/hisi_hdc",
+            "41": "/dev/hisi_hdc",
+            "42": "/dev/hisi_hdc",
+            "43": "/dev/hisi_hdc",
+            "44": "/dev/hisi_hdc",
+            "45": "/dev/davinci_manager",
+            "46": "/dev/davinci_manager",
+            "47": "/dev/davinci_manager",
+            "48": "/dev/davinci_manager",
+            "49": "/dev/davinci_manager",
+            "50": "/dev/davinci_manager",
+            "51": "/dev/davinci_manager",
+            "52": "/dev/davinci_manager",
+            "53": "/dev/davinci_manager",
+            "54": "/dev/davinci_manager",
+            "55": "/dev/davinci_manager",
+            "56": "/dev/davinci_manager",
+            "57": "/dev/davinci_manager",
+            "58": "/dev/davinci_manager",
+            "59": "/dev/davinci_manager",
+            "60": "/dev/davinci_manager",
+            "61": "/dev/davinci_manager",
+            "62": "/dev/davinci_manager",
+            "63": "/dev/davinci_manager",
+            "64": "/dev/davinci_manager",
+            "65": "/dev/hisi_hdc",
+            "66": "anon_inode:[eventpoll]",
+            "67": "anon_inode:[eventfd]",
+            "68": "/dev/hisi_hdc",
+            "69": "/dev/hisi_hdc",
+            "70": "anon_inode:[eventpoll]",
+            "71": "socket:[358930688]",
+            "78": "/dev/hisi_hdc",
+            "83": "/dev/hisi_hdc",
+            "88": "/dev/hisi_hdc",
+            "93": "/dev/hisi_hdc",
+            "94": "/dev/hisi_hdc"
+          },
+          "socket_states": {
+            "358913222": {
+              "protocol": "tcp",
+              "state_hex": "0A"
+            }
+          }
+        },
+        "resource_sample_time_ns": 1792276564310974735
+      },
+      {
+        "round": 2,
+        "requests": [
+          {
+            "case": "retrieval-65536-late",
+            "ttft_ms": 9801.311658229679,
+            "request_started_ms_since_run": 151693.399510812,
+            "first_text_ms_since_run": 161494.7111690417,
+            "text_chunks": 4,
+            "chunk_intervals_ms": [
+              27.79720164835453,
+              24.502217303961515,
+              24.987350683659315
+            ],
+            "total_ms": 10791.39336105436,
+            "usage": {
+              "prompt_tokens": 65520,
+              "total_tokens": 65525,
+              "completion_tokens": 5
+            }
+          },
+          {
+            "case": "access-code-529",
+            "ttft_ms": 1751.2567657977343,
+            "request_started_ms_since_run": 151697.93417397887,
+            "first_text_ms_since_run": 153449.1909397766,
+            "text_chunks": 4,
+            "chunk_intervals_ms": [
+              511.13144727423787,
+              526.6466797329485,
+              527.1735033020377
+            ],
+            "total_ms": 3873.9471519365907,
+            "usage": {
+              "prompt_tokens": 529,
+              "total_tokens": 534,
+              "completion_tokens": 5
+            }
+          },
+          {
+            "case": "arithmetic",
+            "ttft_ms": 313.9774529263377,
+            "request_started_ms_since_run": 151698.15929606557,
+            "first_text_ms_since_run": 152012.1367489919,
+            "text_chunks": 7,
+            "chunk_intervals_ms": [
+              29.572525061666965,
+              27.93486276641488,
+              27.78392191976309,
+              27.709342073649168,
+              27.62961108237505,
+              27.676750905811787
+            ],
+            "total_ms": 535.4848438873887,
+            "usage": {
+              "prompt_tokens": 12,
+              "total_tokens": 20,
+              "completion_tokens": 8
+            }
+          },
+          {
+            "case": "geography",
+            "ttft_ms": 313.8808230869472,
+            "request_started_ms_since_run": 151698.30789696425,
+            "first_text_ms_since_run": 152012.1887200512,
+            "text_chunks": 7,
+            "chunk_intervals_ms": [
+              29.491733759641647,
+              27.935483027249575,
+              27.786232065409422,
+              27.708922047168016,
+              27.62993099167943,
+              27.677311096340418
+            ],
+            "total_ms": 522.2007767297328,
+            "usage": {
+              "prompt_tokens": 15,
+              "total_tokens": 23,
+              "completion_tokens": 8
+            }
+          }
+        ],
+        "recovery": {
+          "ttft_ms": 287.25944086909294,
+          "request_started_ms_since_run": 162783.46049087122,
+          "first_text_ms_since_run": 163070.7199317403,
+          "text_chunks": 7,
+          "chunk_intervals_ms": [
+            23.60755018889904,
+            22.47956208884716,
+            22.368269972503185,
+            22.176309023052454,
+            22.36328087747097,
+            22.383681032806635
+          ],
+          "total_ms": 458.7968601845205,
+          "usage": {
+            "prompt_tokens": 12,
+            "total_tokens": 20,
+            "completion_tokens": 8
+          }
+        },
+        "process_resources": {
+          "rss_bytes": 6811697152,
+          "peak_rss_bytes": 6811697152,
+          "threads": 663,
+          "file_descriptors": 76,
+          "fd_targets": {
+            "0": "pipe:[358824326]",
+            "1": "/data/p00603624/inferfabric/openpangu92/release-order64k-load-http/server.log",
+            "2": "/data/p00603624/inferfabric/openpangu92/release-order64k-load-http/server.log",
+            "3": "anon_inode:[eventpoll]",
+            "4": "anon_inode:[eventfd]",
+            "5": "anon_inode:[eventpoll]",
+            "6": "socket:[358930688]",
+            "7": "socket:[358930689]",
+            "8": "socket:[358930688]",
+            "9": "/dev/davinci_manager",
+            "10": "/dev/davinci_manager",
+            "11": "/dev/davinci_manager",
+            "12": "/dev/hisi_hdc",
+            "13": "/dev/hisi_hdc",
+            "14": "/dev/hisi_hdc",
+            "15": "/dev/hisi_hdc",
+            "16": "/dev/davinci_manager",
+            "17": "/dev/davinci_manager",
+            "18": "/dev/davinci_manager",
+            "19": "/dev/davinci_manager",
+            "20": "/dev/davinci_manager",
+            "21": "socket:[358913222]",
+            "23": "/dev/hisi_hdc",
+            "24": "/dev/hisi_hdc",
+            "25": "/dev/hisi_hdc",
+            "26": "/dev/hisi_hdc",
+            "27": "/dev/hisi_hdc",
+            "28": "/dev/hisi_hdc",
+            "29": "/dev/hisi_hdc",
+            "30": "/dev/davinci_manager",
+            "31": "/dev/hisi_hdc",
+            "32": "/dev/hisi_hdc",
+            "33": "/dev/hisi_hdc",
+            "34": "/dev/hisi_hdc",
+            "35": "/dev/hisi_hdc",
+            "36": "/dev/hisi_hdc",
+            "37": "/dev/hisi_hdc",
+            "38": "/dev/hisi_hdc",
+            "39": "/dev/hisi_hdc",
+            "40": "/dev/hisi_hdc",
+            "41": "/dev/hisi_hdc",
+            "42": "/dev/hisi_hdc",
+            "43": "/dev/hisi_hdc",
+            "44": "/dev/hisi_hdc",
+            "45": "/dev/davinci_manager",
+            "46": "/dev/davinci_manager",
+            "47": "/dev/davinci_manager",
+            "48": "/dev/davinci_manager",
+            "49": "/dev/davinci_manager",
+            "50": "/dev/davinci_manager",
+            "51": "/dev/davinci_manager",
+            "52": "/dev/davinci_manager",
+            "53": "/dev/davinci_manager",
+            "54": "/dev/davinci_manager",
+            "55": "/dev/davinci_manager",
+            "56": "/dev/davinci_manager",
+            "57": "/dev/davinci_manager",
+            "58": "/dev/davinci_manager",
+            "59": "/dev/davinci_manager",
+            "60": "/dev/davinci_manager",
+            "61": "/dev/davinci_manager",
+            "62": "/dev/davinci_manager",
+            "63": "/dev/davinci_manager",
+            "64": "/dev/davinci_manager",
+            "65": "/dev/hisi_hdc",
+            "66": "anon_inode:[eventpoll]",
+            "67": "anon_inode:[eventfd]",
+            "68": "/dev/hisi_hdc",
+            "69": "/dev/hisi_hdc",
+            "70": "anon_inode:[eventpoll]",
+            "71": "socket:[358930688]",
+            "78": "/dev/hisi_hdc",
+            "83": "/dev/hisi_hdc",
+            "88": "/dev/hisi_hdc",
+            "93": "/dev/hisi_hdc",
+            "94": "/dev/hisi_hdc"
+          },
+          "socket_states": {
+            "358913222": {
+              "protocol": "tcp",
+              "state_hex": "0A"
+            }
+          }
+        },
+        "resource_sample_time_ns": 1792276575866904608
+      },
+      {
+        "round": 3,
+        "requests": [
+          {
+            "case": "retrieval-65536-early",
+            "ttft_ms": 10011.456373147666,
+            "request_started_ms_since_run": 163249.53575572,
+            "first_text_ms_since_run": 173260.99212886766,
+            "text_chunks": 4,
+            "chunk_intervals_ms": [
+              33.72617810964584,
+              43.58487203717232,
+              24.910280015319586
+            ],
+            "total_ms": 11011.940776370466,
+            "usage": {
+              "prompt_tokens": 65520,
+              "total_tokens": 65525,
+              "completion_tokens": 5
+            }
+          },
+          {
+            "case": "arithmetic",
+            "ttft_ms": 316.0176812671125,
+            "request_started_ms_since_run": 163254.12109075114,
+            "first_text_ms_since_run": 163570.13877201825,
+            "text_chunks": 7,
+            "chunk_intervals_ms": [
+              28.91269000247121,
+              27.77371183037758,
+              27.60713081806898,
+              27.457899414002895,
+              27.62411069124937,
+              27.62810094282031
+            ],
+            "total_ms": 536.8158351629972,
+            "usage": {
+              "prompt_tokens": 12,
+              "total_tokens": 20,
+              "completion_tokens": 8
+            }
+          },
+          {
+            "case": "geography",
+            "ttft_ms": 315.9115598537028,
+            "request_started_ms_since_run": 163254.27905190736,
+            "first_text_ms_since_run": 163570.19061176106,
+            "text_chunks": 7,
+            "chunk_intervals_ms": [
+              28.911740984767675,
+              27.772782370448112,
+              27.60508982464671,
+              27.45747985318303,
+              27.54621021449566,
+              27.703160885721445
+            ],
+            "total_ms": 525.2982680685818,
+            "usage": {
+              "prompt_tokens": 15,
+              "total_tokens": 23,
+              "completion_tokens": 8
+            }
+          },
+          {
+            "case": "chinese",
+            "ttft_ms": 1714.1857570968568,
+            "request_started_ms_since_run": 163254.44491300732,
+            "first_text_ms_since_run": 164968.63067010418,
+            "text_chunks": 16,
+            "chunk_intervals_ms": [
+              516.2023575976491,
+              521.8183910474181,
+              523.4542931430042,
+              537.3206390067935,
+              587.3701712116599,
+              541.1294577643275,
+              546.3029178790748,
+              551.4757372438908,
+              558.5857508704066,
+              562.1197479777038,
+              567.9909829050303,
+              571.7456419952214,
+              580.2490562200546,
+              1126.4293431304395,
+              33.83039776235819
+            ],
+            "total_ms": 10083.999286871403,
+            "usage": {
+              "prompt_tokens": 14,
+              "total_tokens": 31,
+              "completion_tokens": 17
+            }
+          }
+        ],
+        "recovery": {
+          "ttft_ms": 289.47936883196235,
+          "request_started_ms_since_run": 174561.5851408802,
+          "first_text_ms_since_run": 174851.06450971216,
+          "text_chunks": 7,
+          "chunk_intervals_ms": [
+            24.028043262660503,
+            22.81800378113985,
+            22.377640940248966,
+            22.372550331056118,
+            22.334600798785686,
+            22.253929171711206
+          ],
+          "total_ms": 462.21737610176206,
+          "usage": {
+            "prompt_tokens": 12,
+            "total_tokens": 20,
+            "completion_tokens": 8
+          }
+        },
+        "process_resources": {
+          "rss_bytes": 6822830080,
+          "peak_rss_bytes": 6822830080,
+          "threads": 663,
+          "file_descriptors": 76,
+          "fd_targets": {
+            "0": "pipe:[358824326]",
+            "1": "/data/p00603624/inferfabric/openpangu92/release-order64k-load-http/server.log",
+            "2": "/data/p00603624/inferfabric/openpangu92/release-order64k-load-http/server.log",
+            "3": "anon_inode:[eventpoll]",
+            "4": "anon_inode:[eventfd]",
+            "5": "anon_inode:[eventpoll]",
+            "6": "socket:[358930688]",
+            "7": "socket:[358930689]",
+            "8": "socket:[358930688]",
+            "9": "/dev/davinci_manager",
+            "10": "/dev/davinci_manager",
+            "11": "/dev/davinci_manager",
+            "12": "/dev/hisi_hdc",
+            "13": "/dev/hisi_hdc",
+            "14": "/dev/hisi_hdc",
+            "15": "/dev/hisi_hdc",
+            "16": "/dev/davinci_manager",
+            "17": "/dev/davinci_manager",
+            "18": "/dev/davinci_manager",
+            "19": "/dev/davinci_manager",
+            "20": "/dev/davinci_manager",
+            "21": "socket:[358913222]",
+            "23": "/dev/hisi_hdc",
+            "24": "/dev/hisi_hdc",
+            "25": "/dev/hisi_hdc",
+            "26": "/dev/hisi_hdc",
+            "27": "/dev/hisi_hdc",
+            "28": "/dev/hisi_hdc",
+            "29": "/dev/hisi_hdc",
+            "30": "/dev/davinci_manager",
+            "31": "/dev/hisi_hdc",
+            "32": "/dev/hisi_hdc",
+            "33": "/dev/hisi_hdc",
+            "34": "/dev/hisi_hdc",
+            "35": "/dev/hisi_hdc",
+            "36": "/dev/hisi_hdc",
+            "37": "/dev/hisi_hdc",
+            "38": "/dev/hisi_hdc",
+            "39": "/dev/hisi_hdc",
+            "40": "/dev/hisi_hdc",
+            "41": "/dev/hisi_hdc",
+            "42": "/dev/hisi_hdc",
+            "43": "/dev/hisi_hdc",
+            "44": "/dev/hisi_hdc",
+            "45": "/dev/davinci_manager",
+            "46": "/dev/davinci_manager",
+            "47": "/dev/davinci_manager",
+            "48": "/dev/davinci_manager",
+            "49": "/dev/davinci_manager",
+            "50": "/dev/davinci_manager",
+            "51": "/dev/davinci_manager",
+            "52": "/dev/davinci_manager",
+            "53": "/dev/davinci_manager",
+            "54": "/dev/davinci_manager",
+            "55": "/dev/davinci_manager",
+            "56": "/dev/davinci_manager",
+            "57": "/dev/davinci_manager",
+            "58": "/dev/davinci_manager",
+            "59": "/dev/davinci_manager",
+            "60": "/dev/davinci_manager",
+            "61": "/dev/davinci_manager",
+            "62": "/dev/davinci_manager",
+            "63": "/dev/davinci_manager",
+            "64": "/dev/davinci_manager",
+            "65": "/dev/hisi_hdc",
+            "66": "anon_inode:[eventpoll]",
+            "67": "anon_inode:[eventfd]",
+            "68": "/dev/hisi_hdc",
+            "69": "/dev/hisi_hdc",
+            "70": "anon_inode:[eventpoll]",
+            "71": "socket:[358930688]",
+            "78": "/dev/hisi_hdc",
+            "83": "/dev/hisi_hdc",
+            "88": "/dev/hisi_hdc",
+            "93": "/dev/hisi_hdc",
+            "94": "/dev/hisi_hdc"
+          },
+          "socket_states": {
+            "358913222": {
+              "protocol": "tcp",
+              "state_hex": "0A"
+            }
+          }
+        },
+        "resource_sample_time_ns": 1792276587648415604
+      },
+      {
+        "round": 4,
+        "requests": [
+          {
+            "case": "retrieval-65536-middle",
+            "ttft_ms": 9940.974837169051,
+            "request_started_ms_since_run": 175031.21068375185,
+            "first_text_ms_since_run": 184972.1855209209,
+            "text_chunks": 4,
+            "chunk_intervals_ms": [
+              28.152748942375183,
+              24.324053898453712,
+              24.46809411048889
+            ],
+            "total_ms": 10914.315707050264,
+            "usage": {
+              "prompt_tokens": 65520,
+              "total_tokens": 65525,
+              "completion_tokens": 5
+            }
+          },
+          {
+            "case": "geography",
+            "ttft_ms": 332.53291714936495,
+            "request_started_ms_since_run": 175036.0046699643,
+            "first_text_ms_since_run": 175368.53758711368,
+            "text_chunks": 7,
+            "chunk_intervals_ms": [
+              29.408183880150318,
+              28.151224832981825,
+              27.843772899359465,
+              27.701191138476133,
+              27.69517106935382,
+              27.649310883134604
+            ],
+            "total_ms": 542.1212259680033,
+            "usage": {
+              "prompt_tokens": 15,
+              "total_tokens": 23,
+              "completion_tokens": 8
+            }
+          },
+          {
+            "case": "chinese",
+            "ttft_ms": 332.4512969702482,
+            "request_started_ms_since_run": 175036.1414910294,
+            "first_text_ms_since_run": 175368.59278799966,
+            "text_chunks": 16,
+            "chunk_intervals_ms": [
+              29.3850339949131,
+              28.148463927209377,
+              27.841902803629637,
+              27.701521292328835,
+              27.69389096647501,
+              27.649690862745047,
+              41.00347310304642,
+              256.9407201372087,
+              30.0066489726305,
+              28.6871287971735,
+              28.487206902354956,
+              51.173951011151075,
+              959.5894902013242,
+              514.5658641122282,
+              526.2848660349846
+            ],
+            "total_ms": 3480.297246016562,
+            "usage": {
+              "prompt_tokens": 14,
+              "total_tokens": 31,
+              "completion_tokens": 17
+            }
+          },
+          {
+            "case": "access-code-529",
+            "ttft_ms": 798.7055126577616,
+            "request_started_ms_since_run": 175036.29579301924,
+            "first_text_ms_since_run": 175835.001305677,
+            "text_chunks": 4,
+            "chunk_intervals_ms": [
+              29.93465820327401,
+              28.68561912328005,
+              28.48947700113058
+            ],
+            "total_ms": 937.1396088972688,
+            "usage": {
+              "prompt_tokens": 529,
+              "total_tokens": 534,
+              "completion_tokens": 5
+            }
+          }
+        ],
+        "recovery": {
+          "ttft_ms": 258.57448717579246,
+          "request_started_ms_since_run": 186184.23993466422,
+          "first_text_ms_since_run": 186442.81442184,
+          "text_chunks": 7,
+          "chunk_intervals_ms": [
+            23.894591256976128,
+            22.928723599761724,
+            22.74893317371607,
+            22.77782279998064,
+            22.70652214065194,
+            22.590142209082842
+          ],
+          "total_ms": 431.5051091834903,
+          "usage": {
+            "prompt_tokens": 12,
+            "total_tokens": 20,
+            "completion_tokens": 8
+          }
+        },
+        "process_resources": {
+          "rss_bytes": 6831534080,
+          "peak_rss_bytes": 6831996928,
+          "threads": 663,
+          "file_descriptors": 76,
+          "fd_targets": {
+            "0": "pipe:[358824326]",
+            "1": "/data/p00603624/inferfabric/openpangu92/release-order64k-load-http/server.log",
+            "2": "/data/p00603624/inferfabric/openpangu92/release-order64k-load-http/server.log",
+            "3": "anon_inode:[eventpoll]",
+            "4": "anon_inode:[eventfd]",
+            "5": "anon_inode:[eventpoll]",
+            "6": "socket:[358930688]",
+            "7": "socket:[358930689]",
+            "8": "socket:[358930688]",
+            "9": "/dev/davinci_manager",
+            "10": "/dev/davinci_manager",
+            "11": "/dev/davinci_manager",
+            "12": "/dev/hisi_hdc",
+            "13": "/dev/hisi_hdc",
+            "14": "/dev/hisi_hdc",
+            "15": "/dev/hisi_hdc",
+            "16": "/dev/davinci_manager",
+            "17": "/dev/davinci_manager",
+            "18": "/dev/davinci_manager",
+            "19": "/dev/davinci_manager",
+            "20": "/dev/davinci_manager",
+            "21": "socket:[358913222]",
+            "23": "/dev/hisi_hdc",
+            "24": "/dev/hisi_hdc",
+            "25": "/dev/hisi_hdc",
+            "26": "/dev/hisi_hdc",
+            "27": "/dev/hisi_hdc",
+            "28": "/dev/hisi_hdc",
+            "29": "/dev/hisi_hdc",
+            "30": "/dev/davinci_manager",
+            "31": "/dev/hisi_hdc",
+            "32": "/dev/hisi_hdc",
+            "33": "/dev/hisi_hdc",
+            "34": "/dev/hisi_hdc",
+            "35": "/dev/hisi_hdc",
+            "36": "/dev/hisi_hdc",
+            "37": "/dev/hisi_hdc",
+            "38": "/dev/hisi_hdc",
+            "39": "/dev/hisi_hdc",
+            "40": "/dev/hisi_hdc",
+            "41": "/dev/hisi_hdc",
+            "42": "/dev/hisi_hdc",
+            "43": "/dev/hisi_hdc",
+            "44": "/dev/hisi_hdc",
+            "45": "/dev/davinci_manager",
+            "46": "/dev/davinci_manager",
+            "47": "/dev/davinci_manager",
+            "48": "/dev/davinci_manager",
+            "49": "/dev/davinci_manager",
+            "50": "/dev/davinci_manager",
+            "51": "/dev/davinci_manager",
+            "52": "/dev/davinci_manager",
+            "53": "/dev/davinci_manager",
+            "54": "/dev/davinci_manager",
+            "55": "/dev/davinci_manager",
+            "56": "/dev/davinci_manager",
+            "57": "/dev/davinci_manager",
+            "58": "/dev/davinci_manager",
+            "59": "/dev/davinci_manager",
+            "60": "/dev/davinci_manager",
+            "61": "/dev/davinci_manager",
+            "62": "/dev/davinci_manager",
+            "63": "/dev/davinci_manager",
+            "64": "/dev/davinci_manager",
+            "65": "/dev/hisi_hdc",
+            "66": "anon_inode:[eventpoll]",
+            "67": "anon_inode:[eventfd]",
+            "68": "/dev/hisi_hdc",
+            "69": "/dev/hisi_hdc",
+            "70": "anon_inode:[eventpoll]",
+            "71": "socket:[358930688]",
+            "78": "/dev/hisi_hdc",
+            "83": "/dev/hisi_hdc",
+            "88": "/dev/hisi_hdc",
+            "93": "/dev/hisi_hdc",
+            "94": "/dev/hisi_hdc"
+          },
+          "socket_states": {
+            "358913222": {
+              "protocol": "tcp",
+              "state_hex": "0A"
+            }
+          }
+        },
+        "resource_sample_time_ns": 1792276599240364205
+      },
+      {
+        "round": 5,
+        "requests": [
+          {
+            "case": "retrieval-65536-late",
+            "ttft_ms": 9828.744817059487,
+            "request_started_ms_since_run": 186623.36391489953,
+            "first_text_ms_since_run": 196452.10873195902,
+            "text_chunks": 4,
+            "chunk_intervals_ms": [
+              26.52433793991804,
+              24.40971415489912,
+              24.337663780897856
+            ],
+            "total_ms": 10801.53483292088,
+            "usage": {
+              "prompt_tokens": 65520,
+              "total_tokens": 65525,
+              "completion_tokens": 5
+            }
+          },
+          {
+            "case": "chinese",
+            "ttft_ms": 288.5434287600219,
+            "request_started_ms_since_run": 186628.13996709883,
+            "first_text_ms_since_run": 186916.68339585885,
+            "text_chunks": 16,
+            "chunk_intervals_ms": [
+              29.227755963802338,
+              28.108869213610888,
+              28.031988069415092,
+              27.898957952857018,
+              27.870866935700178,
+              27.875736821442842,
+              39.06633285805583,
+              243.18614415824413,
+              30.173703096807003,
+              28.901613783091307,
+              28.763593174517155,
+              48.626657109707594,
+              954.0855097584426,
+              512.3493121936917,
+              521.389143075794
+            ],
+            "total_ms": 3398.035860620439,
+            "usage": {
+              "prompt_tokens": 14,
+              "total_tokens": 31,
+              "completion_tokens": 17
+            }
+          },
+          {
+            "case": "access-code-529",
+            "ttft_ms": 739.7250696085393,
+            "request_started_ms_since_run": 186628.26044810936,
+            "first_text_ms_since_run": 187367.9855177179,
+            "text_chunks": 4,
+            "chunk_intervals_ms": [
+              30.111152213066816,
+              28.90107501298189,
+              28.763953130692244
+            ],
+            "total_ms": 876.2888675555587,
+            "usage": {
+              "prompt_tokens": 529,
+              "total_tokens": 534,
+              "completion_tokens": 5
+            }
+          },
+          {
+            "case": "arithmetic",
+            "ttft_ms": 288.17036701366305,
+            "request_started_ms_since_run": 186628.46470903605,
+            "first_text_ms_since_run": 186916.63507604972,
+            "text_chunks": 7,
+            "chunk_intervals_ms": [
+              29.243845958262682,
+              28.111308813095093,
+              28.033328242599964,
+              27.899857610464096,
+              27.87088742479682,
+              27.875707019120455
+            ],
+            "total_ms": 496.42916582524776,
+            "usage": {
+              "prompt_tokens": 12,
+              "total_tokens": 20,
+              "completion_tokens": 8
+            }
+          }
+        ],
+        "recovery": {
+          "ttft_ms": 263.403229881078,
+          "request_started_ms_since_run": 197847.7415489033,
+          "first_text_ms_since_run": 198111.14477878436,
+          "text_chunks": 7,
+          "chunk_intervals_ms": [
+            24.26445297896862,
+            23.15144520252943,
+            23.388396948575974,
+            23.21812603622675,
+            22.628971841186285,
+            23.56580924242735
+          ],
+          "total_ms": 438.48959589377046,
+          "usage": {
+            "prompt_tokens": 12,
+            "total_tokens": 20,
+            "completion_tokens": 8
+          }
+        },
+        "process_resources": {
+          "rss_bytes": 6842646528,
+          "peak_rss_bytes": 6842646528,
+          "threads": 663,
+          "file_descriptors": 76,
+          "fd_targets": {
+            "0": "pipe:[358824326]",
+            "1": "/data/p00603624/inferfabric/openpangu92/release-order64k-load-http/server.log",
+            "2": "/data/p00603624/inferfabric/openpangu92/release-order64k-load-http/server.log",
+            "3": "anon_inode:[eventpoll]",
+            "4": "anon_inode:[eventfd]",
+            "5": "anon_inode:[eventpoll]",
+            "6": "socket:[358930688]",
+            "7": "socket:[358930689]",
+            "8": "socket:[358930688]",
+            "9": "/dev/davinci_manager",
+            "10": "/dev/davinci_manager",
+            "11": "/dev/davinci_manager",
+            "12": "/dev/hisi_hdc",
+            "13": "/dev/hisi_hdc",
+            "14": "/dev/hisi_hdc",
+            "15": "/dev/hisi_hdc",
+            "16": "/dev/davinci_manager",
+            "17": "/dev/davinci_manager",
+            "18": "/dev/davinci_manager",
+            "19": "/dev/davinci_manager",
+            "20": "/dev/davinci_manager",
+            "21": "socket:[358913222]",
+            "23": "/dev/hisi_hdc",
+            "24": "/dev/hisi_hdc",
+            "25": "/dev/hisi_hdc",
+            "26": "/dev/hisi_hdc",
+            "27": "/dev/hisi_hdc",
+            "28": "/dev/hisi_hdc",
+            "29": "/dev/hisi_hdc",
+            "30": "/dev/davinci_manager",
+            "31": "/dev/hisi_hdc",
+            "32": "/dev/hisi_hdc",
+            "33": "/dev/hisi_hdc",
+            "34": "/dev/hisi_hdc",
+            "35": "/dev/hisi_hdc",
+            "36": "/dev/hisi_hdc",
+            "37": "/dev/hisi_hdc",
+            "38": "/dev/hisi_hdc",
+            "39": "/dev/hisi_hdc",
+            "40": "/dev/hisi_hdc",
+            "41": "/dev/hisi_hdc",
+            "42": "/dev/hisi_hdc",
+            "43": "/dev/hisi_hdc",
+            "44": "/dev/hisi_hdc",
+            "45": "/dev/davinci_manager",
+            "46": "/dev/davinci_manager",
+            "47": "/dev/davinci_manager",
+            "48": "/dev/davinci_manager",
+            "49": "/dev/davinci_manager",
+            "50": "/dev/davinci_manager",
+            "51": "/dev/davinci_manager",
+            "52": "/dev/davinci_manager",
+            "53": "/dev/davinci_manager",
+            "54": "/dev/davinci_manager",
+            "55": "/dev/davinci_manager",
+            "56": "/dev/davinci_manager",
+            "57": "/dev/davinci_manager",
+            "58": "/dev/davinci_manager",
+            "59": "/dev/davinci_manager",
+            "60": "/dev/davinci_manager",
+            "61": "/dev/davinci_manager",
+            "62": "/dev/davinci_manager",
+            "63": "/dev/davinci_manager",
+            "64": "/dev/davinci_manager",
+            "65": "/dev/hisi_hdc",
+            "66": "anon_inode:[eventpoll]",
+            "67": "anon_inode:[eventfd]",
+            "68": "/dev/hisi_hdc",
+            "69": "/dev/hisi_hdc",
+            "70": "anon_inode:[eventpoll]",
+            "71": "socket:[358930688]",
+            "78": "/dev/hisi_hdc",
+            "83": "/dev/hisi_hdc",
+            "88": "/dev/hisi_hdc",
+            "93": "/dev/hisi_hdc",
+            "94": "/dev/hisi_hdc"
+          },
+          "socket_states": {
+            "358913222": {
+              "protocol": "tcp",
+              "state_hex": "0A"
+            }
+          }
+        },
+        "resource_sample_time_ns": 1792276610910848686
+      },
+      {
+        "round": 6,
+        "requests": [
+          {
+            "case": "retrieval-65536-early",
+            "ttft_ms": 9697.657501790673,
+            "request_started_ms_since_run": 198294.03509711847,
+            "first_text_ms_since_run": 207991.69259890914,
+            "text_chunks": 4,
+            "chunk_intervals_ms": [
+              26.377439964562654,
+              24.6951668523252,
+              24.122854229062796
+            ],
+            "total_ms": 10657.545940950513,
+            "usage": {
+              "prompt_tokens": 65520,
+              "total_tokens": 65525,
+              "completion_tokens": 5
+            }
+          },
+          {
+            "case": "access-code-529",
+            "ttft_ms": 1661.880168132484,
+            "request_started_ms_since_run": 198298.51025668904,
+            "first_text_ms_since_run": 199960.39042482153,
+            "text_chunks": 4,
+            "chunk_intervals_ms": [
+              511.0354912467301,
+              518.8604709692299,
+              523.6695166677237
+            ],
+            "total_ms": 3767.950613051653,
+            "usage": {
+              "prompt_tokens": 529,
+              "total_tokens": 534,
+              "completion_tokens": 5
+            }
+          },
+          {
+            "case": "arithmetic",
+            "ttft_ms": 279.9775409512222,
+            "request_started_ms_since_run": 198298.67698904127,
+            "first_text_ms_since_run": 198578.6545299925,
+            "text_chunks": 7,
+            "chunk_intervals_ms": [
+              29.50632805004716,
+              28.243249747902155,
+              28.28805986791849,
+              28.152299113571644,
+              27.951708063483238,
+              28.066338039934635
+            ],
+            "total_ms": 501.3967580161989,
+            "usage": {
+              "prompt_tokens": 12,
+              "total_tokens": 20,
+              "completion_tokens": 8
+            }
+          },
+          {
+            "case": "geography",
+            "ttft_ms": 279.7185489907861,
+            "request_started_ms_since_run": 198298.84364968166,
+            "first_text_ms_since_run": 198578.56219867244,
+            "text_chunks": 7,
+            "chunk_intervals_ms": [
+              29.575069434940815,
+              28.24672870337963,
+              28.288301080465317,
+              28.151789214462042,
+              27.952076867222786,
+              28.070388827472925
+            ],
+            "total_ms": 490.0042121298611,
+            "usage": {
+              "prompt_tokens": 15,
+              "total_tokens": 23,
+              "completion_tokens": 8
+            }
+          }
+        ],
+        "recovery": {
+          "ttft_ms": 282.2085530497134,
+          "request_started_ms_since_run": 209250.55764894933,
+          "first_text_ms_since_run": 209532.76620199904,
+          "text_chunks": 7,
+          "chunk_intervals_ms": [
+            23.788360878825188,
+            22.71513221785426,
+            23.003264795988798,
+            22.613951936364174,
+            22.616971284151077,
+            23.292756639420986
+          ],
+          "total_ms": 455.61046013608575,
+          "usage": {
+            "prompt_tokens": 12,
+            "total_tokens": 20,
+            "completion_tokens": 8
+          }
+        },
+        "process_resources": {
+          "rss_bytes": 6847184896,
+          "peak_rss_bytes": 6847184896,
+          "threads": 663,
+          "file_descriptors": 76,
+          "fd_targets": {
+            "0": "pipe:[358824326]",
+            "1": "/data/p00603624/inferfabric/openpangu92/release-order64k-load-http/server.log",
+            "2": "/data/p00603624/inferfabric/openpangu92/release-order64k-load-http/server.log",
+            "3": "anon_inode:[eventpoll]",
+            "4": "anon_inode:[eventfd]",
+            "5": "anon_inode:[eventpoll]",
+            "6": "socket:[358930688]",
+            "7": "socket:[358930689]",
+            "8": "socket:[358930688]",
+            "9": "/dev/davinci_manager",
+            "10": "/dev/davinci_manager",
+            "11": "/dev/davinci_manager",
+            "12": "/dev/hisi_hdc",
+            "13": "/dev/hisi_hdc",
+            "14": "/dev/hisi_hdc",
+            "15": "/dev/hisi_hdc",
+            "16": "/dev/davinci_manager",
+            "17": "/dev/davinci_manager",
+            "18": "/dev/davinci_manager",
+            "19": "/dev/davinci_manager",
+            "20": "/dev/davinci_manager",
+            "21": "socket:[358913222]",
+            "23": "/dev/hisi_hdc",
+            "24": "/dev/hisi_hdc",
+            "25": "/dev/hisi_hdc",
+            "26": "/dev/hisi_hdc",
+            "27": "/dev/hisi_hdc",
+            "28": "/dev/hisi_hdc",
+            "29": "/dev/hisi_hdc",
+            "30": "/dev/davinci_manager",
+            "31": "/dev/hisi_hdc",
+            "32": "/dev/hisi_hdc",
+            "33": "/dev/hisi_hdc",
+            "34": "/dev/hisi_hdc",
+            "35": "/dev/hisi_hdc",
+            "36": "/dev/hisi_hdc",
+            "37": "/dev/hisi_hdc",
+            "38": "/dev/hisi_hdc",
+            "39": "/dev/hisi_hdc",
+            "40": "/dev/hisi_hdc",
+            "41": "/dev/hisi_hdc",
+            "42": "/dev/hisi_hdc",
+            "43": "/dev/hisi_hdc",
+            "44": "/dev/hisi_hdc",
+            "45": "/dev/davinci_manager",
+            "46": "/dev/davinci_manager",
+            "47": "/dev/davinci_manager",
+            "48": "/dev/davinci_manager",
+            "49": "/dev/davinci_manager",
+            "50": "/dev/davinci_manager",
+            "51": "/dev/davinci_manager",
+            "52": "/dev/davinci_manager",
+            "53": "/dev/davinci_manager",
+            "54": "/dev/davinci_manager",
+            "55": "/dev/davinci_manager",
+            "56": "/dev/davinci_manager",
+            "57": "/dev/davinci_manager",
+            "58": "/dev/davinci_manager",
+            "59": "/dev/davinci_manager",
+            "60": "/dev/davinci_manager",
+            "61": "/dev/davinci_manager",
+            "62": "/dev/davinci_manager",
+            "63": "/dev/davinci_manager",
+            "64": "/dev/davinci_manager",
+            "65": "/dev/hisi_hdc",
+            "66": "anon_inode:[eventpoll]",
+            "67": "anon_inode:[eventfd]",
+            "68": "/dev/hisi_hdc",
+            "69": "/dev/hisi_hdc",
+            "70": "anon_inode:[eventpoll]",
+            "71": "socket:[358930688]",
+            "78": "/dev/hisi_hdc",
+            "83": "/dev/hisi_hdc",
+            "88": "/dev/hisi_hdc",
+            "93": "/dev/hisi_hdc",
+            "94": "/dev/hisi_hdc"
+          },
+          "socket_states": {
+            "358913222": {
+              "protocol": "tcp",
+              "state_hex": "0A"
+            }
+          }
+        },
+        "resource_sample_time_ns": 1792276622330816786
+      },
+      {
+        "round": 7,
+        "requests": [
+          {
+            "case": "retrieval-65536-middle",
+            "ttft_ms": 9971.666799392551,
+            "request_started_ms_since_run": 209714.21238966286,
+            "first_text_ms_since_run": 219685.8791890554,
+            "text_chunks": 4,
+            "chunk_intervals_ms": [
+              32.56789781153202,
+              44.0538739785552,
+              24.259964004158974
+            ],
+            "total_ms": 10965.321126393974,
+            "usage": {
+              "prompt_tokens": 65520,
+              "total_tokens": 65525,
+              "completion_tokens": 5
+            }
+          },
+          {
+            "case": "arithmetic",
+            "ttft_ms": 326.6610512509942,
+            "request_started_ms_since_run": 209718.685913831,
+            "first_text_ms_since_run": 210045.346965082,
+            "text_chunks": 7,
+            "chunk_intervals_ms": [
+              29.057470615953207,
+              27.96537196263671,
+              27.945222333073616,
+              27.922251727432013,
+              27.838642243295908,
+              27.8088110499084
+            ],
+            "total_ms": 535.2706252597272,
+            "usage": {
+              "prompt_tokens": 12,
+              "total_tokens": 20,
+              "completion_tokens": 8
+            }
+          },
+          {
+            "case": "geography",
+            "ttft_ms": 326.58013002946973,
+            "request_started_ms_since_run": 209718.80689496174,
+            "first_text_ms_since_run": 210045.3870249912,
+            "text_chunks": 7,
+            "chunk_intervals_ms": [
+              29.046901036053896,
+              27.963571716099977,
+              27.943972032517195,
+              27.92201191186905,
+              27.838762383908033,
+              27.80922083184123
+            ],
+            "total_ms": 547.7575599215925,
+            "usage": {
+              "prompt_tokens": 15,
+              "total_tokens": 23,
+              "completion_tokens": 8
+            }
+          },
+          {
+            "case": "chinese",
+            "ttft_ms": 1725.0755913555622,
+            "request_started_ms_since_run": 209718.97839568555,
+            "first_text_ms_since_run": 211444.05398704112,
+            "text_chunks": 16,
+            "chunk_intervals_ms": [
+              514.2936557531357,
+              519.494874868542,
+              530.3087481297553,
+              547.2563761286438,
+              535.6669179163873,
+              539.9437402375042,
+              546.5558809228241,
+              548.6312569119036,
+              554.948893841356,
+              562.872065231204,
+              567.2059580683708,
+              572.0776836387813,
+              577.215373981744,
+              1125.0639641657472,
+              32.896580174565315
+            ],
+            "total_ms": 10043.695527128875,
+            "usage": {
+              "prompt_tokens": 14,
+              "total_tokens": 31,
+              "completion_tokens": 17
+            }
+          }
+        ],
+        "recovery": {
+          "ttft_ms": 281.183616258204,
+          "request_started_ms_since_run": 220977.18951571733,
+          "first_text_ms_since_run": 221258.37313197553,
+          "text_chunks": 7,
+          "chunk_intervals_ms": [
+            23.612949065864086,
+            22.478871047496796,
+            22.19333779066801,
+            22.334900218993425,
+            22.211907897144556,
+            22.31535967439413
+          ],
+          "total_ms": 452.33343495056033,
+          "usage": {
+            "prompt_tokens": 12,
+            "total_tokens": 20,
+            "completion_tokens": 8
+          }
+        },
+        "process_resources": {
+          "rss_bytes": 6850170880,
+          "peak_rss_bytes": 6850170880,
+          "threads": 663,
+          "file_descriptors": 76,
+          "fd_targets": {
+            "0": "pipe:[358824326]",
+            "1": "/data/p00603624/inferfabric/openpangu92/release-order64k-load-http/server.log",
+            "2": "/data/p00603624/inferfabric/openpangu92/release-order64k-load-http/server.log",
+            "3": "anon_inode:[eventpoll]",
+            "4": "anon_inode:[eventfd]",
+            "5": "anon_inode:[eventpoll]",
+            "6": "socket:[358930688]",
+            "7": "socket:[358930689]",
+            "8": "socket:[358930688]",
+            "9": "/dev/davinci_manager",
+            "10": "/dev/davinci_manager",
+            "11": "/dev/davinci_manager",
+            "12": "/dev/hisi_hdc",
+            "13": "/dev/hisi_hdc",
+            "14": "/dev/hisi_hdc",
+            "15": "/dev/hisi_hdc",
+            "16": "/dev/davinci_manager",
+            "17": "/dev/davinci_manager",
+            "18": "/dev/davinci_manager",
+            "19": "/dev/davinci_manager",
+            "20": "/dev/davinci_manager",
+            "21": "socket:[358913222]",
+            "23": "/dev/hisi_hdc",
+            "24": "/dev/hisi_hdc",
+            "25": "/dev/hisi_hdc",
+            "26": "/dev/hisi_hdc",
+            "27": "/dev/hisi_hdc",
+            "28": "/dev/hisi_hdc",
+            "29": "/dev/hisi_hdc",
+            "30": "/dev/davinci_manager",
+            "31": "/dev/hisi_hdc",
+            "32": "/dev/hisi_hdc",
+            "33": "/dev/hisi_hdc",
+            "34": "/dev/hisi_hdc",
+            "35": "/dev/hisi_hdc",
+            "36": "/dev/hisi_hdc",
+            "37": "/dev/hisi_hdc",
+            "38": "/dev/hisi_hdc",
+            "39": "/dev/hisi_hdc",
+            "40": "/dev/hisi_hdc",
+            "41": "/dev/hisi_hdc",
+            "42": "/dev/hisi_hdc",
+            "43": "/dev/hisi_hdc",
+            "44": "/dev/hisi_hdc",
+            "45": "/dev/davinci_manager",
+            "46": "/dev/davinci_manager",
+            "47": "/dev/davinci_manager",
+            "48": "/dev/davinci_manager",
+            "49": "/dev/davinci_manager",
+            "50": "/dev/davinci_manager",
+            "51": "/dev/davinci_manager",
+            "52": "/dev/davinci_manager",
+            "53": "/dev/davinci_manager",
+            "54": "/dev/davinci_manager",
+            "55": "/dev/davinci_manager",
+            "56": "/dev/davinci_manager",
+            "57": "/dev/davinci_manager",
+            "58": "/dev/davinci_manager",
+            "59": "/dev/davinci_manager",
+            "60": "/dev/davinci_manager",
+            "61": "/dev/davinci_manager",
+            "62": "/dev/davinci_manager",
+            "63": "/dev/davinci_manager",
+            "64": "/dev/davinci_manager",
+            "65": "/dev/hisi_hdc",
+            "66": "anon_inode:[eventpoll]",
+            "67": "anon_inode:[eventfd]",
+            "68": "/dev/hisi_hdc",
+            "69": "/dev/hisi_hdc",
+            "70": "anon_inode:[eventpoll]",
+            "71": "socket:[358930688]",
+            "78": "/dev/hisi_hdc",
+            "83": "/dev/hisi_hdc",
+            "88": "/dev/hisi_hdc",
+            "93": "/dev/hisi_hdc",
+            "94": "/dev/hisi_hdc"
+          },
+          "socket_states": {
+            "358913222": {
+              "protocol": "tcp",
+              "state_hex": "0A"
+            }
+          }
+        },
+        "resource_sample_time_ns": 1792276634054144588
+      },
+      {
+        "round": 8,
+        "requests": [
+          {
+            "case": "retrieval-65536-late",
+            "ttft_ms": 10075.34553669393,
+            "request_started_ms_since_run": 221437.7140630968,
+            "first_text_ms_since_run": 231513.05959979072,
+            "text_chunks": 4,
+            "chunk_intervals_ms": [
+              26.724482886493206,
+              24.592447094619274,
+              24.53562617301941
+            ],
+            "total_ms": 11056.897730566561,
+            "usage": {
+              "prompt_tokens": 65520,
+              "total_tokens": 65525,
+              "completion_tokens": 5
+            }
+          },
+          {
+            "case": "geography",
+            "ttft_ms": 314.23602579161525,
+            "request_started_ms_since_run": 221442.19782808796,
+            "first_text_ms_since_run": 221756.43385387957,
+            "text_chunks": 7,
+            "chunk_intervals_ms": [
+              28.934179805219173,
+              27.626000344753265,
+              27.52524893730879,
+              27.458077762275934,
+              27.37492835149169,
+              27.310956735163927
+            ],
+            "total_ms": 520.7985648885369,
+            "usage": {
+              "prompt_tokens": 15,
+              "total_tokens": 23,
+              "completion_tokens": 8
+            }
+          },
+          {
+            "case": "chinese",
+            "ttft_ms": 314.0681949444115,
+            "request_started_ms_since_run": 221442.32661882415,
+            "first_text_ms_since_run": 221756.39481376857,
+            "text_chunks": 16,
+            "chunk_intervals_ms": [
+              28.945360332727432,
+              27.626738883554935,
+              27.526498772203922,
+              27.458749245852232,
+              27.375718113034964,
+              27.310596778988838,
+              27.584699913859367,
+              273.86126993224025,
+              29.939877334982157,
+              28.57742691412568,
+              28.589586727321148,
+              28.095783200114965,
+              643.9607911743224,
+              509.1317165642977,
+              513.260877225548
+            ],
+            "total_ms": 3097.728414926678,
+            "usage": {
+              "prompt_tokens": 14,
+              "total_tokens": 31,
+              "completion_tokens": 17
+            }
+          },
+          {
+            "case": "access-code-529",
+            "ttft_ms": 781.6650359891355,
+            "request_started_ms_since_run": 221442.45625007898,
+            "first_text_ms_since_run": 222224.1212860681,
+            "text_chunks": 4,
+            "chunk_intervals_ms": [
+              29.9304467625916,
+              28.575886972248554,
+              28.6003272049129
+            ],
+            "total_ms": 923.0409786105156,
+            "usage": {
+              "prompt_tokens": 529,
+              "total_tokens": 534,
+              "completion_tokens": 5
+            }
+          }
+        ],
+        "recovery": {
+          "ttft_ms": 272.46650913730264,
+          "request_started_ms_since_run": 232762.46117893606,
+          "first_text_ms_since_run": 233034.92768807337,
+          "text_chunks": 7,
+          "chunk_intervals_ms": [
+            24.023111909627914,
+            23.02305493503809,
+            22.911483887583017,
+            22.816842887550592,
+            22.853154223412275,
+            23.21845619007945
+          ],
+          "total_ms": 445.0115687213838,
+          "usage": {
+            "prompt_tokens": 12,
+            "total_tokens": 20,
+            "completion_tokens": 8
+          }
+        },
+        "process_resources": {
+          "rss_bytes": 6853017600,
+          "peak_rss_bytes": 6853017600,
+          "threads": 663,
+          "file_descriptors": 76,
+          "fd_targets": {
+            "0": "pipe:[358824326]",
+            "1": "/data/p00603624/inferfabric/openpangu92/release-order64k-load-http/server.log",
+            "2": "/data/p00603624/inferfabric/openpangu92/release-order64k-load-http/server.log",
+            "3": "anon_inode:[eventpoll]",
+            "4": "anon_inode:[eventfd]",
+            "5": "anon_inode:[eventpoll]",
+            "6": "socket:[358930688]",
+            "7": "socket:[358930689]",
+            "8": "socket:[358930688]",
+            "9": "/dev/davinci_manager",
+            "10": "/dev/davinci_manager",
+            "11": "/dev/davinci_manager",
+            "12": "/dev/hisi_hdc",
+            "13": "/dev/hisi_hdc",
+            "14": "/dev/hisi_hdc",
+            "15": "/dev/hisi_hdc",
+            "16": "/dev/davinci_manager",
+            "17": "/dev/davinci_manager",
+            "18": "/dev/davinci_manager",
+            "19": "/dev/davinci_manager",
+            "20": "/dev/davinci_manager",
+            "21": "socket:[358913222]",
+            "23": "/dev/hisi_hdc",
+            "24": "/dev/hisi_hdc",
+            "25": "/dev/hisi_hdc",
+            "26": "/dev/hisi_hdc",
+            "27": "/dev/hisi_hdc",
+            "28": "/dev/hisi_hdc",
+            "29": "/dev/hisi_hdc",
+            "30": "/dev/davinci_manager",
+            "31": "/dev/hisi_hdc",
+            "32": "/dev/hisi_hdc",
+            "33": "/dev/hisi_hdc",
+            "34": "/dev/hisi_hdc",
+            "35": "/dev/hisi_hdc",
+            "36": "/dev/hisi_hdc",
+            "37": "/dev/hisi_hdc",
+            "38": "/dev/hisi_hdc",
+            "39": "/dev/hisi_hdc",
+            "40": "/dev/hisi_hdc",
+            "41": "/dev/hisi_hdc",
+            "42": "/dev/hisi_hdc",
+            "43": "/dev/hisi_hdc",
+            "44": "/dev/hisi_hdc",
+            "45": "/dev/davinci_manager",
+            "46": "/dev/davinci_manager",
+            "47": "/dev/davinci_manager",
+            "48": "/dev/davinci_manager",
+            "49": "/dev/davinci_manager",
+            "50": "/dev/davinci_manager",
+            "51": "/dev/davinci_manager",
+            "52": "/dev/davinci_manager",
+            "53": "/dev/davinci_manager",
+            "54": "/dev/davinci_manager",
+            "55": "/dev/davinci_manager",
+            "56": "/dev/davinci_manager",
+            "57": "/dev/davinci_manager",
+            "58": "/dev/davinci_manager",
+            "59": "/dev/davinci_manager",
+            "60": "/dev/davinci_manager",
+            "61": "/dev/davinci_manager",
+            "62": "/dev/davinci_manager",
+            "63": "/dev/davinci_manager",
+            "64": "/dev/davinci_manager",
+            "65": "/dev/hisi_hdc",
+            "66": "anon_inode:[eventpoll]",
+            "67": "anon_inode:[eventfd]",
+            "68": "/dev/hisi_hdc",
+            "69": "/dev/hisi_hdc",
+            "70": "anon_inode:[eventpoll]",
+            "71": "socket:[358930688]",
+            "78": "/dev/hisi_hdc",
+            "83": "/dev/hisi_hdc",
+            "88": "/dev/hisi_hdc",
+            "93": "/dev/hisi_hdc",
+            "94": "/dev/hisi_hdc"
+          },
+          "socket_states": {
+            "358913222": {
+              "protocol": "tcp",
+              "state_hex": "0A"
+            }
+          }
+        },
+        "resource_sample_time_ns": 1792276645832222476
+      },
+      {
+        "round": 9,
+        "requests": [
+          {
+            "case": "retrieval-65536-early",
+            "ttft_ms": 9986.14657111466,
+            "request_started_ms_since_run": 233215.96237272024,
+            "first_text_ms_since_run": 243202.1089438349,
+            "text_chunks": 4,
+            "chunk_intervals_ms": [
+              27.458245866000652,
+              24.028302170336246,
+              24.636756163090467
+            ],
+            "total_ms": 10936.329524964094,
+            "usage": {
+              "prompt_tokens": 65520,
+              "total_tokens": 65525,
+              "completion_tokens": 5
+            }
+          },
+          {
+            "case": "chinese",
+            "ttft_ms": 307.91766894981265,
+            "request_started_ms_since_run": 233220.88907007128,
+            "first_text_ms_since_run": 233528.8067390211,
+            "text_chunks": 16,
+            "chunk_intervals_ms": [
+              29.333471786230803,
+              28.30125531181693,
+              28.37982587516308,
+              28.19320373237133,
+              28.118222951889038,
+              28.029113076627254,
+              39.11035694181919,
+              249.22237312421203,
+              29.959028121083975,
+              28.83693901821971,
+              28.91064900904894,
+              52.18956572934985,
+              962.3955292627215,
+              515.706286765635,
+              520.1741303317249
+            ],
+            "total_ms": 3440.116466023028,
+            "usage": {
+              "prompt_tokens": 14,
+              "total_tokens": 31,
+              "completion_tokens": 17
+            }
+          },
+          {
+            "case": "access-code-529",
+            "ttft_ms": 766.500421334058,
+            "request_started_ms_since_run": 233221.03027068079,
+            "first_text_ms_since_run": 233987.53069201484,
+            "text_chunks": 4,
+            "chunk_intervals_ms": [
+              29.89610703662038,
+              28.839778620749712,
+              28.908010106533766
+            ],
+            "total_ms": 906.4516541548073,
+            "usage": {
+              "prompt_tokens": 529,
+              "total_tokens": 534,
+              "completion_tokens": 5
+            }
+          },
+          {
+            "case": "arithmetic",
+            "ttft_ms": 307.5356548652053,
+            "request_started_ms_since_run": 233221.2090329267,
+            "first_text_ms_since_run": 233528.7446877919,
+            "text_chunks": 7,
+            "chunk_intervals_ms": [
+              29.362193308770657,
+              28.30476500093937,
+              28.385215904563665,
+              28.189933858811855,
+              28.118573129177094,
+              28.028782922774553
+            ],
+            "total_ms": 517.1655267477036,
+            "usage": {
+              "prompt_tokens": 12,
+              "total_tokens": 20,
+              "completion_tokens": 8
+            }
+          }
+        ],
+        "recovery": {
+          "ttft_ms": 272.2485070116818,
+          "request_started_ms_since_run": 244408.12295675278,
+          "first_text_ms_since_run": 244680.37146376446,
+          "text_chunks": 7,
+          "chunk_intervals_ms": [
+            26.931973174214363,
+            22.920502815395594,
+            22.90358394384384,
+            22.396520245820284,
+            22.323039826005697,
+            22.382730152457952
+          ],
+          "total_ms": 444.86115127801895,
+          "usage": {
+            "prompt_tokens": 12,
+            "total_tokens": 20,
+            "completion_tokens": 8
+          }
+        },
+        "process_resources": {
+          "rss_bytes": 6855983104,
+          "peak_rss_bytes": 6855983104,
+          "threads": 663,
+          "file_descriptors": 76,
+          "fd_targets": {
+            "0": "pipe:[358824326]",
+            "1": "/data/p00603624/inferfabric/openpangu92/release-order64k-load-http/server.log",
+            "2": "/data/p00603624/inferfabric/openpangu92/release-order64k-load-http/server.log",
+            "3": "anon_inode:[eventpoll]",
+            "4": "anon_inode:[eventfd]",
+            "5": "anon_inode:[eventpoll]",
+            "6": "socket:[358930688]",
+            "7": "socket:[358930689]",
+            "8": "socket:[358930688]",
+            "9": "/dev/davinci_manager",
+            "10": "/dev/davinci_manager",
+            "11": "/dev/davinci_manager",
+            "12": "/dev/hisi_hdc",
+            "13": "/dev/hisi_hdc",
+            "14": "/dev/hisi_hdc",
+            "15": "/dev/hisi_hdc",
+            "16": "/dev/davinci_manager",
+            "17": "/dev/davinci_manager",
+            "18": "/dev/davinci_manager",
+            "19": "/dev/davinci_manager",
+            "20": "/dev/davinci_manager",
+            "21": "socket:[358913222]",
+            "23": "/dev/hisi_hdc",
+            "24": "/dev/hisi_hdc",
+            "25": "/dev/hisi_hdc",
+            "26": "/dev/hisi_hdc",
+            "27": "/dev/hisi_hdc",
+            "28": "/dev/hisi_hdc",
+            "29": "/dev/hisi_hdc",
+            "30": "/dev/davinci_manager",
+            "31": "/dev/hisi_hdc",
+            "32": "/dev/hisi_hdc",
+            "33": "/dev/hisi_hdc",
+            "34": "/dev/hisi_hdc",
+            "35": "/dev/hisi_hdc",
+            "36": "/dev/hisi_hdc",
+            "37": "/dev/hisi_hdc",
+            "38": "/dev/hisi_hdc",
+            "39": "/dev/hisi_hdc",
+            "40": "/dev/hisi_hdc",
+            "41": "/dev/hisi_hdc",
+            "42": "/dev/hisi_hdc",
+            "43": "/dev/hisi_hdc",
+            "44": "/dev/hisi_hdc",
+            "45": "/dev/davinci_manager",
+            "46": "/dev/davinci_manager",
+            "47": "/dev/davinci_manager",
+            "48": "/dev/davinci_manager",
+            "49": "/dev/davinci_manager",
+            "50": "/dev/davinci_manager",
+            "51": "/dev/davinci_manager",
+            "52": "/dev/davinci_manager",
+            "53": "/dev/davinci_manager",
+            "54": "/dev/davinci_manager",
+            "55": "/dev/davinci_manager",
+            "56": "/dev/davinci_manager",
+            "57": "/dev/davinci_manager",
+            "58": "/dev/davinci_manager",
+            "59": "/dev/davinci_manager",
+            "60": "/dev/davinci_manager",
+            "61": "/dev/davinci_manager",
+            "62": "/dev/davinci_manager",
+            "63": "/dev/davinci_manager",
+            "64": "/dev/davinci_manager",
+            "65": "/dev/hisi_hdc",
+            "66": "anon_inode:[eventpoll]",
+            "67": "anon_inode:[eventfd]",
+            "68": "/dev/hisi_hdc",
+            "69": "/dev/hisi_hdc",
+            "70": "anon_inode:[eventpoll]",
+            "71": "socket:[358930688]",
+            "78": "/dev/hisi_hdc",
+            "83": "/dev/hisi_hdc",
+            "88": "/dev/hisi_hdc",
+            "93": "/dev/hisi_hdc",
+            "94": "/dev/hisi_hdc"
+          },
+          "socket_states": {
+            "358913222": {
+              "protocol": "tcp",
+              "state_hex": "0A"
+            }
+          }
+        },
+        "resource_sample_time_ns": 1792276657477598462
+      },
+      {
+        "round": 10,
+        "requests": [
+          {
+            "case": "retrieval-65536-middle",
+            "ttft_ms": 9732.838780619204,
+            "request_started_ms_since_run": 244861.5090190433,
+            "first_text_ms_since_run": 254594.3477996625,
+            "text_chunks": 4,
+            "chunk_intervals_ms": [
+              28.290313202887774,
+              24.555005133152008,
+              24.647166952490807
+            ],
+            "total_ms": 10693.916972726583,
+            "usage": {
+              "prompt_tokens": 65520,
+              "total_tokens": 65525,
+              "completion_tokens": 5
+            }
+          },
+          {
+            "case": "access-code-529",
+            "ttft_ms": 1690.411236602813,
+            "request_started_ms_since_run": 244865.97971105948,
+            "first_text_ms_since_run": 246556.3909476623,
+            "text_chunks": 4,
+            "chunk_intervals_ms": [
+              511.1779454164207,
+              516.3940116763115,
+              525.2696960233152
+            ],
+            "total_ms": 3794.457130599767,
+            "usage": {
+              "prompt_tokens": 529,
+              "total_tokens": 534,
+              "completion_tokens": 5
+            }
+          },
+          {
+            "case": "arithmetic",
+            "ttft_ms": 299.35923125594854,
+            "request_started_ms_since_run": 244866.16932181641,
+            "first_text_ms_since_run": 245165.52855307236,
+            "text_chunks": 7,
+            "chunk_intervals_ms": [
+              29.148617759346962,
+              27.99886092543602,
+              27.691268362104893,
+              27.612116653472185,
+              27.653328143060207,
+              27.723518200218678
+            ],
+            "total_ms": 513.6432931758463,
+            "usage": {
+              "prompt_tokens": 12,
+              "total_tokens": 20,
+              "completion_tokens": 8
+            }
+          },
+          {
+            "case": "geography",
+            "ttft_ms": 299.1311689838767,
+            "request_started_ms_since_run": 244866.35619401932,
+            "first_text_ms_since_run": 245165.4873630032,
+            "text_chunks": 7,
+            "chunk_intervals_ms": [
+              29.15968792513013,
+              28.001519851386547,
+              27.69280830398202,
+              27.611547615379095,
+              27.653777040541172,
+              27.723079081624746
+            ],
+            "total_ms": 504.5997276902199,
+            "usage": {
+              "prompt_tokens": 15,
+              "total_tokens": 23,
+              "completion_tokens": 8
+            }
+          }
+        ],
+        "recovery": {
+          "ttft_ms": 273.81987823173404,
+          "request_started_ms_since_run": 255838.01361266524,
+          "first_text_ms_since_run": 256111.83349089697,
+          "text_chunks": 7,
+          "chunk_intervals_ms": [
+            23.427966982126236,
+            22.409100085496902,
+            22.38707011565566,
+            22.266389802098274,
+            22.18884788453579,
+            22.242339327931404
+          ],
+          "total_ms": 444.39182709902525,
+          "usage": {
+            "prompt_tokens": 12,
+            "total_tokens": 20,
+            "completion_tokens": 8
+          }
+        },
+        "process_resources": {
+          "rss_bytes": 6857723904,
+          "peak_rss_bytes": 6857723904,
+          "threads": 663,
+          "file_descriptors": 76,
+          "fd_targets": {
+            "0": "pipe:[358824326]",
+            "1": "/data/p00603624/inferfabric/openpangu92/release-order64k-load-http/server.log",
+            "2": "/data/p00603624/inferfabric/openpangu92/release-order64k-load-http/server.log",
+            "3": "anon_inode:[eventpoll]",
+            "4": "anon_inode:[eventfd]",
+            "5": "anon_inode:[eventpoll]",
+            "6": "socket:[358930688]",
+            "7": "socket:[358930689]",
+            "8": "socket:[358930688]",
+            "9": "/dev/davinci_manager",
+            "10": "/dev/davinci_manager",
+            "11": "/dev/davinci_manager",
+            "12": "/dev/hisi_hdc",
+            "13": "/dev/hisi_hdc",
+            "14": "/dev/hisi_hdc",
+            "15": "/dev/hisi_hdc",
+            "16": "/dev/davinci_manager",
+            "17": "/dev/davinci_manager",
+            "18": "/dev/davinci_manager",
+            "19": "/dev/davinci_manager",
+            "20": "/dev/davinci_manager",
+            "21": "socket:[358913222]",
+            "23": "/dev/hisi_hdc",
+            "24": "/dev/hisi_hdc",
+            "25": "/dev/hisi_hdc",
+            "26": "/dev/hisi_hdc",
+            "27": "/dev/hisi_hdc",
+            "28": "/dev/hisi_hdc",
+            "29": "/dev/hisi_hdc",
+            "30": "/dev/davinci_manager",
+            "31": "/dev/hisi_hdc",
+            "32": "/dev/hisi_hdc",
+            "33": "/dev/hisi_hdc",
+            "34": "/dev/hisi_hdc",
+            "35": "/dev/hisi_hdc",
+            "36": "/dev/hisi_hdc",
+            "37": "/dev/hisi_hdc",
+            "38": "/dev/hisi_hdc",
+            "39": "/dev/hisi_hdc",
+            "40": "/dev/hisi_hdc",
+            "41": "/dev/hisi_hdc",
+            "42": "/dev/hisi_hdc",
+            "43": "/dev/hisi_hdc",
+            "44": "/dev/hisi_hdc",
+            "45": "/dev/davinci_manager",
+            "46": "/dev/davinci_manager",
+            "47": "/dev/davinci_manager",
+            "48": "/dev/davinci_manager",
+            "49": "/dev/davinci_manager",
+            "50": "/dev/davinci_manager",
+            "51": "/dev/davinci_manager",
+            "52": "/dev/davinci_manager",
+            "53": "/dev/davinci_manager",
+            "54": "/dev/davinci_manager",
+            "55": "/dev/davinci_manager",
+            "56": "/dev/davinci_manager",
+            "57": "/dev/davinci_manager",
+            "58": "/dev/davinci_manager",
+            "59": "/dev/davinci_manager",
+            "60": "/dev/davinci_manager",
+            "61": "/dev/davinci_manager",
+            "62": "/dev/davinci_manager",
+            "63": "/dev/davinci_manager",
+            "64": "/dev/davinci_manager",
+            "65": "/dev/hisi_hdc",
+            "66": "anon_inode:[eventpoll]",
+            "67": "anon_inode:[eventfd]",
+            "68": "/dev/hisi_hdc",
+            "69": "/dev/hisi_hdc",
+            "70": "anon_inode:[eventpoll]",
+            "71": "socket:[358930688]",
+            "78": "/dev/hisi_hdc",
+            "83": "/dev/hisi_hdc",
+            "88": "/dev/hisi_hdc",
+            "93": "/dev/hisi_hdc",
+            "94": "/dev/hisi_hdc"
+          },
+          "socket_states": {
+            "358913222": {
+              "protocol": "tcp",
+              "state_hex": "0A"
+            }
+          }
+        },
+        "resource_sample_time_ns": 1792276668907033644
+      },
+      {
+        "round": 11,
+        "requests": [
+          {
+            "case": "retrieval-65536-late",
+            "ttft_ms": 10029.63048266247,
+            "request_started_ms_since_run": 256291.16214299574,
+            "first_text_ms_since_run": 266320.7926256582,
+            "text_chunks": 4,
+            "chunk_intervals_ms": [
+              27.15494530275464,
+              24.150392040610313,
+              24.369894061237574
+            ],
+            "total_ms": 11004.813675768673,
+            "usage": {
+              "prompt_tokens": 65520,
+              "total_tokens": 65525,
+              "completion_tokens": 5
+            }
+          },
+          {
+            "case": "arithmetic",
+            "ttft_ms": 769.2652908153832,
+            "request_started_ms_since_run": 256295.69041496143,
+            "first_text_ms_since_run": 257064.9557057768,
+            "text_chunks": 7,
+            "chunk_intervals_ms": [
+              28.9991470053792,
+              27.862659189850092,
+              27.579256799072027,
+              27.67242817208171,
+              27.6305777952075,
+              27.40728622302413
+            ],
+            "total_ms": 977.0852867513895,
+            "usage": {
+              "prompt_tokens": 12,
+              "total_tokens": 20,
+              "completion_tokens": 8
+            }
+          },
+          {
+            "case": "geography",
+            "ttft_ms": 315.03499299287796,
+            "request_started_ms_since_run": 256295.82901578397,
+            "first_text_ms_since_run": 256610.86400877684,
+            "text_chunks": 7,
+            "chunk_intervals_ms": [
+              28.90592720359564,
+              27.84002898260951,
+              27.712298091500998,
+              27.501355856657028,
+              27.568306773900986,
+              27.55254739895463
+            ],
+            "total_ms": 523.4280629083514,
+            "usage": {
+              "prompt_tokens": 15,
+              "total_tokens": 23,
+              "completion_tokens": 8
+            }
+          },
+          {
+            "case": "chinese",
+            "ttft_ms": 314.9449219927192,
+            "request_started_ms_since_run": 256295.9623867646,
+            "first_text_ms_since_run": 256610.9073087573,
+            "text_chunks": 16,
+            "chunk_intervals_ms": [
+              28.834866359829903,
+              27.841308619827032,
+              27.713109273463488,
+              27.501975651830435,
+              27.568307239562273,
+              27.551646810024977,
+              27.55465731024742,
+              259.4558047130704,
+              28.979988303035498,
+              27.88731874898076,
+              27.581186965107918,
+              27.710418216884136,
+              27.593187987804413,
+              27.406835928559303,
+              27.395945973694324
+            ],
+            "total_ms": 1610.1180529221892,
+            "usage": {
+              "prompt_tokens": 14,
+              "total_tokens": 31,
+              "completion_tokens": 17
+            }
+          }
+        ],
+        "recovery": {
+          "ttft_ms": 271.36943116784096,
+          "request_started_ms_since_run": 267554.7287687659,
+          "first_text_ms_since_run": 267826.09819993377,
+          "text_chunks": 7,
+          "chunk_intervals_ms": [
+            24.000761099159718,
+            22.582652047276497,
+            22.654841654002666,
+            22.478840313851833,
+            22.452750708907843,
+            22.453390061855316
+          ],
+          "total_ms": 441.97566993534565,
+          "usage": {
+            "prompt_tokens": 12,
+            "total_tokens": 20,
+            "completion_tokens": 8
+          }
+        },
+        "process_resources": {
+          "rss_bytes": 6860931072,
+          "peak_rss_bytes": 6860931072,
+          "threads": 663,
+          "file_descriptors": 76,
+          "fd_targets": {
+            "0": "pipe:[358824326]",
+            "1": "/data/p00603624/inferfabric/openpangu92/release-order64k-load-http/server.log",
+            "2": "/data/p00603624/inferfabric/openpangu92/release-order64k-load-http/server.log",
+            "3": "anon_inode:[eventpoll]",
+            "4": "anon_inode:[eventfd]",
+            "5": "anon_inode:[eventpoll]",
+            "6": "socket:[358930688]",
+            "7": "socket:[358930689]",
+            "8": "socket:[358930688]",
+            "9": "/dev/davinci_manager",
+            "10": "/dev/davinci_manager",
+            "11": "/dev/davinci_manager",
+            "12": "/dev/hisi_hdc",
+            "13": "/dev/hisi_hdc",
+            "14": "/dev/hisi_hdc",
+            "15": "/dev/hisi_hdc",
+            "16": "/dev/davinci_manager",
+            "17": "/dev/davinci_manager",
+            "18": "/dev/davinci_manager",
+            "19": "/dev/davinci_manager",
+            "20": "/dev/davinci_manager",
+            "21": "socket:[358913222]",
+            "23": "/dev/hisi_hdc",
+            "24": "/dev/hisi_hdc",
+            "25": "/dev/hisi_hdc",
+            "26": "/dev/hisi_hdc",
+            "27": "/dev/hisi_hdc",
+            "28": "/dev/hisi_hdc",
+            "29": "/dev/hisi_hdc",
+            "30": "/dev/davinci_manager",
+            "31": "/dev/hisi_hdc",
+            "32": "/dev/hisi_hdc",
+            "33": "/dev/hisi_hdc",
+            "34": "/dev/hisi_hdc",
+            "35": "/dev/hisi_hdc",
+            "36": "/dev/hisi_hdc",
+            "37": "/dev/hisi_hdc",
+            "38": "/dev/hisi_hdc",
+            "39": "/dev/hisi_hdc",
+            "40": "/dev/hisi_hdc",
+            "41": "/dev/hisi_hdc",
+            "42": "/dev/hisi_hdc",
+            "43": "/dev/hisi_hdc",
+            "44": "/dev/hisi_hdc",
+            "45": "/dev/davinci_manager",
+            "46": "/dev/davinci_manager",
+            "47": "/dev/davinci_manager",
+            "48": "/dev/davinci_manager",
+            "49": "/dev/davinci_manager",
+            "50": "/dev/davinci_manager",
+            "51": "/dev/davinci_manager",
+            "52": "/dev/davinci_manager",
+            "53": "/dev/davinci_manager",
+            "54": "/dev/davinci_manager",
+            "55": "/dev/davinci_manager",
+            "56": "/dev/davinci_manager",
+            "57": "/dev/davinci_manager",
+            "58": "/dev/davinci_manager",
+            "59": "/dev/davinci_manager",
+            "60": "/dev/davinci_manager",
+            "61": "/dev/davinci_manager",
+            "62": "/dev/davinci_manager",
+            "63": "/dev/davinci_manager",
+            "64": "/dev/davinci_manager",
+            "65": "/dev/hisi_hdc",
+            "66": "anon_inode:[eventpoll]",
+            "67": "anon_inode:[eventfd]",
+            "68": "/dev/hisi_hdc",
+            "69": "/dev/hisi_hdc",
+            "70": "anon_inode:[eventpoll]",
+            "71": "socket:[358930688]",
+            "78": "/dev/hisi_hdc",
+            "83": "/dev/hisi_hdc",
+            "88": "/dev/hisi_hdc",
+            "93": "/dev/hisi_hdc",
+            "94": "/dev/hisi_hdc"
+          },
+          "socket_states": {
+            "358913222": {
+              "protocol": "tcp",
+              "state_hex": "0A"
+            }
+          }
+        },
+        "resource_sample_time_ns": 1792276680621306143
+      },
+      {
+        "round": 12,
+        "requests": [
+          {
+            "case": "retrieval-65536-early",
+            "ttft_ms": 9851.149849127978,
+            "request_started_ms_since_run": 268005.6090927683,
+            "first_text_ms_since_run": 277856.75894189626,
+            "text_chunks": 4,
+            "chunk_intervals_ms": [
+              27.898799162358046,
+              24.14767164736986,
+              23.881009314209223
+            ],
+            "total_ms": 10807.196795009077,
+            "usage": {
+              "prompt_tokens": 65520,
+              "total_tokens": 65525,
+              "completion_tokens": 5
+            }
+          },
+          {
+            "case": "geography",
+            "ttft_ms": 299.9394438229501,
+            "request_started_ms_since_run": 268010.01617498696,
+            "first_text_ms_since_run": 268309.9556188099,
+            "text_chunks": 7,
+            "chunk_intervals_ms": [
+              29.351930133998394,
+              28.08023104444146,
+              27.971369680017233,
+              27.897529304027557,
+              27.826318982988596,
+              28.10023073107004
+            ],
+            "total_ms": 507.3685869574547,
+            "usage": {
+              "prompt_tokens": 15,
+              "total_tokens": 23,
+              "completion_tokens": 8
+            }
+          },
+          {
+            "case": "chinese",
+            "ttft_ms": 299.8465830460191,
+            "request_started_ms_since_run": 268010.14872593805,
+            "first_text_ms_since_run": 268309.9953089841,
+            "text_chunks": 16,
+            "chunk_intervals_ms": [
+              29.338479973375797,
+              28.07733090594411,
+              27.889559045433998,
+              28.018510900437832,
+              27.79224794358015,
+              28.097281232476234,
+              38.075902964919806,
+              248.17147385329008,
+              29.988714028149843,
+              28.690696228295565,
+              28.68848480284214,
+              47.31098795309663,
+              959.2180890031159,
+              522.6214560680091,
+              518.6362788081169
+            ],
+            "total_ms": 3431.2309427186847,
+            "usage": {
+              "prompt_tokens": 14,
+              "total_tokens": 31,
+              "completion_tokens": 17
+            }
+          },
+          {
+            "case": "access-code-529",
+            "ttft_ms": 755.1983301527798,
+            "request_started_ms_since_run": 268010.28758566827,
+            "first_text_ms_since_run": 268765.48591582105,
+            "text_chunks": 4,
+            "chunk_intervals_ms": [
+              29.933123849332333,
+              28.692105319350958,
+              28.686465695500374
+            ],
+            "total_ms": 889.9653842672706,
+            "usage": {
+              "prompt_tokens": 529,
+              "total_tokens": 534,
+              "completion_tokens": 5
+            }
+          }
+        ],
+        "recovery": {
+          "ttft_ms": 289.96513690799475,
+          "request_started_ms_since_run": 279077.0063409582,
+          "first_text_ms_since_run": 279366.9714778662,
+          "text_chunks": 7,
+          "chunk_intervals_ms": [
+            24.00670014321804,
+            22.73880084976554,
+            22.32891693711281,
+            22.489489056169987,
+            22.38865802064538,
+            22.574538830667734
+          ],
+          "total_ms": 460.5103968642652,
+          "usage": {
+            "prompt_tokens": 12,
+            "total_tokens": 20,
+            "completion_tokens": 8
+          }
+        },
+        "process_resources": {
+          "rss_bytes": 6863933440,
+          "peak_rss_bytes": 6863933440,
+          "threads": 663,
+          "file_descriptors": 76,
+          "fd_targets": {
+            "0": "pipe:[358824326]",
+            "1": "/data/p00603624/inferfabric/openpangu92/release-order64k-load-http/server.log",
+            "2": "/data/p00603624/inferfabric/openpangu92/release-order64k-load-http/server.log",
+            "3": "anon_inode:[eventpoll]",
+            "4": "anon_inode:[eventfd]",
+            "5": "anon_inode:[eventpoll]",
+            "6": "socket:[358930688]",
+            "7": "socket:[358930689]",
+            "8": "socket:[358930688]",
+            "9": "/dev/davinci_manager",
+            "10": "/dev/davinci_manager",
+            "11": "/dev/davinci_manager",
+            "12": "/dev/hisi_hdc",
+            "13": "/dev/hisi_hdc",
+            "14": "/dev/hisi_hdc",
+            "15": "/dev/hisi_hdc",
+            "16": "/dev/davinci_manager",
+            "17": "/dev/davinci_manager",
+            "18": "/dev/davinci_manager",
+            "19": "/dev/davinci_manager",
+            "20": "/dev/davinci_manager",
+            "21": "socket:[358913222]",
+            "23": "/dev/hisi_hdc",
+            "24": "/dev/hisi_hdc",
+            "25": "/dev/hisi_hdc",
+            "26": "/dev/hisi_hdc",
+            "27": "/dev/hisi_hdc",
+            "28": "/dev/hisi_hdc",
+            "29": "/dev/hisi_hdc",
+            "30": "/dev/davinci_manager",
+            "31": "/dev/hisi_hdc",
+            "32": "/dev/hisi_hdc",
+            "33": "/dev/hisi_hdc",
+            "34": "/dev/hisi_hdc",
+            "35": "/dev/hisi_hdc",
+            "36": "/dev/hisi_hdc",
+            "37": "/dev/hisi_hdc",
+            "38": "/dev/hisi_hdc",
+            "39": "/dev/hisi_hdc",
+            "40": "/dev/hisi_hdc",
+            "41": "/dev/hisi_hdc",
+            "42": "/dev/hisi_hdc",
+            "43": "/dev/hisi_hdc",
+            "44": "/dev/hisi_hdc",
+            "45": "/dev/davinci_manager",
+            "46": "/dev/davinci_manager",
+            "47": "/dev/davinci_manager",
+            "48": "/dev/davinci_manager",
+            "49": "/dev/davinci_manager",
+            "50": "/dev/davinci_manager",
+            "51": "/dev/davinci_manager",
+            "52": "/dev/davinci_manager",
+            "53": "/dev/davinci_manager",
+            "54": "/dev/davinci_manager",
+            "55": "/dev/davinci_manager",
+            "56": "/dev/davinci_manager",
+            "57": "/dev/davinci_manager",
+            "58": "/dev/davinci_manager",
+            "59": "/dev/davinci_manager",
+            "60": "/dev/davinci_manager",
+            "61": "/dev/davinci_manager",
+            "62": "/dev/davinci_manager",
+            "63": "/dev/davinci_manager",
+            "64": "/dev/davinci_manager",
+            "65": "/dev/hisi_hdc",
+            "66": "anon_inode:[eventpoll]",
+            "67": "anon_inode:[eventfd]",
+            "68": "/dev/hisi_hdc",
+            "69": "/dev/hisi_hdc",
+            "70": "anon_inode:[eventpoll]",
+            "71": "socket:[358930688]",
+            "78": "/dev/hisi_hdc",
+            "83": "/dev/hisi_hdc",
+            "88": "/dev/hisi_hdc",
+            "93": "/dev/hisi_hdc",
+            "94": "/dev/hisi_hdc"
+          },
+          "socket_states": {
+            "358913222": {
+              "protocol": "tcp",
+              "state_hex": "0A"
+            }
+          }
+        },
+        "resource_sample_time_ns": 1792276692162145174
+      },
+      {
+        "round": 13,
+        "requests": [
+          {
+            "case": "retrieval-65536-middle",
+            "ttft_ms": 9986.631370149553,
+            "request_started_ms_since_run": 279546.5726456605,
+            "first_text_ms_since_run": 289533.20401581004,
+            "text_chunks": 4,
+            "chunk_intervals_ms": [
+              26.58031927421689,
+              24.303322657942772,
+              24.109221063554287
+            ],
+            "total_ms": 10945.436347275972,
+            "usage": {
+              "prompt_tokens": 65520,
+              "total_tokens": 65525,
+              "completion_tokens": 5
+            }
+          },
+          {
+            "case": "chinese",
+            "ttft_ms": 320.9495288319886,
+            "request_started_ms_since_run": 279550.9693189524,
+            "first_text_ms_since_run": 279871.9188477844,
+            "text_chunks": 16,
+            "chunk_intervals_ms": [
+              28.97099731490016,
+              27.53115678206086,
+              27.43484592065215,
+              27.27673528715968,
+              27.26470399647951,
+              27.141144033521414,
+              40.701215621083975,
+              271.6736891306937,
+              29.437610879540443,
+              28.09780091047287,
+              27.947249356657267,
+              51.005383022129536,
+              964.4514587707818,
+              513.301573228091,
+              516.7346289381385
+            ],
+            "total_ms": 3471.8310087919235,
+            "usage": {
+              "prompt_tokens": 14,
+              "total_tokens": 31,
+              "completion_tokens": 17
+            }
+          },
+          {
+            "case": "access-code-529",
+            "ttft_ms": 798.8579464145005,
+            "request_started_ms_since_run": 279551.0909296572,
+            "first_text_ms_since_run": 280349.9488760717,
+            "text_chunks": 4,
+            "chunk_intervals_ms": [
+              29.37556989490986,
+              28.09812081977725,
+              27.947300113737583
+            ],
+            "total_ms": 935.4204912669957,
+            "usage": {
+              "prompt_tokens": 529,
+              "total_tokens": 534,
+              "completion_tokens": 5
+            }
+          },
+          {
+            "case": "arithmetic",
+            "ttft_ms": 320.6315664574504,
+            "request_started_ms_since_run": 279551.331281662,
+            "first_text_ms_since_run": 279871.96284811944,
+            "text_chunks": 7,
+            "chunk_intervals_ms": [
+              28.89635693281889,
+              27.52758702263236,
+              27.442355640232563,
+              27.278813999146223,
+              27.263415046036243,
+              27.14510401710868
+            ],
+            "total_ms": 527.0386850461364,
+            "usage": {
+              "prompt_tokens": 12,
+              "total_tokens": 20,
+              "completion_tokens": 8
+            }
+          }
+        ],
+        "recovery": {
+          "ttft_ms": 299.6957190334797,
+          "request_started_ms_since_run": 290744.0941547975,
+          "first_text_ms_since_run": 291043.789873831,
+          "text_chunks": 7,
+          "chunk_intervals_ms": [
+            23.575107101351023,
+            22.534078918397427,
+            22.358498070389032,
+            22.2923681139946,
+            22.293356712907553,
+            22.206837311387062
+          ],
+          "total_ms": 471.2831568904221,
+          "usage": {
+            "prompt_tokens": 12,
+            "total_tokens": 20,
+            "completion_tokens": 8
+          }
+        },
+        "process_resources": {
+          "rss_bytes": 6864818176,
+          "peak_rss_bytes": 6864818176,
+          "threads": 663,
+          "file_descriptors": 76,
+          "fd_targets": {
+            "0": "pipe:[358824326]",
+            "1": "/data/p00603624/inferfabric/openpangu92/release-order64k-load-http/server.log",
+            "2": "/data/p00603624/inferfabric/openpangu92/release-order64k-load-http/server.log",
+            "3": "anon_inode:[eventpoll]",
+            "4": "anon_inode:[eventfd]",
+            "5": "anon_inode:[eventpoll]",
+            "6": "socket:[358930688]",
+            "7": "socket:[358930689]",
+            "8": "socket:[358930688]",
+            "9": "/dev/davinci_manager",
+            "10": "/dev/davinci_manager",
+            "11": "/dev/davinci_manager",
+            "12": "/dev/hisi_hdc",
+            "13": "/dev/hisi_hdc",
+            "14": "/dev/hisi_hdc",
+            "15": "/dev/hisi_hdc",
+            "16": "/dev/davinci_manager",
+            "17": "/dev/davinci_manager",
+            "18": "/dev/davinci_manager",
+            "19": "/dev/davinci_manager",
+            "20": "/dev/davinci_manager",
+            "21": "socket:[358913222]",
+            "23": "/dev/hisi_hdc",
+            "24": "/dev/hisi_hdc",
+            "25": "/dev/hisi_hdc",
+            "26": "/dev/hisi_hdc",
+            "27": "/dev/hisi_hdc",
+            "28": "/dev/hisi_hdc",
+            "29": "/dev/hisi_hdc",
+            "30": "/dev/davinci_manager",
+            "31": "/dev/hisi_hdc",
+            "32": "/dev/hisi_hdc",
+            "33": "/dev/hisi_hdc",
+            "34": "/dev/hisi_hdc",
+            "35": "/dev/hisi_hdc",
+            "36": "/dev/hisi_hdc",
+            "37": "/dev/hisi_hdc",
+            "38": "/dev/hisi_hdc",
+            "39": "/dev/hisi_hdc",
+            "40": "/dev/hisi_hdc",
+            "41": "/dev/hisi_hdc",
+            "42": "/dev/hisi_hdc",
+            "43": "/dev/hisi_hdc",
+            "44": "/dev/hisi_hdc",
+            "45": "/dev/davinci_manager",
+            "46": "/dev/davinci_manager",
+            "47": "/dev/davinci_manager",
+            "48": "/dev/davinci_manager",
+            "49": "/dev/davinci_manager",
+            "50": "/dev/davinci_manager",
+            "51": "/dev/davinci_manager",
+            "52": "/dev/davinci_manager",
+            "53": "/dev/davinci_manager",
+            "54": "/dev/davinci_manager",
+            "55": "/dev/davinci_manager",
+            "56": "/dev/davinci_manager",
+            "57": "/dev/davinci_manager",
+            "58": "/dev/davinci_manager",
+            "59": "/dev/davinci_manager",
+            "60": "/dev/davinci_manager",
+            "61": "/dev/davinci_manager",
+            "62": "/dev/davinci_manager",
+            "63": "/dev/davinci_manager",
+            "64": "/dev/davinci_manager",
+            "65": "/dev/hisi_hdc",
+            "66": "anon_inode:[eventpoll]",
+            "67": "anon_inode:[eventfd]",
+            "68": "/dev/hisi_hdc",
+            "69": "/dev/hisi_hdc",
+            "70": "anon_inode:[eventpoll]",
+            "71": "socket:[358930688]",
+            "78": "/dev/hisi_hdc",
+            "83": "/dev/hisi_hdc",
+            "88": "/dev/hisi_hdc",
+            "93": "/dev/hisi_hdc",
+            "94": "/dev/hisi_hdc"
+          },
+          "socket_states": {
+            "358913222": {
+              "protocol": "tcp",
+              "state_hex": "0A"
+            }
+          }
+        },
+        "resource_sample_time_ns": 1792276703840003039
+      },
+      {
+        "round": 14,
+        "requests": [
+          {
+            "case": "retrieval-65536-late",
+            "ttft_ms": 9807.562366127968,
+            "request_started_ms_since_run": 291224.67827191576,
+            "first_text_ms_since_run": 301032.24063804373,
+            "text_chunks": 4,
+            "chunk_intervals_ms": [
+              27.973449788987637,
+              24.11875082179904,
+              24.53164430335164
+            ],
+            "total_ms": 10785.212453920394,
+            "usage": {
+              "prompt_tokens": 65520,
+              "total_tokens": 65525,
+              "completion_tokens": 5
+            }
+          },
+          {
+            "case": "access-code-529",
+            "ttft_ms": 1768.5508048161864,
+            "request_started_ms_since_run": 291229.0810449049,
+            "first_text_ms_since_run": 292997.6318497211,
+            "text_chunks": 4,
+            "chunk_intervals_ms": [
+              513.9899482019246,
+              517.7305960096419,
+              522.3214607685804
+            ],
+            "total_ms": 3872.8996901772916,
+            "usage": {
+              "prompt_tokens": 529,
+              "total_tokens": 534,
+              "completion_tokens": 5
+            }
+          },
+          {
+            "case": "arithmetic",
+            "ttft_ms": 329.3193122372031,
+            "request_started_ms_since_run": 291229.26904587075,
+            "first_text_ms_since_run": 291558.58835810795,
+            "text_chunks": 7,
+            "chunk_intervals_ms": [
+              28.836386743932962,
+              27.81191887333989,
+              27.71953819319606,
+              27.535645756870508,
+              27.466736268252134,
+              27.488376945257187
+            ],
+            "total_ms": 551.532450132072,
+            "usage": {
+              "prompt_tokens": 12,
+              "total_tokens": 20,
+              "completion_tokens": 8
+            }
+          },
+          {
+            "case": "geography",
+            "ttft_ms": 329.13570012897253,
+            "request_started_ms_since_run": 291229.4217078015,
+            "first_text_ms_since_run": 291558.5574079305,
+            "text_chunks": 7,
+            "chunk_intervals_ms": [
+              28.844886925071478,
+              27.808737941086292,
+              27.72540831938386,
+              27.5353966280818,
+              27.467016130685806,
+              27.49195694923401
+            ],
+            "total_ms": 537.3657331801951,
+            "usage": {
+              "prompt_tokens": 15,
+              "total_tokens": 23,
+              "completion_tokens": 8
+            }
+          }
+        ],
+        "recovery": {
+          "ttft_ms": 273.5877330414951,
+          "request_started_ms_since_run": 302257.78324669227,
+          "first_text_ms_since_run": 302531.37097973377,
+          "text_chunks": 7,
+          "chunk_intervals_ms": [
+            23.68422830477357,
+            22.81728107482195,
+            22.59181998670101,
+            22.530948743224144,
+            22.48451905325055,
+            22.325998172163963
+          ],
+          "total_ms": 442.7119232714176,
+          "usage": {
+            "prompt_tokens": 12,
+            "total_tokens": 20,
+            "completion_tokens": 8
+          }
+        },
+        "process_resources": {
+          "rss_bytes": 6865264640,
+          "peak_rss_bytes": 6865264640,
+          "threads": 663,
+          "file_descriptors": 76,
+          "fd_targets": {
+            "0": "pipe:[358824326]",
+            "1": "/data/p00603624/inferfabric/openpangu92/release-order64k-load-http/server.log",
+            "2": "/data/p00603624/inferfabric/openpangu92/release-order64k-load-http/server.log",
+            "3": "anon_inode:[eventpoll]",
+            "4": "anon_inode:[eventfd]",
+            "5": "anon_inode:[eventpoll]",
+            "6": "socket:[358930688]",
+            "7": "socket:[358930689]",
+            "8": "socket:[358930688]",
+            "9": "/dev/davinci_manager",
+            "10": "/dev/davinci_manager",
+            "11": "/dev/davinci_manager",
+            "12": "/dev/hisi_hdc",
+            "13": "/dev/hisi_hdc",
+            "14": "/dev/hisi_hdc",
+            "15": "/dev/hisi_hdc",
+            "16": "/dev/davinci_manager",
+            "17": "/dev/davinci_manager",
+            "18": "/dev/davinci_manager",
+            "19": "/dev/davinci_manager",
+            "20": "/dev/davinci_manager",
+            "21": "socket:[358913222]",
+            "23": "/dev/hisi_hdc",
+            "24": "/dev/hisi_hdc",
+            "25": "/dev/hisi_hdc",
+            "26": "/dev/hisi_hdc",
+            "27": "/dev/hisi_hdc",
+            "28": "/dev/hisi_hdc",
+            "29": "/dev/hisi_hdc",
+            "30": "/dev/davinci_manager",
+            "31": "/dev/hisi_hdc",
+            "32": "/dev/hisi_hdc",
+            "33": "/dev/hisi_hdc",
+            "34": "/dev/hisi_hdc",
+            "35": "/dev/hisi_hdc",
+            "36": "/dev/hisi_hdc",
+            "37": "/dev/hisi_hdc",
+            "38": "/dev/hisi_hdc",
+            "39": "/dev/hisi_hdc",
+            "40": "/dev/hisi_hdc",
+            "41": "/dev/hisi_hdc",
+            "42": "/dev/hisi_hdc",
+            "43": "/dev/hisi_hdc",
+            "44": "/dev/hisi_hdc",
+            "45": "/dev/davinci_manager",
+            "46": "/dev/davinci_manager",
+            "47": "/dev/davinci_manager",
+            "48": "/dev/davinci_manager",
+            "49": "/dev/davinci_manager",
+            "50": "/dev/davinci_manager",
+            "51": "/dev/davinci_manager",
+            "52": "/dev/davinci_manager",
+            "53": "/dev/davinci_manager",
+            "54": "/dev/davinci_manager",
+            "55": "/dev/davinci_manager",
+            "56": "/dev/davinci_manager",
+            "57": "/dev/davinci_manager",
+            "58": "/dev/davinci_manager",
+            "59": "/dev/davinci_manager",
+            "60": "/dev/davinci_manager",
+            "61": "/dev/davinci_manager",
+            "62": "/dev/davinci_manager",
+            "63": "/dev/davinci_manager",
+            "64": "/dev/davinci_manager",
+            "65": "/dev/hisi_hdc",
+            "66": "anon_inode:[eventpoll]",
+            "67": "anon_inode:[eventfd]",
+            "68": "/dev/hisi_hdc",
+            "69": "/dev/hisi_hdc",
+            "70": "anon_inode:[eventpoll]",
+            "71": "socket:[358930688]",
+            "78": "/dev/hisi_hdc",
+            "83": "/dev/hisi_hdc",
+            "88": "/dev/hisi_hdc",
+            "93": "/dev/hisi_hdc",
+            "94": "/dev/hisi_hdc"
+          },
+          "socket_states": {
+            "358913222": {
+              "protocol": "tcp",
+              "state_hex": "0A"
+            }
+          }
+        },
+        "resource_sample_time_ns": 1792276715325109996
+      },
+      {
+        "round": 15,
+        "requests": [
+          {
+            "case": "retrieval-65536-early",
+            "ttft_ms": 9941.949672996998,
+            "request_started_ms_since_run": 302709.90028977394,
+            "first_text_ms_since_run": 312651.84996277094,
+            "text_chunks": 4,
+            "chunk_intervals_ms": [
+              31.48632124066353,
+              43.73273067176342,
+              23.91712600365281
+            ],
+            "total_ms": 10926.743145100772,
+            "usage": {
+              "prompt_tokens": 65520,
+              "total_tokens": 65525,
+              "completion_tokens": 5
+            }
+          },
+          {
+            "case": "arithmetic",
+            "ttft_ms": 303.00819408148527,
+            "request_started_ms_since_run": 302714.2340326682,
+            "first_text_ms_since_run": 303017.24222674966,
+            "text_chunks": 7,
+            "chunk_intervals_ms": [
+              29.41971132531762,
+              28.354262933135033,
+              28.031629975885153,
+              27.96792984008789,
+              27.80052926391363,
+              27.797549031674862
+            ],
+            "total_ms": 520.0544544495642,
+            "usage": {
+              "prompt_tokens": 12,
+              "total_tokens": 20,
+              "completion_tokens": 8
+            }
+          },
+          {
+            "case": "geography",
+            "ttft_ms": 302.8541528619826,
+            "request_started_ms_since_run": 302714.3481038511,
+            "first_text_ms_since_run": 303017.20225671306,
+            "text_chunks": 7,
+            "chunk_intervals_ms": [
+              29.429651331156492,
+              28.357872739434242,
+              28.032090049237013,
+              27.967859990894794,
+              27.800729032605886,
+              27.797099202871323
+            ],
+            "total_ms": 510.35104086622596,
+            "usage": {
+              "prompt_tokens": 15,
+              "total_tokens": 23,
+              "completion_tokens": 8
+            }
+          },
+          {
+            "case": "chinese",
+            "ttft_ms": 1689.925144892186,
+            "request_started_ms_since_run": 302714.5118149929,
+            "first_text_ms_since_run": 304404.43695988506,
+            "text_chunks": 16,
+            "chunk_intervals_ms": [
+              511.5445991978049,
+              518.1755796074867,
+              523.1590270996094,
+              528.324814978987,
+              535.2898882701993,
+              543.0017206817865,
+              548.2407561503351,
+              553.1879421323538,
+              558.2421887665987,
+              579.6668869443238,
+              569.2775710485876,
+              574.1140563040972,
+              579.1408629156649,
+              1125.814407132566,
+              31.663562636822462
+            ],
+            "total_ms": 10012.73763179779,
+            "usage": {
+              "prompt_tokens": 14,
+              "total_tokens": 31,
+              "completion_tokens": 17
+            }
+          }
+        ],
+        "recovery": {
+          "ttft_ms": 289.65539718046784,
+          "request_started_ms_since_run": 313950.7109806873,
+          "first_text_ms_since_run": 314240.36637786776,
+          "text_chunks": 7,
+          "chunk_intervals_ms": [
+            23.593063931912184,
+            22.077632136642933,
+            22.037241142243147,
+            21.87576098367572,
+            22.00294192880392,
+            21.878249943256378
+          ],
+          "total_ms": 458.0841842107475,
+          "usage": {
+            "prompt_tokens": 12,
+            "total_tokens": 20,
+            "completion_tokens": 8
+          }
+        },
+        "process_resources": {
+          "rss_bytes": 6866292736,
+          "peak_rss_bytes": 6866292736,
+          "threads": 663,
+          "file_descriptors": 76,
+          "fd_targets": {
+            "0": "pipe:[358824326]",
+            "1": "/data/p00603624/inferfabric/openpangu92/release-order64k-load-http/server.log",
+            "2": "/data/p00603624/inferfabric/openpangu92/release-order64k-load-http/server.log",
+            "3": "anon_inode:[eventpoll]",
+            "4": "anon_inode:[eventfd]",
+            "5": "anon_inode:[eventpoll]",
+            "6": "socket:[358930688]",
+            "7": "socket:[358930689]",
+            "8": "socket:[358930688]",
+            "9": "/dev/davinci_manager",
+            "10": "/dev/davinci_manager",
+            "11": "/dev/davinci_manager",
+            "12": "/dev/hisi_hdc",
+            "13": "/dev/hisi_hdc",
+            "14": "/dev/hisi_hdc",
+            "15": "/dev/hisi_hdc",
+            "16": "/dev/davinci_manager",
+            "17": "/dev/davinci_manager",
+            "18": "/dev/davinci_manager",
+            "19": "/dev/davinci_manager",
+            "20": "/dev/davinci_manager",
+            "21": "socket:[358913222]",
+            "23": "/dev/hisi_hdc",
+            "24": "/dev/hisi_hdc",
+            "25": "/dev/hisi_hdc",
+            "26": "/dev/hisi_hdc",
+            "27": "/dev/hisi_hdc",
+            "28": "/dev/hisi_hdc",
+            "29": "/dev/hisi_hdc",
+            "30": "/dev/davinci_manager",
+            "31": "/dev/hisi_hdc",
+            "32": "/dev/hisi_hdc",
+            "33": "/dev/hisi_hdc",
+            "34": "/dev/hisi_hdc",
+            "35": "/dev/hisi_hdc",
+            "36": "/dev/hisi_hdc",
+            "37": "/dev/hisi_hdc",
+            "38": "/dev/hisi_hdc",
+            "39": "/dev/hisi_hdc",
+            "40": "/dev/hisi_hdc",
+            "41": "/dev/hisi_hdc",
+            "42": "/dev/hisi_hdc",
+            "43": "/dev/hisi_hdc",
+            "44": "/dev/hisi_hdc",
+            "45": "/dev/davinci_manager",
+            "46": "/dev/davinci_manager",
+            "47": "/dev/davinci_manager",
+            "48": "/dev/davinci_manager",
+            "49": "/dev/davinci_manager",
+            "50": "/dev/davinci_manager",
+            "51": "/dev/davinci_manager",
+            "52": "/dev/davinci_manager",
+            "53": "/dev/davinci_manager",
+            "54": "/dev/davinci_manager",
+            "55": "/dev/davinci_manager",
+            "56": "/dev/davinci_manager",
+            "57": "/dev/davinci_manager",
+            "58": "/dev/davinci_manager",
+            "59": "/dev/davinci_manager",
+            "60": "/dev/davinci_manager",
+            "61": "/dev/davinci_manager",
+            "62": "/dev/davinci_manager",
+            "63": "/dev/davinci_manager",
+            "64": "/dev/davinci_manager",
+            "65": "/dev/hisi_hdc",
+            "66": "anon_inode:[eventpoll]",
+            "67": "anon_inode:[eventfd]",
+            "68": "/dev/hisi_hdc",
+            "69": "/dev/hisi_hdc",
+            "70": "anon_inode:[eventpoll]",
+            "71": "socket:[358930688]",
+            "78": "/dev/hisi_hdc",
+            "83": "/dev/hisi_hdc",
+            "88": "/dev/hisi_hdc",
+            "93": "/dev/hisi_hdc",
+            "94": "/dev/hisi_hdc"
+          },
+          "socket_states": {
+            "358913222": {
+              "protocol": "tcp",
+              "state_hex": "0A"
+            }
+          }
+        },
+        "resource_sample_time_ns": 1792276727033389760
+      },
+      {
+        "round": 16,
+        "requests": [
+          {
+            "case": "retrieval-65536-middle",
+            "ttft_ms": 10062.98492802307,
+            "request_started_ms_since_run": 314418.3486448601,
+            "first_text_ms_since_run": 324481.33357288316,
+            "text_chunks": 4,
+            "chunk_intervals_ms": [
+              28.70765095576644,
+              24.254308082163334,
+              24.633130989968777
+            ],
+            "total_ms": 11029.256014153361,
+            "usage": {
+              "prompt_tokens": 65520,
+              "total_tokens": 65525,
+              "completion_tokens": 5
+            }
+          },
+          {
+            "case": "geography",
+            "ttft_ms": 327.52436492592096,
+            "request_started_ms_since_run": 314422.74467786774,
+            "first_text_ms_since_run": 314750.26904279366,
+            "text_chunks": 7,
+            "chunk_intervals_ms": [
+              29.157054144889116,
+              28.02555589005351,
+              27.865224052220583,
+              27.78394380584359,
+              27.950826101005077,
+              28.146086260676384
+            ],
+            "total_ms": 536.1731369048357,
+            "usage": {
+              "prompt_tokens": 15,
+              "total_tokens": 23,
+              "completion_tokens": 8
+            }
+          },
+          {
+            "case": "chinese",
+            "ttft_ms": 327.3713937960565,
+            "request_started_ms_since_run": 314422.85852786154,
+            "first_text_ms_since_run": 314750.2299216576,
+            "text_chunks": 16,
+            "chunk_intervals_ms": [
+              29.167975299060345,
+              28.027414809912443,
+              27.865765150636435,
+              27.78412401676178,
+              27.95185474678874,
+              28.12183741480112,
+              27.571961749345064,
+              273.0451161041856,
+              29.873788822442293,
+              28.587500099092722,
+              28.30182807520032,
+              28.18430680781603,
+              650.949570350349,
+              509.6365516074002,
+              511.71156810596585
+            ],
+            "total_ms": 3113.582325167954,
+            "usage": {
+              "prompt_tokens": 14,
+              "total_tokens": 31,
+              "completion_tokens": 17
+            }
+          },
+          {
+            "case": "access-code-529",
+            "ttft_ms": 796.8192016705871,
+            "request_started_ms_since_run": 314422.97977907583,
+            "first_text_ms_since_run": 315219.7989807464,
+            "text_chunks": 4,
+            "chunk_intervals_ms": [
+              29.86805932596326,
+              28.585579711943865,
+              28.301568236202
+            ],
+            "total_ms": 937.4875649809837,
+            "usage": {
+              "prompt_tokens": 529,
+              "total_tokens": 534,
+              "completion_tokens": 5
+            }
+          }
+        ],
+        "recovery": {
+          "ttft_ms": 264.7872851230204,
+          "request_started_ms_since_run": 325696.53417682275,
+          "first_text_ms_since_run": 325961.3214619458,
+          "text_chunks": 7,
+          "chunk_intervals_ms": [
+            23.788574151694775,
+            22.933548782020807,
+            22.86256803199649,
+            22.730797063559294,
+            22.730115801095963,
+            22.736437153071165
+          ],
+          "total_ms": 435.30023703351617,
+          "usage": {
+            "prompt_tokens": 12,
+            "total_tokens": 20,
+            "completion_tokens": 8
+          }
+        },
+        "process_resources": {
+          "rss_bytes": 6867230720,
+          "peak_rss_bytes": 6867230720,
+          "threads": 663,
+          "file_descriptors": 76,
+          "fd_targets": {
+            "0": "pipe:[358824326]",
+            "1": "/data/p00603624/inferfabric/openpangu92/release-order64k-load-http/server.log",
+            "2": "/data/p00603624/inferfabric/openpangu92/release-order64k-load-http/server.log",
+            "3": "anon_inode:[eventpoll]",
+            "4": "anon_inode:[eventfd]",
+            "5": "anon_inode:[eventpoll]",
+            "6": "socket:[358930688]",
+            "7": "socket:[358930689]",
+            "8": "socket:[358930688]",
+            "9": "/dev/davinci_manager",
+            "10": "/dev/davinci_manager",
+            "11": "/dev/davinci_manager",
+            "12": "/dev/hisi_hdc",
+            "13": "/dev/hisi_hdc",
+            "14": "/dev/hisi_hdc",
+            "15": "/dev/hisi_hdc",
+            "16": "/dev/davinci_manager",
+            "17": "/dev/davinci_manager",
+            "18": "/dev/davinci_manager",
+            "19": "/dev/davinci_manager",
+            "20": "/dev/davinci_manager",
+            "21": "socket:[358913222]",
+            "23": "/dev/hisi_hdc",
+            "24": "/dev/hisi_hdc",
+            "25": "/dev/hisi_hdc",
+            "26": "/dev/hisi_hdc",
+            "27": "/dev/hisi_hdc",
+            "28": "/dev/hisi_hdc",
+            "29": "/dev/hisi_hdc",
+            "30": "/dev/davinci_manager",
+            "31": "/dev/hisi_hdc",
+            "32": "/dev/hisi_hdc",
+            "33": "/dev/hisi_hdc",
+            "34": "/dev/hisi_hdc",
+            "35": "/dev/hisi_hdc",
+            "36": "/dev/hisi_hdc",
+            "37": "/dev/hisi_hdc",
+            "38": "/dev/hisi_hdc",
+            "39": "/dev/hisi_hdc",
+            "40": "/dev/hisi_hdc",
+            "41": "/dev/hisi_hdc",
+            "42": "/dev/hisi_hdc",
+            "43": "/dev/hisi_hdc",
+            "44": "/dev/hisi_hdc",
+            "45": "/dev/davinci_manager",
+            "46": "/dev/davinci_manager",
+            "47": "/dev/davinci_manager",
+            "48": "/dev/davinci_manager",
+            "49": "/dev/davinci_manager",
+            "50": "/dev/davinci_manager",
+            "51": "/dev/davinci_manager",
+            "52": "/dev/davinci_manager",
+            "53": "/dev/davinci_manager",
+            "54": "/dev/davinci_manager",
+            "55": "/dev/davinci_manager",
+            "56": "/dev/davinci_manager",
+            "57": "/dev/davinci_manager",
+            "58": "/dev/davinci_manager",
+            "59": "/dev/davinci_manager",
+            "60": "/dev/davinci_manager",
+            "61": "/dev/davinci_manager",
+            "62": "/dev/davinci_manager",
+            "63": "/dev/davinci_manager",
+            "64": "/dev/davinci_manager",
+            "65": "/dev/hisi_hdc",
+            "66": "anon_inode:[eventpoll]",
+            "67": "anon_inode:[eventfd]",
+            "68": "/dev/hisi_hdc",
+            "69": "/dev/hisi_hdc",
+            "70": "anon_inode:[eventpoll]",
+            "71": "socket:[358930688]",
+            "78": "/dev/hisi_hdc",
+            "83": "/dev/hisi_hdc",
+            "88": "/dev/hisi_hdc",
+            "93": "/dev/hisi_hdc",
+            "94": "/dev/hisi_hdc"
+          },
+          "socket_states": {
+            "358913222": {
+              "protocol": "tcp",
+              "state_hex": "0A"
+            }
+          }
+        },
+        "resource_sample_time_ns": 1792276738756439249
+      },
+      {
+        "round": 17,
+        "requests": [
+          {
+            "case": "retrieval-65536-late",
+            "ttft_ms": 9827.461338136345,
+            "request_started_ms_since_run": 326141.6081157513,
+            "first_text_ms_since_run": 335969.06945388764,
+            "text_chunks": 4,
+            "chunk_intervals_ms": [
+              29.615846928209066,
+              24.753931909799576,
+              24.602771271020174
+            ],
+            "total_ms": 10784.723228309304,
+            "usage": {
+              "prompt_tokens": 65520,
+              "total_tokens": 65525,
+              "completion_tokens": 5
+            }
+          },
+          {
+            "case": "chinese",
+            "ttft_ms": 292.26683592423797,
+            "request_started_ms_since_run": 326145.9718779661,
+            "first_text_ms_since_run": 326438.2387138903,
+            "text_chunks": 16,
+            "chunk_intervals_ms": [
+              29.20454414561391,
+              28.138376772403717,
+              28.069576248526573,
+              27.998705860227346,
+              27.932485099881887,
+              28.046805877238512,
+              38.35241077467799,
+              242.86714429035783,
+              29.892119113355875,
+              28.962392825633287,
+              28.648341074585915,
+              47.58617887273431,
+              952.4721740745008,
+              511.2883048132062,
+              516.4709929376841
+            ],
+            "total_ms": 3390.177284833044,
+            "usage": {
+              "prompt_tokens": 14,
+              "total_tokens": 31,
+              "completion_tokens": 17
+            }
+          },
+          {
+            "case": "access-code-529",
+            "ttft_ms": 742.7999349310994,
+            "request_started_ms_since_run": 326146.08484786004,
+            "first_text_ms_since_run": 326888.88478279114,
+            "text_chunks": 4,
+            "chunk_intervals_ms": [
+              29.82922922819853,
+              28.96602265536785,
+              28.626610059291124
+            ],
+            "total_ms": 877.9280381277204,
+            "usage": {
+              "prompt_tokens": 529,
+              "total_tokens": 534,
+              "completion_tokens": 5
+            }
+          },
+          {
+            "case": "arithmetic",
+            "ttft_ms": 291.9086432084441,
+            "request_started_ms_since_run": 326146.2631197646,
+            "first_text_ms_since_run": 326438.17176297307,
+            "text_chunks": 7,
+            "chunk_intervals_ms": [
+              29.190964996814728,
+              28.19031709805131,
+              28.071715962141752,
+              27.999525889754295,
+              27.931794989854097,
+              28.04991602897644
+            ],
+            "total_ms": 499.81260020285845,
+            "usage": {
+              "prompt_tokens": 12,
+              "total_tokens": 20,
+              "completion_tokens": 8
+            }
+          }
+        ],
+        "recovery": {
+          "ttft_ms": 274.69471702352166,
+          "request_started_ms_since_run": 337240.35417009145,
+          "first_text_ms_since_run": 337515.048887115,
+          "text_chunks": 7,
+          "chunk_intervals_ms": [
+            23.965305648744106,
+            23.038758896291256,
+            22.915488108992577,
+            22.72125706076622,
+            22.813017945736647,
+            22.778657265007496
+          ],
+          "total_ms": 445.86035376414657,
+          "usage": {
+            "prompt_tokens": 12,
+            "total_tokens": 20,
+            "completion_tokens": 8
+          }
+        },
+        "process_resources": {
+          "rss_bytes": 6868398080,
+          "peak_rss_bytes": 6868398080,
+          "threads": 663,
+          "file_descriptors": 76,
+          "fd_targets": {
+            "0": "pipe:[358824326]",
+            "1": "/data/p00603624/inferfabric/openpangu92/release-order64k-load-http/server.log",
+            "2": "/data/p00603624/inferfabric/openpangu92/release-order64k-load-http/server.log",
+            "3": "anon_inode:[eventpoll]",
+            "4": "anon_inode:[eventfd]",
+            "5": "anon_inode:[eventpoll]",
+            "6": "socket:[358930688]",
+            "7": "socket:[358930689]",
+            "8": "socket:[358930688]",
+            "9": "/dev/davinci_manager",
+            "10": "/dev/davinci_manager",
+            "11": "/dev/davinci_manager",
+            "12": "/dev/hisi_hdc",
+            "13": "/dev/hisi_hdc",
+            "14": "/dev/hisi_hdc",
+            "15": "/dev/hisi_hdc",
+            "16": "/dev/davinci_manager",
+            "17": "/dev/davinci_manager",
+            "18": "/dev/davinci_manager",
+            "19": "/dev/davinci_manager",
+            "20": "/dev/davinci_manager",
+            "21": "socket:[358913222]",
+            "23": "/dev/hisi_hdc",
+            "24": "/dev/hisi_hdc",
+            "25": "/dev/hisi_hdc",
+            "26": "/dev/hisi_hdc",
+            "27": "/dev/hisi_hdc",
+            "28": "/dev/hisi_hdc",
+            "29": "/dev/hisi_hdc",
+            "30": "/dev/davinci_manager",
+            "31": "/dev/hisi_hdc",
+            "32": "/dev/hisi_hdc",
+            "33": "/dev/hisi_hdc",
+            "34": "/dev/hisi_hdc",
+            "35": "/dev/hisi_hdc",
+            "36": "/dev/hisi_hdc",
+            "37": "/dev/hisi_hdc",
+            "38": "/dev/hisi_hdc",
+            "39": "/dev/hisi_hdc",
+            "40": "/dev/hisi_hdc",
+            "41": "/dev/hisi_hdc",
+            "42": "/dev/hisi_hdc",
+            "43": "/dev/hisi_hdc",
+            "44": "/dev/hisi_hdc",
+            "45": "/dev/davinci_manager",
+            "46": "/dev/davinci_manager",
+            "47": "/dev/davinci_manager",
+            "48": "/dev/davinci_manager",
+            "49": "/dev/davinci_manager",
+            "50": "/dev/davinci_manager",
+            "51": "/dev/davinci_manager",
+            "52": "/dev/davinci_manager",
+            "53": "/dev/davinci_manager",
+            "54": "/dev/davinci_manager",
+            "55": "/dev/davinci_manager",
+            "56": "/dev/davinci_manager",
+            "57": "/dev/davinci_manager",
+            "58": "/dev/davinci_manager",
+            "59": "/dev/davinci_manager",
+            "60": "/dev/davinci_manager",
+            "61": "/dev/davinci_manager",
+            "62": "/dev/davinci_manager",
+            "63": "/dev/davinci_manager",
+            "64": "/dev/davinci_manager",
+            "65": "/dev/hisi_hdc",
+            "66": "anon_inode:[eventpoll]",
+            "67": "anon_inode:[eventfd]",
+            "68": "/dev/hisi_hdc",
+            "69": "/dev/hisi_hdc",
+            "70": "anon_inode:[eventpoll]",
+            "71": "socket:[358930688]",
+            "78": "/dev/hisi_hdc",
+            "83": "/dev/hisi_hdc",
+            "88": "/dev/hisi_hdc",
+            "93": "/dev/hisi_hdc",
+            "94": "/dev/hisi_hdc"
+          },
+          "socket_states": {
+            "358913222": {
+              "protocol": "tcp",
+              "state_hex": "0A"
+            }
+          }
+        },
+        "resource_sample_time_ns": 1792276750310843959
+      },
+      {
+        "round": 18,
+        "requests": [
+          {
+            "case": "retrieval-65536-early",
+            "ttft_ms": 9780.976547393948,
+            "request_started_ms_since_run": 337696.2109967135,
+            "first_text_ms_since_run": 347477.18754410744,
+            "text_chunks": 4,
+            "chunk_intervals_ms": [
+              29.844988603144884,
+              24.972284212708473,
+              24.120097048580647
+            ],
+            "total_ms": 10746.646258980036,
+            "usage": {
+              "prompt_tokens": 65520,
+              "total_tokens": 65525,
+              "completion_tokens": 5
+            }
+          },
+          {
+            "case": "access-code-529",
+            "ttft_ms": 1748.3215793035924,
+            "request_started_ms_since_run": 337700.6182996556,
+            "first_text_ms_since_run": 339448.9398789592,
+            "text_chunks": 4,
+            "chunk_intervals_ms": [
+              517.1962981112301,
+              519.4898936897516,
+              524.5839832350612
+            ],
+            "total_ms": 3859.220650047064,
+            "usage": {
+              "prompt_tokens": 529,
+              "total_tokens": 534,
+              "completion_tokens": 5
+            }
+          },
+          {
+            "case": "arithmetic",
+            "ttft_ms": 308.14992263913155,
+            "request_started_ms_since_run": 337700.7959210314,
+            "first_text_ms_since_run": 338008.9458436705,
+            "text_chunks": 7,
+            "chunk_intervals_ms": [
+              29.125374276190996,
+              28.137756045907736,
+              28.177986852824688,
+              28.048436157405376,
+              28.013186063617468,
+              28.147896751761436
+            ],
+            "total_ms": 526.0485727339983,
+            "usage": {
+              "prompt_tokens": 12,
+              "total_tokens": 20,
+              "completion_tokens": 8
+            }
+          },
+          {
+            "case": "geography",
+            "ttft_ms": 307.9056111164391,
+            "request_started_ms_since_run": 337700.94865188,
+            "first_text_ms_since_run": 338008.85426299646,
+            "text_chunks": 7,
+            "chunk_intervals_ms": [
+              29.194514732807875,
+              28.13896629959345,
+              28.17872678861022,
+              28.05069601163268,
+              28.012186288833618,
+              28.148026671260595
+            ],
+            "total_ms": 516.1946411244571,
+            "usage": {
+              "prompt_tokens": 15,
+              "total_tokens": 23,
+              "completion_tokens": 8
+            }
+          }
+        ],
+        "recovery": {
+          "ttft_ms": 276.58389089629054,
+          "request_started_ms_since_run": 348809.59063908085,
+          "first_text_ms_since_run": 349086.17452997714,
+          "text_chunks": 7,
+          "chunk_intervals_ms": [
+            23.891824763268232,
+            22.758528124541044,
+            22.752737160772085,
+            22.483504842966795,
+            23.001838941127062,
+            22.467025090008974
+          ],
+          "total_ms": 446.40315789729357,
+          "usage": {
+            "prompt_tokens": 12,
+            "total_tokens": 20,
+            "completion_tokens": 8
+          }
+        },
+        "process_resources": {
+          "rss_bytes": 6869049344,
+          "peak_rss_bytes": 6869049344,
+          "threads": 663,
+          "file_descriptors": 76,
+          "fd_targets": {
+            "0": "pipe:[358824326]",
+            "1": "/data/p00603624/inferfabric/openpangu92/release-order64k-load-http/server.log",
+            "2": "/data/p00603624/inferfabric/openpangu92/release-order64k-load-http/server.log",
+            "3": "anon_inode:[eventpoll]",
+            "4": "anon_inode:[eventfd]",
+            "5": "anon_inode:[eventpoll]",
+            "6": "socket:[358930688]",
+            "7": "socket:[358930689]",
+            "8": "socket:[358930688]",
+            "9": "/dev/davinci_manager",
+            "10": "/dev/davinci_manager",
+            "11": "/dev/davinci_manager",
+            "12": "/dev/hisi_hdc",
+            "13": "/dev/hisi_hdc",
+            "14": "/dev/hisi_hdc",
+            "15": "/dev/hisi_hdc",
+            "16": "/dev/davinci_manager",
+            "17": "/dev/davinci_manager",
+            "18": "/dev/davinci_manager",
+            "19": "/dev/davinci_manager",
+            "20": "/dev/davinci_manager",
+            "21": "socket:[358913222]",
+            "23": "/dev/hisi_hdc",
+            "24": "/dev/hisi_hdc",
+            "25": "/dev/hisi_hdc",
+            "26": "/dev/hisi_hdc",
+            "27": "/dev/hisi_hdc",
+            "28": "/dev/hisi_hdc",
+            "29": "/dev/hisi_hdc",
+            "30": "/dev/davinci_manager",
+            "31": "/dev/hisi_hdc",
+            "32": "/dev/hisi_hdc",
+            "33": "/dev/hisi_hdc",
+            "34": "/dev/hisi_hdc",
+            "35": "/dev/hisi_hdc",
+            "36": "/dev/hisi_hdc",
+            "37": "/dev/hisi_hdc",
+            "38": "/dev/hisi_hdc",
+            "39": "/dev/hisi_hdc",
+            "40": "/dev/hisi_hdc",
+            "41": "/dev/hisi_hdc",
+            "42": "/dev/hisi_hdc",
+            "43": "/dev/hisi_hdc",
+            "44": "/dev/hisi_hdc",
+            "45": "/dev/davinci_manager",
+            "46": "/dev/davinci_manager",
+            "47": "/dev/davinci_manager",
+            "48": "/dev/davinci_manager",
+            "49": "/dev/davinci_manager",
+            "50": "/dev/davinci_manager",
+            "51": "/dev/davinci_manager",
+            "52": "/dev/davinci_manager",
+            "53": "/dev/davinci_manager",
+            "54": "/dev/davinci_manager",
+            "55": "/dev/davinci_manager",
+            "56": "/dev/davinci_manager",
+            "57": "/dev/davinci_manager",
+            "58": "/dev/davinci_manager",
+            "59": "/dev/davinci_manager",
+            "60": "/dev/davinci_manager",
+            "61": "/dev/davinci_manager",
+            "62": "/dev/davinci_manager",
+            "63": "/dev/davinci_manager",
+            "64": "/dev/davinci_manager",
+            "65": "/dev/hisi_hdc",
+            "66": "anon_inode:[eventpoll]",
+            "67": "anon_inode:[eventfd]",
+            "68": "/dev/hisi_hdc",
+            "69": "/dev/hisi_hdc",
+            "70": "anon_inode:[eventpoll]",
+            "71": "socket:[358930688]",
+            "78": "/dev/hisi_hdc",
+            "83": "/dev/hisi_hdc",
+            "88": "/dev/hisi_hdc",
+            "93": "/dev/hisi_hdc",
+            "94": "/dev/hisi_hdc"
+          },
+          "socket_states": {
+            "358913222": {
+              "protocol": "tcp",
+              "state_hex": "0A"
+            }
+          }
+        },
+        "resource_sample_time_ns": 1792276761880603922
+      },
+      {
+        "round": 19,
+        "requests": [
+          {
+            "case": "retrieval-65536-middle",
+            "ttft_ms": 9927.701969165355,
+            "request_started_ms_since_run": 349266.1246107891,
+            "first_text_ms_since_run": 359193.8265799545,
+            "text_chunks": 4,
+            "chunk_intervals_ms": [
+              33.76602195203304,
+              44.97450590133667,
+              24.35537101700902
+            ],
+            "total_ms": 10923.281081952155,
+            "usage": {
+              "prompt_tokens": 65520,
+              "total_tokens": 65525,
+              "completion_tokens": 5
+            }
+          },
+          {
+            "case": "arithmetic",
+            "ttft_ms": 301.93003825843334,
+            "request_started_ms_since_run": 349270.4653828405,
+            "first_text_ms_since_run": 349572.3954210989,
+            "text_chunks": 7,
+            "chunk_intervals_ms": [
+              29.12452258169651,
+              27.949136216193438,
+              27.87849400192499,
+              27.611382771283388,
+              27.79708430171013,
+              28.66924088448286
+            ],
+            "total_ms": 518.6359388753772,
+            "usage": {
+              "prompt_tokens": 12,
+              "total_tokens": 20,
+              "completion_tokens": 8
+            }
+          },
+          {
+            "case": "geography",
+            "ttft_ms": 301.76621628925204,
+            "request_started_ms_since_run": 349270.5820137635,
+            "first_text_ms_since_run": 349572.34823005274,
+            "text_chunks": 7,
+            "chunk_intervals_ms": [
+              29.13490403443575,
+              27.953865006566048,
+              27.879914734512568,
+              27.612242847681046,
+              27.794494293630123,
+              28.62187009304762
+            ],
+            "total_ms": 509.00582829490304,
+            "usage": {
+              "prompt_tokens": 15,
+              "total_tokens": 23,
+              "completion_tokens": 8
+            }
+          },
+          {
+            "case": "chinese",
+            "ttft_ms": 1682.4006447568536,
+            "request_started_ms_since_run": 349270.72282508016,
+            "first_text_ms_since_run": 350953.123469837,
+            "text_chunks": 16,
+            "chunk_intervals_ms": [
+              510.78766118735075,
+              518.7196489423513,
+              528.7441527470946,
+              538.811257109046,
+              543.865623883903,
+              539.8424342274666,
+              546.4861309155822,
+              553.7656890228391,
+              552.6590198278427,
+              563.2317801937461,
+              566.8299361132085,
+              573.1304329819977,
+              579.1506581008434,
+              1124.5549046434462,
+              33.82948227226734
+            ],
+            "total_ms": 10002.024383749813,
+            "usage": {
+              "prompt_tokens": 14,
+              "total_tokens": 31,
+              "completion_tokens": 17
+            }
+          }
+        ],
+        "recovery": {
+          "ttft_ms": 270.09109407663345,
+          "request_started_ms_since_run": 360515.7574159093,
+          "first_text_ms_since_run": 360785.84850998595,
+          "text_chunks": 7,
+          "chunk_intervals_ms": [
+            24.023268837481737,
+            22.687959019094706,
+            22.85538101568818,
+            22.569938097149134,
+            22.357876878231764,
+            22.361867129802704
+          ],
+          "total_ms": 439.34417609125376,
+          "usage": {
+            "prompt_tokens": 12,
+            "total_tokens": 20,
+            "completion_tokens": 8
+          }
+        },
+        "process_resources": {
+          "rss_bytes": 6870495232,
+          "peak_rss_bytes": 6870495232,
+          "threads": 663,
+          "file_descriptors": 76,
+          "fd_targets": {
+            "0": "pipe:[358824326]",
+            "1": "/data/p00603624/inferfabric/openpangu92/release-order64k-load-http/server.log",
+            "2": "/data/p00603624/inferfabric/openpangu92/release-order64k-load-http/server.log",
+            "3": "anon_inode:[eventpoll]",
+            "4": "anon_inode:[eventfd]",
+            "5": "anon_inode:[eventpoll]",
+            "6": "socket:[358930688]",
+            "7": "socket:[358930689]",
+            "8": "socket:[358930688]",
+            "9": "/dev/davinci_manager",
+            "10": "/dev/davinci_manager",
+            "11": "/dev/davinci_manager",
+            "12": "/dev/hisi_hdc",
+            "13": "/dev/hisi_hdc",
+            "14": "/dev/hisi_hdc",
+            "15": "/dev/hisi_hdc",
+            "16": "/dev/davinci_manager",
+            "17": "/dev/davinci_manager",
+            "18": "/dev/davinci_manager",
+            "19": "/dev/davinci_manager",
+            "20": "/dev/davinci_manager",
+            "21": "socket:[358913222]",
+            "23": "/dev/hisi_hdc",
+            "24": "/dev/hisi_hdc",
+            "25": "/dev/hisi_hdc",
+            "26": "/dev/hisi_hdc",
+            "27": "/dev/hisi_hdc",
+            "28": "/dev/hisi_hdc",
+            "29": "/dev/hisi_hdc",
+            "30": "/dev/davinci_manager",
+            "31": "/dev/hisi_hdc",
+            "32": "/dev/hisi_hdc",
+            "33": "/dev/hisi_hdc",
+            "34": "/dev/hisi_hdc",
+            "35": "/dev/hisi_hdc",
+            "36": "/dev/hisi_hdc",
+            "37": "/dev/hisi_hdc",
+            "38": "/dev/hisi_hdc",
+            "39": "/dev/hisi_hdc",
+            "40": "/dev/hisi_hdc",
+            "41": "/dev/hisi_hdc",
+            "42": "/dev/hisi_hdc",
+            "43": "/dev/hisi_hdc",
+            "44": "/dev/hisi_hdc",
+            "45": "/dev/davinci_manager",
+            "46": "/dev/davinci_manager",
+            "47": "/dev/davinci_manager",
+            "48": "/dev/davinci_manager",
+            "49": "/dev/davinci_manager",
+            "50": "/dev/davinci_manager",
+            "51": "/dev/davinci_manager",
+            "52": "/dev/davinci_manager",
+            "53": "/dev/davinci_manager",
+            "54": "/dev/davinci_manager",
+            "55": "/dev/davinci_manager",
+            "56": "/dev/davinci_manager",
+            "57": "/dev/davinci_manager",
+            "58": "/dev/davinci_manager",
+            "59": "/dev/davinci_manager",
+            "60": "/dev/davinci_manager",
+            "61": "/dev/davinci_manager",
+            "62": "/dev/davinci_manager",
+            "63": "/dev/davinci_manager",
+            "64": "/dev/davinci_manager",
+            "65": "/dev/hisi_hdc",
+            "66": "anon_inode:[eventpoll]",
+            "67": "anon_inode:[eventfd]",
+            "68": "/dev/hisi_hdc",
+            "69": "/dev/hisi_hdc",
+            "70": "anon_inode:[eventpoll]",
+            "71": "socket:[358930688]",
+            "78": "/dev/hisi_hdc",
+            "83": "/dev/hisi_hdc",
+            "88": "/dev/hisi_hdc",
+            "93": "/dev/hisi_hdc",
+            "94": "/dev/hisi_hdc"
+          },
+          "socket_states": {
+            "358913222": {
+              "protocol": "tcp",
+              "state_hex": "0A"
+            }
+          }
+        },
+        "resource_sample_time_ns": 1792276773579732918
+      },
+      {
+        "round": 20,
+        "requests": [
+          {
+            "case": "retrieval-65536-late",
+            "ttft_ms": 10015.095300972462,
+            "request_started_ms_since_run": 360965.4067289084,
+            "first_text_ms_since_run": 370980.5020298809,
+            "text_chunks": 4,
+            "chunk_intervals_ms": [
+              27.807067148387432,
+              24.541832972317934,
+              23.8612680695951
+            ],
+            "total_ms": 10984.204296022654,
+            "usage": {
+              "prompt_tokens": 65520,
+              "total_tokens": 65525,
+              "completion_tokens": 5
+            }
+          },
+          {
+            "case": "geography",
+            "ttft_ms": 302.7484770864248,
+            "request_started_ms_since_run": 360969.8306019418,
+            "first_text_ms_since_run": 361272.5790790282,
+            "text_chunks": 7,
+            "chunk_intervals_ms": [
+              32.26865082979202,
+              27.93963812291622,
+              27.811387088149786,
+              27.845827862620354,
+              27.777256909757853,
+              27.66038617119193
+            ],
+            "total_ms": 511.08063012361526,
+            "usage": {
+              "prompt_tokens": 15,
+              "total_tokens": 23,
+              "completion_tokens": 8
+            }
+          },
+          {
+            "case": "chinese",
+            "ttft_ms": 302.5683560408652,
+            "request_started_ms_since_run": 360969.95927300304,
+            "first_text_ms_since_run": 361272.5276290439,
+            "text_chunks": 16,
+            "chunk_intervals_ms": [
+              32.28311100974679,
+              27.942707762122154,
+              27.81084692105651,
+              27.845248114317656,
+              27.78228698298335,
+              27.662355918437243,
+              27.733777184039354,
+              256.6377129405737,
+              30.121065210551023,
+              28.710543643683195,
+              28.660394251346588,
+              28.412201907485723,
+              635.2825360372663,
+              508.3991209976375,
+              514.232053887099
+            ],
+            "total_ms": 3071.3876197114587,
+            "usage": {
+              "prompt_tokens": 14,
+              "total_tokens": 31,
+              "completion_tokens": 17
+            }
+          },
+          {
+            "case": "access-code-529",
+            "ttft_ms": 758.1367031671107,
+            "request_started_ms_since_run": 360970.1296938583,
+            "first_text_ms_since_run": 361728.26639702544,
+            "text_chunks": 4,
+            "chunk_intervals_ms": [
+              30.110104009509087,
+              28.70731381699443,
+              28.65911414846778
+            ],
+            "total_ms": 895.38608584553,
+            "usage": {
+              "prompt_tokens": 529,
+              "total_tokens": 534,
+              "completion_tokens": 5
+            }
+          }
+        ],
+        "recovery": {
+          "ttft_ms": 282.2341490536928,
+          "request_started_ms_since_run": 372297.7763209492,
+          "first_text_ms_since_run": 372580.0104700029,
+          "text_chunks": 7,
+          "chunk_intervals_ms": [
+            23.699966724961996,
+            22.313287016004324,
+            22.703910246491432,
+            22.18540571630001,
+            22.88697101175785,
+            23.23414431884885
+          ],
+          "total_ms": 452.61739287525415,
+          "usage": {
+            "prompt_tokens": 12,
+            "total_tokens": 20,
+            "completion_tokens": 8
+          }
+        },
+        "process_resources": {
+          "rss_bytes": 6871121920,
+          "peak_rss_bytes": 6871121920,
+          "threads": 663,
+          "file_descriptors": 76,
+          "fd_targets": {
+            "0": "pipe:[358824326]",
+            "1": "/data/p00603624/inferfabric/openpangu92/release-order64k-load-http/server.log",
+            "2": "/data/p00603624/inferfabric/openpangu92/release-order64k-load-http/server.log",
+            "3": "anon_inode:[eventpoll]",
+            "4": "anon_inode:[eventfd]",
+            "5": "anon_inode:[eventpoll]",
+            "6": "socket:[358930688]",
+            "7": "socket:[358930689]",
+            "8": "socket:[358930688]",
+            "9": "/dev/davinci_manager",
+            "10": "/dev/davinci_manager",
+            "11": "/dev/davinci_manager",
+            "12": "/dev/hisi_hdc",
+            "13": "/dev/hisi_hdc",
+            "14": "/dev/hisi_hdc",
+            "15": "/dev/hisi_hdc",
+            "16": "/dev/davinci_manager",
+            "17": "/dev/davinci_manager",
+            "18": "/dev/davinci_manager",
+            "19": "/dev/davinci_manager",
+            "20": "/dev/davinci_manager",
+            "21": "socket:[358913222]",
+            "23": "/dev/hisi_hdc",
+            "24": "/dev/hisi_hdc",
+            "25": "/dev/hisi_hdc",
+            "26": "/dev/hisi_hdc",
+            "27": "/dev/hisi_hdc",
+            "28": "/dev/hisi_hdc",
+            "29": "/dev/hisi_hdc",
+            "30": "/dev/davinci_manager",
+            "31": "/dev/hisi_hdc",
+            "32": "/dev/hisi_hdc",
+            "33": "/dev/hisi_hdc",
+            "34": "/dev/hisi_hdc",
+            "35": "/dev/hisi_hdc",
+            "36": "/dev/hisi_hdc",
+            "37": "/dev/hisi_hdc",
+            "38": "/dev/hisi_hdc",
+            "39": "/dev/hisi_hdc",
+            "40": "/dev/hisi_hdc",
+            "41": "/dev/hisi_hdc",
+            "42": "/dev/hisi_hdc",
+            "43": "/dev/hisi_hdc",
+            "44": "/dev/hisi_hdc",
+            "45": "/dev/davinci_manager",
+            "46": "/dev/davinci_manager",
+            "47": "/dev/davinci_manager",
+            "48": "/dev/davinci_manager",
+            "49": "/dev/davinci_manager",
+            "50": "/dev/davinci_manager",
+            "51": "/dev/davinci_manager",
+            "52": "/dev/davinci_manager",
+            "53": "/dev/davinci_manager",
+            "54": "/dev/davinci_manager",
+            "55": "/dev/davinci_manager",
+            "56": "/dev/davinci_manager",
+            "57": "/dev/davinci_manager",
+            "58": "/dev/davinci_manager",
+            "59": "/dev/davinci_manager",
+            "60": "/dev/davinci_manager",
+            "61": "/dev/davinci_manager",
+            "62": "/dev/davinci_manager",
+            "63": "/dev/davinci_manager",
+            "64": "/dev/davinci_manager",
+            "65": "/dev/hisi_hdc",
+            "66": "anon_inode:[eventpoll]",
+            "67": "anon_inode:[eventfd]",
+            "68": "/dev/hisi_hdc",
+            "69": "/dev/hisi_hdc",
+            "70": "anon_inode:[eventpoll]",
+            "71": "socket:[358930688]",
+            "78": "/dev/hisi_hdc",
+            "83": "/dev/hisi_hdc",
+            "88": "/dev/hisi_hdc",
+            "93": "/dev/hisi_hdc",
+            "94": "/dev/hisi_hdc"
+          },
+          "socket_states": {
+            "358913222": {
+              "protocol": "tcp",
+              "state_hex": "0A"
+            }
+          }
+        },
+        "resource_sample_time_ns": 1792276785375166402
+      },
+      {
+        "round": 21,
+        "requests": [
+          {
+            "case": "retrieval-65536-early",
+            "ttft_ms": 10026.805714704096,
+            "request_started_ms_since_run": 372761.06304395944,
+            "first_text_ms_since_run": 382787.86875866354,
+            "text_chunks": 4,
+            "chunk_intervals_ms": [
+              30.114145018160343,
+              23.73787807300687,
+              24.170220363885164
+            ],
+            "total_ms": 11000.513596925884,
+            "usage": {
+              "prompt_tokens": 65520,
+              "total_tokens": 65525,
+              "completion_tokens": 5
+            }
+          },
+          {
+            "case": "chinese",
+            "ttft_ms": 306.06176890432835,
+            "request_started_ms_since_run": 372765.4674970545,
+            "first_text_ms_since_run": 373071.5292659588,
+            "text_chunks": 16,
+            "chunk_intervals_ms": [
+              29.31620879098773,
+              27.820538263767958,
+              28.076899703592062,
+              27.96988934278488,
+              27.611396741122007,
+              27.648346964269876,
+              27.64340629801154,
+              263.41651985421777,
+              30.124555807560682,
+              28.739425353705883,
+              28.52287283167243,
+              28.36282178759575,
+              635.8649153262377,
+              505.9141740202904,
+              510.266805998981
+            ],
+            "total_ms": 3060.399876907468,
+            "usage": {
+              "prompt_tokens": 14,
+              "total_tokens": 31,
+              "completion_tokens": 17
+            }
+          },
+          {
+            "case": "access-code-529",
+            "ttft_ms": 765.4506051912904,
+            "request_started_ms_since_run": 372765.6194376759,
+            "first_text_ms_since_run": 373531.0700428672,
+            "text_chunks": 4,
+            "chunk_intervals_ms": [
+              30.11604491621256,
+              28.73798506334424,
+              28.521763160824776
+            ],
+            "total_ms": 902.9821832664311,
+            "usage": {
+              "prompt_tokens": 529,
+              "total_tokens": 534,
+              "completion_tokens": 5
+            }
+          },
+          {
+            "case": "arithmetic",
+            "ttft_ms": 305.74320582672954,
+            "request_started_ms_since_run": 372765.8232199028,
+            "first_text_ms_since_run": 373071.56642572954,
+            "text_chunks": 7,
+            "chunk_intervals_ms": [
+              29.306229203939438,
+              27.819308917969465,
+              28.07754883542657,
+              27.96880016103387,
+              27.61028613895178,
+              27.64808712527156
+            ],
+            "total_ms": 512.2423209249973,
+            "usage": {
+              "prompt_tokens": 12,
+              "total_tokens": 20,
+              "completion_tokens": 8
+            }
+          }
+        ],
+        "recovery": {
+          "ttft_ms": 309.61104575544596,
+          "request_started_ms_since_run": 384177.9234940186,
+          "first_text_ms_since_run": 384487.53453977406,
+          "text_chunks": 7,
+          "chunk_intervals_ms": [
+            22.808410227298737,
+            21.96414489299059,
+            21.86474297195673,
+            21.80056320503354,
+            21.388310007750988,
+            21.935833618044853
+          ],
+          "total_ms": 480.37191294133663,
+          "usage": {
+            "prompt_tokens": 12,
+            "total_tokens": 20,
+            "completion_tokens": 8
+          }
+        },
+        "process_resources": {
+          "rss_bytes": 6871863296,
+          "peak_rss_bytes": 6871863296,
+          "threads": 663,
+          "file_descriptors": 76,
+          "fd_targets": {
+            "0": "pipe:[358824326]",
+            "1": "/data/p00603624/inferfabric/openpangu92/release-order64k-load-http/server.log",
+            "2": "/data/p00603624/inferfabric/openpangu92/release-order64k-load-http/server.log",
+            "3": "anon_inode:[eventpoll]",
+            "4": "anon_inode:[eventfd]",
+            "5": "anon_inode:[eventpoll]",
+            "6": "socket:[358930688]",
+            "7": "socket:[358930689]",
+            "8": "socket:[358930688]",
+            "9": "/dev/davinci_manager",
+            "10": "/dev/davinci_manager",
+            "11": "/dev/davinci_manager",
+            "12": "/dev/hisi_hdc",
+            "13": "/dev/hisi_hdc",
+            "14": "/dev/hisi_hdc",
+            "15": "/dev/hisi_hdc",
+            "16": "/dev/davinci_manager",
+            "17": "/dev/davinci_manager",
+            "18": "/dev/davinci_manager",
+            "19": "/dev/davinci_manager",
+            "20": "/dev/davinci_manager",
+            "21": "socket:[358913222]",
+            "23": "/dev/hisi_hdc",
+            "24": "/dev/hisi_hdc",
+            "25": "/dev/hisi_hdc",
+            "26": "/dev/hisi_hdc",
+            "27": "/dev/hisi_hdc",
+            "28": "/dev/hisi_hdc",
+            "29": "/dev/hisi_hdc",
+            "30": "/dev/davinci_manager",
+            "31": "/dev/hisi_hdc",
+            "32": "/dev/hisi_hdc",
+            "33": "/dev/hisi_hdc",
+            "34": "/dev/hisi_hdc",
+            "35": "/dev/hisi_hdc",
+            "36": "/dev/hisi_hdc",
+            "37": "/dev/hisi_hdc",
+            "38": "/dev/hisi_hdc",
+            "39": "/dev/hisi_hdc",
+            "40": "/dev/hisi_hdc",
+            "41": "/dev/hisi_hdc",
+            "42": "/dev/hisi_hdc",
+            "43": "/dev/hisi_hdc",
+            "44": "/dev/hisi_hdc",
+            "45": "/dev/davinci_manager",
+            "46": "/dev/davinci_manager",
+            "47": "/dev/davinci_manager",
+            "48": "/dev/davinci_manager",
+            "49": "/dev/davinci_manager",
+            "50": "/dev/davinci_manager",
+            "51": "/dev/davinci_manager",
+            "52": "/dev/davinci_manager",
+            "53": "/dev/davinci_manager",
+            "54": "/dev/davinci_manager",
+            "55": "/dev/davinci_manager",
+            "56": "/dev/davinci_manager",
+            "57": "/dev/davinci_manager",
+            "58": "/dev/davinci_manager",
+            "59": "/dev/davinci_manager",
+            "60": "/dev/davinci_manager",
+            "61": "/dev/davinci_manager",
+            "62": "/dev/davinci_manager",
+            "63": "/dev/davinci_manager",
+            "64": "/dev/davinci_manager",
+            "65": "/dev/hisi_hdc",
+            "66": "anon_inode:[eventpoll]",
+            "67": "anon_inode:[eventfd]",
+            "68": "/dev/hisi_hdc",
+            "69": "/dev/hisi_hdc",
+            "70": "anon_inode:[eventpoll]",
+            "71": "socket:[358930688]",
+            "78": "/dev/hisi_hdc",
+            "83": "/dev/hisi_hdc",
+            "88": "/dev/hisi_hdc",
+            "93": "/dev/hisi_hdc",
+            "94": "/dev/hisi_hdc"
+          },
+          "socket_states": {
+            "358913222": {
+              "protocol": "tcp",
+              "state_hex": "0A"
+            }
+          }
+        },
+        "resource_sample_time_ns": 1792276797282904073
+      },
+      {
+        "round": 22,
+        "requests": [
+          {
+            "case": "retrieval-65536-middle",
+            "ttft_ms": 9831.52534486726,
+            "request_started_ms_since_run": 384668.93650591373,
+            "first_text_ms_since_run": 394500.461850781,
+            "text_chunks": 4,
+            "chunk_intervals_ms": [
+              27.287343982607126,
+              24.35773191973567,
+              24.249961134046316
+            ],
+            "total_ms": 10798.252744134516,
+            "usage": {
+              "prompt_tokens": 65520,
+              "total_tokens": 65525,
+              "completion_tokens": 5
+            }
+          },
+          {
+            "case": "access-code-529",
+            "ttft_ms": 1778.5923411138356,
+            "request_started_ms_since_run": 384673.40413993225,
+            "first_text_ms_since_run": 386451.9964810461,
+            "text_chunks": 4,
+            "chunk_intervals_ms": [
+              512.8756049089134,
+              520.8048648200929,
+              525.1247170381248
+            ],
+            "total_ms": 3892.5697300583124,
+            "usage": {
+              "prompt_tokens": 529,
+              "total_tokens": 534,
+              "completion_tokens": 5
+            }
+          },
+          {
+            "case": "arithmetic",
+            "ttft_ms": 354.3880400247872,
+            "request_started_ms_since_run": 384673.5912207514,
+            "first_text_ms_since_run": 385027.9792607762,
+            "text_chunks": 7,
+            "chunk_intervals_ms": [
+              28.217492159456015,
+              27.082521934062243,
+              27.0066917873919,
+              26.81553130969405,
+              26.771879754960537,
+              26.7331600189209
+            ],
+            "total_ms": 574.8957199975848,
+            "usage": {
+              "prompt_tokens": 12,
+              "total_tokens": 20,
+              "completion_tokens": 8
+            }
+          },
+          {
+            "case": "geography",
+            "ttft_ms": 354.1569788940251,
+            "request_started_ms_since_run": 384673.7480619922,
+            "first_text_ms_since_run": 385027.90504088625,
+            "text_chunks": 7,
+            "chunk_intervals_ms": [
+              28.261571191251278,
+              27.09009265527129,
+              27.003152295947075,
+              26.81493991985917,
+              26.773591060191393,
+              26.73318888992071
+            ],
+            "total_ms": 561.0401458106935,
+            "usage": {
+              "prompt_tokens": 15,
+              "total_tokens": 23,
+              "completion_tokens": 8
+            }
+          }
+        ],
+        "recovery": {
+          "ttft_ms": 276.05240512639284,
+          "request_started_ms_since_run": 395722.8701119311,
+          "first_text_ms_since_run": 395998.9225170575,
+          "text_chunks": 7,
+          "chunk_intervals_ms": [
+            24.07199004665017,
+            22.88344083353877,
+            22.874941118061543,
+            22.876081056892872,
+            22.903410717844963,
+            22.877632174640894
+          ],
+          "total_ms": 449.19714983552694,
+          "usage": {
+            "prompt_tokens": 12,
+            "total_tokens": 20,
+            "completion_tokens": 8
+          }
+        },
+        "process_resources": {
+          "rss_bytes": 6872481792,
+          "peak_rss_bytes": 6872481792,
+          "threads": 663,
+          "file_descriptors": 76,
+          "fd_targets": {
+            "0": "pipe:[358824326]",
+            "1": "/data/p00603624/inferfabric/openpangu92/release-order64k-load-http/server.log",
+            "2": "/data/p00603624/inferfabric/openpangu92/release-order64k-load-http/server.log",
+            "3": "anon_inode:[eventpoll]",
+            "4": "anon_inode:[eventfd]",
+            "5": "anon_inode:[eventpoll]",
+            "6": "socket:[358930688]",
+            "7": "socket:[358930689]",
+            "8": "socket:[358930688]",
+            "9": "/dev/davinci_manager",
+            "10": "/dev/davinci_manager",
+            "11": "/dev/davinci_manager",
+            "12": "/dev/hisi_hdc",
+            "13": "/dev/hisi_hdc",
+            "14": "/dev/hisi_hdc",
+            "15": "/dev/hisi_hdc",
+            "16": "/dev/davinci_manager",
+            "17": "/dev/davinci_manager",
+            "18": "/dev/davinci_manager",
+            "19": "/dev/davinci_manager",
+            "20": "/dev/davinci_manager",
+            "21": "socket:[358913222]",
+            "23": "/dev/hisi_hdc",
+            "24": "/dev/hisi_hdc",
+            "25": "/dev/hisi_hdc",
+            "26": "/dev/hisi_hdc",
+            "27": "/dev/hisi_hdc",
+            "28": "/dev/hisi_hdc",
+            "29": "/dev/hisi_hdc",
+            "30": "/dev/davinci_manager",
+            "31": "/dev/hisi_hdc",
+            "32": "/dev/hisi_hdc",
+            "33": "/dev/hisi_hdc",
+            "34": "/dev/hisi_hdc",
+            "35": "/dev/hisi_hdc",
+            "36": "/dev/hisi_hdc",
+            "37": "/dev/hisi_hdc",
+            "38": "/dev/hisi_hdc",
+            "39": "/dev/hisi_hdc",
+            "40": "/dev/hisi_hdc",
+            "41": "/dev/hisi_hdc",
+            "42": "/dev/hisi_hdc",
+            "43": "/dev/hisi_hdc",
+            "44": "/dev/hisi_hdc",
+            "45": "/dev/davinci_manager",
+            "46": "/dev/davinci_manager",
+            "47": "/dev/davinci_manager",
+            "48": "/dev/davinci_manager",
+            "49": "/dev/davinci_manager",
+            "50": "/dev/davinci_manager",
+            "51": "/dev/davinci_manager",
+            "52": "/dev/davinci_manager",
+            "53": "/dev/davinci_manager",
+            "54": "/dev/davinci_manager",
+            "55": "/dev/davinci_manager",
+            "56": "/dev/davinci_manager",
+            "57": "/dev/davinci_manager",
+            "58": "/dev/davinci_manager",
+            "59": "/dev/davinci_manager",
+            "60": "/dev/davinci_manager",
+            "61": "/dev/davinci_manager",
+            "62": "/dev/davinci_manager",
+            "63": "/dev/davinci_manager",
+            "64": "/dev/davinci_manager",
+            "65": "/dev/hisi_hdc",
+            "66": "anon_inode:[eventpoll]",
+            "67": "anon_inode:[eventfd]",
+            "68": "/dev/hisi_hdc",
+            "69": "/dev/hisi_hdc",
+            "70": "anon_inode:[eventpoll]",
+            "71": "socket:[358930688]",
+            "78": "/dev/hisi_hdc",
+            "83": "/dev/hisi_hdc",
+            "88": "/dev/hisi_hdc",
+            "93": "/dev/hisi_hdc",
+            "94": "/dev/hisi_hdc"
+          },
+          "socket_states": {
+            "358913222": {
+              "protocol": "tcp",
+              "state_hex": "0A"
+            }
+          }
+        },
+        "resource_sample_time_ns": 1792276808796678258
+      },
+      {
+        "round": 23,
+        "requests": [
+          {
+            "case": "retrieval-65536-late",
+            "ttft_ms": 9949.117973912507,
+            "request_started_ms_since_run": 396182.9459727742,
+            "first_text_ms_since_run": 406132.0639466867,
+            "text_chunks": 4,
+            "chunk_intervals_ms": [
+              40.341722313314676,
+              41.38221871107817,
+              24.9061263166368
+            ],
+            "total_ms": 10941.333814058453,
+            "usage": {
+              "prompt_tokens": 65520,
+              "total_tokens": 65525,
+              "completion_tokens": 5
+            }
+          },
+          {
+            "case": "arithmetic",
+            "ttft_ms": 304.5288771390915,
+            "request_started_ms_since_run": 396187.3566857539,
+            "first_text_ms_since_run": 396491.885562893,
+            "text_chunks": 7,
+            "chunk_intervals_ms": [
+              29.520520940423012,
+              28.39047322049737,
+              28.56756281107664,
+              28.248561080545187,
+              28.20434095337987,
+              28.361462987959385
+            ],
+            "total_ms": 522.8310800157487,
+            "usage": {
+              "prompt_tokens": 12,
+              "total_tokens": 20,
+              "completion_tokens": 8
+            }
+          },
+          {
+            "case": "geography",
+            "ttft_ms": 304.41754683852196,
+            "request_started_ms_since_run": 396187.5042170286,
+            "first_text_ms_since_run": 396491.92176386714,
+            "text_chunks": 7,
+            "chunk_intervals_ms": [
+              29.434840194880962,
+              28.46816275268793,
+              28.565343003720045,
+              28.24869193136692,
+              28.204011265188456,
+              28.31060066819191
+            ],
+            "total_ms": 513.5451010428369,
+            "usage": {
+              "prompt_tokens": 15,
+              "total_tokens": 23,
+              "completion_tokens": 8
+            }
+          },
+          {
+            "case": "chinese",
+            "ttft_ms": 1690.1441998779774,
+            "request_started_ms_since_run": 396187.6652580686,
+            "first_text_ms_since_run": 397877.80945794657,
+            "text_chunks": 16,
+            "chunk_intervals_ms": [
+              511.3451140932739,
+              519.0028706565499,
+              526.7923204228282,
+              532.3707708157599,
+              536.0314487479627,
+              541.774052195251,
+              557.2855770587921,
+              555.9466178528965,
+              566.215614322573,
+              562.0662439614534,
+              567.2387517988682,
+              573.4426681883633,
+              578.0981127172709,
+              1126.5037250705063,
+              40.42955208569765
+            ],
+            "total_ms": 10026.291450951248,
+            "usage": {
+              "prompt_tokens": 14,
+              "total_tokens": 31,
+              "completion_tokens": 17
+            }
+          }
+        ],
+        "recovery": {
+          "ttft_ms": 267.1828381717205,
+          "request_started_ms_since_run": 407374.5512487367,
+          "first_text_ms_since_run": 407641.7340869084,
+          "text_chunks": 7,
+          "chunk_intervals_ms": [
+            23.77102803438902,
+            22.883780766278505,
+            22.793250158429146,
+            22.708170115947723,
+            22.673349827528,
+            22.606548853218555
+          ],
+          "total_ms": 437.96031503006816,
+          "usage": {
+            "prompt_tokens": 12,
+            "total_tokens": 20,
+            "completion_tokens": 8
+          }
+        },
+        "process_resources": {
+          "rss_bytes": 6873378816,
+          "peak_rss_bytes": 6873378816,
+          "threads": 663,
+          "file_descriptors": 76,
+          "fd_targets": {
+            "0": "pipe:[358824326]",
+            "1": "/data/p00603624/inferfabric/openpangu92/release-order64k-load-http/server.log",
+            "2": "/data/p00603624/inferfabric/openpangu92/release-order64k-load-http/server.log",
+            "3": "anon_inode:[eventpoll]",
+            "4": "anon_inode:[eventfd]",
+            "5": "anon_inode:[eventpoll]",
+            "6": "socket:[358930688]",
+            "7": "socket:[358930689]",
+            "8": "socket:[358930688]",
+            "9": "/dev/davinci_manager",
+            "10": "/dev/davinci_manager",
+            "11": "/dev/davinci_manager",
+            "12": "/dev/hisi_hdc",
+            "13": "/dev/hisi_hdc",
+            "14": "/dev/hisi_hdc",
+            "15": "/dev/hisi_hdc",
+            "16": "/dev/davinci_manager",
+            "17": "/dev/davinci_manager",
+            "18": "/dev/davinci_manager",
+            "19": "/dev/davinci_manager",
+            "20": "/dev/davinci_manager",
+            "21": "socket:[358913222]",
+            "23": "/dev/hisi_hdc",
+            "24": "/dev/hisi_hdc",
+            "25": "/dev/hisi_hdc",
+            "26": "/dev/hisi_hdc",
+            "27": "/dev/hisi_hdc",
+            "28": "/dev/hisi_hdc",
+            "29": "/dev/hisi_hdc",
+            "30": "/dev/davinci_manager",
+            "31": "/dev/hisi_hdc",
+            "32": "/dev/hisi_hdc",
+            "33": "/dev/hisi_hdc",
+            "34": "/dev/hisi_hdc",
+            "35": "/dev/hisi_hdc",
+            "36": "/dev/hisi_hdc",
+            "37": "/dev/hisi_hdc",
+            "38": "/dev/hisi_hdc",
+            "39": "/dev/hisi_hdc",
+            "40": "/dev/hisi_hdc",
+            "41": "/dev/hisi_hdc",
+            "42": "/dev/hisi_hdc",
+            "43": "/dev/hisi_hdc",
+            "44": "/dev/hisi_hdc",
+            "45": "/dev/davinci_manager",
+            "46": "/dev/davinci_manager",
+            "47": "/dev/davinci_manager",
+            "48": "/dev/davinci_manager",
+            "49": "/dev/davinci_manager",
+            "50": "/dev/davinci_manager",
+            "51": "/dev/davinci_manager",
+            "52": "/dev/davinci_manager",
+            "53": "/dev/davinci_manager",
+            "54": "/dev/davinci_manager",
+            "55": "/dev/davinci_manager",
+            "56": "/dev/davinci_manager",
+            "57": "/dev/davinci_manager",
+            "58": "/dev/davinci_manager",
+            "59": "/dev/davinci_manager",
+            "60": "/dev/davinci_manager",
+            "61": "/dev/davinci_manager",
+            "62": "/dev/davinci_manager",
+            "63": "/dev/davinci_manager",
+            "64": "/dev/davinci_manager",
+            "65": "/dev/hisi_hdc",
+            "66": "anon_inode:[eventpoll]",
+            "67": "anon_inode:[eventfd]",
+            "68": "/dev/hisi_hdc",
+            "69": "/dev/hisi_hdc",
+            "70": "anon_inode:[eventpoll]",
+            "71": "socket:[358930688]",
+            "78": "/dev/hisi_hdc",
+            "83": "/dev/hisi_hdc",
+            "88": "/dev/hisi_hdc",
+            "93": "/dev/hisi_hdc",
+            "94": "/dev/hisi_hdc"
+          },
+          "socket_states": {
+            "358913222": {
+              "protocol": "tcp",
+              "state_hex": "0A"
+            }
+          }
+        },
+        "resource_sample_time_ns": 1792276820437151070
+      }
+    ],
+    "resource_growth": {
+      "baseline": {
+        "rss_bytes": 6798073856,
+        "peak_rss_bytes": 6798073856,
+        "threads": 663,
+        "file_descriptors": 76,
+        "fd_targets": {
+          "0": "pipe:[358824326]",
+          "1": "/data/p00603624/inferfabric/openpangu92/release-order64k-load-http/server.log",
+          "2": "/data/p00603624/inferfabric/openpangu92/release-order64k-load-http/server.log",
+          "3": "anon_inode:[eventpoll]",
+          "4": "anon_inode:[eventfd]",
+          "5": "anon_inode:[eventpoll]",
+          "6": "socket:[358930688]",
+          "7": "socket:[358930689]",
+          "8": "socket:[358930688]",
+          "9": "/dev/davinci_manager",
+          "10": "/dev/davinci_manager",
+          "11": "/dev/davinci_manager",
+          "12": "/dev/hisi_hdc",
+          "13": "/dev/hisi_hdc",
+          "14": "/dev/hisi_hdc",
+          "15": "/dev/hisi_hdc",
+          "16": "/dev/davinci_manager",
+          "17": "/dev/davinci_manager",
+          "18": "/dev/davinci_manager",
+          "19": "/dev/davinci_manager",
+          "20": "/dev/davinci_manager",
+          "21": "socket:[358913222]",
+          "23": "/dev/hisi_hdc",
+          "24": "/dev/hisi_hdc",
+          "25": "/dev/hisi_hdc",
+          "26": "/dev/hisi_hdc",
+          "27": "/dev/hisi_hdc",
+          "28": "/dev/hisi_hdc",
+          "29": "/dev/hisi_hdc",
+          "30": "/dev/davinci_manager",
+          "31": "/dev/hisi_hdc",
+          "32": "/dev/hisi_hdc",
+          "33": "/dev/hisi_hdc",
+          "34": "/dev/hisi_hdc",
+          "35": "/dev/hisi_hdc",
+          "36": "/dev/hisi_hdc",
+          "37": "/dev/hisi_hdc",
+          "38": "/dev/hisi_hdc",
+          "39": "/dev/hisi_hdc",
+          "40": "/dev/hisi_hdc",
+          "41": "/dev/hisi_hdc",
+          "42": "/dev/hisi_hdc",
+          "43": "/dev/hisi_hdc",
+          "44": "/dev/hisi_hdc",
+          "45": "/dev/davinci_manager",
+          "46": "/dev/davinci_manager",
+          "47": "/dev/davinci_manager",
+          "48": "/dev/davinci_manager",
+          "49": "/dev/davinci_manager",
+          "50": "/dev/davinci_manager",
+          "51": "/dev/davinci_manager",
+          "52": "/dev/davinci_manager",
+          "53": "/dev/davinci_manager",
+          "54": "/dev/davinci_manager",
+          "55": "/dev/davinci_manager",
+          "56": "/dev/davinci_manager",
+          "57": "/dev/davinci_manager",
+          "58": "/dev/davinci_manager",
+          "59": "/dev/davinci_manager",
+          "60": "/dev/davinci_manager",
+          "61": "/dev/davinci_manager",
+          "62": "/dev/davinci_manager",
+          "63": "/dev/davinci_manager",
+          "64": "/dev/davinci_manager",
+          "65": "/dev/hisi_hdc",
+          "66": "anon_inode:[eventpoll]",
+          "67": "anon_inode:[eventfd]",
+          "68": "/dev/hisi_hdc",
+          "69": "/dev/hisi_hdc",
+          "70": "anon_inode:[eventpoll]",
+          "71": "socket:[358930688]",
+          "78": "/dev/hisi_hdc",
+          "83": "/dev/hisi_hdc",
+          "88": "/dev/hisi_hdc",
+          "93": "/dev/hisi_hdc",
+          "94": "/dev/hisi_hdc"
+        },
+        "socket_states": {
+          "358913222": {
+            "protocol": "tcp",
+            "state_hex": "0A"
+          }
+        }
+      },
+      "final": {
+        "rss_bytes": 6873378816,
+        "peak_rss_bytes": 6873378816,
+        "threads": 663,
+        "file_descriptors": 76,
+        "fd_targets": {
+          "0": "pipe:[358824326]",
+          "1": "/data/p00603624/inferfabric/openpangu92/release-order64k-load-http/server.log",
+          "2": "/data/p00603624/inferfabric/openpangu92/release-order64k-load-http/server.log",
+          "3": "anon_inode:[eventpoll]",
+          "4": "anon_inode:[eventfd]",
+          "5": "anon_inode:[eventpoll]",
+          "6": "socket:[358930688]",
+          "7": "socket:[358930689]",
+          "8": "socket:[358930688]",
+          "9": "/dev/davinci_manager",
+          "10": "/dev/davinci_manager",
+          "11": "/dev/davinci_manager",
+          "12": "/dev/hisi_hdc",
+          "13": "/dev/hisi_hdc",
+          "14": "/dev/hisi_hdc",
+          "15": "/dev/hisi_hdc",
+          "16": "/dev/davinci_manager",
+          "17": "/dev/davinci_manager",
+          "18": "/dev/davinci_manager",
+          "19": "/dev/davinci_manager",
+          "20": "/dev/davinci_manager",
+          "21": "socket:[358913222]",
+          "23": "/dev/hisi_hdc",
+          "24": "/dev/hisi_hdc",
+          "25": "/dev/hisi_hdc",
+          "26": "/dev/hisi_hdc",
+          "27": "/dev/hisi_hdc",
+          "28": "/dev/hisi_hdc",
+          "29": "/dev/hisi_hdc",
+          "30": "/dev/davinci_manager",
+          "31": "/dev/hisi_hdc",
+          "32": "/dev/hisi_hdc",
+          "33": "/dev/hisi_hdc",
+          "34": "/dev/hisi_hdc",
+          "35": "/dev/hisi_hdc",
+          "36": "/dev/hisi_hdc",
+          "37": "/dev/hisi_hdc",
+          "38": "/dev/hisi_hdc",
+          "39": "/dev/hisi_hdc",
+          "40": "/dev/hisi_hdc",
+          "41": "/dev/hisi_hdc",
+          "42": "/dev/hisi_hdc",
+          "43": "/dev/hisi_hdc",
+          "44": "/dev/hisi_hdc",
+          "45": "/dev/davinci_manager",
+          "46": "/dev/davinci_manager",
+          "47": "/dev/davinci_manager",
+          "48": "/dev/davinci_manager",
+          "49": "/dev/davinci_manager",
+          "50": "/dev/davinci_manager",
+          "51": "/dev/davinci_manager",
+          "52": "/dev/davinci_manager",
+          "53": "/dev/davinci_manager",
+          "54": "/dev/davinci_manager",
+          "55": "/dev/davinci_manager",
+          "56": "/dev/davinci_manager",
+          "57": "/dev/davinci_manager",
+          "58": "/dev/davinci_manager",
+          "59": "/dev/davinci_manager",
+          "60": "/dev/davinci_manager",
+          "61": "/dev/davinci_manager",
+          "62": "/dev/davinci_manager",
+          "63": "/dev/davinci_manager",
+          "64": "/dev/davinci_manager",
+          "65": "/dev/hisi_hdc",
+          "66": "anon_inode:[eventpoll]",
+          "67": "anon_inode:[eventfd]",
+          "68": "/dev/hisi_hdc",
+          "69": "/dev/hisi_hdc",
+          "70": "anon_inode:[eventpoll]",
+          "71": "socket:[358930688]",
+          "78": "/dev/hisi_hdc",
+          "83": "/dev/hisi_hdc",
+          "88": "/dev/hisi_hdc",
+          "93": "/dev/hisi_hdc",
+          "94": "/dev/hisi_hdc"
+        },
+        "socket_states": {
+          "358913222": {
+            "protocol": "tcp",
+            "state_hex": "0A"
+          }
+        }
+      },
+      "maximum_growth": {
+        "rss_bytes": 75304960,
+        "threads": 0,
+        "file_descriptors": 0
+      },
+      "rss_limit_bytes": 134217728,
+      "passed": true,
+      "scope": "post-wave process counters; not continuous peak or device memory sampling"
+    }
+  },
+  "graceful_sigterm_shutdown": true,
+  "prefill_graph_replays": [
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0
+  ],
+  "scheduler": {
+    "max_active": 2,
+    "mixed_ticks": 22,
+    "consumed_tokens": 1785397,
+    "token_budget": 4096
+  },
+  "shared_pool": {
+    "admissions": 171,
+    "cross_partition_bindings": 25920,
+    "peak_occupied_bytes": 7534288896,
+    "remaining_occupied_bytes": 0
+  },
+  "arithmetic_history": {
+    "request_histories": 171,
+    "completed_input_tokens": 1785397,
+    "all_scheduler_tokens_accounted": true
+  }
+}
