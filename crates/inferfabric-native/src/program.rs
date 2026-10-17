@@ -134,10 +134,12 @@ impl Engine {
         self.check(unsafe { (self.reset_fn)(self.ptr) })
     }
     pub fn select_resident(&mut self, slot: u32) -> Result<()> {
+        if slot == 0 && self.select_resident_fn.is_none() { return Ok(()); }
         let select = self.select_resident_fn.ok_or_else(|| invalid("backend does not support resident selection"))?;
         self.check(unsafe { select(self.ptr, slot) })
     }
     pub fn reset_resident(&mut self, slot: u32) -> Result<()> {
+        if slot == 0 && self.reset_resident_fn.is_none() { return self.reset(); }
         let reset = self.reset_resident_fn.ok_or_else(|| invalid("backend does not support resident reset"))?;
         self.check(unsafe { reset(self.ptr, slot) })
     }

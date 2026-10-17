@@ -379,3 +379,24 @@ This advances S2 storage; it does not complete S2's multi-sequence kernels or S4
 packed scheduler. Next connect resident lifecycle to the Rust HTTP worker, then
 replace serial token invocations with qualified packed variants. Native storage
 currently uses fixed disjoint partitions, not dynamic cross-request page lending.
+
+### Implementation record: Rust HTTP resident scheduling
+
+The vLLM 0.25.1 Rust program worker now admits requests into available native
+resident slots, advances prefill/decode with a rotating token budget and reuses a
+finished/cancelled slot without resetting its peers. `--max-num-seqs` and
+`--max-model-len` are bounded by compiled capacities before device startup;
+`--max-num-batched-tokens` bounds scheduler rounds. The bounded queue accepts four
+times the configured resident count. Cancellation is checked between completed
+native invocations, and rank failures/shutdown terminate active and queued streams.
+
+This supplies continuous HTTP admission and mixed-phase progress using qualified
+single-token invocations. It is not the packed execution required to complete S2–S4.
+Local tests exercise the actual worker loop with injected rank failures,
+in-invocation cancellation/shutdown, queued disconnects, slot reuse and a one-token
+budget. [Full NPU HTTP evidence](validation/2026-10-17-resident-http/README.md)
+verifies six concurrent requests and short-request completion during a 504-token
+prompt, with isolated cancellation/reset and all-rank frozen/residency checks.
+The long prompt's approximately 9.9-second TTFT still requires packed prefill;
+HTTP overload currently maps to a generic backend 500 and needs a retryable
+status before the production gate.

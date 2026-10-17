@@ -1,6 +1,7 @@
 mod backend;
 mod batching_smoke;
 mod native_args;
+mod program_args;
 mod native_backend;
 mod native_sampling;
 mod native_smoke;
@@ -58,9 +59,10 @@ async fn run(shutdown: CancellationToken) -> anyhow::Result<()> {
         .as_str()
     {
         "--program" => {
-            anyhow::ensure!(args.len() == 5 || args.len() == 6, "--program requires BUNDLE CHECKPOINT LIB [PORT]");
-            (native_backend::Backend::program(args[2].clone().into(), args[3].clone().into(), args[4].clone().into()).await?,
-                "inferfabric-program", args.get(5).map(|s| s.parse()).transpose()?.unwrap_or(18081))
+            anyhow::ensure!(args.len() >= 5, "--program requires BUNDLE CHECKPOINT LIB [PORT] [--max-model-len N] [--max-num-seqs N] [--max-num-batched-tokens N]");
+            let options = program_args::ProgramArgs::parse(&args[5..])?;
+            (native_backend::Backend::program(args[2].clone().into(), args[3].clone().into(), args[4].clone().into(), options).await?,
+                "inferfabric-program", options.port)
         }
         "--mock" => {
             let spec = inferfabric_dsl::parse(&std::fs::read_to_string(&args[2])?)?;

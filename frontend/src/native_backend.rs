@@ -132,12 +132,13 @@ impl Backend {
         }))
     }
 
-    pub async fn program(bundle: PathBuf, dir: PathBuf, library: PathBuf) -> anyhow::Result<Arc<Self>> {
+    pub async fn program(bundle: PathBuf, dir: PathBuf, library: PathBuf, options: crate::program_args::ProgramArgs) -> anyhow::Result<Arc<Self>> {
         let defaults = program_defaults()?;
         let manifest = inferfabric_native::program::manifest(&bundle)?;
-        let context = manifest.variants[0].max_context as usize;
+        let (residents, context, token_budget) = options.resolve(manifest.resident_sequences as usize, manifest.variants[0].max_context as usize)?;
+        eprintln!("program scheduler configured max_num_seqs={residents} max_num_batched_tokens={token_budget} max_model_len={context}; single-token invocations, no packed prefill");
         let vocab = manifest.vocab_size;
-        let (tx, mut rx) = mpsc::channel::<Job>(4);
+        let (tx, mut rx) = mpsc::channel::<Job>(residents * 4);
         let (ready_tx, ready_rx) = oneshot::channel();
         let (done, finished) = oneshot::channel();
         let active: Active = Arc::new(Mutex::new(std::collections::BTreeMap::new()));
@@ -150,7 +151,7 @@ impl Backend {
                 Ok(mut engine) => {
                     h.store(true, Ordering::Release);
                     if ready_tx.send(Ok(())).is_ok() {
-                        if let Err(e) = program_worker::run(&mut engine, &mut rx, &a, &s) {
+                        if let Err(e) = program_worker::run(&mut engine, &mut rx, &a, &s, residents, token_budget) {
                             eprintln!("program worker failed: {e}");
                         }
                         h.store(false, Ordering::Release);
@@ -194,7 +195,7 @@ impl GenerationBackend for Backend {
         BackendMetadata {
             max_model_len: self.context as u32,
             model_dtype: ModelDtype::BFloat16,
-            version: if self.program_mode { "0.25.1 / InferFabric persistent program; serial greedy qualification" } else { "0.25.1 / InferFabric native continuous batching" }.into(),
+            version: if self.program_mode { "0.25.1 / InferFabric resident request scheduler; single-token greedy invocations" } else { "0.25.1 / InferFabric native continuous batching" }.into(),
             healthy: self.healthy.load(Ordering::Acquire) && !self.stop.load(Ordering::Acquire),
         }
     }

@@ -1,0 +1,12 @@
+{
+  "purpose": "negative control for independent progress during long prefill",
+  "max_num_seqs": 1,
+  "max_num_batched_tokens": 2,
+  "concurrent_isolation_requests": 4,
+  "harness_exit_code": 1,
+  "rejection": "long prefill blocked short request: no independent resident progress",
+  "observed_max_active": 1,
+  "observed_mixed_ticks": 0,
+  "observed_consumed_tokens": 811,
+  "shutdown_log_confirms_native_workers_closed": true
+}

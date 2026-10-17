@@ -402,5 +402,20 @@ preparation and arena binding for this new binary. Use
 `scripts/qualify-program-engine.py --interleave --permuted-pages` at each stage to
 test independent continuation and slot reuse against the immutable full-model
 fixtures. The C ABI and Rust adapter expose capacity, select-resident and
-reset-resident operations. The HTTP worker still needs scheduling integration;
-resident storage qualification alone is not continuous batching.
+reset-resident operations. The HTTP worker continuously admits and interleaves
+resident requests:
+
+```bash
+INFERFABRIC_DECODE_GRAPH=1 inferfabric-server --program \
+  resident-bound /models/92B "$PWD/native-build/libinferfabric_program.so" 18081 \
+  --max-num-seqs 2 --max-num-batched-tokens 2 --max-model-len 512
+```
+
+`max-num-seqs` cannot exceed compiled resident capacity. `max-model-len` is prompt
+plus output and cannot exceed compiled context; lowering it restricts admission
+without shrinking the frozen arena. The token budget bounds sequential invocations
+per scheduling round, with at most one input token per resident per round and a
+rotating cursor when the budget is smaller than active count. This keeps short
+decode work progressing during long prompts, but does not turn the current
+single-token graph into packed prefill or a multi-sequence kernel. The queue holds
+at most four times the configured resident count; excess admission fails explicitly.

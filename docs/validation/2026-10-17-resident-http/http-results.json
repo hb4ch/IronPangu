@@ -1,0 +1,161 @@
+{
+  "frontend": "vLLM Rust 0.25.1",
+  "mode": "resident request scheduler; single-token invocations",
+  "full_fixture_text": true,
+  "sse_agreement": true,
+  "queued_isolation": true,
+  "disconnect_recovery": true,
+  "unsupported_sampling_rejected": true,
+  "results": [
+    {
+      "case": "arithmetic",
+      "text": "1 + 1 = 2",
+      "collected": {
+        "total_ms": 368.20097733289003,
+        "usage": {
+          "prompt_tokens": 12,
+          "total_tokens": 20,
+          "completion_tokens": 8
+        }
+      },
+      "streaming": {
+        "ttft_ms": 230.97449308261275,
+        "text_chunks": 7,
+        "chunk_intervals_ms": [
+          17.9088250733912,
+          17.97732664272189,
+          18.09747703373432,
+          18.065067008137703,
+          18.03270634263754,
+          17.961747013032436
+        ],
+        "total_ms": 357.2679301723838,
+        "usage": {
+          "prompt_tokens": 12,
+          "total_tokens": 20,
+          "completion_tokens": 8
+        }
+      }
+    },
+    {
+      "case": "geography",
+      "text": "The capital of France is Paris.",
+      "collected": {
+        "total_ms": 411.4710809662938,
+        "usage": {
+          "prompt_tokens": 15,
+          "total_tokens": 23,
+          "completion_tokens": 8
+        }
+      },
+      "streaming": {
+        "ttft_ms": 286.0792400315404,
+        "text_chunks": 7,
+        "chunk_intervals_ms": [
+          17.943076323717833,
+          18.090946599841118,
+          17.99656730145216,
+          18.01292598247528,
+          18.048966769129038,
+          18.061817158013582
+        ],
+        "total_ms": 412.4569781124592,
+        "usage": {
+          "prompt_tokens": 15,
+          "total_tokens": 23,
+          "completion_tokens": 8
+        }
+      }
+    },
+    {
+      "case": "chinese",
+      "text": "北京是中国的首都，拥有悠久的历史、丰富的文化遗产和现代化的城市风貌。",
+      "collected": {
+        "total_ms": 558.5851138457656,
+        "usage": {
+          "prompt_tokens": 14,
+          "total_tokens": 31,
+          "completion_tokens": 17
+        }
+      },
+      "streaming": {
+        "ttft_ms": 270.5073510296643,
+        "text_chunks": 16,
+        "chunk_intervals_ms": [
+          18.046997021883726,
+          18.13532691448927,
+          18.13916675746441,
+          18.103028181940317,
+          18.10690714046359,
+          18.15433707088232,
+          18.1136978790164,
+          18.04789574816823,
+          18.029856961220503,
+          18.189198337495327,
+          18.09998694807291,
+          18.106226809322834,
+          18.125677946954966,
+          18.194887321442366,
+          18.197698052972555
+        ],
+        "total_ms": 560.5061179958284,
+        "usage": {
+          "prompt_tokens": 14,
+          "total_tokens": 31,
+          "completion_tokens": 17
+        }
+      }
+    }
+  ],
+  "concurrent_requests": 6,
+  "mixed_residents": {
+    "long_prompt_tokens": 504,
+    "short_finished_before_long": true,
+    "cancellation_during_peer_prefill": true,
+    "short": {
+      "ttft_ms": 471.7798549681902,
+      "text_chunks": 7,
+      "chunk_intervals_ms": [
+        38.11281826347113,
+        38.073496893048286,
+        38.048157934099436,
+        37.968376185745,
+        37.8644960001111,
+        37.74865576997399
+      ],
+      "total_ms": 737.6705529168248,
+      "usage": {
+        "prompt_tokens": 12,
+        "total_tokens": 20,
+        "completion_tokens": 8
+      }
+    },
+    "long": {
+      "ttft_ms": 9922.57471429184,
+      "text_chunks": 6,
+      "chunk_intervals_ms": [
+        56.098983623087406,
+        18.70398223400116,
+        18.84613186120987,
+        19.083374179899693,
+        18.866613041609526
+      ],
+      "total_ms": 10054.208109155297,
+      "usage": {
+        "prompt_tokens": 504,
+        "total_tokens": 512,
+        "completion_tokens": 8
+      }
+    }
+  },
+  "context_overflow_rejected": true,
+  "max_num_seqs": 2,
+  "max_num_batched_tokens": 2,
+  "graceful_sigterm_shutdown": true,
+  "scheduler": {
+    "max_active": 2,
+    "mixed_ticks": 47,
+    "consumed_tokens": 862,
+    "token_budget": 2
+  }
+}
