@@ -50,6 +50,8 @@ typedef struct IFProgramSequenceV1 {
 int inferfabric_program_batch(void *engine,const IFProgramSequenceV1 *sequences,uint32_t sequence_count,
                              const uint32_t *tokens,uint32_t token_count,
                              uint32_t *outputs,uint32_t output_capacity,uint32_t *output_count);
+// Zero means this handle has no qualified batch execution capacity.
+int inferfabric_program_batch_capacity(void *engine,uint32_t *capacity);
 int inferfabric_program_close(void *engine);
 const char *inferfabric_program_error(void);
 #ifdef __cplusplus

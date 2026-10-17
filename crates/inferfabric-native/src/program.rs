@@ -17,6 +17,37 @@ type Open = unsafe extern "C" fn(*const c_char, *const c_char, u32, *mut *mut c_
 type Close = unsafe extern "C" fn(*mut c_void) -> i32;
 type Token = unsafe extern "C" fn(*mut c_void, u32, u32, u32, *mut u32) -> i32;
 type Prefill = unsafe extern "C" fn(*mut c_void, *const u32, u32, u32, u32, *mut u32) -> i32;
+type Batch = unsafe extern "C" fn(*mut c_void,*const NativeSequence,u32,*const u32,u32,*mut u32,u32,*mut u32)->i32;
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct NativeSequence { resident:u32, position:u32, token_count:u32, sample:u32 }
+#[derive(Clone, Debug)]
+pub struct BatchInput {
+    pub resident:u32,
+    pub position:u32,
+    pub tokens:Vec<u32>,
+    pub sample:bool,
+}
+fn pack_batch(inputs:&[BatchInput],residents:usize,budget:u32)->Result<(Vec<NativeSequence>,Vec<u32>,String)> {
+    if inputs.is_empty() || inputs.len()>residents {return Err(invalid("batch resident count"));}
+    let mut seen=std::collections::BTreeSet::new();
+    let mut descriptors=Vec::new();let mut tokens=Vec::new();let mut hash=Sha256::new();
+    for input in inputs {
+        let count=u32::try_from(input.tokens.len()).map_err(|_|invalid("batch token count overflow"))?;
+        if input.resident as usize>=residents || !seen.insert(input.resident) || count==0 ||
+            input.position.checked_add(count).is_none() || tokens.len()+input.tokens.len()>budget as usize {
+            return Err(invalid("invalid batch member or token budget"));
+        }
+        descriptors.push(NativeSequence{resident:input.resident,position:input.position,token_count:count,sample:input.sample.into()});
+        // Until batching-independent arithmetic is qualified, peer content and
+        // sequence geometry are part of the exact prefix compatibility domain.
+        for value in [input.position,count] {hash.update(value.to_le_bytes());}
+        for token in &input.tokens {hash.update(token.to_le_bytes());}
+        tokens.extend_from_slice(&input.tokens);
+    }
+    let digest=hash.finalize().iter().map(|b|format!("{b:02x}")).collect();
+    Ok((descriptors,tokens,digest))
+}
 type Error = unsafe extern "C" fn() -> *const c_char;
 type BindPages = unsafe extern "C" fn(*mut c_void, u32, *const c_char, *const i32, u32) -> i32;
 type Resident = unsafe extern "C" fn(*mut c_void, u32) -> i32;
@@ -155,6 +186,7 @@ pub struct Engine {
     reset_fn: Close,
     token_fn: Token,
     prefill_fn: Option<Prefill>,
+    batch_fn: Option<Batch>,
     prefill_tokens: u32,
     uncaptured_prefill: bool,
     prefill_variants: Vec<u32>,
@@ -216,6 +248,7 @@ impl Engine {
                     .ok()
                     .map(|f| *f),
                 prefill_tokens: prefill_capacity(&contract)?,
+                batch_fn:lib.get::<Batch>(b"inferfabric_program_batch\0").ok().map(|f|*f),
                 uncaptured_prefill: contract.variants.iter().any(|v|v.phase==Phase::Prefill && !v.graph_capable),
                 prefill_variants: contract.variants.iter().skip(1).filter(|v|v.graph_capable).map(|v|v.max_tokens).collect(),
                 variants: contract.variants.clone(),
@@ -613,6 +646,54 @@ impl Engine {
         self.histories[self.selected].append_completed(&self.variants[0],position,1)?;
         Ok(sample.then_some(output))
     }
+    /// One native forward; all leases remain in flight until all rank streams
+    /// complete. The current native implementation rejects unqualified arenas.
+    pub fn batch(&mut self,inputs:&[BatchInput])->Result<Vec<Option<u32>>> {
+        let call=self.batch_fn.ok_or_else(||invalid("native batch ABI unavailable"))?;
+        let (descriptors,tokens,digest)=pack_batch(inputs,self.histories.len(),self.prefill_tokens)?;
+        let base=self.variants.iter().find(|v|v.phase==Phase::Prefill && !v.graph_capable && v.accepts_query_tokens(tokens.len() as u32))
+            .ok_or_else(||invalid("batch requires uncaptured packed variant"))?;
+        let mut variants=Vec::new();
+        for (index,input) in inputs.iter().enumerate() {
+            let mut variant=base.clone();
+            variant.numerical_class=format!("{}:sequence-batch-v1:{digest}:member={index}",base.numerical_class);
+            self.histories[input.resident as usize].check_append(&variant,input.position,input.tokens.len() as u32)?;
+            if self.sealed[input.resident as usize].is_some(){return Err(invalid("batch cannot mutate sealed resident"));}
+            variants.push(variant);
+        }
+        let ticket=if let Some(shared)=&mut self.shared {
+            let leases=inputs.iter().map(|input| {
+                let slot=input.resident as usize;
+                if input.position+input.tokens.len() as u32>shared.token_limits[slot] {
+                    return Err(invalid("batch exceeds request reservation"));
+                }
+                shared.leases[slot].ok_or_else(||invalid("batch resident has no state reservation"))
+            }).collect::<Result<Vec<_>>>()?;
+            Some(shared.pool.submit(1,&leases,&[])?)
+        } else {None};
+        let expected=inputs.iter().filter(|x|x.sample).count();let mut output=vec![0u32;expected];let mut count=0;
+        let status=unsafe{call(self.ptr,descriptors.as_ptr(),descriptors.len() as u32,tokens.as_ptr(),tokens.len() as u32,
+            output.as_mut_ptr(),output.len() as u32,&mut count)};
+        self.finish_invocation(ticket,status)?;
+        if count as usize!=expected {
+            if let Some(shared)=&mut self.shared{shared.pool.poison();}
+            return Err(invalid("native batch output count mismatch"));
+        }
+        let mut sampled=output.into_iter();let mut result=Vec::new();
+        for (input,variant) in inputs.iter().zip(&variants) {
+            self.histories[input.resident as usize].append_completed(variant,input.position,input.tokens.len() as u32)?;
+            result.push(if input.sample{sampled.next()}else{None});
+        }
+        Ok(result)
+    }
+    pub fn batch_capacity(&self)->Result<u32> {
+        let Some(call)=(unsafe{self._library.get::<Capacity>(b"inferfabric_program_batch_capacity\0").ok()}) else{return Ok(0)};
+        let mut capacity=0;self.check(unsafe{call(self.ptr,&mut capacity)})?;
+        if capacity>self.prefill_tokens || (capacity>0 && self.batch_fn.is_none()) {
+            return Err(invalid("native batch capacity disagrees with executable"));
+        }
+        Ok(capacity)
+    }
     pub fn arithmetic_history(&self, slot:u32) -> Result<&ArithmeticHistory> {
         self.histories.get(slot as usize).ok_or_else(||invalid("resident history bounds"))
     }
@@ -674,6 +755,31 @@ impl Drop for Engine {
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn packed_batch_preserves_members_and_rejects_aliasing() {
+        let inputs=vec![BatchInput{resident:2,position:63,tokens:vec![9],sample:true},
+            BatchInput{resident:0,position:0,tokens:vec![7,8,9],sample:false}];
+        let (descriptors,tokens,digest)=pack_batch(&inputs,3,4).unwrap();
+        assert_eq!(std::mem::size_of::<NativeSequence>(),16);
+        assert_eq!(tokens,vec![9,7,8,9]);
+        assert_eq!((descriptors[0].resident,descriptors[0].position,descriptors[0].token_count,descriptors[0].sample),(2,63,1,1));
+        assert_eq!((descriptors[1].resident,descriptors[1].token_count,descriptors[1].sample),(0,3,0));
+        assert!(pack_batch(&inputs,3,3).is_err());
+        assert!(pack_batch(&inputs,2,4).is_err());
+        assert!(pack_batch(&[],3,4).is_err());
+        let mut bad=inputs.clone();bad[1].resident=2;assert!(pack_batch(&bad,3,4).is_err());
+        bad=inputs.clone();bad[1].tokens.clear();assert!(pack_batch(&bad,3,4).is_err());
+        bad=inputs.clone();bad[0].position=u32::MAX;assert!(pack_batch(&bad,3,4).is_err());
+        let mut changed=inputs.clone();changed[1].tokens[0]=6;
+        assert_ne!(digest,pack_batch(&changed,3,4).unwrap().2);
+        changed=inputs.clone();changed[1].position=10;
+        assert_ne!(digest,pack_batch(&changed,3,4).unwrap().2);
+        changed=inputs.clone();changed.swap(0,1);
+        assert_ne!(digest,pack_batch(&changed,3,4).unwrap().2);
+        // Physical slot reassignment alone does not change arithmetic.
+        changed=inputs;changed[0].resident=1;
+        assert_eq!(digest,pack_batch(&changed,3,4).unwrap().2);
+    }
     #[test]
     fn uncaptured_envelope_cannot_masquerade_as_captured_variants() {
         let mut m:Manifest=serde_json::from_str(include_str!("../../../docs/validation/2026-10-17-persistent-serving/serving.json")).unwrap();

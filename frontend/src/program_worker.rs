@@ -20,6 +20,10 @@ pub(super) fn validate(req: &GenerateRequest) -> vllm_llm::Result<()> {
     Ok(())
 }
 pub(super) trait ResidentEngine {
+    fn batch_capacity(&self)->inferfabric_model::Result<u32> {Ok(0)}
+    fn batch(&mut self,_inputs:&[inferfabric_native::program::BatchInput])->inferfabric_model::Result<Vec<Option<u32>>> {
+        Err(inferfabric_model::invalid("native sequence batching unavailable"))
+    }
     fn uncaptured_prefill(&self)->bool {false}
     fn restore_prefix(&mut self,_slot:u32,_request:&GenerateRequest)->inferfabric_model::Result<u32> {Ok(0)}
     fn prefill_limit(&self,position:u32,prompt_tokens:u32)->u32 {prompt_tokens-position}
@@ -56,6 +60,8 @@ pub(super) trait ResidentEngine {
     ) -> inferfabric_model::Result<Option<u32>>;
 }
 impl ResidentEngine for inferfabric_native::program::Engine {
+    fn batch_capacity(&self)->inferfabric_model::Result<u32> {self.batch_capacity()}
+    fn batch(&mut self,inputs:&[inferfabric_native::program::BatchInput])->inferfabric_model::Result<Vec<Option<u32>>> {self.batch(inputs)}
     fn uncaptured_prefill(&self)->bool { self.uncaptured_prefill() }
     fn prefill_chunk(&self, limit: u32) -> u32 { self.prefill_chunk(limit) }
     fn admit(&mut self, slot: u32, tokens: u32) -> inferfabric_model::Result<()> {
@@ -135,6 +141,11 @@ fn advance(
     } else {
         engine.token(token, r.position, sample)?
     };
+    finish_advance(r,count,next)
+}
+fn finish_advance(r:&mut Running,count:usize,next:Option<u32>)->inferfabric_model::Result<(bool,usize)> {
+    let prompt=&r.job.req.prompt_token_ids;
+    let sample=r.position as usize+count>=prompt.len();
     r.position += count as u32;
     if cancelled(&r.job) {
         return Ok((true, count));
@@ -187,6 +198,7 @@ pub(super) fn run(
     }
     let mut slots: Vec<Option<Running>> = (0..residents).map(|_| None).collect();
     let chunk = engine.prefill_capacity();
+    let batch_capacity=engine.batch_capacity()? as usize;
     let (mut cursor, mut max_active, mut mixed_ticks, mut consumed) = (0, 0, 0, 0u64);
     let mut result: inferfabric_model::Result<()> = (|| {
         while !stop.load(Ordering::Acquire) {
@@ -245,6 +257,46 @@ pub(super) fn run(
             }
             let start = cursor;
             let (mut tokens, mut prefill, mut decode) = (0, 0, 0);
+            if batch_capacity>0 {
+                let budget=token_budget.min(batch_capacity);
+                let mut inputs=Vec::new();
+                for offset in 0..residents {
+                    let index=(start+offset)%residents;
+                    let Some(r)=slots[index].as_ref() else{continue};
+                    if cancelled(&r.job) || r.job.tx.capacity()==0 {continue;}
+                    let prompt=&r.job.req.prompt_token_ids;
+                    let extending=(r.position as usize)<prompt.len();
+                    let count=if extending {
+                        let limit=engine.prefill_limit(r.position,prompt.len() as u32) as usize;
+                        if limit==0 || limit>prompt.len()-r.position as usize {return Err(inferfabric_model::invalid("invalid batch prefix boundary"));}
+                        engine.prefill_chunk(limit.min(budget) as u32) as usize
+                    } else{1};
+                    if count==0 || count>budget {return Err(inferfabric_model::invalid("invalid batch quantum"));}
+                    if count>budget-tokens {cursor=index;break;}
+                    let ids=if extending {prompt[r.position as usize..r.position as usize+count].to_vec()}
+                        else{vec![r.next.ok_or_else(||inferfabric_model::invalid("missing batch decode input"))?]};
+                    inputs.push(inferfabric_native::program::BatchInput{resident:index as u32,position:r.position,tokens:ids,
+                        sample:r.position as usize+count>=prompt.len()});
+                    tokens+=count;if extending{prefill+=1}else{decode+=1};cursor=(index+1)%residents;
+                }
+                if !inputs.is_empty() {
+                    let outputs=engine.batch(&inputs)?;
+                    if outputs.len()!=inputs.len() || inputs.iter().zip(&outputs).any(|(i,o)|i.sample!=o.is_some()) {
+                        return Err(inferfabric_model::invalid("batch output/member mismatch"));
+                    }
+                    for (input,output) in inputs.iter().zip(outputs) {
+                        let index=input.resident as usize;let r=slots[index].as_mut().unwrap();
+                        let (finished,_)=finish_advance(r,input.tokens.len(),output)?;
+                        if !finished && !cancelled(&r.job) && (r.position as usize)<r.job.req.prompt_token_ids.len() {
+                            engine.checkpoint(index as u32,&r.job.req,r.position)?;
+                        }
+                        if finished {engine.release(index as u32)?;release(&mut slots[index],active);}
+                    }
+                    consumed+=tokens as u64;
+                } else {std::thread::sleep(std::time::Duration::from_millis(2));}
+                if prefill>0 && decode>0 {mixed_ticks+=1;}
+                continue;
+            }
             for offset in 0..residents {
                 if tokens == token_budget || stop.load(Ordering::Acquire) {
                     break;
@@ -368,8 +420,16 @@ mod tests {
         cache_cleared:bool,
         drain_at:Option<(usize,mpsc::Receiver<vllm_llm::Result<GenerateOutput>>)>,
         drained:Vec<u32>,
+        batched:bool,
+        batches:Vec<Vec<inferfabric_native::program::BatchInput>>,
     }
     impl ResidentEngine for Fake {
+        fn batch_capacity(&self)->inferfabric_model::Result<u32> {Ok(if self.batched{self.chunk}else{0})}
+        fn batch(&mut self,inputs:&[inferfabric_native::program::BatchInput])->inferfabric_model::Result<Vec<Option<u32>>> {
+            assert!(self.batched);assert!(inputs.iter().map(|i|i.tokens.len()).sum::<usize>()<=self.chunk as usize);
+            self.batches.push(inputs.to_vec());
+            inputs.iter().map(|i|{self.selected=i.resident as usize;self.prefill(&i.tokens,i.position,i.sample)}).collect()
+        }
         fn uncaptured_prefill(&self)->bool {self.uncaptured}
         fn restore_prefix(&mut self,slot:u32,request:&GenerateRequest)->inferfabric_model::Result<u32> {
             self.position[slot as usize]=self.restored;
@@ -491,6 +551,56 @@ mod tests {
         assert_eq!(output.try_recv().unwrap().unwrap().token_ids,vec![1]);
         assert!(matches!(output.try_recv(),Err(mpsc::error::TryRecvError::Disconnected)));
         assert!(active.lock().unwrap().is_empty());assert!(engine.cache_cleared);
+    }
+    #[test]
+    fn packed_scheduler_submits_mixed_members_and_preserves_outputs() {
+        let active=Arc::new(Mutex::new(Default::default()));let(tx,mut rx)=mpsc::channel(2);
+        let (short,mut a)=job(request("short",vec![1],3),&active);
+        let (long,mut b)=job(request("long",vec![1;9],2),&active);
+        tx.try_send(short).unwrap();tx.try_send(long).unwrap();drop(tx);
+        let mut engine=Fake{batched:true,uncaptured:true,chunk:8,..Default::default()};
+        run(&mut engine,&mut rx,&active,&Arc::new(AtomicBool::new(false)),2,8).unwrap();
+        let collect=|r:&mut mpsc::Receiver<vllm_llm::Result<GenerateOutput>>|{
+            let mut tokens=Vec::new();while let Ok(value)=r.try_recv(){tokens.extend(value.unwrap().token_ids);}tokens};
+        assert_eq!(collect(&mut a),vec![1,2,4]);assert_eq!(collect(&mut b),vec![9,18]);
+        assert!(engine.batches.iter().any(|batch|batch.len()==2 && batch.iter().any(|i|i.resident==0 && i.position>=1)
+            && batch.iter().any(|i|i.resident==1 && i.position<9)));
+        assert!(engine.batches.iter().all(|b|b.iter().map(|i|i.tokens.len()).sum::<usize>()<=8));
+        assert!(active.lock().unwrap().is_empty());
+    }
+    #[test]
+    fn packed_scheduler_keeps_full_4k_prefill_quantum_beside_decode() {
+        let active=Arc::new(Mutex::new(Default::default()));let(tx,mut rx)=mpsc::channel(2);
+        let (short,_a)=job(request("short",vec![1],3),&active);
+        let (long,mut b)=job(request("long",vec![1;8192],1),&active);
+        tx.try_send(short).unwrap();tx.try_send(long).unwrap();drop(tx);
+        let mut engine=Fake{batched:true,uncaptured:true,chunk:4096,..Default::default()};
+        run(&mut engine,&mut rx,&active,&Arc::new(AtomicBool::new(false)),2,4096).unwrap();
+        let long=engine.batches.iter().flatten().filter(|i|i.resident==1).map(|i|i.tokens.len()).collect::<Vec<_>>();
+        assert_eq!(long,vec![4096,4096]);assert_eq!(b.try_recv().unwrap().unwrap().token_ids,vec![8192]);
+    }
+    #[test]
+    fn packed_cancellation_drops_only_cancelled_output() {
+        let active=Arc::new(Mutex::new(Default::default()));let(tx,mut rx)=mpsc::channel(2);
+        let (a,mut ar)=job(request("cancel",vec![1;2],1),&active);let flag=a.cancel.clone();
+        let (b,mut br)=job(request("peer",vec![3;2],1),&active);
+        tx.try_send(a).unwrap();tx.try_send(b).unwrap();drop(tx);
+        let mut engine=Fake{batched:true,uncaptured:true,chunk:8,cancel_at:Some((0,flag)),..Default::default()};
+        run(&mut engine,&mut rx,&active,&Arc::new(AtomicBool::new(false)),2,8).unwrap();
+        assert!(ar.try_recv().is_err());assert_eq!(br.try_recv().unwrap().unwrap().token_ids,vec![6]);
+        assert_eq!(engine.batches.len(),1);assert_eq!(engine.batches[0].len(),2);
+        assert!(active.lock().unwrap().is_empty());
+    }
+    #[test]
+    fn packed_failure_terminates_members_and_queued_requests() {
+        let active=Arc::new(Mutex::new(Default::default()));let(tx,mut rx)=mpsc::channel(3);
+        let mut outputs=Vec::new();for id in ["a","b","queued"] {
+            let (job,out)=job(request(id,vec![1;2],1),&active);tx.try_send(job).unwrap();outputs.push(out);
+        }drop(tx);
+        let mut engine=Fake{batched:true,uncaptured:true,chunk:8,fail_at:Some(1),..Default::default()};
+        assert!(run(&mut engine,&mut rx,&active,&Arc::new(AtomicBool::new(false)),2,8).is_err());
+        for out in &mut outputs {assert!(out.try_recv().unwrap().is_err());}
+        assert!(active.lock().unwrap().is_empty());
     }
     #[test]
     fn program_admission_forwards_cache_salt_without_enabling_other_features() {

@@ -112,6 +112,8 @@ mod tests {
     }
 }
 impl ResidentEngine for CachedProgram {
+    fn batch_capacity(&self)->Result<u32> {self.engine.batch_capacity()}
+    fn batch(&mut self,inputs:&[inferfabric_native::program::BatchInput])->Result<Vec<Option<u32>>> {self.engine.batch(inputs)}
     fn uncaptured_prefill(&self)->bool {self.engine.uncaptured_prefill()}
     fn prefill_capacity(&self) -> u32 {
         self.engine.prefill_capacity()

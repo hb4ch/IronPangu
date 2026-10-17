@@ -381,3 +381,7 @@ extern "C" int inferfabric_program_batch(void *p,const IFProgramSequenceV1 *sequ
     *output_count=e.batch_outputs.size();
   });
 }
+extern "C" int inferfabric_program_batch_capacity(void *p,uint32_t *capacity) {
+  return call([&]{if(!capacity)throw std::runtime_error("null batch capacity");auto &e=engine(p);
+    *capacity=e.preparation && e.program.uncaptured_prefill?e.program.prefill_tokens:0;});
+}
