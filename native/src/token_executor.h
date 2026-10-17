@@ -772,11 +772,11 @@ struct Decoder {
     DeviceTensor rope_out({1,1,1,64},ACL_BF16,2),latent_out({1,1,1,512},ACL_BF16,2);
     char cache_mode[]="PA",rotary_mode[]="half",quant_mode[]="none";
     uint64_t bytes=0;aclOpExecutor *e=nullptr;
-    checked(prepared::query("cache_normalize",false,aclnnAiInfraKvRmsNormRopeCacheGetWorkspaceSize,
+    checked(prepared::query("cache_normalize",false,ifOwnedAiInfraKvRmsNormRopeCacheGetWorkspaceSize,
         kv.t,norm_weight.t,rotary_cos_bf16->tensor,rotary_sin_bf16->tensor,zero_cache_position->tensor,
         nullptr,row.tensor,nullptr,nullptr,nullptr,nullptr,nullptr,1e-5,cache_mode,rotary_mode,quant_mode,
         true,rope_out.tensor,latent_out.tensor,&bytes,&e),"normalize cache row prepare");
-    run(aclnnAiInfraKvRmsNormRopeCache,bytes,e);
+    run(ifOwnedAiInfraKvRmsNormRopeCache,bytes,e);
     return result(row).view(0,576);
   }
   void quantize_cache(const V &input,const V &sinks,const std::string &name,unsigned bits) {

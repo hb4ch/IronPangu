@@ -65,7 +65,7 @@ int main(){using namespace inferfabric;try{
     std::cout<<"{\"packed\":"<<(packed?"true":"false")<<",\"rows\":"<<rows<<",\"audit\":";
     context.write(std::cout);std::cout<<"}\n";
   }
-  prepared::check(aclrtResetDevice(0),"reset");prepared::check(aclFinalize(),"finalize");
+  prepared::check(aclFinalize(),"finalize");
   std::cout<<"{\"status\":\"passed\",\"batch_launches\":"<<launches<<",\"checked_values\":"<<checked
     <<",\"max_scale_error\":"<<max_scale_error<<",\"max_bf16_error\":"<<max_bf16_error<<"}\n";
 }catch(const std::exception &e){std::cerr<<e.what()<<'\n';return 1;}}

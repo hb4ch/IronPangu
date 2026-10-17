@@ -220,6 +220,16 @@ target_link_libraries(router_lifetime_probe PRIVATE "${ACL_LIBRARY}" "${OPAPI_LI
 target_compile_options(router_lifetime_probe PRIVATE -Wall -Wextra -Werror)
 
 if(TARGET openpangu_decode)
+  # Owned optional descriptors; retain the installed vendor L0/kernel ABI.
+  add_library(inferfabric_owned_opapi STATIC
+    vendor/omni_opapi/aclnn_ai_infra_fused_infer_attention_sink.cpp
+    vendor/omni_opapi/aclnn_ai_infra_kv_rms_norm_rope_cache.cpp)
+  set_target_properties(inferfabric_owned_opapi PROPERTIES POSITION_INDEPENDENT_CODE ON)
+  target_compile_definitions(inferfabric_owned_opapi PRIVATE _GLIBCXX_USE_CXX11_ABI=0)
+  target_include_directories(inferfabric_owned_opapi PRIVATE "${ACL_INCLUDE}" "${ACL_INCLUDE}/aclnn")
+  target_link_libraries(inferfabric_owned_opapi PUBLIC "${OMNI_INFERENCE_ROOT}/op_api/lib/libcust_opapi.so" "${NNOPBASE_LIBRARY}")
+  target_link_libraries(inferfabric_owned_opapi PUBLIC "${CANN_ROOT}/lib64/libc_sec.so" "${CANN_ROOT}/lib64/libunified_dlog.so" "${CANN_ROOT}/lib64/libgraph.so")
+  target_link_libraries(openpangu_decode PRIVATE inferfabric_owned_opapi)
   set_target_properties(inferfabric_initialization inferfabric_initialization_acl inferfabric_compiled_kernel PROPERTIES POSITION_INDEPENDENT_CODE ON)
   add_library(inferfabric_program SHARED src/program_engine.cpp)
   foreach(property INCLUDE_DIRECTORIES COMPILE_DEFINITIONS COMPILE_OPTIONS LINK_LIBRARIES)
@@ -233,9 +243,11 @@ if(TARGET openpangu_decode)
   add_executable(prefill_metadata_probe probes/prefill_metadata_probe.cpp)
   add_executable(prefill_head_probe probes/prefill_head_probe.cpp)
   add_executable(prefill_cache_writer_probe probes/prefill_cache_writer_probe.cpp)
+  target_link_libraries(prefill_cache_writer_probe PRIVATE inferfabric_owned_opapi)
   add_executable(sequence_convolution_probe probes/sequence_convolution_probe.cpp)
   add_executable(sequence_attention_probe probes/sequence_attention_probe.cpp)
   add_executable(sequence_window_probe probes/sequence_window_probe.cpp)
+  target_link_libraries(sequence_window_probe PRIVATE inferfabric_owned_opapi)
   target_include_directories(sequence_window_probe PRIVATE "${ACL_INCLUDE}" "${OMNI_INFERENCE_ROOT}/op_api/include")
   target_link_libraries(sequence_window_probe PRIVATE "${OMNI_INFERENCE_ROOT}/op_api/lib/libcust_opapi.so" "${ACL_LIBRARY}" "${OPAPI_LIBRARY}" "${NNOPBASE_LIBRARY}")
   target_compile_options(sequence_window_probe PRIVATE -Wall -Wextra -Werror -include "${CMAKE_CURRENT_SOURCE_DIR}/src/resident_transfer.h")

@@ -1,0 +1,11 @@
+{
+  "returncode": 0,
+  "elapsed_seconds": 78.76672528870404,
+  "command": [
+    "/data/p00603624/inferfabric/openpangu92/native-build-owned-opapi/program_engine_probe",
+    "/data/p00603624/inferfabric/openpangu92/owned-opapi-raii8k-frozen-plan",
+    "/models/92B",
+    "/data/p00603624/inferfabric/openpangu92/device-zero-apc8k-fixture/requests.txt"
+  ],
+  "preparation": false
+}

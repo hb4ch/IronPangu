@@ -75,6 +75,6 @@ int main(){using namespace inferfabric;try{
       }
     }
   }
-  prepared::check(aclrtResetDevice(0),"reset");prepared::check(aclFinalize(),"finalize");
+  prepared::check(aclFinalize(),"finalize");
   std::cout<<"{\"passed\":true,\"batches\":6,\"checked_values\":"<<checked<<"}\n";
 }catch(const std::exception &e){std::cerr<<e.what()<<'\n';return 1;}}

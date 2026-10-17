@@ -1,6 +1,6 @@
 #pragma once
 #include "resident_tensor.h"
-#include <aclnn_ai_infra_kv_rms_norm_rope_cache.h>
+#include "../vendor/omni_opapi/aclnn_ai_infra_kv_rms_norm_rope_cache.h"
 namespace inferfabric::resident {
 inline void normalized_cache_append(const Tensor &input,aclTensor *gamma,aclTensor *cosine,
     aclTensor *sine,aclTensor *positions,aclTensor *cache,uint32_t rows,bool packed) {
@@ -13,10 +13,10 @@ inline void normalized_cache_append(const Tensor &input,aclTensor *gamma,aclTens
   char mode[]="PA",rotary[]="half",none[]="none",c8[]="pertile128";
   uint64_t bytes=0;aclOpExecutor *executor=nullptr;
   prepared::check(prepared::query("aclnnAiInfraKvRmsNormRopeCache",false,
-      aclnnAiInfraKvRmsNormRopeCacheGetWorkspaceSize,kv,gamma,cosine,sine,positions,
+      ifOwnedAiInfraKvRmsNormRopeCacheGetWorkspaceSize,kv,gamma,cosine,sine,positions,
       nullptr,cache,nullptr,nullptr,nullptr,nullptr,nullptr,1e-5,mode,rotary,packed?c8:none,
       true,rope.tensor,latent.tensor,&bytes,&executor),"batch cache prepare");
   context.require_stream(context.stream);
-  prepared::check(aclnnAiInfraKvRmsNormRopeCache(context.workspace(bytes),bytes,executor,context.stream),"batch cache append");
+  prepared::check(ifOwnedAiInfraKvRmsNormRopeCache(context.workspace(bytes),bytes,executor,context.stream),"batch cache append");
 }
 }

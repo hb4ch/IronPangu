@@ -202,6 +202,15 @@ ssh root@7.156.99.58 "docker exec inferfabric-build chmod +x /data/p00603624/inf
 
 Rebuild and deploy Rust and the native library from the same revision when changing their C ABI. Record the source revision, image digest, compiler versions and artifact hashes together. Old `libpangu_acl.so` artifacts and historical binary names are not interchangeable with current InferFabric builds.
 
+The program backend also compiles the host API adapters in
+`native/vendor/omni_opapi` into `inferfabric_owned_opapi`. They fix optional
+descriptor ownership while continuing to call the installed vendor L0 operators
+and kernels. This target alone uses `_GLIBCXX_USE_CXX11_ABI=0`, matching CANN's
+host C++ API; the serving frontend and executor keep their existing ABI.
+The source provenance, license and changes are recorded in that directory.
+An incompatible vendor L0 ABI is a link error. Do not disable the adapter to
+hide that error or reuse a frozen arena from a different backend library.
+
 ## 6. Runtime checks: CPU mock versus NPU execution
 
 The mock server can run in the build-only container with no compute devices. In one container shell:
