@@ -34,6 +34,16 @@ The server is `inferfabric-server-apc-device-zero`, plan
 `/models/92B`. Prefix caching is disabled. Remote evidence is
 `/data/p00603624/inferfabric/openpangu92/resource-load-http`, HCCL port 64400.
 
-The next controlled experiment limits glibc to two arenas with
-`MALLOC_ARENA_MAX=2`, retaining the same workload, binary, plan and tolerance.
-This is a diagnostic experiment, not an adopted production fix.
+The controlled experiment with `MALLOC_ARENA_MAX=2` also failed after all 24
+waves. RSS increased from 7,370,661,888 to 7,965,405,184 bytes, a maximum growth
+of 594,743,296 bytes (567 MiB), with unchanged thread/FD counts. All 120
+wave/recovery outputs still matched their references. Evidence is in the
+`arena2-*.json` files; remote output `resource-arena2-http`, HCCL port 64600,
+runner exit 1. This setting alone does not solve the regression and is not
+adopted as a production fix. Scheduling is dynamic, so this single experiment
+does not isolate all allocator effects or identify the remaining cause.
+
+Next instrument host live allocations and descriptor/executor retention across
+the same short repeated workload. Preserve captured-decode descriptor lifetimes
+and owning-stream completion when changing metadata reclamation. Do not repeat
+the 64K output ladder until a concrete runtime fix justifies that qualification.
