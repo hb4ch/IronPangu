@@ -66,6 +66,21 @@ class WorkspacePlanning(unittest.TestCase):
         binder.bind(output, self.audits, self.root / 'bound')
         metadata = json.loads((self.root / 'bound/arena.json').read_text())
         self.assertEqual(metadata['ranks'][0]['workspace']['planned_bytes'], 2048)
+        self.assertTrue((self.root / 'bound/arena-rank-0.txt').read_text().startswith('IFARENA2 '))
+        self.assertEqual(metadata['ranks'][0]['instruction_envelopes']['7'],
+                         dict(max_request_bytes=0, workspace=True))
+
+    def test_rebinding_updates_existing_viewer_contract(self):
+        source = self.planned()
+        (source / 'execution.html').write_text('<script type="application/json" id="plan-data">{}</script>\n'
+            '    function memoryDetails(id) { return "old eligibility"; }\n'
+            '    function inspect(id) {}\n')
+        binder.bind(source, self.audits, self.root / 'bound')
+        html = (self.root / 'bound/execution.html').read_text()
+        self.assertNotIn('old eligibility', html)
+        self.assertIn('arena.instruction_envelopes', html)
+        self.assertIn('Maximum request:', html)
+        self.assertIn('Observed slot IDs:', html)
 
     def test_discovery_is_not_bindable(self):
         with self.assertRaises(ValueError):

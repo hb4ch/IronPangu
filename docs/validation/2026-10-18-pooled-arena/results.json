@@ -1,0 +1,1049 @@
+{
+  "discovery": {
+    "passed": true,
+    "stage": "discovery",
+    "exact_output_tokens": 39,
+    "requests": 6,
+    "arena_bytes": [
+      39716906512,
+      39716906512,
+      39716906512,
+      39716906512,
+      39716906512,
+      39716906512,
+      39716906512,
+      39716906512
+    ],
+    "workspace_bytes": [
+      159221248,
+      159221248,
+      159221248,
+      159221248,
+      159221248,
+      159221248,
+      159221248,
+      159221248
+    ],
+    "activation_host_transfers": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    "process": {
+      "returncode": 0,
+      "elapsed_seconds": 115.26731257978827,
+      "command": [
+        "/data/p00603624/inferfabric/openpangu92/native-build-head-batch/program_engine_probe",
+        "/data/p00603624/inferfabric/openpangu92/sequence64k-source",
+        "/models/92B",
+        "/data/p00603624/inferfabric/openpangu92/sequence8k-fixture/requests.txt"
+      ],
+      "preparation": true
+    },
+    "batch_trace": {
+      "batches": 26,
+      "prefill_chunks": [
+        [
+          4096,
+          4080
+        ],
+        [
+          12
+        ],
+        [
+          4096,
+          4080
+        ],
+        [
+          12
+        ],
+        [
+          4096,
+          4080
+        ],
+        [
+          12
+        ]
+      ],
+      "pure_decode_batch_us": [
+        48754,
+        29896,
+        30262,
+        29582,
+        80600,
+        30554,
+        34711,
+        87755,
+        30155,
+        30385,
+        29740,
+        24995,
+        24341,
+        24316,
+        24185,
+        24000,
+        24196,
+        24303
+      ],
+      "pure_decode_batches": [
+        {
+          "sequences": 2,
+          "elapsed_us": 48754
+        },
+        {
+          "sequences": 2,
+          "elapsed_us": 29896
+        },
+        {
+          "sequences": 2,
+          "elapsed_us": 30262
+        },
+        {
+          "sequences": 2,
+          "elapsed_us": 29582
+        },
+        {
+          "sequences": 2,
+          "elapsed_us": 80600
+        },
+        {
+          "sequences": 2,
+          "elapsed_us": 30554
+        },
+        {
+          "sequences": 2,
+          "elapsed_us": 34711
+        },
+        {
+          "sequences": 2,
+          "elapsed_us": 87755
+        },
+        {
+          "sequences": 2,
+          "elapsed_us": 30155
+        },
+        {
+          "sequences": 2,
+          "elapsed_us": 30385
+        },
+        {
+          "sequences": 2,
+          "elapsed_us": 29740
+        },
+        {
+          "sequences": 1,
+          "elapsed_us": 24995
+        },
+        {
+          "sequences": 1,
+          "elapsed_us": 24341
+        },
+        {
+          "sequences": 1,
+          "elapsed_us": 24316
+        },
+        {
+          "sequences": 1,
+          "elapsed_us": 24185
+        },
+        {
+          "sequences": 1,
+          "elapsed_us": 24000
+        },
+        {
+          "sequences": 1,
+          "elapsed_us": 24196
+        },
+        {
+          "sequences": 1,
+          "elapsed_us": 24303
+        }
+      ],
+      "completed_input_tokens": 24597,
+      "timing_scope": "completed native ABI call including sampling/consensus; pure-decode batches exclude competing prefill"
+    },
+    "first_token_ms": {
+      "0": 13712.287,
+      "1": 13564.587,
+      "2": 12933.282,
+      "3": 917.238,
+      "4": 13205.946,
+      "5": 978.847
+    },
+    "ranks": [
+      {
+        "rank": 0,
+        "graphs": [
+          {
+            "name": "token_decode",
+            "replays": 1
+          },
+          {
+            "name": "sequence_decode_1",
+            "replays": 8
+          },
+          {
+            "name": "sequence_decode_2",
+            "replays": 12
+          }
+        ],
+        "frozen": false,
+        "workspace_growth": 6,
+        "recorded_step_allocations": 0,
+        "recorded_internal_fences": 0
+      },
+      {
+        "rank": 1,
+        "graphs": [
+          {
+            "name": "token_decode",
+            "replays": 1
+          },
+          {
+            "name": "sequence_decode_1",
+            "replays": 8
+          },
+          {
+            "name": "sequence_decode_2",
+            "replays": 12
+          }
+        ],
+        "frozen": false,
+        "workspace_growth": 6,
+        "recorded_step_allocations": 0,
+        "recorded_internal_fences": 0
+      },
+      {
+        "rank": 2,
+        "graphs": [
+          {
+            "name": "token_decode",
+            "replays": 1
+          },
+          {
+            "name": "sequence_decode_1",
+            "replays": 8
+          },
+          {
+            "name": "sequence_decode_2",
+            "replays": 12
+          }
+        ],
+        "frozen": false,
+        "workspace_growth": 6,
+        "recorded_step_allocations": 0,
+        "recorded_internal_fences": 0
+      },
+      {
+        "rank": 3,
+        "graphs": [
+          {
+            "name": "token_decode",
+            "replays": 1
+          },
+          {
+            "name": "sequence_decode_1",
+            "replays": 8
+          },
+          {
+            "name": "sequence_decode_2",
+            "replays": 12
+          }
+        ],
+        "frozen": false,
+        "workspace_growth": 6,
+        "recorded_step_allocations": 0,
+        "recorded_internal_fences": 0
+      },
+      {
+        "rank": 4,
+        "graphs": [
+          {
+            "name": "token_decode",
+            "replays": 1
+          },
+          {
+            "name": "sequence_decode_1",
+            "replays": 8
+          },
+          {
+            "name": "sequence_decode_2",
+            "replays": 12
+          }
+        ],
+        "frozen": false,
+        "workspace_growth": 6,
+        "recorded_step_allocations": 0,
+        "recorded_internal_fences": 0
+      },
+      {
+        "rank": 5,
+        "graphs": [
+          {
+            "name": "token_decode",
+            "replays": 1
+          },
+          {
+            "name": "sequence_decode_1",
+            "replays": 8
+          },
+          {
+            "name": "sequence_decode_2",
+            "replays": 12
+          }
+        ],
+        "frozen": false,
+        "workspace_growth": 6,
+        "recorded_step_allocations": 0,
+        "recorded_internal_fences": 0
+      },
+      {
+        "rank": 6,
+        "graphs": [
+          {
+            "name": "token_decode",
+            "replays": 1
+          },
+          {
+            "name": "sequence_decode_1",
+            "replays": 8
+          },
+          {
+            "name": "sequence_decode_2",
+            "replays": 12
+          }
+        ],
+        "frozen": false,
+        "workspace_growth": 6,
+        "recorded_step_allocations": 0,
+        "recorded_internal_fences": 0
+      },
+      {
+        "rank": 7,
+        "graphs": [
+          {
+            "name": "token_decode",
+            "replays": 1
+          },
+          {
+            "name": "sequence_decode_1",
+            "replays": 8
+          },
+          {
+            "name": "sequence_decode_2",
+            "replays": 12
+          }
+        ],
+        "frozen": false,
+        "workspace_growth": 6,
+        "recorded_step_allocations": 0,
+        "recorded_internal_fences": 0
+      }
+    ]
+  },
+  "fixed": {
+    "passed": true,
+    "stage": "fixed",
+    "exact_output_tokens": 39,
+    "requests": 6,
+    "arena_bytes": [
+      39572690960,
+      39572690960,
+      39572690960,
+      39572690960,
+      39572690960,
+      39572690960,
+      39572690960,
+      39572690960
+    ],
+    "workspace_bytes": [
+      159221248,
+      159221248,
+      159221248,
+      159221248,
+      159221248,
+      159221248,
+      159221248,
+      159221248
+    ],
+    "activation_host_transfers": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    "process": {
+      "returncode": 0,
+      "elapsed_seconds": 114.61919581983238,
+      "command": [
+        "/data/p00603624/inferfabric/openpangu92/native-build-head-batch/program_engine_probe",
+        "/data/p00603624/inferfabric/openpangu92/pooled8k-clean-fixed-plan",
+        "/models/92B",
+        "/data/p00603624/inferfabric/openpangu92/sequence8k-fixture/requests.txt"
+      ],
+      "preparation": true
+    },
+    "batch_trace": {
+      "batches": 26,
+      "prefill_chunks": [
+        [
+          4096,
+          4080
+        ],
+        [
+          12
+        ],
+        [
+          4096,
+          4080
+        ],
+        [
+          12
+        ],
+        [
+          4096,
+          4080
+        ],
+        [
+          12
+        ]
+      ],
+      "pure_decode_batch_us": [
+        35317,
+        29789,
+        29588,
+        29762,
+        87122,
+        30693,
+        34660,
+        76752,
+        29413,
+        30244,
+        29667,
+        24996,
+        24384,
+        23654,
+        24014,
+        23872,
+        24070,
+        23442
+      ],
+      "pure_decode_batches": [
+        {
+          "sequences": 2,
+          "elapsed_us": 35317
+        },
+        {
+          "sequences": 2,
+          "elapsed_us": 29789
+        },
+        {
+          "sequences": 2,
+          "elapsed_us": 29588
+        },
+        {
+          "sequences": 2,
+          "elapsed_us": 29762
+        },
+        {
+          "sequences": 2,
+          "elapsed_us": 87122
+        },
+        {
+          "sequences": 2,
+          "elapsed_us": 30693
+        },
+        {
+          "sequences": 2,
+          "elapsed_us": 34660
+        },
+        {
+          "sequences": 2,
+          "elapsed_us": 76752
+        },
+        {
+          "sequences": 2,
+          "elapsed_us": 29413
+        },
+        {
+          "sequences": 2,
+          "elapsed_us": 30244
+        },
+        {
+          "sequences": 2,
+          "elapsed_us": 29667
+        },
+        {
+          "sequences": 1,
+          "elapsed_us": 24996
+        },
+        {
+          "sequences": 1,
+          "elapsed_us": 24384
+        },
+        {
+          "sequences": 1,
+          "elapsed_us": 23654
+        },
+        {
+          "sequences": 1,
+          "elapsed_us": 24014
+        },
+        {
+          "sequences": 1,
+          "elapsed_us": 23872
+        },
+        {
+          "sequences": 1,
+          "elapsed_us": 24070
+        },
+        {
+          "sequences": 1,
+          "elapsed_us": 23442
+        }
+      ],
+      "completed_input_tokens": 24597,
+      "timing_scope": "completed native ABI call including sampling/consensus; pure-decode batches exclude competing prefill"
+    },
+    "first_token_ms": {
+      "0": 13366.097,
+      "1": 13222.039,
+      "2": 12900.347,
+      "3": 1030.854,
+      "4": 12784.873,
+      "5": 1014.533
+    },
+    "ranks": [
+      {
+        "rank": 0,
+        "graphs": [
+          {
+            "name": "token_decode",
+            "replays": 1
+          },
+          {
+            "name": "sequence_decode_1",
+            "replays": 8
+          },
+          {
+            "name": "sequence_decode_2",
+            "replays": 12
+          }
+        ],
+        "frozen": false,
+        "workspace_growth": 0,
+        "recorded_step_allocations": 0,
+        "recorded_internal_fences": 0
+      },
+      {
+        "rank": 1,
+        "graphs": [
+          {
+            "name": "token_decode",
+            "replays": 1
+          },
+          {
+            "name": "sequence_decode_1",
+            "replays": 8
+          },
+          {
+            "name": "sequence_decode_2",
+            "replays": 12
+          }
+        ],
+        "frozen": false,
+        "workspace_growth": 0,
+        "recorded_step_allocations": 0,
+        "recorded_internal_fences": 0
+      },
+      {
+        "rank": 2,
+        "graphs": [
+          {
+            "name": "token_decode",
+            "replays": 1
+          },
+          {
+            "name": "sequence_decode_1",
+            "replays": 8
+          },
+          {
+            "name": "sequence_decode_2",
+            "replays": 12
+          }
+        ],
+        "frozen": false,
+        "workspace_growth": 0,
+        "recorded_step_allocations": 0,
+        "recorded_internal_fences": 0
+      },
+      {
+        "rank": 3,
+        "graphs": [
+          {
+            "name": "token_decode",
+            "replays": 1
+          },
+          {
+            "name": "sequence_decode_1",
+            "replays": 8
+          },
+          {
+            "name": "sequence_decode_2",
+            "replays": 12
+          }
+        ],
+        "frozen": false,
+        "workspace_growth": 0,
+        "recorded_step_allocations": 0,
+        "recorded_internal_fences": 0
+      },
+      {
+        "rank": 4,
+        "graphs": [
+          {
+            "name": "token_decode",
+            "replays": 1
+          },
+          {
+            "name": "sequence_decode_1",
+            "replays": 8
+          },
+          {
+            "name": "sequence_decode_2",
+            "replays": 12
+          }
+        ],
+        "frozen": false,
+        "workspace_growth": 0,
+        "recorded_step_allocations": 0,
+        "recorded_internal_fences": 0
+      },
+      {
+        "rank": 5,
+        "graphs": [
+          {
+            "name": "token_decode",
+            "replays": 1
+          },
+          {
+            "name": "sequence_decode_1",
+            "replays": 8
+          },
+          {
+            "name": "sequence_decode_2",
+            "replays": 12
+          }
+        ],
+        "frozen": false,
+        "workspace_growth": 0,
+        "recorded_step_allocations": 0,
+        "recorded_internal_fences": 0
+      },
+      {
+        "rank": 6,
+        "graphs": [
+          {
+            "name": "token_decode",
+            "replays": 1
+          },
+          {
+            "name": "sequence_decode_1",
+            "replays": 8
+          },
+          {
+            "name": "sequence_decode_2",
+            "replays": 12
+          }
+        ],
+        "frozen": false,
+        "workspace_growth": 0,
+        "recorded_step_allocations": 0,
+        "recorded_internal_fences": 0
+      },
+      {
+        "rank": 7,
+        "graphs": [
+          {
+            "name": "token_decode",
+            "replays": 1
+          },
+          {
+            "name": "sequence_decode_1",
+            "replays": 8
+          },
+          {
+            "name": "sequence_decode_2",
+            "replays": 12
+          }
+        ],
+        "frozen": false,
+        "workspace_growth": 0,
+        "recorded_step_allocations": 0,
+        "recorded_internal_fences": 0
+      }
+    ]
+  },
+  "frozen": {
+    "passed": true,
+    "stage": "frozen",
+    "exact_output_tokens": 39,
+    "requests": 6,
+    "arena_bytes": [
+      39572690960,
+      39572690960,
+      39572690960,
+      39572690960,
+      39572690960,
+      39572690960,
+      39572690960,
+      39572690960
+    ],
+    "workspace_bytes": [
+      159221248,
+      159221248,
+      159221248,
+      159221248,
+      159221248,
+      159221248,
+      159221248,
+      159221248
+    ],
+    "activation_host_transfers": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    "process": {
+      "returncode": 0,
+      "elapsed_seconds": 123.0036419252865,
+      "command": [
+        "/data/p00603624/inferfabric/openpangu92/native-build-head-batch/program_engine_probe",
+        "/data/p00603624/inferfabric/openpangu92/pooled8k-clean-frozen-plan",
+        "/models/92B",
+        "/data/p00603624/inferfabric/openpangu92/sequence8k-fixture/requests.txt"
+      ],
+      "preparation": false
+    },
+    "batch_trace": {
+      "batches": 26,
+      "prefill_chunks": [
+        [
+          4096,
+          4080
+        ],
+        [
+          12
+        ],
+        [
+          4096,
+          4080
+        ],
+        [
+          12
+        ],
+        [
+          4096,
+          4080
+        ],
+        [
+          12
+        ]
+      ],
+      "pure_decode_batch_us": [
+        56687,
+        28436,
+        27873,
+        29262,
+        96085,
+        28029,
+        31300,
+        96992,
+        27606,
+        27590,
+        28836,
+        22902,
+        21642,
+        21427,
+        21301,
+        21279,
+        21216,
+        21992
+      ],
+      "pure_decode_batches": [
+        {
+          "sequences": 2,
+          "elapsed_us": 56687
+        },
+        {
+          "sequences": 2,
+          "elapsed_us": 28436
+        },
+        {
+          "sequences": 2,
+          "elapsed_us": 27873
+        },
+        {
+          "sequences": 2,
+          "elapsed_us": 29262
+        },
+        {
+          "sequences": 2,
+          "elapsed_us": 96085
+        },
+        {
+          "sequences": 2,
+          "elapsed_us": 28029
+        },
+        {
+          "sequences": 2,
+          "elapsed_us": 31300
+        },
+        {
+          "sequences": 2,
+          "elapsed_us": 96992
+        },
+        {
+          "sequences": 2,
+          "elapsed_us": 27606
+        },
+        {
+          "sequences": 2,
+          "elapsed_us": 27590
+        },
+        {
+          "sequences": 2,
+          "elapsed_us": 28836
+        },
+        {
+          "sequences": 1,
+          "elapsed_us": 22902
+        },
+        {
+          "sequences": 1,
+          "elapsed_us": 21642
+        },
+        {
+          "sequences": 1,
+          "elapsed_us": 21427
+        },
+        {
+          "sequences": 1,
+          "elapsed_us": 21301
+        },
+        {
+          "sequences": 1,
+          "elapsed_us": 21279
+        },
+        {
+          "sequences": 1,
+          "elapsed_us": 21216
+        },
+        {
+          "sequences": 1,
+          "elapsed_us": 21992
+        }
+      ],
+      "completed_input_tokens": 24597,
+      "timing_scope": "completed native ABI call including sampling/consensus; pure-decode batches exclude competing prefill"
+    },
+    "first_token_ms": {
+      "0": 14050.492,
+      "1": 13759.122,
+      "2": 12816.389,
+      "3": 785.896,
+      "4": 12196.234,
+      "5": 1031.174
+    },
+    "ranks": [
+      {
+        "rank": 0,
+        "graphs": [
+          {
+            "name": "token_decode",
+            "replays": 1
+          },
+          {
+            "name": "sequence_decode_1",
+            "replays": 8
+          },
+          {
+            "name": "sequence_decode_2",
+            "replays": 12
+          }
+        ],
+        "frozen": true,
+        "workspace_growth": 0,
+        "recorded_step_allocations": 0,
+        "recorded_internal_fences": 0
+      },
+      {
+        "rank": 1,
+        "graphs": [
+          {
+            "name": "token_decode",
+            "replays": 1
+          },
+          {
+            "name": "sequence_decode_1",
+            "replays": 8
+          },
+          {
+            "name": "sequence_decode_2",
+            "replays": 12
+          }
+        ],
+        "frozen": true,
+        "workspace_growth": 0,
+        "recorded_step_allocations": 0,
+        "recorded_internal_fences": 0
+      },
+      {
+        "rank": 2,
+        "graphs": [
+          {
+            "name": "token_decode",
+            "replays": 1
+          },
+          {
+            "name": "sequence_decode_1",
+            "replays": 8
+          },
+          {
+            "name": "sequence_decode_2",
+            "replays": 12
+          }
+        ],
+        "frozen": true,
+        "workspace_growth": 0,
+        "recorded_step_allocations": 0,
+        "recorded_internal_fences": 0
+      },
+      {
+        "rank": 3,
+        "graphs": [
+          {
+            "name": "token_decode",
+            "replays": 1
+          },
+          {
+            "name": "sequence_decode_1",
+            "replays": 8
+          },
+          {
+            "name": "sequence_decode_2",
+            "replays": 12
+          }
+        ],
+        "frozen": true,
+        "workspace_growth": 0,
+        "recorded_step_allocations": 0,
+        "recorded_internal_fences": 0
+      },
+      {
+        "rank": 4,
+        "graphs": [
+          {
+            "name": "token_decode",
+            "replays": 1
+          },
+          {
+            "name": "sequence_decode_1",
+            "replays": 8
+          },
+          {
+            "name": "sequence_decode_2",
+            "replays": 12
+          }
+        ],
+        "frozen": true,
+        "workspace_growth": 0,
+        "recorded_step_allocations": 0,
+        "recorded_internal_fences": 0
+      },
+      {
+        "rank": 5,
+        "graphs": [
+          {
+            "name": "token_decode",
+            "replays": 1
+          },
+          {
+            "name": "sequence_decode_1",
+            "replays": 8
+          },
+          {
+            "name": "sequence_decode_2",
+            "replays": 12
+          }
+        ],
+        "frozen": true,
+        "workspace_growth": 0,
+        "recorded_step_allocations": 0,
+        "recorded_internal_fences": 0
+      },
+      {
+        "rank": 6,
+        "graphs": [
+          {
+            "name": "token_decode",
+            "replays": 1
+          },
+          {
+            "name": "sequence_decode_1",
+            "replays": 8
+          },
+          {
+            "name": "sequence_decode_2",
+            "replays": 12
+          }
+        ],
+        "frozen": true,
+        "workspace_growth": 0,
+        "recorded_step_allocations": 0,
+        "recorded_internal_fences": 0
+      },
+      {
+        "rank": 7,
+        "graphs": [
+          {
+            "name": "token_decode",
+            "replays": 1
+          },
+          {
+            "name": "sequence_decode_1",
+            "replays": 8
+          },
+          {
+            "name": "sequence_decode_2",
+            "replays": 12
+          }
+        ],
+        "frozen": true,
+        "workspace_growth": 0,
+        "recorded_step_allocations": 0,
+        "recorded_internal_fences": 0
+      }
+    ]
+  },
+  "artifact_bytes": {
+    "arena.json": 9157620,
+    "arena-rank-0.txt": 103461,
+    "execution.html": 12504046
+  },
+  "reference_scope": "through_first_eos"
+}

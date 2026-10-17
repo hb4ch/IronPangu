@@ -383,6 +383,45 @@ table includes preparation-only buffers; it is not a claim that every listed slo
 is newly allocated on each token. Some backend recipes remain composite, so this
 milestone must not be described as completion of the full primitive execution DAG.
 
+### Shared pool with instruction request limits (2026-10-18)
+
+The `IFARENA2` contract supersedes observed-slot eligibility for variable-length
+prefill. Observed addresses are not a valid restriction on future leases: a
+different tail shape can leave an adequate larger slot free while the sampled
+slot is live. Even restricting backing capacities to an instruction's maximum
+request size is incorrect; a small tensor may safely occupy a larger slot.
+
+The pool still has fixed disjoint offsets, one owning stream and exclusive live
+leases. Each instruction instead declares a maximum **requested byte count**
+and whether it uses the permanent workspace. Uncaptured execution chooses the
+smallest sufficient free pool slot, with LIFO ties; captured execution keeps
+exact-size reuse. A request cannot exceed its instruction limit. Workspace is
+reserved first, remains live, and is excluded from temporary-pool selection.
+Pool exhaustion and unknown instructions fail closed; no host fallback, arena
+growth, relocation of live buffers or new synchronization is permitted.
+
+The compact rank file contains:
+
+```text
+IFARENA2 <program fingerprint> <backend fingerprint> <arena bytes> <slot count>
+<offset> <capacity bytes>                         # repeated per slot
+pool <instruction count> <workspace slot, 0 or -1>
+<instruction id> <max requested bytes> <workspace access, 0 or 1>
+```
+
+Instruction `-1` covers initialization. A workspace-only instruction may have
+zero requested bytes and workspace access enabled. Preparation currently uses
+the largest observed non-workspace backing capacity as a conservative request
+limit; this is not an optimal symbolic size proof. `arena.json` records
+`instruction_envelopes`; `instruction_slots` are retained as observations only.
+The viewer shows that distinction and the request limit. The binder refreshes
+the memory inspector when rebinding older HTML bundles. Neither the JSON nor
+the runtime expands an instruction-by-slot permission matrix.
+
+The backend fingerprint remains mandatory, so existing bindings cannot be
+retagged for the new executor. Both parser/allocator contract tests and full
+NPU output/resource qualification are required before promoting a new bundle.
+
 ### Per-token composite expansion and strict execution (2026-10-16)
 
 The subsequent expansion completes the **per-token vendor-API DAG** for the

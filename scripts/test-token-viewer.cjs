@@ -55,4 +55,10 @@ if(api.data.arena?.ranks[7]?.workspace) {
   assert(details.includes('permanent slot 0'));
   assert(details.includes('Growth allocations: 0'));
   assert(details.includes('instruction demand'));
+  if(api.data.arena.ranks[7].instruction_envelopes) {
+    assert(details.includes('Frozen shared pool:'));
+    assert(details.includes('Maximum request:'));
+    assert(details.includes('Observed slot IDs:'));
+    assert(details.includes('Live leases cannot overlap'));
+  }
 }

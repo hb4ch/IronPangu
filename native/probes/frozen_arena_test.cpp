@@ -1,4 +1,5 @@
 #include "frozen_arena.h"
+#include "bounded_buffers.h"
 #include <cstdio>
 #include <iostream>
 #include <functional>
@@ -26,6 +27,27 @@ int main() {
     reject([&]{load(replace("7 2 1 2","-1 2 1 2"));});
     reject([&]{load(valid+"extra");});
     reject([&]{load(replace("bindings 2","bindings 3"));});
+    const std::string pool="IFARENA2 123 456 33555456 3\n0 1024\n1024 8388608\n8389632 25165824\npool 2 0\n-1 25165824 1\n8 8388608 0\n";
+    auto pooled=load(pool);
+    if(!pooled.permits_request(8,1083392) || !pooled.permits_slot(8,2) || pooled.permits_slot(8,0) ||
+       pooled.permits_request(8,8388609) || pooled.permits_request(99,4) ||
+       !pooled.permits_request(-1,1024,true) || pooled.permits_request(8,1024,true))
+      throw std::runtime_error("pooled request bound confused with backing slot capacity");
+    struct Block {size_t slot,bytes;};
+    Block workspace_slot{0,1024}, larger_free{2,25165824};
+    std::map<size_t,std::vector<Block *>> free{{1024,{&workspace_slot}},{25165824,{&larger_free}}};
+    auto eligible=[&](Block *b){return pooled.permits_slot(8,b->slot) && int64_t(b->slot)!=pooled.workspace_slot;};
+    auto *lease=inferfabric::prepared::take_bounded_buffer(free,1083392,eligible);
+    if(lease!=&larger_free || inferfabric::prepared::take_bounded_buffer(free,1083392,eligible))
+      throw std::runtime_error("shared pool lost larger backing or reused live lease");
+    for(size_t rows=1;rows<=4096;++rows) {
+      free[larger_free.bytes].push_back(&larger_free);
+      if(!pooled.permits_request(8,rows*2048) || inferfabric::prepared::take_bounded_buffer(free,rows*2048,eligible)!=&larger_free)
+        throw std::runtime_error("tail envelope cannot use oversized free backing");
+    }
+    reject([&]{load(pool+"extra");});
+    auto invalid_pool=pool;invalid_pool.replace(invalid_pool.find("8 8388608 0"),11,"8 33554432 0");
+    reject([&]{load(invalid_pool);});
     auto workspace=[&](const std::string &text,uint64_t program=123,uint64_t backend=456) {
       {std::ofstream out(path);out<<text;}
       return inferfabric::prepared::WorkspacePlan::read(path,program,backend);

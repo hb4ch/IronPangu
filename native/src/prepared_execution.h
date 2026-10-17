@@ -54,8 +54,7 @@ class Context {
   std::map<int64_t,std::set<size_t>> instruction_slots_;
   void record(Block *b) {
     if(arena_) {
-      auto allowed=layout_.bindings.find(instruction_);
-      if(allowed==layout_.bindings.end() || !allowed->second.count(b->slot))
+      if(!layout_.permits_slot(instruction_,b->slot))
         throw std::runtime_error("unplanned arena binding at instruction " + std::to_string(instruction_) + " slot=" + std::to_string(b->slot));
     }
     instruction_slots_[instruction_].insert(b->slot);
@@ -144,7 +143,7 @@ public:
     if(planned_workspace_bytes_) {
       // Reserve before any model/control allocations. The lease stays live for
       // the entire context; every vendor call and graph sees this one address.
-      workspace_=acquire(planned_workspace_bytes_);
+      workspace_=acquire(planned_workspace_bytes_,true);
       workspace_bytes_=planned_workspace_bytes_;
     }
   }
@@ -176,15 +175,16 @@ public:
       throw std::runtime_error(
           "prepared buffer used outside its owning stream/context");
   }
-  void *acquire(size_t bytes) {
+  void *acquire(size_t bytes,bool workspace_allocation=false) {
     require_stream(stream);
     if (!bytes)
       throw std::runtime_error("zero prepared allocation");
+    if(arena_ && !layout_.permits_request(instruction_,bytes,workspace_allocation))
+      throw std::runtime_error("frozen arena request exceeds instruction envelope " + std::to_string(instruction_) + " bytes=" + std::to_string(bytes));
     if(bounded_buffers_) {
       auto *block=take_bounded_buffer(free_,bytes,[&](Block *candidate) {
         if(!arena_)return true;
-        auto allowed=layout_.bindings.find(instruction_);
-        return allowed!=layout_.bindings.end() && allowed->second.count(candidate->slot);
+        return layout_.permits_slot(instruction_,candidate->slot) && (!layout_.pooled || int64_t(candidate->slot)!=layout_.workspace_slot);
       });
       if(block) {
         record(block);

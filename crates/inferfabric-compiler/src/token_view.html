@@ -413,8 +413,10 @@
       const arena=data.arena?.ranks[rank];
       if(!arena) return "Preparation pool; no hardware-bound arena in this bundle. Vendor workspace and composite temporaries are prepared at runtime.";
       const slots=(arena.instruction_slots[String(id)] || []).map(j=>arena.slots[j]);
+      const envelope=arena.instruction_envelopes?.[String(id)];
       const w=arena.workspace;
       const workspace=w ? `Shared workspace: ${w.planned_bytes.toLocaleString()} bytes, permanent slot ${w.slot ?? "none"}; instruction demand ${(w.instruction_requests[String(id)] || 0).toLocaleString()} bytes. Growth allocations: ${w.growth_allocations}.<br>` : "";
+      if(envelope) return workspace + `Frozen shared pool: ${arena.bytes.toLocaleString()} bytes, ${arena.slots.length} disjoint slots. Maximum request: ${envelope.max_request_bytes.toLocaleString()} bytes. Any sufficient free slot may back the request; a larger slot does not increase this limit. Workspace access: ${envelope.workspace ? "allowed, permanent exclusive slot" : "not allowed"}. Live leases cannot overlap. Growth is forbidden. Observed slot IDs: ${slots.map(s=>s.id).join(", ") || "none"}.`;
       return workspace + `Frozen arena: ${arena.bytes.toLocaleString()} bytes, ${arena.slots.length} slots on rank ${rank}. Growth is forbidden. Exact-size LIFO reuse on the owning stream; checkpoint storage is separate.<br>` +
         (slots.length ? `<table><thead><tr><th>Slot</th><th>Offset</th><th>Bytes</th></tr></thead><tbody>${slots.map(s=>`<tr><td>${s.id}</td><td>${s.offset}</td><td>${s.bytes}</td></tr>`).join("")}</tbody></table>` : "No new slot or workspace acquired by this instruction in the preparation trace; aliases may still read existing storage.");
     }

@@ -186,7 +186,18 @@ int main(int argc, char **argv) {
           else tokens.push_back(r.next);
         }
         std::vector<uint32_t> outputs(members.size());uint32_t count=0;
+        auto batch_started=std::chrono::steady_clock::now();
         check(inferfabric_program_batch(engine,members.data(),members.size(),tokens.data(),tokens.size(),outputs.data(),outputs.size(),&count));
+        if(std::getenv("INFERFABRIC_BATCH_TRACE")) {
+          auto elapsed=std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now()-batch_started).count();
+          std::cout<<"{\"event\":\"sequence_batch\",\"elapsed_us\":"<<elapsed<<",\"tokens\":"<<tokens.size()<<",\"members\":[";
+          for(size_t n=0;n<members.size();++n) {
+            const auto &m=members[n];if(n)std::cout<<",";
+            std::cout<<"{\"request\":"<<live[m.resident].request<<",\"resident\":"<<m.resident
+                     <<",\"position\":"<<m.position<<",\"tokens\":"<<m.token_count<<",\"sample\":"<<m.sample<<"}";
+          }
+          std::cout<<"]}"<<std::endl;
+        }
         size_t sampled=0;std::vector<unsigned> retired;
         for(const auto &member:members) {
           auto &r=live[member.resident];r.position+=member.token_count;

@@ -19,26 +19,17 @@ def fingerprint(data):
     return str(value)
 
 
-def capacity_bindings(arena, workspace_slot):
-    """Freeze capacity classes, not incidental addresses from a sampled run.
+def request_envelopes(arena, workspace_slot):
+    """Bound requests, not backing addresses: any sufficient FREE pool slot fits.
 
-    Slots remain disjoint and the executor leases only free slots on its owning
-    stream. Equal-capacity storage is interchangeable; a tail must not fail just
-    because its sampled slot is live while an equivalent slot is free. Never
-    broaden a binding to a different capacity or the permanent workspace.
+    A sampled backing capacity is a conservative request upper bound. The
+    allocator retains exclusive leases and never borrows the permanent workspace.
     """
-    classes = {}
-    for slot in arena['slots']:
-        if slot['id'] != workspace_slot:
-            classes.setdefault(slot['bytes'], set()).add(slot['id'])
     capacities = {slot['id']: slot['bytes'] for slot in arena['slots']}
     result = {}
     for instruction, slots in arena['instruction_slots'].items():
-        eligible = set(slots)
-        for slot in slots:
-            if slot != workspace_slot:
-                eligible.update(classes[capacities[slot]])
-        result[instruction] = sorted(eligible)
+        ceiling = max((capacities[slot] for slot in slots if slot != workspace_slot), default=0)
+        result[instruction] = dict(max_request_bytes=ceiling, workspace=workspace_slot in slots)
     return result
 
 
@@ -86,8 +77,8 @@ def bind(plan, audits, output):
             end = slot["offset"] + slot["bytes"]
         if not end or end != arena["bytes"] or end > 1 << 40:
             raise ValueError("invalid arena extent")
-        arena['observed_instruction_slots'] = arena['instruction_slots']
-        arena['instruction_slots'] = capacity_bindings(arena, workspace['slot'])
+        arena['instruction_envelopes'] = request_envelopes(arena, workspace['slot'])
+        arena['binding_policy'] = 'shared_pool_request_envelopes'
         arenas.append(arena)
     if len({a["backend_fingerprint"] for a in arenas}) != 1:
         raise ValueError("inconsistent backend binary")
@@ -95,23 +86,35 @@ def bind(plan, audits, output):
         raise ValueError("output must not exist")
     shutil.copytree(plan, output)
     for rank, arena in enumerate(arenas):
-        lines = [f"IFARENA1 {expected} {arena['backend_fingerprint']} "
+        lines = [f"IFARENA2 {expected} {arena['backend_fingerprint']} "
                  f"{arena['bytes']} {len(arena['slots'])}"]
         lines.extend(f"{s['offset']} {s['bytes']}" for s in arena["slots"])
-        bindings = arena["instruction_slots"]
-        lines.append(f"bindings {len(bindings)}")
-        for instruction, slots in sorted(bindings.items(), key=lambda pair: int(pair[0])):
-            lines.append(f"{instruction} {len(slots)} " + " ".join(map(str, slots)))
+        envelopes = arena['instruction_envelopes']
+        workspace_slot = arena['workspace']['slot']
+        lines.append(f"pool {len(envelopes)} {workspace_slot if workspace_slot is not None else -1}")
+        for instruction, envelope in sorted(envelopes.items(), key=lambda pair: int(pair[0])):
+            lines.append(f"{instruction} {envelope['max_request_bytes']} {int(envelope['workspace'])}")
         (output / f"arena-rank-{rank}.txt").write_text("\n".join(lines) + "\n")
     metadata = {
         "format": "inferfabric.bound-arena.v1",
         "execution_sha256": hashlib.sha256(program).hexdigest(),
-        "policy": "fixed disjoint slots on owning stream; instruction-bound capacity classes with interchangeable equal-capacity free slots, permanent workspace excluded; exact-size LIFO for captured execution, smallest sufficient capacity (LIFO ties) for uncaptured prefill; fail on exhaustion",
+        "policy": "fixed disjoint shared pool on owning stream; per-instruction request byte limits; any sufficient free backing slot, permanent workspace excluded; exact-size LIFO for captured execution, smallest sufficient capacity (LIFO ties) for uncaptured prefill; fail on exhaustion; instruction_slots are observations, not eligibility restrictions",
         "scope": "prepared tensors and vendor workspace; checkpoint allocations separate",
         "ranks": arenas,
     }
     (output / "arena.json").write_text(json.dumps(metadata, indent=2) + "\n")
     html = (output / "execution.html").read_text()
+    # Rebinding an existing bundle must also teach its embedded viewer the new
+    # contract; observations must never be presented as eligibility restrictions.
+    if 'function memoryDetails(id)' in html:
+        template = (Path(__file__).resolve().parents[1] / 'crates/inferfabric-compiler/src/token_view.html').read_text()
+        memory_pattern = r'    function memoryDetails\(id\) \{.*?(?=    function inspect\(id\))'
+        replacement = re.search(memory_pattern, template, re.S)
+        if not replacement or 'instruction_envelopes' not in replacement[0]:
+            raise ValueError('viewer template lacks shared pool contract')
+        html, count = re.subn(memory_pattern, lambda _: replacement[0], html, flags=re.S)
+        if count != 1:
+            raise ValueError('bound viewer memory inspector missing or duplicated')
     pattern = r'(<script type="application/json" id="plan-data">)(.*?)(</script>)'
     match = re.search(pattern, html, re.S)
     if not match:
