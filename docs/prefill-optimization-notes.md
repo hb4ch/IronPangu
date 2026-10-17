@@ -88,3 +88,7 @@ This is a possible explanation for the earlier environment-only AIV result, not
 proof of the installed binary's selection. Its profiler label is RING-RING-NHR;
 that label does not identify an executor class. Do not silently force a newer
 source's AIV_ONLY enum into the installed communicator ABI.
+
+### Implemented legality analysis (not enabled in execution yet)
+
+`inferfabric_compiler::output_rows::plan` now proves a conservative contiguous output suffix and returns its source, bounds and explicit request-sample row domain. Unknown/stateful operations stay in the full-token prefix; nonterminal outputs are not transformed. Rank-major gather plus token-layout conversion must move together. Three local legality tests and the real 92B learned-C8 DSL lowering test pass. The current binary and executor remain unchanged: serialization, viewer presentation, compact runtime row mapping, preparation coverage and NPU qualification are still required before this optimization is enabled.

@@ -2,6 +2,26 @@ use inferfabric_authoring::execution::Graph;
 use inferfabric_compiler::token_program::lower;
 
 #[test]
+fn output_rows_proves_real_92b_suffix_without_changing_the_program() {
+    use inferfabric_dsl::{authoring::ModelDefinition, definition};
+    let ModelDefinition::Execution { mut graph, .. } = definition(include_str!(
+        "../../../examples/openpangu/92b-tp8-ep8-c8-learned.inferfabric"
+    )).unwrap() else { panic!() };
+    graph.max_context = 65536;
+    let p = lower(&graph, None).unwrap().with_resident_sequences(3).unwrap()
+        .with_uncaptured_prefill().unwrap();
+    let before = serde_json::to_vec(&p).unwrap();
+    let rows = inferfabric_compiler::output_rows::plan(&p.instructions, p.output).unwrap().unwrap_or_else(|| panic!("output={} tail={:?}", p.output, &p.instructions[p.instructions.len()-6..]));
+    let suffix = &p.instructions[rows.first..=rows.last];
+    assert!(suffix.iter().any(|n| n.op == "linear"));
+    assert_eq!(suffix.last().unwrap().op, "head_to_token");
+    assert!(suffix.iter().any(|n| n.op == "gather_heads"));
+    assert_eq!(rows.source_width, p.instructions[rows.source].width);
+    assert!(p.instructions[..rows.first].iter().any(|n| n.op == "cache_c8_norm_rope_append"));
+    assert_eq!(serde_json::to_vec(&p).unwrap(), before);
+}
+
+#[test]
 fn fanout_reuses_a_cast_without_erasing_rounding() {
     use inferfabric_authoring::execution::Node;
     use std::collections::BTreeMap;

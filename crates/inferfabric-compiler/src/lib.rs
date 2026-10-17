@@ -3,6 +3,7 @@ pub mod initialization;
 pub mod token;
 pub mod token_physical;
 pub mod token_program;
+pub mod output_rows;
 pub mod token_view;
 pub mod token_serving;
 use inferfabric_ir::*;
