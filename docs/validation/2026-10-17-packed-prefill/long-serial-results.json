@@ -1,0 +1,37 @@
+{
+  "format": "inferfabric.persistent-program-qualification.v1",
+  "requests": 3,
+  "output_tokens": 24,
+  "exact_fixture_tokens": true,
+  "fixture_sha256": "863d59877f4b30a8fef2b53fa7d98a31f095460f4783babd7995f447a75e5b30",
+  "permuted_pages": false,
+  "interleaved_residents": false,
+  "packed_prefill": false,
+  "scope": "one loaded TP8/EP8 group, serial token graph; no long-context claim",
+  "measurements": [
+    {
+      "request": 0,
+      "case": "serial_layout_oracle_504",
+      "prompt_tokens": 504,
+      "output_tokens": 8,
+      "engine_ttft_ms": 9214.092,
+      "tpot_ms": 18.752142857142857
+    },
+    {
+      "request": 1,
+      "case": "serial_layout_oracle_504",
+      "prompt_tokens": 504,
+      "output_tokens": 8,
+      "engine_ttft_ms": 9177.009,
+      "tpot_ms": 18.639142857142858
+    },
+    {
+      "request": 2,
+      "case": "serial_layout_oracle_504",
+      "prompt_tokens": 504,
+      "output_tokens": 8,
+      "engine_ttft_ms": 9175.419,
+      "tpot_ms": 18.609142857142857
+    }
+  ]
+}

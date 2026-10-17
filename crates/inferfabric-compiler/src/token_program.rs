@@ -25,6 +25,7 @@ pub struct Program {
     pub max_context: usize,
     /// Resident histories, independent of the one-token invocation batch size.
     pub resident_sequences: usize,
+    pub prefill_tokens: usize,
     pub eos: usize,
     pub output: usize,
     pub instructions: Vec<Instruction>,
@@ -141,7 +142,7 @@ fn emit(
 pub fn lower(graph: &Graph, inventory: Option<&Inventory>) -> Result<Program> {
     let types = graph.validate()?;
     let mut p = Program {
-        format: "inferfabric.token-program.v2".into(), max_context: graph.max_context, resident_sequences: 1,
+        format: "inferfabric.token-program.v2".into(), max_context: graph.max_context, resident_sequences: 1, prefill_tokens: 1,
         eos: graph.eos, output: 0, instructions: vec![], conversions_shared: 0, copies_eliminated: 0,
         limitations: vec!["Per-token vendor composites are expanded into declared API invocations, explicit casts, packing and initialization of outputs. Parameter/state preparation remains a declared initialization recipe; vendor-internal kernel launches are opaque. Hardware preparation binds fixed arena slots; this is not a cost-optimized arena packing.".into()],
     };
@@ -645,14 +646,22 @@ pub fn lower(graph: &Graph, inventory: Option<&Inventory>) -> Result<Program> {
 }
 
 impl Program {
+    pub fn with_prefill_tokens(mut self, count: usize) -> Result<Self> {
+        self.prefill_tokens = count;
+        let residents = self.resident_sequences;
+        self.with_resident_sequences(residents)
+    }
     pub fn with_resident_sequences(mut self, count: usize) -> Result<Self> {
         self.resident_sequences = count;
-        self.format = if count == 1 { "inferfabric.token-program.v2" } else { "inferfabric.token-program.v3" }.into();
+        self.format = if self.prefill_tokens > 1 { "inferfabric.token-program.v4" } else if count == 1 { "inferfabric.token-program.v2" } else { "inferfabric.token-program.v3" }.into();
         self.validate()?;
         Ok(self)
     }
     pub fn validate(&self) -> Result<()> {
-        if self.format != if self.resident_sequences == 1 { "inferfabric.token-program.v2" } else { "inferfabric.token-program.v3" }
+        if self.format != if self.prefill_tokens > 1 { "inferfabric.token-program.v4" } else if self.resident_sequences == 1 { "inferfabric.token-program.v2" } else { "inferfabric.token-program.v3" }
+            || !matches!(self.prefill_tokens, 1 | 2 | 4 | 8 | 16)
+            || self.prefill_tokens > self.max_context
+            || (self.prefill_tokens > 1 && self.instructions.iter().any(|i| i.op == "cache_quantize_append"))
             || self.resident_sequences == 0 || self.resident_sequences > 64
             || (self.resident_sequences > 1 && self.instructions.iter().any(|i| i.op == "cache_quantize_append"))
             || self.instructions.is_empty()
@@ -709,7 +718,7 @@ impl Program {
         if self.instructions.iter().any(|i| i.kernel == "unbound") {
             return Err(invalid("cannot execute unbound kernel selection"));
         }
-        let mut b = if self.resident_sequences == 1 { b"IFTOKN02" } else { b"IFTOKN03" }.to_vec();
+        let mut b = if self.prefill_tokens > 1 { b"IFTOKN04" } else if self.resident_sequences == 1 { b"IFTOKN02" } else { b"IFTOKN03" }.to_vec();
         for n in [
             self.max_context,
             self.eos,
@@ -718,7 +727,8 @@ impl Program {
         ] {
             num(&mut b, n);
         }
-        if self.resident_sequences != 1 { num(&mut b, self.resident_sequences); }
+        if self.resident_sequences != 1 || self.prefill_tokens > 1 { num(&mut b, self.resident_sequences); }
+        if self.prefill_tokens > 1 { num(&mut b, self.prefill_tokens); }
         for i in &self.instructions {
             num(&mut b, i.kind);
             num(&mut b, i.width);
@@ -746,7 +756,7 @@ impl Program {
 pub fn recipes(p: &Program, graph: &Graph) -> Vec<serde_json::Value> {
     let cache_controls: BTreeMap<_, _> = p.instructions.iter()
         .filter(|i| matches!(i.op.as_str(), "cache_c8_norm_rope_append" | "cache_norm_rope_append" | "cache_append"))
-        .enumerate().map(|(slot, i)| (i.name.as_str(), slot * 16)).collect();
+        .enumerate().map(|(slot, i)| (i.name.as_str(), slot * 16 * p.prefill_tokens)).collect();
     p.instructions.iter().map(|i| {
         let n = &graph.nodes[i.logical_node];
         let (apis, internal, materialization): (&[&str], &str, &str) = match i.op.as_str() {
@@ -854,12 +864,40 @@ pub fn recipes(p: &Program, graph: &Graph) -> Vec<serde_json::Value> {
             }
             fields.push(serde_json::json!({"name":"resident_partition","resident_sequences":p.resident_sequences,"logical_capacity_tokens":if i.op=="cache_c8_norm_rope_append" {p.max_context.div_ceil(32)*32} else {512},"ownership":"disjoint fixed page partitions; mappings persist across selection; cross-partition binding rejected"}));
             fields.push(serde_json::json!({"name":"device_block_table","dtype":"int32","shape":[1,32],"role":"control_input","binding":"component/rank physical page IDs; stable device address"}));
-            fields.push(serde_json::json!({"name":"physical_append_position","dtype":if i.op=="cache_append" {"int32"} else {"int64"},"shape":[1],"role":"control_input","binding":"block_table[logical_position / page_tokens] * page_tokens + logical_position % page_tokens","page_tokens":if i.op=="cache_c8_norm_rope_append" {32} else {16},"staging":"one packed control upload per rank per invocation","control_bank_bytes":cache_controls.len()*16,"byte_offset":cache_controls[i.name.as_str()]+if i.op=="cache_append" {8} else {0}}));
+            fields.push(serde_json::json!({"name":"physical_append_position","dtype":if i.op=="cache_append" {"int32"} else {"int64"},"shape":[1],"role":"control_input","binding":"block_table[logical_position / page_tokens] * page_tokens + logical_position % page_tokens","page_tokens":if i.op=="cache_c8_norm_rope_append" {32} else {16},"staging":"one packed control upload per rank per invocation","control_bank_bytes":cache_controls.len()*16*p.prefill_tokens,"byte_offset":cache_controls[i.name.as_str()]+if i.op=="cache_append" {8} else {0}}));
         }
         if matches!(i.op.as_str(), "mome" | "mome_inplace") {
             fields.push(serde_json::json!({"name":"recurrent_history","dtype":"bf16","shape":[p.resident_sequences,2,i.width],"binding":"shared device resident-slot control selects one history; other slots remain untouched"}));
         }
-        serde_json::json!({"preparation":preparation,"value_fields":fields,"apis":apis,"internal":internal,"materialization":materialization,"placement":placement,"communication":communication,
+        if p.prefill_tokens>1 {
+            for field in &mut fields {
+                let name=field["name"].as_str().unwrap_or("");
+                let shape=field.get("shape").and_then(serde_json::Value::as_array).cloned();
+                if let Some(mut shape)=shape {
+                    if i.kind==0 && name=="value" && i.op!="sink_normalize" {
+                        shape.insert(0,serde_json::json!(p.prefill_tokens));
+                    } else if matches!(name,"expert_ids"|"scores"|"packed_rows"|"inverse_indices"|"quantized"|"scales"|"quantized_rows"|"causal_indices"|"kv_length"|"metadata_effect"|"physical_append_position")
+                        && let Some(n)=shape.first().and_then(serde_json::Value::as_u64) {
+                        shape[0]=serde_json::json!(n*p.prefill_tokens as u64);
+                    }
+                    field["prefill_shape"]=serde_json::json!(shape);
+                }
+            }
+        }
+        let per_query = matches!(i.op.as_str(), "mome"|"mome_inplace"|"query_project"|"query_rotary_extract"|"rope"|"rope_f32"|"mla_query"|"mla_value"|"cache_append"|"cache_norm_rope_append"|"cache_c8_norm_rope_append"|"latent_attention"|"packed_latent_attention"|"attention_metadata"|"packed_attention_metadata");
+        let assembly = matches!(i.op.as_str(), "repeat"|"slice"|"query_project"|"query_rotary_extract"|"rope"|"rope_f32"|"mla_query"|"mla_value"|"mome"|"latent_attention"|"packed_latent_attention");
+        let packed = if p.prefill_tokens > 1 { serde_json::json!({
+            "tokens":p.prefill_tokens,
+            "schedule":if i.op=="sink_normalize" {"shared initialization constant"} else if per_query {"ordered per-query calls"} else {"token matrix"},
+            "api_repetitions":if per_query {p.prefill_tokens} else {1},
+            "output_elements":if i.kind==0 {Some(i.width*if i.op=="sink_normalize" {1} else {p.prefill_tokens})} else {None},
+            "assembly_copies":if assembly {p.prefill_tokens} else if i.op=="gather" {8*p.prefill_tokens} else {0},
+            "assembly_api":"aclrtMemcpyAsync device-to-device",
+            "assembly_layout":if i.op=="gather" {"rank-major to token-major"} else {"contiguous token rows"},
+            "control_row_stride_bytes":16,
+            "control_bank_bytes":cache_controls.len()*16*p.prefill_tokens
+        }) } else {serde_json::Value::Null};
+        serde_json::json!({"packed_prefill":packed,"preparation":preparation,"value_fields":fields,"apis":apis,"internal":internal,"materialization":materialization,"placement":placement,"communication":communication,
             "granularity":if i.op=="sink_normalize" {"initialization recipe"} else {"instruction"}})
     }).collect()
 }

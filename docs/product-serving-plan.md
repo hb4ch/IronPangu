@@ -1,5 +1,10 @@
 # Product serving execution and scheduling
 
+Latest implementation evidence: [native four-token packed prefill](validation/2026-10-17-packed-prefill/README.md).
+The frozen TP8/EP8 path passes full output fixtures and chunk/page-boundary
+continuations through the existing 512-token envelope. HTTP chunk scheduling and
+the 64K release gates below remain open.
+
 Date: 2026-10-17. Status: proposed design and implementation sequence; no new serving capability is claimed by this document.
 
 This is the next implementation plan for OpenPangu V2 92B, followed by independent 505B qualification. It supersedes the initial Qwen-first serving sequence in `design.md`, while preserving its frontend and device-residency constraints. The first release is a colocated single-node TP=8/EP=8 engine. Disaggregated prefill/decode is a later topology, not a prerequisite for useful serving.

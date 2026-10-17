@@ -419,3 +419,24 @@ rotating cursor when the budget is smaller than active count. This keeps short
 decode work progressing during long prompts, but does not turn the current
 single-token graph into packed prefill or a multi-sequence kernel. The queue holds
 at most four times the configured resident count; excess admission fails explicitly.
+
+### Native packed-prefill qualification
+
+Add `--prefill-tokens 4` to `compile-token` to compile the first qualified packed
+variant alongside serial decode. This emits `IFTOKN04`; widths 2, 8 and 16 are
+accepted by the compiler but do not yet have the width-4 NPU qualification.
+Do not reuse a frozen arena from a different chunk width or native library.
+Discover workspace with the chunk-enabled probe, plan its maximum, prepare again
+with that workspace, and bind the resulting arena before normal execution.
+
+Pass `--packed-prefill` to `scripts/qualify-program-engine.py` at **every**
+preparation and final qualification stage. Combine it with `--interleave` and
+`--permuted-pages` to verify independent histories and noncontiguous page bindings.
+The harness verifies full output and the exact packed-graph replay count; merely
+compiling a chunk variant does not prove that a client uses it.
+
+The C ABI provides `inferfabric_program_prefill_capacity` and
+`inferfabric_program_prefill`; calls accept exactly the compiled number of input
+tokens and sample only the final row when requested. Token tails use the existing
+single-token call. The Rust HTTP adapter does not yet accept these multi-variant
+bundles. See [native evidence and timings](validation/2026-10-17-packed-prefill/README.md).

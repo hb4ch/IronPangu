@@ -352,12 +352,33 @@ pub fn write_bundle_with_resident_sequences(
     output: &std::path::Path,
     resident_sequences: usize,
 ) -> Result<()> {
+    write_bundle_with_resources(graph, topology, inventory, output, resident_sequences, 1)
+}
+pub fn write_bundle_with_resources(
+    graph: &Graph, topology: &OpenPanguParallel, inventory: &Inventory,
+    output: &std::path::Path, resident_sequences: usize, prefill_tokens: usize,
+) -> Result<()> {
     let plans = initialization_plans(graph, topology, inventory)?;
-    let program = crate::token_program::lower(graph, Some(inventory))?.with_resident_sequences(resident_sequences)?;
+    let program = crate::token_program::lower(graph, Some(inventory))?.with_resident_sequences(resident_sequences)?.with_prefill_tokens(prefill_tokens)?;
     let binary = program.encode()?;
     let physical = crate::token_physical::lower(graph, &topology.devices)?;
     let mut serving = crate::token_serving::lower(graph, &physical, &binary, &inventory.metadata_sha256)?;
     serving.resident_sequences = resident_sequences as u32;
+    if prefill_tokens > 1 {
+        use inferfabric_ir::serving::{Phase, Variant};
+        serving.variants.push(Variant {
+            id: format!("packed_prefill_{prefill_tokens}_v1"),
+            phase: Phase::Prefill,
+            max_sequences: 1,
+            max_tokens: prefill_tokens as u32,
+            max_query_tokens: prefill_tokens as u32,
+            max_context: program.max_context as u32,
+            numerical_class: format!("packed_prefill_{prefill_tokens}_v1"),
+            graph_capable: true,
+            packed: true,
+        });
+        serving.limitations.push("Packed prefill uses an exact compiled chunk width, batched tokenwise operators and ordered per-query attention/convolution. Numerical equivalence and hardware readiness require independent qualification; no prefix reuse across numerical classes is granted.".into());
+    }
     serving.validate()?;
     if output.exists() {
         return Err(invalid(

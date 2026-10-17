@@ -7,7 +7,7 @@
 namespace {
 thread_local std::string last_error;
 std::atomic<bool> owned{false};
-enum class Command { Reset, Token, BindPages, SelectResident, ResetResident };
+enum class Command { Reset, Token, Prefill, BindPages, SelectResident, ResetResident };
 struct Engine {
   std::string bundle, checkpoint;
   inferfabric::execution::Plan program;
@@ -22,6 +22,7 @@ struct Engine {
   uint32_t input = 0, position = 0, sample = 0, output = 0;
   uint32_t active_resident = 0;
   std::vector<uint32_t> next_positions;
+  std::vector<uint32_t> chunk_tokens;
   uint32_t vocabulary = 0;
   std::string binding_component;
   std::vector<int32_t> binding_pages;
@@ -84,6 +85,14 @@ struct Engine {
         warm = decoder.token(0, 2, true);
         decoder.emit(warm, 0, false);
         warm = {};
+        if(program.prefill_tokens>1) {
+          std::vector<uint32_t> chunk(program.prefill_tokens,0);
+          for(int pass=0;pass<3;++pass) {
+            decoder.reset_request();
+            auto logits=decoder.prefill(chunk,0,pass==2);
+            decoder.emit(logits,int(program.prefill_tokens)-1,false);
+          }
+        }
         if (const char *dir = std::getenv("INFERFABRIC_PREPARED_AUDIT_DIR")) {
           std::filesystem::create_directories(dir);
           std::ofstream audit(std::filesystem::path(dir) / ("rank-" + std::to_string(rank) + ".json"));
@@ -115,6 +124,10 @@ struct Engine {
           else if (cmd == Command::Token) {
             auto logits = decoder.token(int(token), int(pos), true);
             if (want) next = uint32_t(decoder.emit(logits, int(pos), false));
+            else decoder.execution.complete();
+          } else if(cmd == Command::Prefill) {
+            auto logits=decoder.prefill(chunk_tokens,int(pos),true);
+            if(want)next=uint32_t(decoder.emit(logits,int(pos+chunk_tokens.size()-1),false));
             else decoder.execution.complete();
           }
           {
@@ -234,4 +247,19 @@ extern "C" int inferfabric_program_token(void *p, uint32_t token, uint32_t posit
 }
 extern "C" int inferfabric_program_close(void *p) {
   return call([&] { if (!p) throw std::runtime_error("null engine"); delete static_cast<Engine *>(p); owned = false; });
+}
+extern "C" int inferfabric_program_prefill_capacity(void *p,uint32_t *count) {
+  return call([&]{if(!count)throw std::runtime_error("null prefill capacity");*count=engine(p).program.prefill_tokens;});
+}
+extern "C" int inferfabric_program_prefill(void *p,const uint32_t *tokens,uint32_t count,uint32_t position,uint32_t sample,uint32_t *output) {
+  return call([&]{
+    auto &e=engine(p);
+    if(!tokens || !output || sample>1 || count<=1 || count!=e.program.prefill_tokens ||
+       position!=e.next_positions[e.active_resident] || position>e.program.context || count>e.program.context-position)
+      throw std::runtime_error("invalid program prefill shape/position/output");
+    for(uint32_t i=0;i<count;++i)if(tokens[i]>=e.vocabulary)throw std::runtime_error("invalid prefill token");
+    e.chunk_tokens.assign(tokens,tokens+count);
+    *output=e.submit(Command::Prefill,0,position,sample);
+    e.next_positions[e.active_resident]+=count;
+  });
 }

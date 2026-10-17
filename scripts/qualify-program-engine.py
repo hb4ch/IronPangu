@@ -20,6 +20,7 @@ def main():
     for name in ('binary', 'plan', 'checkpoint', 'cases', 'output'):
         p.add_argument('--' + name, required=True, type=Path)
     p.add_argument('--prepare', action='store_true')
+    p.add_argument('--packed-prefill', action='store_true', help='require the compiled packed chunk path')
     p.add_argument('--permuted-pages', action='store_true', help='qualify rank/component-specific noncontiguous device cache bindings')
     p.add_argument('--interleave', action='store_true', help='interleave resident histories token by token, including slot reuse while peers are live')
     args = p.parse_args()
@@ -33,6 +34,9 @@ def main():
     env.pop('INFERFABRIC_PREPARE_ARENA', None)
     env.pop('INFERFABRIC_ALTERNATE_PAGE_LAYOUTS', None)
     env.pop('INFERFABRIC_INTERLEAVE_RESIDENTS', None)
+    env.pop('INFERFABRIC_PACKED_PREFILL', None)
+    if args.packed_prefill:
+        env['INFERFABRIC_PACKED_PREFILL'] = '1'
     if args.interleave:
         env['INFERFABRIC_INTERLEAVE_RESIDENTS'] = '1'
     if args.prepare:
@@ -84,6 +88,12 @@ def main():
         if audit['activation_host_transfers'] or audit['rejected']:
             raise RuntimeError('residency violation')
         prepared = json.loads((args.output / 'prepared' / f'rank-{rank}.json').read_text())
+        if args.packed_prefill:
+            chunk = json.loads((args.plan / 'device-program.json').read_text())['prefill_tokens']
+            expected_chunks = sum(len(c['input_ids']) // chunk for c in cases)
+            graphs = [g for g in prepared['graphs'] if g['name'] == 'packed_prefill']
+            if chunk <= 1 or not expected_chunks or len(graphs) != 1 or graphs[0]['replays'] != expected_chunks + 1:
+                raise RuntimeError('packed prefill graph did not execute every expected chunk')
         if not args.prepare and (not prepared['workspace']['planned'] or prepared['workspace']['growth_allocations']):
             raise RuntimeError('workspace growth or missing fixed plan')
         if not args.prepare and (not prepared['arena']['frozen'] or any(
@@ -94,7 +104,8 @@ def main():
                   fixture_sha256=hashlib.sha256(args.cases.read_bytes()).hexdigest(),
                   permuted_pages=args.permuted_pages,
                   interleaved_residents=args.interleave,
-                  scope='one loaded TP8/EP8 group, serial token graph; no packed prefill or long-context claim',
+                  packed_prefill=args.packed_prefill,
+                  scope='one loaded TP8/EP8 group, ' + ('compiled packed prefill and serial decode' if args.packed_prefill else 'serial token graph') + '; no long-context claim',
                   measurements=measurements)
     (args.output / 'results.json').write_text(json.dumps(report, indent=2) + '\n')
     print(json.dumps(report))

@@ -22,6 +22,10 @@ int inferfabric_program_bind_pages(void *engine, uint32_t rank, const char *comp
 int inferfabric_program_info(void *engine, uint32_t *context, uint32_t *vocabulary, uint32_t *eos);
 int inferfabric_program_token(void *engine, uint32_t token, uint32_t position,
                               uint32_t sample, uint32_t *output);
+// Exact compiled chunk width, or 1 when no packed variant was compiled.
+int inferfabric_program_prefill_capacity(void *engine, uint32_t *count);
+int inferfabric_program_prefill(void *engine, const uint32_t *tokens, uint32_t count,
+                               uint32_t position, uint32_t sample, uint32_t *output);
 int inferfabric_program_close(void *engine);
 const char *inferfabric_program_error(void);
 #ifdef __cplusplus

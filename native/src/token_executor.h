@@ -100,6 +100,9 @@ struct Decoder {
   resident::PreparedWeightViews weight_views;
   std::vector<std::unique_ptr<inferfabric::PreparedKernel>> pending_kernels;
   aclmdlRI decode_graph = nullptr;
+  aclmdlRI prefill_graph = nullptr;
+  V prefill_output;
+  std::vector<std::unique_ptr<inferfabric::PreparedKernel>> prefill_kernels;
   V graph_output;
   std::vector<std::unique_ptr<inferfabric::PreparedKernel>> graph_kernels;
   std::unique_ptr<DeviceTensor> token_index, position_index, cache_position, zero_cache_position,
@@ -119,6 +122,18 @@ struct Decoder {
   std::unique_ptr<DeviceTensor> cache_controls;
   std::unique_ptr<DeviceTensor> resident_index;
   uint32_t active_resident = 0;
+  uint32_t active_tokens = 1, active_row = 0;
+  aclTensor *prefix(DeviceTensor &x, const std::vector<int64_t> &shape, size_t offset=0) {
+    size_t bytes=resident::element_bytes(x.type);
+    for(auto dimension:shape) { if(dimension<=0 || size_t(dimension)>x.bytes/bytes)throw std::runtime_error("prepared prefix bounds"); bytes*=dimension; }
+    if(offset>x.bytes || bytes>x.bytes-offset)throw std::runtime_error("prepared prefix extent");
+    return execution.descriptor(static_cast<uint8_t *>(x.data)+offset,shape,x.type);
+  }
+  aclTensor *control_row(DeviceTensor &x, const std::vector<int64_t> &shape={1}) {
+    size_t bytes=resident::element_bytes(x.type);
+    for(auto dimension:shape)bytes*=dimension;
+    return prefix(x,shape,active_row*bytes);
+  }
   std::vector<uint8_t> cache_control_host;
   std::map<std::string, V> prepared_sinks;
   aclrtStream stream = nullptr;
@@ -148,34 +163,34 @@ struct Decoder {
     resident::control_upload(*resident_index,std::vector<int32_t>{0});
     for (const auto &node : program.nodes)
       if (node.op == "cache_append" || node.op == "cache_norm_rope_append" || node.op == "cache_c8_norm_rope_append") {
-        auto offset=cache_control_offsets.size()*16;
+        auto offset=cache_control_offsets.size()*16*program.prefill_tokens;
         if (!cache_control_offsets.emplace(node.name,offset).second)
           throw std::runtime_error("duplicate cache control binding");
       }
     if (!cache_control_offsets.empty()) {
-      cache_control_host.resize(cache_control_offsets.size()*16,0);
+      cache_control_host.resize(cache_control_offsets.size()*16*program.prefill_tokens,0);
       cache_controls=std::make_unique<DeviceTensor>(std::vector<int64_t>{int64_t(cache_control_host.size())},ACL_UINT8,1);
     }
     token_index =
-        std::make_unique<DeviceTensor>(std::vector<int64_t>{1}, ACL_INT32, 4);
+        std::make_unique<DeviceTensor>(std::vector<int64_t>{program.prefill_tokens}, ACL_INT32, 4);
     position_index =
-        std::make_unique<DeviceTensor>(std::vector<int64_t>{1}, ACL_INT32, 4);
+        std::make_unique<DeviceTensor>(std::vector<int64_t>{program.prefill_tokens}, ACL_INT32, 4);
     cache_position =
-        std::make_unique<DeviceTensor>(std::vector<int64_t>{1}, ACL_INT64, 8);
+        std::make_unique<DeviceTensor>(std::vector<int64_t>{program.prefill_tokens}, ACL_INT64, 8);
     zero_cache_position=std::make_unique<DeviceTensor>(std::vector<int64_t>{1},ACL_INT64,8);
     resident::control_upload(*zero_cache_position,std::vector<int64_t>{0});
     sequence_length64 =
-        std::make_unique<DeviceTensor>(std::vector<int64_t>{1}, ACL_INT64, 8);
+        std::make_unique<DeviceTensor>(std::vector<int64_t>{program.prefill_tokens}, ACL_INT64, 8);
     rotary_cos =
-        std::make_unique<DeviceTensor>(std::vector<int64_t>{64}, ACL_FLOAT, 4);
+        std::make_unique<DeviceTensor>(std::vector<int64_t>{int64_t(program.prefill_tokens)*64}, ACL_FLOAT, 4);
     rotary_sin =
-        std::make_unique<DeviceTensor>(std::vector<int64_t>{64}, ACL_FLOAT, 4);
+        std::make_unique<DeviceTensor>(std::vector<int64_t>{int64_t(program.prefill_tokens)*64}, ACL_FLOAT, 4);
     rotary_cos_bf16 =
-        std::make_unique<DeviceTensor>(std::vector<int64_t>{1, 1, 1, 64}, ACL_BF16, 2);
+        std::make_unique<DeviceTensor>(std::vector<int64_t>{program.prefill_tokens, 1, 1, 64}, ACL_BF16, 2);
     rotary_sin_bf16 =
-        std::make_unique<DeviceTensor>(std::vector<int64_t>{1, 1, 1, 64}, ACL_BF16, 2);
+        std::make_unique<DeviceTensor>(std::vector<int64_t>{program.prefill_tokens, 1, 1, 64}, ACL_BF16, 2);
     query_length64 = std::make_unique<DeviceTensor>(std::vector<int64_t>{1}, ACL_INT64, 8);
-    attention_metadata = std::make_unique<DeviceTensor>(std::vector<int64_t>{1024}, ACL_INT32, 4);
+    attention_metadata = std::make_unique<DeviceTensor>(std::vector<int64_t>{int64_t(program.prefill_tokens)*1024}, ACL_INT32, 4);
     resident::control_upload(*query_length64, std::vector<int64_t>{1});
     attention_mask = std::make_unique<DeviceTensor>(std::vector<int64_t>{2048, 2048}, ACL_BOOL, 1);
     std::vector<uint8_t> mask(2048 * 2048);
@@ -291,7 +306,14 @@ struct Decoder {
                             comm, stream),
               "all gather");
     }
-    return result(b);
+    if(active_tokens==1)return result(b);
+    // HCCL produces rank-major rows; the next operator consumes token-major rows.
+    V output(x.size()*8,ACL_BF16);
+    auto width=x.size()/active_tokens;
+    for(uint32_t token=0;token<active_tokens;++token)for(size_t peer=0;peer<8;++peer)
+      resident::copy(static_cast<uint16_t *>(output.data())+(token*8+peer)*width,
+                     static_cast<uint16_t *>(b.data)+(peer*active_tokens+token)*width,width*2);
+    return output;
   }
   V sum(const V &x, bool bf16 = false) {
     auto dtype = bf16 ? ACL_BF16 : ACL_FLOAT;
@@ -309,9 +331,12 @@ struct Decoder {
   V matrix(const V &x, void *weight, int rows, int cols,
            bool transposed = true) {
     int output = transposed ? rows : cols;
+    int input_width = transposed ? cols : rows;
+    if(input_width<=0 || x.size()%input_width)throw std::runtime_error("matrix token rows");
+    int64_t tokens=x.size()/input_width;
     auto value = cast(x, ACL_BF16);
-    View input(value.data(), {1, int64_t(x.size())}, ACL_BF16);
-    DeviceTensor out({1, output}, ACL_BF16, 2);
+    View input(value.data(), {tokens, input_width}, ACL_BF16);
+    DeviceTensor out({tokens, output}, ACL_BF16, 2);
     View view(weight, {rows, cols}, ACL_BF16, transposed);
     uint64_t bytes = 0;
     aclOpExecutor *e = nullptr;
@@ -322,10 +347,13 @@ struct Decoder {
     return result(out);
   }
   struct Quantized { V values, scales; };
-  Quantized quantize(const V &x) {
+  Quantized quantize(const V &x, size_t width=0) {
     if (x.dtype()!=ACL_BF16) throw std::runtime_error("quantize requires planned BF16 input");
-    View input(x.data(), {1,int64_t(x.size())}, ACL_BF16);
-    DeviceTensor quant({1,int64_t(x.size())}, ACL_INT8, 1), scale({1},ACL_FLOAT,4);
+    if(!width)width=x.size();
+    if(x.size()%width)throw std::runtime_error("quantize token rows");
+    int64_t tokens=x.size()/width;
+    View input(x.data(), {tokens,int64_t(width)}, ACL_BF16);
+    DeviceTensor quant({tokens,int64_t(width)}, ACL_INT8, 1), scale({tokens},ACL_FLOAT,4);
     uint64_t bytes=0; aclOpExecutor *e=nullptr;
     checked(prepared::query("aclnnDynamicQuant", false, aclnnDynamicQuantGetWorkspaceSize,
                             input.t,nullptr,quant.tensor,scale.tensor,&bytes,&e),"quant prepare");
@@ -335,11 +363,12 @@ struct Decoder {
   V quantized_linear(const std::string &name, const Quantized &x) {
     auto &a=w(name+".weight"), &s=w(name+".weight_scale");
     int n=a.descriptor.shape[0],k=a.descriptor.shape[1];
-    if (x.values.dtype()!=ACL_INT8 || x.values.size()!=size_t(k) || x.scales.dtype()!=ACL_FLOAT || x.scales.size()!=1)
+    int64_t tokens=x.scales.size();
+    if (x.values.dtype()!=ACL_INT8 || x.values.size()!=size_t(k)*tokens || x.scales.dtype()!=ACL_FLOAT || !tokens)
       throw std::runtime_error("quantized linear input contract");
-    View quant(x.values.data(),{1,k},ACL_INT8), scale(x.scales.data(),{1},ACL_FLOAT);
+    View quant(x.values.data(),{tokens,k},ACL_INT8), scale(x.scales.data(),{tokens},ACL_FLOAT);
     View weight(a.data,{n,k},ACL_INT8), scales(s.data,{n},ACL_FLOAT);
-    DeviceTensor out({1,n},ACL_BF16,2); uint64_t bytes=0; aclOpExecutor *e=nullptr;
+    DeviceTensor out({tokens,n},ACL_BF16,2); uint64_t bytes=0; aclOpExecutor *e=nullptr;
     checked(prepared::query("aclnnQuantMatmulV5",false,aclnnQuantMatmulV5GetWorkspaceSize,
                             quant.t,weight.t,scale.t,scales.t,nullptr,nullptr,nullptr,nullptr,
                             nullptr,false,true,0,out.tensor,&bytes,&e),"int8 matmul prepare");
@@ -348,37 +377,39 @@ struct Decoder {
   V linear(const std::string &name, const V &x, const std::string &implementation = "") {
     auto &a=w(name+".weight");
     int n=a.descriptor.shape[0],k=a.descriptor.shape[1];
-    if (x.size()!=size_t(k)) throw std::runtime_error("linear shape "+name);
+    if (!k || x.size()%size_t(k)) throw std::runtime_error("linear shape "+name);
     if (implementation=="bf16" || (implementation.empty() && a.dtype==inferfabric::initialization::DType::Bf16))
       return matrix(x,a.data,n,k);
     if (program.physical) throw std::runtime_error("physical INT8 projection requires explicit quantize");
-    return quantized_linear(name,quantize(cast(x,ACL_BF16)));
+    return quantized_linear(name,quantize(cast(x,ACL_BF16),k));
   }
   V linear_pair(const std::string &first, const std::string &second, const V &x) {
     auto &a = w(first + ".weight"), &b = w(second + ".weight");
     if (a.dtype != inferfabric::initialization::DType::Bf16 || b.dtype != a.dtype ||
-        a.descriptor.shape[1] != int64_t(x.size()) || b.descriptor.shape[1] != int64_t(x.size()))
+        a.descriptor.shape[1] != b.descriptor.shape[1] || x.size()%a.descriptor.shape[1])
       throw std::runtime_error("paired projection dtype/shape");
     int64_t rows = a.descriptor.shape[0] + b.descriptor.shape[0];
     auto &packed = paired_projections[{first, second}];
     if (!packed) {
       prepared::Context::InitializationCopies declared(execution);
-      packed = std::make_unique<DeviceTensor>(std::vector<int64_t>{rows, int64_t(x.size())}, ACL_BF16, 2);
+      packed = std::make_unique<DeviceTensor>(std::vector<int64_t>{rows, a.descriptor.shape[1]}, ACL_BF16, 2);
       execution.copy(packed->data, a.data, a.bytes);
       execution.copy(static_cast<char *>(packed->data) + a.bytes, b.data, b.bytes);
     }
-    return matrix(x, packed->data, rows, x.size());
+    return matrix(x, packed->data, rows, a.descriptor.shape[1]);
   }
   void trace(const std::string &, const V &) {}
   V norm(const V &x, const std::string &name) {
     auto &gamma = w(name + ".weight");
-    if (gamma.bytes != x.size() * 2)
+    size_t width=gamma.bytes/2;
+    if (!width || x.size()%width)
       throw std::runtime_error("norm shape");
     auto value = cast(x, ACL_BF16);
-    View input(value.data(), {1, int64_t(x.size())}, ACL_BF16);
-    DeviceTensor out({1, int64_t(x.size())}, ACL_BF16, 2),
-        rstd({1, 1}, ACL_FLOAT, 4);
-    View weight(gamma.data, {int64_t(x.size())}, ACL_BF16);
+    int64_t tokens=x.size()/width;
+    View input(value.data(), {tokens, int64_t(width)}, ACL_BF16);
+    DeviceTensor out({tokens, int64_t(width)}, ACL_BF16, 2),
+        rstd({tokens, 1}, ACL_FLOAT, 4);
+    View weight(gamma.data, {int64_t(width)}, ACL_BF16);
     uint64_t bytes = 0;
     aclOpExecutor *e = nullptr;
     checked(prepared::query("aclnnRmsNorm", false, aclnnRmsNormGetWorkspaceSize,
@@ -414,7 +445,7 @@ struct Decoder {
                             aclnnAiInfraFusedCausalConv1dGetWorkspaceSize,
                             input_view.t, s.weight.tensor, s.state.tensor,
                             s.starts.tensor, resident_index->tensor, nullptr, nullptr,
-                            nullptr, position_index->tensor, nullptr, nullptr,
+                            nullptr, control_row(*position_index), nullptr, nullptr,
                             nullptr, 0, -1, 0, 1, 1, 128, 1, true, s.out.tensor,
                             &bytes, &e),
             "MoME prepare");
@@ -429,7 +460,7 @@ struct Decoder {
          const std::string &state_name, bool defer_sink = false) {
     auto &ptr = mhc_states[state_name];
     if (!ptr) {
-      ptr = std::make_unique<MhcState>();
+      ptr = std::make_unique<MhcState>(program.prefill_tokens);
       auto &phi = cpu(name + ".phi.weight");
       auto &gamma = cpu(name + ".norm_gamma");
       Host folded(24 * 10240, 0), alpha(3, 0), beta(24, 0);
@@ -445,20 +476,21 @@ struct Decoder {
     }
     auto &s = *ptr;
     auto residual = cast(x, ACL_BF16);
-    View residual_view(residual.data(), {1, 4, 2560}, ACL_BF16);
+    int64_t tokens=active_tokens;
+    View residual_view(residual.data(), {tokens, 4, 2560}, ACL_BF16);
     auto &api = training_api();
     uint64_t bytes = 0;
     aclOpExecutor *e = nullptr;
     checked(prepared::query("mHC.pre", false, api.pre_size, residual_view.t,
                             s.phi.tensor, s.alpha.tensor, s.beta.tensor,
-                            nullptr, 0, 1e-6, 1e-6, s.input.tensor,
-                            s.post.tensor, s.res.tensor, s.rms.tensor,
-                            s.mix.tensor, s.pre_weights.tensor, &bytes, &e),
+                            nullptr, 0, 1e-6, 1e-6, prefix(s.input,{tokens,2560}),
+                            prefix(s.post,{tokens,4}), prefix(s.res,{tokens,4,4}), prefix(s.rms,{tokens}),
+                            prefix(s.mix,{tokens,24}), prefix(s.pre_weights,{tokens,4}), &bytes, &e),
             "mHC pre prepare");
     run(api.pre, bytes, e);
     if (!merge && !defer_sink) {
-      checked(prepared::query("mHC.sink", false, api.sink_size, s.res.tensor, 0,
-                              1e-6, 20, s.sink.tensor, nullptr, nullptr, &bytes,
+      checked(prepared::query("mHC.sink", false, api.sink_size, prefix(s.res,{tokens,4,4}), 0,
+                              1e-6, 20, prefix(s.sink,{tokens,4,4}), nullptr, nullptr, &bytes,
                               &e),
               "mHC Sinkhorn prepare");
       run(api.sink, bytes, e);
@@ -466,13 +498,13 @@ struct Decoder {
     HC h;
     h.device = &s;
     h.residual = residual;
-    h.input = result(s.input);
+    h.input = result(s.input).view(0,tokens*2560);
     return h;
   }
   HC sinkhorn(HC h) {
     if(!h.device) throw std::runtime_error("missing mHC projection");
     auto &s=*h.device;auto &api=training_api();uint64_t bytes=0;aclOpExecutor *e=nullptr;
-    checked(prepared::query("mHC.sink",false,api.sink_size,s.res.tensor,0,1e-6,20,s.sink.tensor,nullptr,nullptr,&bytes,&e),"mHC Sinkhorn prepare");
+    checked(prepared::query("mHC.sink",false,api.sink_size,prefix(s.res,{active_tokens,4,4}),0,1e-6,20,prefix(s.sink,{active_tokens,4,4}),nullptr,nullptr,&bytes,&e),"mHC Sinkhorn prepare");
     run(api.sink,bytes,e);return h;
   }
   V post(const V &, const V &branch, const HC &h) {
@@ -480,17 +512,17 @@ struct Decoder {
       throw std::runtime_error("missing mHC pre state");
     auto &s = *h.device;
     auto value = cast(branch, ACL_BF16);
-    View residual(h.residual.data(), {1, 4, 2560}, ACL_BF16),
-        branch_view(value.data(), {1, 2560}, ACL_BF16);
+    View residual(h.residual.data(), {active_tokens, 4, 2560}, ACL_BF16),
+        branch_view(value.data(), {active_tokens, 2560}, ACL_BF16);
     auto &api = training_api();
     uint64_t bytes = 0;
     aclOpExecutor *e = nullptr;
     checked(prepared::query("mHC.post", false, api.post_size, residual.t,
-                            s.sink.tensor, branch_view.t, s.post.tensor,
-                            s.out.tensor, &bytes, &e),
+                            prefix(s.sink,{active_tokens,4,4}), branch_view.t, prefix(s.post,{active_tokens,4}),
+                            prefix(s.out,{active_tokens,4,2560}), &bytes, &e),
             "mHC post prepare");
     run(api.post, bytes, e);
-    return result(s.out);
+    return result(s.out).view(0,size_t(active_tokens)*10240);
   }
   V rope(const V &input, int pos, bool fp32_output = false) {
     if (!input.size() || input.size() % 64 || pos != current_position)
@@ -501,8 +533,8 @@ struct Decoder {
     int64_t heads = input.size() / 64;
     DeviceTensor out({1, heads, 1, 64}, ACL_FLOAT, 4);
     View x(value.data(), {1, heads, 1, 64}, ACL_FLOAT),
-        cos(rotary_cos->data, {1, 1, 1, 64}, ACL_FLOAT),
-        sin(rotary_sin->data, {1, 1, 1, 64}, ACL_FLOAT);
+        cos(static_cast<float *>(rotary_cos->data)+active_row*64, {1, 1, 1, 64}, ACL_FLOAT),
+        sin(static_cast<float *>(rotary_sin->data)+active_row*64, {1, 1, 1, 64}, ACL_FLOAT);
     uint64_t bytes = 0;
     aclOpExecutor *e = nullptr;
     checked(prepared::query("aclnnRotaryPositionEmbedding", false,
@@ -660,8 +692,8 @@ struct Decoder {
     aclOpExecutor *e = nullptr;
     checked(prepared::query("aclnnAiInfraKvRmsNormRopeCache", false,
                             aclnnAiInfraKvRmsNormRopeCacheGetWorkspaceSize,
-                            kv.t, norm_weight.t, rotary_cos_bf16->tensor,
-                            rotary_sin_bf16->tensor, cache_append_descriptor(state_name,ACL_INT64),
+                            kv.t, norm_weight.t, control_row(*rotary_cos_bf16,{1,1,1,64}),
+                            control_row(*rotary_sin_bf16,{1,1,1,64}), cache_append_descriptor(state_name,ACL_INT64),
                             nullptr, ptr->key.tensor, nullptr, nullptr,
                             nullptr, nullptr, nullptr, 1e-5, cache_mode,
                             rotary_mode, quant_mode, true, rope_out.tensor, latent_out.tensor,
@@ -716,11 +748,14 @@ struct Decoder {
   void prepare_packed_attention_metadata() {
 #ifdef IF_CACHE_KERNELS
     if(!packed_indices) {
-      packed_indices=std::make_unique<DeviceTensor>(std::vector<int64_t>{1,1,512},ACL_INT32,4);
-      packed_length=std::make_unique<DeviceTensor>(std::vector<int64_t>{1},ACL_INT32,4);
+      packed_indices=std::make_unique<DeviceTensor>(std::vector<int64_t>{program.prefill_tokens,1,512},ACL_INT32,4);
+      packed_length=std::make_unique<DeviceTensor>(std::vector<int64_t>{program.prefill_tokens},ACL_INT32,4);
     }
     execution.require_stream(stream);
-    if_packed_attention_metadata(cache_position->data,packed_indices->data,packed_length->data,512,stream);
+    for(uint32_t row=0;row<active_tokens;++row)
+      if_packed_attention_metadata(static_cast<int64_t *>(cache_position->data)+row,
+          static_cast<int32_t *>(packed_indices->data)+row*512,
+          static_cast<int32_t *>(packed_length->data)+row,512,stream);
 #else
     throw std::runtime_error("packed attention metadata kernel not built");
 #endif
@@ -735,8 +770,8 @@ struct Decoder {
     uint64_t bytes=0;aclOpExecutor *e=nullptr;
     checked(prepared::query("aclnnAiInfraKvQuantSparseFlashAttention",false,
         aclnnAiInfraKvQuantSparseFlashAttentionGetWorkspaceSize,
-        q.t,state.key.tensor,state.key.tensor,packed_indices->tensor,nullptr,nullptr,
-        state.table.tensor,state.qlen.tensor,packed_length->tensor,state.sink.tensor,sink_values,
+        q.t,state.key.tensor,state.key.tensor,control_row(*packed_indices,{1,1,512}),nullptr,nullptr,
+        state.table.tensor,state.qlen.tensor,control_row(*packed_length),state.sink.tensor,sink_values,
         1/std::sqrt(192.0),2,2,1,layout,cache_layout,3,INT64_MAX,INT64_MAX,2,1,128,64,
         state.out.tensor,&bytes,&e),"packed C8 attention prepare");
     run(aclnnAiInfraKvQuantSparseFlashAttention,bytes,e);
@@ -745,17 +780,22 @@ struct Decoder {
   void prepare_attention_metadata(bool cleared = false) {
     if (metadata_enqueued) return;
     if(!cleared) execution.zero(attention_metadata->data, attention_metadata->bytes);
+    auto previous=active_row;
+    for(active_row=0;active_row<active_tokens;++active_row)prepare_attention_metadata_row();
+    active_row=previous;
+    metadata_enqueued = true;
+  }
+  void prepare_attention_metadata_row() {
     char layout[] = "TND", cache_layout[] = "BnBsH";
     uint64_t bytes = 0;
     aclOpExecutor *e = nullptr;
     checked(prepared::query("attention_metadata", false,
         aclnnAiInfraFusedInferAttentionSinkMetadataGetWorkspaceSize,
-        query_length64->tensor, sequence_length64->tensor,
+        query_length64->tensor, control_row(*sequence_length64),
         6, 1, 512, 512, 1, 4, int64_t(program.context) - 1, 0,
         layout, cache_layout, 0, 128, 64, 16, cube_cores, vector_cores,
-        attention_metadata->tensor, &bytes, &e), "attention metadata prepare");
+        control_row(*attention_metadata,{1024}), &bytes, &e), "attention metadata prepare");
     run(aclnnAiInfraFusedInferAttentionSinkMetadata, bytes, e);
-    metadata_enqueued = true;
   }
   V attend(const V &queries, const std::string &state_name, const V *decoded=nullptr) {
     if(!program.physical) prepare_attention_metadata();
@@ -803,10 +843,10 @@ struct Decoder {
     checked(prepared::query("aclnnAiInfraFusedInferAttentionSink", false,
         aclnnAiInfraFusedInferAttentionSinkGetWorkspaceSize,
         q, keys.value, values.value,
-        nullptr, attention_mask->tensor, query_length64->tensor, sequence_length64->tensor,
+        nullptr, attention_mask->tensor, query_length64->tensor, control_row(*sequence_length64),
         nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr,
         state.table.tensor, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr,
-        qr, rope_cache.get(), nullptr, nullptr, attention_metadata->tensor,
+        qr, rope_cache.get(), nullptr, nullptr, control_row(*attention_metadata,{1024}),
         sink, sink_rope, sink,
         6, 1 / std::sqrt(192.0), int64_t(program.context) - 1, 0, layout,
         1, 4, 0, 16, 0, false, 0, 0, 0, 0,
@@ -815,15 +855,16 @@ struct Decoder {
     return result(state.out);
   }
   V activate(const V &gate, const V &up) {
-    return activate(resident::concat(gate, up));
+    return activate(active_tokens==1 ? resident::concat(gate, up) : concat_columns(gate,up,active_tokens));
   }
   V activate(const V &joined) {
     if (!joined.size() || joined.size() % 2)
       throw std::runtime_error("packed activation shape");
-    int width = joined.size() / 2;
+    if(joined.size()%(2*active_tokens))throw std::runtime_error("activation token rows");
+    int width = joined.size() / (2*active_tokens);
     auto input = cast(joined, ACL_BF16);
-    DeviceTensor output({1, width}, ACL_BF16, 2);
-    auto descriptor = [](void *data, int64_t columns,
+    DeviceTensor output({active_tokens, width}, ACL_BF16, 2);
+    auto descriptor = [&](void *data, int64_t columns,
                          uint32_t access) {
       IFKernelTensorV1 result{};
       result.struct_bytes = sizeof(result);
@@ -831,8 +872,8 @@ struct Decoder {
       result.rank = 2;
       result.access = access;
       result.data = data;
-      result.allocation_bytes = uint64_t(columns) * 2;
-      result.shape[0] = 1;
+      result.allocation_bytes = uint64_t(columns) * active_tokens * 2;
+      result.shape[0] = active_tokens;
       result.shape[1] = columns;
       result.strides[0] = columns;
       result.strides[1] = 1;
@@ -859,7 +900,7 @@ struct Decoder {
                const std::string &state_name) {
     auto &ptr = routers[state_name];
     if (!ptr) {
-      ptr = std::make_unique<openpangu::Router>(1, 2560, 256, 8, stream);
+      ptr = std::make_unique<openpangu::Router>(program.prefill_tokens, 2560, 256, 8, stream);
       auto &gate = cpu(p + ".gate.weight");
       Host transposed(gate.size());
       for (int e = 0; e < 256; ++e)
@@ -870,21 +911,25 @@ struct Decoder {
                                  cpu(p + ".e_score_correction_bias"));
     }
     auto value = cast(x, ACL_FLOAT);
-    View input(value.data(), {1, 2560}, ACL_FLOAT);
+    View input(value.data(), {active_tokens, 2560}, ACL_FLOAT);
     uint64_t bytes = 0;
     aclOpExecutor *e = nullptr;
     checked(prepared::query("router_projection", false,
                             aclnnMatmulGetWorkspaceSize, input.t,
-                            ptr->weight.tensor, ptr->logits.tensor, 0, &bytes, &e),
+                            ptr->weight.tensor, prefix(ptr->logits,{active_tokens,256}), 0, &bytes, &e),
             "router projection prepare");
     run(aclnnMatmul, bytes, e);
-    return result(ptr->logits, ACL_FLOAT);
+    return result(ptr->logits, ACL_FLOAT).view(0,size_t(active_tokens)*256);
   }
   Routes select_route(const V &logits,const std::string &state_name) {
     auto &ptr=routers.at(state_name);
     if(logits.dtype()!=ACL_FLOAT || logits.data()!=ptr->logits.data) throw std::runtime_error("routing projection provenance");
-    ptr->select();
-    return {result(ptr->ids, ACL_INT32), result(ptr->scores, ACL_FLOAT)};
+    uint64_t bytes=0;aclOpExecutor *e=nullptr;
+    checked(prepared::query("router_select",false,aclnnMoeGatingTopKGetWorkspaceSize,
+        prefix(ptr->logits,{active_tokens,256}),ptr->bias.tensor,8,1,1,1,0,1,true,2.5,1e-20,
+        prefix(ptr->scores,{active_tokens,8}),prefix(ptr->ids,{active_tokens,8}),prefix(ptr->normalized,{active_tokens,256}),&bytes,&e),"router topk prepare");
+    run(aclnnMoeGatingTopK,bytes,e);
+    return {result(ptr->ids, ACL_INT32).view(0,size_t(active_tokens)*8), result(ptr->scores, ACL_FLOAT).view(0,size_t(active_tokens)*8)};
   }
   Routes route(const V &x,const std::string &p,const std::string &state_name) {
     return select_route(project_route(x,p,state_name),state_name);
@@ -951,13 +996,13 @@ struct Decoder {
   RoutedQuantized quantize_experts(const V &batch, const Routes &routes,
                             int k, bool fused = false,
                             const ExpertRows *source = nullptr) {
-    const int rows = 8;
+    const int rows = 8*active_tokens;
     if (batch.dtype() != ACL_BF16 ||
-        batch.size() != size_t(k * (fused ? rows * 2 : 1)))
+        batch.size() != size_t(k * (fused ? rows * 2 : active_tokens)))
       throw std::runtime_error("grouped expert input contract");
     V groups, indices;
     if (fused) {
-      if (!source || source->groups.size() != 32 || source->indices.size() != rows)
+      if (!source || source->groups.size() != 32 || source->indices.size() != size_t(rows))
         throw std::runtime_error("fused expert routing provenance");
       groups = source->groups;
       indices = source->indices;
@@ -965,7 +1010,7 @@ struct Decoder {
       groups = V(32, ACL_INT64);
       indices = V(rows, ACL_INT32);
     }
-    View input(batch.data(), {fused ? rows : 1, k * (fused ? 2 : 1)}, ACL_BF16);
+    View input(batch.data(), {fused ? rows : int(active_tokens), k * (fused ? 2 : 1)}, ACL_BF16);
     View group_view(groups.data(), {32}, ACL_INT64);
     DeviceTensor quant({rows, k}, ACL_INT8, 1),
         scale({rows}, ACL_FLOAT, 4);
@@ -983,7 +1028,7 @@ struct Decoder {
     } else {
       // One device operation expands/quantizes the token and filters/sorts
       // routes into this rank's expert interval. Invalid inverse indices are -1.
-      View ids(routes.ids.data(), {1, rows}, ACL_INT32);
+      View ids(routes.ids.data(), {active_tokens, 8}, ACL_INT32);
       int64_t bounds[] = {rank * 32, (rank + 1) * 32};
       auto *range = aclCreateIntArray(bounds, 2);
       if (!range)
@@ -991,7 +1036,7 @@ struct Decoder {
       auto status = prepared::query("aclnnMoeInitRoutingV3", false,
                                      aclnnMoeInitRoutingV3GetWorkspaceSize,
                                      input.t, ids.t, nullptr, nullptr,
-                                     8, 0, 256, 0, 1, true, 1, range, 0,
+                                     rows, 0, 256, 0, 1, true, 1, range, 0,
                                      quant.tensor, indices.tensor(), group_view.t,
                                      scale.tensor, &bytes, &e);
       aclDestroyIntArray(range);
@@ -1001,15 +1046,15 @@ struct Decoder {
     return {result(quant,ACL_INT8),result(scale,ACL_FLOAT),groups,indices};
   }
   ExpertRows zero_expert_output(const RoutedQuantized &q,int width) {
-    ExpertRows output;output.packed=V(size_t(8)*width,ACL_BF16);
+    ExpertRows output;output.packed=V(size_t(8)*active_tokens*width,ACL_BF16);
     output.groups=q.groups;output.indices=q.indices;
     execution.zero(output.packed.data(),output.packed.bytes());
-    for(int i=0;i<8;++i)output.rows.push_back(output.packed.view(size_t(i)*width,width));
+    for(uint32_t i=0;i<8*active_tokens;++i)output.rows.push_back(output.packed.view(size_t(i)*width,width));
     return output;
   }
   ExpertRows expert_gmm(const RoutedQuantized &q,ExpertRows output,ExpertBank &bank) {
-    const int rows=8;
-    if(q.values.dtype()!=ACL_INT8 || q.values.size()!=size_t(rows*bank.k) || q.scales.dtype()!=ACL_FLOAT || q.scales.size()!=rows || q.groups.size()!=32 || output.packed.dtype()!=ACL_BF16 || output.packed.size()!=size_t(rows*bank.n) || output.groups.data()!=q.groups.data() || output.indices.data()!=q.indices.data()) throw std::runtime_error("grouped matmul physical contract");
+    const int rows=8*active_tokens;
+    if(q.values.dtype()!=ACL_INT8 || q.values.size()!=size_t(rows*bank.k) || q.scales.dtype()!=ACL_FLOAT || q.scales.size()!=size_t(rows) || q.groups.size()!=32 || output.packed.dtype()!=ACL_BF16 || output.packed.size()!=size_t(rows*bank.n) || output.groups.data()!=q.groups.data() || output.indices.data()!=q.indices.data()) throw std::runtime_error("grouped matmul physical contract");
     View group_view(q.groups.data(),{32},ACL_INT64);uint64_t bytes=0;aclOpExecutor *e=nullptr;
     // ACL tensor lists own their element descriptors. Give them independent
     // descriptors, never pointers owned by the prepared descriptor cache.
@@ -1071,10 +1116,10 @@ struct Decoder {
       throw std::runtime_error("weighted expert reduction contract");
     auto input = prepared_input ? *prepared_input : cast(rows.packed, ACL_FLOAT);
     if(input.dtype()!=ACL_FLOAT || input.size()!=rows.packed.size()) throw std::runtime_error("planned expert reduction storage");
-    V out(width);
+    V out(width*active_tokens);
     View x(input.data(), {int64_t(scores.size()), 1, int64_t(width)}, ACL_FLOAT),
-        s(scores.data(), {1, int64_t(scores.size())}, ACL_FLOAT),
-        y(out.data(), {1, int64_t(width)}, ACL_FLOAT);
+        s(scores.data(), {active_tokens, 8}, ACL_FLOAT),
+        y(out.data(), {active_tokens, int64_t(width)}, ACL_FLOAT);
     uint64_t bytes = 0;
     aclOpExecutor *e = nullptr;
     checked(prepared::query("aclnnMoeFinalizeRoutingV2", false,
@@ -1160,42 +1205,48 @@ struct Decoder {
   }
   aclTensor *cache_append_descriptor(const std::string &name, aclDataType dtype) {
     if(dtype!=ACL_INT64 && dtype!=ACL_INT32)throw std::runtime_error("cache control dtype");
-    auto offset=cache_control_offsets.at(name)+(dtype==ACL_INT32?8:0);
+    auto offset=cache_control_offsets.at(name)+active_row*16+(dtype==ACL_INT32?8:0);
     return execution.descriptor(static_cast<uint8_t *>(cache_controls->data)+offset,{1},dtype);
   }
-  void set_token_inputs(int id, int pos) {
-    if (pos < 0 || pos >= int(program.context) || id < 0 || uint32_t(id) >= vocabulary())
-      throw std::runtime_error("token/context bound");
-    current_position = pos;
-    for (const auto &entry : cache_control_offsets) {
-      auto state=attention_states.find(entry.first);
-      uint64_t physical=state==attention_states.end()?uint64_t(pos):state->second->page_binding.append(uint32_t(pos));
-      if(physical>INT32_MAX)throw std::runtime_error("physical cache position overflow");
-      int64_t wide=int64_t(physical); int32_t narrow=int32_t(physical);
-      std::memcpy(cache_control_host.data()+entry.second,&wide,sizeof(wide));
-      std::memcpy(cache_control_host.data()+entry.second+8,&narrow,sizeof(narrow));
+  void set_chunk_inputs(const std::vector<uint32_t> &tokens, int pos) {
+    auto count=tokens.size();
+    if((count!=1 && count!=program.prefill_tokens) || pos<0 || size_t(pos)+count>program.context)
+      throw std::runtime_error("compiled token chunk bounds");
+    for(auto id:tokens)if(id>=vocabulary())throw std::runtime_error("chunk token vocabulary");
+    active_tokens=count;active_row=0;current_position=pos;
+    std::vector<int32_t> ids(program.prefill_tokens,0), positions(program.prefill_tokens,0);
+    std::vector<int64_t> positions64(program.prefill_tokens,0), lengths(program.prefill_tokens,0);
+    Host c(program.prefill_tokens*64,0), sn(program.prefill_tokens*64,0);
+    std::vector<uint16_t> cb(program.prefill_tokens*64,0), sb(program.prefill_tokens*64,0);
+    for(size_t row=0;row<count;++row) {
+      int position=pos+row;ids[row]=tokens[row];positions[row]=position;
+      positions64[row]=position;lengths[row]=position+1;
+      for(const auto &entry:cache_control_offsets) {
+        auto state=attention_states.find(entry.first);
+        uint64_t physical=state==attention_states.end()?uint64_t(position):state->second->page_binding.append(position);
+        if(physical>INT32_MAX)throw std::runtime_error("physical append position overflow");
+        int64_t wide=int64_t(physical);int32_t narrow=int32_t(physical);
+        std::memcpy(cache_control_host.data()+entry.second+row*16,&wide,sizeof(wide));
+        std::memcpy(cache_control_host.data()+entry.second+row*16+8,&narrow,sizeof(narrow));
+      }
+      for(int i=0;i<32;++i) {
+        float angle=float(position)/std::pow(6400000.f,float(2*i)/64);
+        c[row*64+i]=c[row*64+i+32]=roundbf(std::cos(angle));
+        sn[row*64+i]=sn[row*64+i+32]=roundbf(std::sin(angle));
+      }
+      for(size_t i=0;i<64;++i){cb[row*64+i]=tobf(c[row*64+i]);sb[row*64+i]=tobf(sn[row*64+i]);}
     }
     if(cache_controls)resident::control_upload(*cache_controls,cache_control_host);
-    resident::control_upload(*token_index, std::vector<int32_t>{id});
-    resident::control_upload(*position_index, std::vector<int32_t>{pos});
-    resident::control_upload(*cache_position, std::vector<int64_t>{pos});
-    resident::control_upload(*sequence_length64, std::vector<int64_t>{pos + 1});
-    Host c(64), sn(64);
-    for (int i = 0; i < 32; ++i) {
-      float angle = float(pos) / std::pow(6400000.f, float(2 * i) / 64);
-      c[i] = c[i + 32] = roundbf(std::cos(angle));
-      sn[i] = sn[i + 32] = roundbf(std::sin(angle));
-    }
-    resident::control_upload(*rotary_cos, c);
-    resident::control_upload(*rotary_sin, sn);
-    std::vector<uint16_t> cb(64), sb(64);
-    for (size_t i = 0; i < 64; ++i) {
-      cb[i] = tobf(c[i]);
-      sb[i] = tobf(sn[i]);
-    }
-    resident::control_upload(*rotary_cos_bf16, cb);
-    resident::control_upload(*rotary_sin_bf16, sb);
+    resident::control_upload(*token_index,ids);resident::control_upload(*position_index,positions);
+    resident::control_upload(*cache_position,positions64);resident::control_upload(*sequence_length64,lengths);
+    resident::control_upload(*rotary_cos,c);resident::control_upload(*rotary_sin,sn);
+    resident::control_upload(*rotary_cos_bf16,cb);resident::control_upload(*rotary_sin_bf16,sb);
   }
+  void set_token_inputs(int id,int pos) {
+    if(id<0)throw std::runtime_error("negative token");
+    set_chunk_inputs({uint32_t(id)},pos);
+  }
+
   V token(int id, int pos, bool decode = false) {
     set_token_inputs(id, pos);
     execution.begin_step(pos);
@@ -1216,6 +1267,36 @@ struct Decoder {
     return output;
   }
   // A request boundary is explicit control work. All preceding work has completed.
+  V prefill(const std::vector<uint32_t> &tokens,int pos,bool replay=true) {
+    if(tokens.size()!=program.prefill_tokens || tokens.size()<=1)throw std::runtime_error("prefill variant size");
+    set_chunk_inputs(tokens,pos);execution.begin_step(pos);
+    V output;
+    if(replay) {
+      if(!prefill_graph) {
+        prefill_graph=execution.capture("packed_prefill",[&]{ pending_kernels.clear();prefill_output=execute_token(); });
+        prefill_kernels=std::move(pending_kernels);
+      }
+      execution.replay(prefill_graph);output=prefill_output;
+    } else output=execute_token();
+    execution.end_step();
+    return output.view((tokens.size()-1)*vocabulary(),vocabulary());
+  }
+  template<class F> void each_row(F f) {
+    struct Restore { Decoder &d;int pos;uint32_t row;~Restore(){d.current_position=pos;d.active_row=row;} } restore{*this,current_position,active_row};
+    for(uint32_t row=0;row<active_tokens;++row){active_row=row;current_position=restore.pos+row;f(row);}
+  }
+  template<class F> V row_values(size_t width,F f) {
+    if(active_tokens==1)return f(0);
+    V result;
+    each_row([&](uint32_t row){
+      V value=f(row);
+      if(value.size()!=width)throw std::runtime_error("packed row result width");
+      if(!row)result=V(width*active_tokens,value.dtype());
+      if(value.dtype()!=result.dtype())throw std::runtime_error("packed row result dtype");
+      resident::copy(static_cast<uint8_t *>(result.data())+row*value.bytes(),value.data(),value.bytes());
+    });
+    return result;
+  }
   // No model-specific layer traversal: only instantiated state bindings are reset.
   void reset_request() {
     for (auto &entry : mome_states)

@@ -47,6 +47,11 @@ int main(int argc, char **argv) {
     }
     for (const auto &r : requests) if (!r.steps || r.steps > 128 || r.prompt.empty()) throw std::runtime_error("probe request bound");
     check(inferfabric_program_open(argv[1], argv[2], std::getenv("INFERFABRIC_PREPARE_ARENA") ? 1 : 0, &engine));
+    uint32_t chunk=1;
+    if(std::getenv("INFERFABRIC_PACKED_PREFILL")) {
+      check(inferfabric_program_prefill_capacity(engine,&chunk));
+      if(chunk<=1)throw std::runtime_error("packed prefill requires a compiled chunk variant");
+    }
     if (std::getenv("INFERFABRIC_INTERLEAVE_RESIDENTS")) {
       uint32_t residents=0;
       check(inferfabric_program_resident_capacity(engine,&residents));
@@ -74,9 +79,11 @@ int main(int argc, char **argv) {
         const auto &request=requests[r.request];
         check(inferfabric_program_select_resident(engine,slot));
         auto token=r.position<request.prompt.size()?request.prompt[r.position]:r.next;
-        auto sample=r.position+1>=request.prompt.size();
-        check(inferfabric_program_token(engine,token,r.position,sample,&r.next));
-        ++r.position;
+        auto count=chunk>1 && r.position<request.prompt.size() && request.prompt.size()-r.position>=chunk ? chunk : 1;
+        auto sample=r.position+count>=request.prompt.size();
+        if(count>1)check(inferfabric_program_prefill(engine,request.prompt.data()+r.position,count,r.position,sample,&r.next));
+        else check(inferfabric_program_token(engine,token,r.position,sample,&r.next));
+        r.position+=count;
         if(sample) {
           auto now=std::chrono::steady_clock::now();
           auto us=std::chrono::duration_cast<std::chrono::microseconds>(now-r.previous).count();
@@ -105,9 +112,11 @@ int main(int argc, char **argv) {
         check(inferfabric_program_bind_pages(engine,b.rank,b.component.c_str(),pages.data(),pages.size()));
       }
       unsigned pos = 0, next = 0;
-      for (auto token : prompt) {
-        check(inferfabric_program_token(engine, token, pos, pos + 1 == prompt.size(), &next));
-        ++pos;
+      while(pos<prompt.size()) {
+        auto count=chunk>1 && prompt.size()-pos>=chunk ? chunk : 1;
+        if(count>1)check(inferfabric_program_prefill(engine,prompt.data()+pos,count,pos,pos+count==prompt.size(),&next));
+        else check(inferfabric_program_token(engine, prompt[pos], pos, pos + 1 == prompt.size(), &next));
+        pos+=count;
       }
       auto previous = began;
       for (unsigned i = 0; i < steps; ++i) {

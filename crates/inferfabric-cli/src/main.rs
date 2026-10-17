@@ -129,6 +129,7 @@ fn run() -> Result<()> {
         Some("compile-token") if args.len() >= 4 =>
         {
             let (mut allow_stale, mut resident_sequences) = (false, None);
+            let mut prefill_tokens = None;
             let mut options = args[4..].iter();
             while let Some(option) = options.next() {
                 match option.as_str() {
@@ -138,6 +139,12 @@ fn run() -> Result<()> {
                             .parse::<usize>().map_err(|_| invalid("invalid resident sequence count"))?;
                         if !(1..=64).contains(&count) { return Err(invalid("resident sequences must be 1..64")); }
                         resident_sequences = Some(count);
+                    }
+                    "--prefill-tokens" if prefill_tokens.is_none() => {
+                        let count = options.next().ok_or_else(|| invalid("missing prefill token count"))?
+                            .parse::<usize>().map_err(|_| invalid("invalid prefill token count"))?;
+                        if !matches!(count, 1 | 2 | 4 | 8 | 16) { return Err(invalid("prefill tokens must be 1,2,4,8,16")); }
+                        prefill_tokens = Some(count);
                     }
                     _ => return Err(invalid("unknown or duplicate compile-token option")),
                 }
@@ -151,12 +158,13 @@ fn run() -> Result<()> {
                 Path::new(&args[2]),
                 allow_stale,
             )?;
-            inferfabric_compiler::token::write_bundle_with_resident_sequences(
+            inferfabric_compiler::token::write_bundle_with_resources(
                 &graph,
                 &parallel,
                 &inventory,
                 Path::new(&args[3]),
                 resident_sequences.unwrap_or(1),
+                prefill_tokens.unwrap_or(1),
             )?;
             println!(
                 "token graph nodes={} ranks={} output={}",
@@ -270,7 +278,7 @@ fn run() -> Result<()> {
         }
         _ => {
             return Err(invalid(
-                "usage: inferfabric compile-token MODEL CHECKPOINT OUTPUT_DIR [--allow-stale-index-size] [--resident-sequences N] | plan-openpangu DSL CHECKPOINT OUTPUT.json [--allow-stale-index-size] | bind-openpangu-checkpoint CHECKPOINT_DIR OUTPUT.json [--allow-stale-index-size] | inspect-openpangu CONFIG.json OUTPUT.json | inspect-openpangu-checkpoint CHECKPOINT_DIR OUTPUT.json [--allow-stale-index-size] | explain-model TYPED-PLAN.json --html MODEL.html | plan GRAPH.json OUTPUT.ifplan [--dump-ir DIR] | explain PLAN.ifplan [--html OUTPUT.html] | execute PLAN.ifplan INPUTS.json REPORT.json | npu-model-probe DSL CHECKPOINT LIBRARY DEVICE TOKENS_JSON REPORT | npu-delta-probe LIBRARY DEVICE REPORT | npu-conv-probe CHECKPOINT LIBRARY DEVICE REPORT | npu-layer-probe CHECKPOINT LIBRARY DEVICE REPORT | npu-attention-probe CHECKPOINT LIBRARY DEVICE REPORT | npu-math-probe DSL CHECKPOINT LIBRARY DEVICE REPORT | compile-checkpoint MODEL.inferfabric CHECKPOINT_DIR OUTPUT.json | compile MODEL.inferfabric OUTPUT | inspect ARTIFACT | demo MODEL.inferfabric REQUESTS.json",
+                "usage: inferfabric compile-token MODEL CHECKPOINT OUTPUT_DIR [--allow-stale-index-size] [--resident-sequences N] [--prefill-tokens 1|2|4|8|16] | plan-openpangu DSL CHECKPOINT OUTPUT.json [--allow-stale-index-size] | bind-openpangu-checkpoint CHECKPOINT_DIR OUTPUT.json [--allow-stale-index-size] | inspect-openpangu CONFIG.json OUTPUT.json | inspect-openpangu-checkpoint CHECKPOINT_DIR OUTPUT.json [--allow-stale-index-size] | explain-model TYPED-PLAN.json --html MODEL.html | plan GRAPH.json OUTPUT.ifplan [--dump-ir DIR] | explain PLAN.ifplan [--html OUTPUT.html] | execute PLAN.ifplan INPUTS.json REPORT.json | npu-model-probe DSL CHECKPOINT LIBRARY DEVICE TOKENS_JSON REPORT | npu-delta-probe LIBRARY DEVICE REPORT | npu-conv-probe CHECKPOINT LIBRARY DEVICE REPORT | npu-layer-probe CHECKPOINT LIBRARY DEVICE REPORT | npu-attention-probe CHECKPOINT LIBRARY DEVICE REPORT | npu-math-probe DSL CHECKPOINT LIBRARY DEVICE REPORT | compile-checkpoint MODEL.inferfabric CHECKPOINT_DIR OUTPUT.json | compile MODEL.inferfabric OUTPUT | inspect ARTIFACT | demo MODEL.inferfabric REQUESTS.json",
             ));
         }
     }

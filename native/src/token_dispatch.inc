@@ -10,13 +10,13 @@ static std::string expert_name(std::string pattern, int expert) {
 }
 V execute_token() {
   metadata_enqueued = false;
-  int pos = current_position;
   std::vector<std::unique_ptr<Value>> values(program.nodes.size());
   auto remaining = program.uses;
   for (size_t i = 0; i < program.nodes.size(); ++i) {
     const auto &n = program.nodes[i];
     execution.instruction(int64_t(i),
-        n.op=="copy" || n.op=="repeat" || n.op=="concat" || n.op=="expert_pack",
+        n.op=="copy" || n.op=="repeat" || n.op=="concat" || n.op=="expert_pack" ||
+        (active_tokens>1 && (n.op=="gather" || n.op=="slice" || n.op=="query_project" || n.op=="query_rotary_extract" || n.op=="rope_f32" || n.op=="rope" || n.op=="mla_query" || n.op=="mla_value" || n.op=="mome" || n.op=="latent_attention" || n.op=="packed_latent_attention")),
         n.op=="cache_c8_norm_rope_append" || n.op=="cache_quantize_append" || n.op=="sink_normalize" || n.op=="cache_append" || n.op=="cache_norm_rope_append" || n.op=="expert_gmm" || (n.op=="linear" && n.kernel=="paired_bf16"));
     inferfabric::profiling::Scope timing(n.op.c_str(), true);
     auto input = [&](size_t j) -> Value & {
@@ -29,11 +29,17 @@ V execute_token() {
       return v;
     };
     auto weight = [&]() -> const std::string & { return n.text("weight"); };
+    auto row_tensor = [&](size_t j,uint32_t row) {
+      const auto &v=tensor(j);
+      if(v.size()%active_tokens)throw std::runtime_error("packed input row extent: "+n.name);
+      size_t width=v.size()/active_tokens;
+      return v.view(row*width,width);
+    };
     Value result;
     if (n.op == "cast") {
       result = cast(tensor(0), n.dtype == "bf16" ? ACL_BF16 : ACL_FLOAT,true);
     } else if (n.op == "quantize") {
-      result = quantize(tensor(0));
+      result = quantize(tensor(0),n.width);
     } else if (n.op == "copy") {
       V copy(tensor(0).size(), tensor(0).dtype());
       resident::copy(copy.data(), tensor(0).data(), copy.bytes());
@@ -43,16 +49,16 @@ V execute_token() {
     } else if (n.op == "embedding") {
       auto &embedding = w(weight() + ".weight");
       auto width = n.integer("width");
-      DeviceTensor output({int64_t(width)}, ACL_BF16, 2);
+      DeviceTensor output({int64_t(active_tokens),int64_t(width)}, ACL_BF16, 2);
       View source(embedding.data,
                   {int64_t(embedding.bytes / (2 * width)), int64_t(width)},
                   ACL_BF16);
-      View destination(output.data, {1, int64_t(width)}, ACL_BF16);
+      View destination(output.data, {int64_t(active_tokens), int64_t(width)}, ACL_BF16);
       uint64_t bytes = 0;
       aclOpExecutor *executor = nullptr;
       checked(prepared::query("aclnnIndexSelect", false,
                               aclnnIndexSelectGetWorkspaceSize, source.t, 0,
-                              token_index->tensor, destination.t, &bytes,
+                              prefix(*token_index,{int64_t(active_tokens)}), destination.t, &bytes,
                               &executor),
               "embedding device index prepare");
       run(aclnnIndexSelect, bytes, executor);
@@ -83,7 +89,7 @@ V execute_token() {
     } else if(n.op=="expert_values") {
       result=std::get<ExpertRows>(input(0)).packed;
     } else if (n.op == "repeat") {
-      result = resident::repeat(tensor(0), n.integer("count"));
+      result = row_values(n.width,[&](uint32_t row){return resident::repeat(row_tensor(0,row), n.integer("count"));});
     } else if (n.op == "mhc_pre" || n.op == "mhc_merge")
       result = pre(tensor(0), weight(), n.op == "mhc_merge", n.name);
     else if (n.op == "mhc_input")
@@ -105,43 +111,47 @@ V execute_token() {
       result = gather(tensor(0));
     else if (n.op == "allreduce")
       result = sum(tensor(0), n.attrs.count("dtype") && n.text("dtype") == "bf16");
-    else if (n.op == "mome" || n.op == "mome_inplace")
-      result = mome(tensor(0), weight(), pos, n.name, n.op == "mome_inplace");
+    else if (n.op == "mome" || n.op == "mome_inplace") {
+      if(n.op=="mome_inplace") {
+        each_row([&](uint32_t row){mome(row_tensor(0,row),weight(),current_position,n.name,true);});
+        result=tensor(0);
+      } else result=row_values(n.width,[&](uint32_t row){return mome(row_tensor(0,row),weight(),current_position,n.name,false);});
+    }
     else if (n.op == "slice") {
       auto start = n.integer("start"), width = n.integer("width");
-      if (size_t(start) + width > tensor(0).size())
+      if (size_t(start) + width > tensor(0).size()/active_tokens)
         throw std::runtime_error("slice bounds");
-      result = resident::slice(tensor(0), start, width);
+      result = row_values(n.width,[&](uint32_t row){return resident::slice(row_tensor(0,row), start, width);});
     } else if (n.op == "query_project") {
-      result=query_project(tensor(0),weight(),n.text("input_layout")=="rank_local");
+      result=row_values(n.width,[&](uint32_t row){return query_project(row_tensor(0,row),weight(),n.text("input_layout")=="rank_local");});
     } else if (n.op == "query_rotary_extract") {
-      result=query_rotary_extract(tensor(0),n.text("input_layout")=="rank_local");
+      result=row_values(n.width,[&](uint32_t row){return query_rotary_extract(row_tensor(0,row),n.text("input_layout")=="rank_local");});
     } else if (n.op == "concat_columns") {
-      result=concat_columns(tensor(0),tensor(1),n.integer("rows"));
+      result=concat_columns(tensor(0),tensor(1),n.integer("rows")*active_tokens);
     } else if (n.op == "rope_f32") {
-      result=rope(tensor(0),pos,true);
+      result=row_values(n.width,[&](uint32_t row){return rope(row_tensor(0,row),current_position,true);});
     } else if (n.op == "rope") {
-      result = rope(tensor(0), pos);
+      result=row_values(n.width,[&](uint32_t row){return rope(row_tensor(0,row),current_position);});
     } else if (n.op == "concat") {
-      result = resident::concat(tensor(0), tensor(1));
+      result = active_tokens==1 ? resident::concat(tensor(0),tensor(1)) : concat_columns(tensor(0),tensor(1),active_tokens);
     } else if (n.op == "mla_query")
-      result = absorb_query(tensor(0), weight(), pos,
+      result = row_values(n.width,[&](uint32_t row){return absorb_query(row_tensor(0,row), weight(), current_position,
                             n.attrs.count("input_layout") &&
-                                n.text("input_layout") == "rank_local");
+                                n.text("input_layout") == "rank_local");});
     else if (n.op == "mla_value")
-      result = expand_value(tensor(0), weight());
+      result = row_values(n.width,[&](uint32_t row){return expand_value(row_tensor(0,row), weight());});
     else if (n.op == "sink_normalize")
       result = normalize_sinks(n.name, weight(), n.text("norm"));
     else if (n.op == "cache_append") {
-      append_cache(tensor(0), tensor(1), n.name, pos);
+      each_row([&](uint32_t row){append_cache(row_tensor(0,row), tensor(1), n.name, current_position);});
       result = n.name;
     } else if(n.op=="cache_c8_norm_rope_append") {
-      append_normalized_cache(tensor(0),tensor(1),weight(),n.name,pos,true);
+      each_row([&](uint32_t row){append_normalized_cache(row_tensor(0,row),tensor(1),weight(),n.name,current_position,true);});
       result=n.name;
     } else if(n.op=="packed_attention_metadata") {
       prepare_packed_attention_metadata();result=std::monostate{};
     } else if(n.op=="packed_latent_attention") {
-      result=attend_packed(tensor(0),std::get<std::string>(input(1)));
+      result=row_values(n.width,[&](uint32_t row){return attend_packed(row_tensor(0,row),std::get<std::string>(input(1)));});
     } else if(n.op=="cache_normalize") {
       result=normalize_cache_row(tensor(0),weight());
     } else if(n.op=="cache_quantize_append") {
@@ -150,11 +160,13 @@ V execute_token() {
     } else if(n.op=="cache_dequantize") {
       result=dequantize_cache(std::get<std::string>(input(0)));
     } else if (n.op == "cache_norm_rope_append") {
-      if(program.physical) append_normalized_cache(tensor(0),tensor(1),weight(),n.name,pos);
-      else append_normalized_cache(resident::concat(tensor(0),tensor(1)),tensor(2),weight(),n.name,pos);
+      each_row([&](uint32_t row){
+        if(program.physical) append_normalized_cache(row_tensor(0,row),tensor(1),weight(),n.name,current_position);
+        else append_normalized_cache(resident::concat(row_tensor(0,row),row_tensor(1,row)),tensor(2),weight(),n.name,current_position);
+      });
       result = n.name;
     } else if (n.op == "latent_attention")
-      result = attend(tensor(0), std::get<std::string>(input(1)),n.inputs.size()==4?&tensor(3):nullptr);
+      result = row_values(n.width,[&](uint32_t row){return attend(row_tensor(0,row), std::get<std::string>(input(1)),n.inputs.size()==4?&tensor(3):nullptr);});
     else if (n.op == "swiglu")
       result = n.inputs.size() == 1 ? activate(tensor(0)) : activate(tensor(0), tensor(1));
     else if (n.op == "router")
@@ -196,7 +208,7 @@ V execute_token() {
     if (auto v = std::get_if<V>(&result)) {
       if (program.physical && v->dtype() != (n.dtype == "bf16" ? ACL_BF16 : ACL_FLOAT))
         throw std::runtime_error("physical output storage mismatch: " + n.name);
-      if (v->size() != n.width)
+      if (v->size() != n.width*(n.op=="sink_normalize" ? 1 : active_tokens))
         throw std::runtime_error("kernel result shape " + n.name);
       trace(n.name, *v);
     }

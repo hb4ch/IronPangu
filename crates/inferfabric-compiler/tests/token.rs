@@ -287,3 +287,29 @@ fn resident_capacity_is_executable_and_inspectable_without_claiming_batching() {
     let (variants, _) = inferfabric_compiler::token_serving::envelope(&graph, 8).unwrap();
     assert_eq!(variants[0].max_sequences, 1);
 }
+
+#[test]
+fn packed_prefill_has_versioned_bounds_and_explicit_materialization() {
+    let (graph, _, inventory) = fixture();
+    let serial = inferfabric_compiler::token_program::lower(&graph, Some(&inventory)).unwrap();
+    for count in [0, 3, 5, 32] {
+        assert!(serial.clone().with_prefill_tokens(count).is_err());
+    }
+    let packed=serial.with_resident_sequences(2).unwrap().with_prefill_tokens(4).unwrap();
+    let binary=packed.encode().unwrap();
+    assert_eq!(&binary[..8], b"IFTOKN04");
+    assert_eq!(u32::from_le_bytes(binary[24..28].try_into().unwrap()),2);
+    assert_eq!(u32::from_le_bytes(binary[28..32].try_into().unwrap()),4);
+    let recipes=inferfabric_compiler::token_program::recipes(&packed,&graph);
+    for (instruction,recipe) in packed.instructions.iter().zip(recipes) {
+        let variant=&recipe["packed_prefill"];
+        assert_eq!(variant["tokens"],4);
+        if instruction.op=="gather" {
+            assert_eq!(variant["assembly_copies"],32);
+        }
+        if instruction.op=="latent_attention" || instruction.op=="packed_latent_attention" {
+            assert_eq!(variant["api_repetitions"],4);
+            assert_eq!(variant["assembly_copies"],4);
+        }
+    }
+}

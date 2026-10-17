@@ -55,13 +55,13 @@ inline TrainingApi &training_api() {
 struct MhcState {
   openpangu::DeviceTensor x, phi, alpha, beta, input, post, res, rms, mix,
       pre_weights, sink, branch, out;
-  MhcState()
-      : x({1, 4, 2560}, ACL_BF16, 2), phi({24, 10240}, ACL_FLOAT, 4),
+  explicit MhcState(int64_t tokens=1)
+      : x({tokens, 4, 2560}, ACL_BF16, 2), phi({24, 10240}, ACL_FLOAT, 4),
         alpha({3}, ACL_FLOAT, 4), beta({24}, ACL_FLOAT, 4),
-        input({1, 2560}, ACL_BF16, 2), post({1, 4}, ACL_FLOAT, 4),
-        res({1, 4, 4}, ACL_FLOAT, 4), rms({1}, ACL_FLOAT, 4),
-        mix({1, 24}, ACL_FLOAT, 4), pre_weights({1, 4}, ACL_FLOAT, 4),
-        sink({1, 4, 4}, ACL_FLOAT, 4), branch({1, 2560}, ACL_BF16, 2),
-        out({1, 4, 2560}, ACL_BF16, 2) {}
+        input({tokens, 2560}, ACL_BF16, 2), post({tokens, 4}, ACL_FLOAT, 4),
+        res({tokens, 4, 4}, ACL_FLOAT, 4), rms({tokens}, ACL_FLOAT, 4),
+        mix({tokens, 24}, ACL_FLOAT, 4), pre_weights({tokens, 4}, ACL_FLOAT, 4),
+        sink({tokens, 4, 4}, ACL_FLOAT, 4), branch({tokens, 2560}, ACL_BF16, 2),
+        out({tokens, 4, 2560}, ACL_BF16, 2) {}
 };
 } // namespace pangu
