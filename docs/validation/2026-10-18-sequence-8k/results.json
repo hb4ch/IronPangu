@@ -1,0 +1,549 @@
+{
+  "discovery": {
+    "passed": true,
+    "stage": "discovery",
+    "exact_output_tokens": 39,
+    "requests": 6,
+    "arena_bytes": [
+      39716906512,
+      39716906512,
+      39716906512,
+      39716906512,
+      39716906512,
+      39716906512,
+      39716906512,
+      39716906512
+    ],
+    "workspace_bytes": [
+      159221248,
+      159221248,
+      159221248,
+      159221248,
+      159221248,
+      159221248,
+      159221248,
+      159221248
+    ],
+    "activation_host_transfers": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    "process": {
+      "returncode": 0,
+      "elapsed_seconds": 115.05917628435418,
+      "command": [
+        "/data/p00603624/inferfabric/openpangu92/native-build-head-batch/program_engine_probe",
+        "/data/p00603624/inferfabric/openpangu92/sequence64k-source",
+        "/models/92B",
+        "/data/p00603624/inferfabric/openpangu92/sequence8k-fixture/requests.txt"
+      ],
+      "preparation": true
+    },
+    "first_token_ms": {
+      "0": 14072.649,
+      "1": 13728.131,
+      "2": 12907.027,
+      "3": 817.794,
+      "4": 13099.391,
+      "5": 933.376
+    },
+    "rank_graphs": [
+      [
+        {
+          "name": "token_decode",
+          "replays": 1
+        },
+        {
+          "name": "sequence_decode_1",
+          "replays": 8
+        },
+        {
+          "name": "sequence_decode_2",
+          "replays": 12
+        }
+      ],
+      [
+        {
+          "name": "token_decode",
+          "replays": 1
+        },
+        {
+          "name": "sequence_decode_1",
+          "replays": 8
+        },
+        {
+          "name": "sequence_decode_2",
+          "replays": 12
+        }
+      ],
+      [
+        {
+          "name": "token_decode",
+          "replays": 1
+        },
+        {
+          "name": "sequence_decode_1",
+          "replays": 8
+        },
+        {
+          "name": "sequence_decode_2",
+          "replays": 12
+        }
+      ],
+      [
+        {
+          "name": "token_decode",
+          "replays": 1
+        },
+        {
+          "name": "sequence_decode_1",
+          "replays": 8
+        },
+        {
+          "name": "sequence_decode_2",
+          "replays": 12
+        }
+      ],
+      [
+        {
+          "name": "token_decode",
+          "replays": 1
+        },
+        {
+          "name": "sequence_decode_1",
+          "replays": 8
+        },
+        {
+          "name": "sequence_decode_2",
+          "replays": 12
+        }
+      ],
+      [
+        {
+          "name": "token_decode",
+          "replays": 1
+        },
+        {
+          "name": "sequence_decode_1",
+          "replays": 8
+        },
+        {
+          "name": "sequence_decode_2",
+          "replays": 12
+        }
+      ],
+      [
+        {
+          "name": "token_decode",
+          "replays": 1
+        },
+        {
+          "name": "sequence_decode_1",
+          "replays": 8
+        },
+        {
+          "name": "sequence_decode_2",
+          "replays": 12
+        }
+      ],
+      [
+        {
+          "name": "token_decode",
+          "replays": 1
+        },
+        {
+          "name": "sequence_decode_1",
+          "replays": 8
+        },
+        {
+          "name": "sequence_decode_2",
+          "replays": 12
+        }
+      ]
+    ],
+    "uncaptured_forwards": [
+      11,
+      11,
+      11,
+      11,
+      11,
+      11,
+      11,
+      11
+    ]
+  },
+  "fixed": {
+    "passed": true,
+    "stage": "fixed",
+    "exact_output_tokens": 39,
+    "requests": 6,
+    "arena_bytes": [
+      39572690960,
+      39572690960,
+      39572690960,
+      39572690960,
+      39572690960,
+      39572690960,
+      39572690960,
+      39572690960
+    ],
+    "workspace_bytes": [
+      159221248,
+      159221248,
+      159221248,
+      159221248,
+      159221248,
+      159221248,
+      159221248,
+      159221248
+    ],
+    "activation_host_transfers": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    "process": {
+      "returncode": 0,
+      "elapsed_seconds": 113.23383187083527,
+      "command": [
+        "/data/p00603624/inferfabric/openpangu92/native-build-head-batch/program_engine_probe",
+        "/data/p00603624/inferfabric/openpangu92/sequence8k-serving-fixed-plan",
+        "/models/92B",
+        "/data/p00603624/inferfabric/openpangu92/sequence8k-fixture/requests.txt"
+      ],
+      "preparation": true
+    },
+    "first_token_ms": {
+      "0": 13660.538,
+      "1": 13372.191,
+      "2": 12610.438,
+      "3": 954.726,
+      "4": 13081.519,
+      "5": 964.079
+    },
+    "rank_graphs": [
+      [
+        {
+          "name": "token_decode",
+          "replays": 1
+        },
+        {
+          "name": "sequence_decode_1",
+          "replays": 8
+        },
+        {
+          "name": "sequence_decode_2",
+          "replays": 12
+        }
+      ],
+      [
+        {
+          "name": "token_decode",
+          "replays": 1
+        },
+        {
+          "name": "sequence_decode_1",
+          "replays": 8
+        },
+        {
+          "name": "sequence_decode_2",
+          "replays": 12
+        }
+      ],
+      [
+        {
+          "name": "token_decode",
+          "replays": 1
+        },
+        {
+          "name": "sequence_decode_1",
+          "replays": 8
+        },
+        {
+          "name": "sequence_decode_2",
+          "replays": 12
+        }
+      ],
+      [
+        {
+          "name": "token_decode",
+          "replays": 1
+        },
+        {
+          "name": "sequence_decode_1",
+          "replays": 8
+        },
+        {
+          "name": "sequence_decode_2",
+          "replays": 12
+        }
+      ],
+      [
+        {
+          "name": "token_decode",
+          "replays": 1
+        },
+        {
+          "name": "sequence_decode_1",
+          "replays": 8
+        },
+        {
+          "name": "sequence_decode_2",
+          "replays": 12
+        }
+      ],
+      [
+        {
+          "name": "token_decode",
+          "replays": 1
+        },
+        {
+          "name": "sequence_decode_1",
+          "replays": 8
+        },
+        {
+          "name": "sequence_decode_2",
+          "replays": 12
+        }
+      ],
+      [
+        {
+          "name": "token_decode",
+          "replays": 1
+        },
+        {
+          "name": "sequence_decode_1",
+          "replays": 8
+        },
+        {
+          "name": "sequence_decode_2",
+          "replays": 12
+        }
+      ],
+      [
+        {
+          "name": "token_decode",
+          "replays": 1
+        },
+        {
+          "name": "sequence_decode_1",
+          "replays": 8
+        },
+        {
+          "name": "sequence_decode_2",
+          "replays": 12
+        }
+      ]
+    ],
+    "uncaptured_forwards": [
+      11,
+      11,
+      11,
+      11,
+      11,
+      11,
+      11,
+      11
+    ]
+  },
+  "frozen": {
+    "passed": true,
+    "stage": "frozen",
+    "exact_output_tokens": 39,
+    "requests": 6,
+    "arena_bytes": [
+      39572690960,
+      39572690960,
+      39572690960,
+      39572690960,
+      39572690960,
+      39572690960,
+      39572690960,
+      39572690960
+    ],
+    "workspace_bytes": [
+      159221248,
+      159221248,
+      159221248,
+      159221248,
+      159221248,
+      159221248,
+      159221248,
+      159221248
+    ],
+    "activation_host_transfers": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    "process": {
+      "returncode": 0,
+      "elapsed_seconds": 120.2182872206904,
+      "command": [
+        "/data/p00603624/inferfabric/openpangu92/native-build-head-batch/program_engine_probe",
+        "/data/p00603624/inferfabric/openpangu92/sequence8k-serving-frozen-plan",
+        "/models/92B",
+        "/data/p00603624/inferfabric/openpangu92/sequence8k-fixture/requests.txt"
+      ],
+      "preparation": false
+    },
+    "first_token_ms": {
+      "0": 14106.19,
+      "1": 13833.808,
+      "2": 13761.402,
+      "3": 1061.157,
+      "4": 13235.619,
+      "5": 910.119
+    },
+    "rank_graphs": [
+      [
+        {
+          "name": "token_decode",
+          "replays": 1
+        },
+        {
+          "name": "sequence_decode_1",
+          "replays": 8
+        },
+        {
+          "name": "sequence_decode_2",
+          "replays": 12
+        }
+      ],
+      [
+        {
+          "name": "token_decode",
+          "replays": 1
+        },
+        {
+          "name": "sequence_decode_1",
+          "replays": 8
+        },
+        {
+          "name": "sequence_decode_2",
+          "replays": 12
+        }
+      ],
+      [
+        {
+          "name": "token_decode",
+          "replays": 1
+        },
+        {
+          "name": "sequence_decode_1",
+          "replays": 8
+        },
+        {
+          "name": "sequence_decode_2",
+          "replays": 12
+        }
+      ],
+      [
+        {
+          "name": "token_decode",
+          "replays": 1
+        },
+        {
+          "name": "sequence_decode_1",
+          "replays": 8
+        },
+        {
+          "name": "sequence_decode_2",
+          "replays": 12
+        }
+      ],
+      [
+        {
+          "name": "token_decode",
+          "replays": 1
+        },
+        {
+          "name": "sequence_decode_1",
+          "replays": 8
+        },
+        {
+          "name": "sequence_decode_2",
+          "replays": 12
+        }
+      ],
+      [
+        {
+          "name": "token_decode",
+          "replays": 1
+        },
+        {
+          "name": "sequence_decode_1",
+          "replays": 8
+        },
+        {
+          "name": "sequence_decode_2",
+          "replays": 12
+        }
+      ],
+      [
+        {
+          "name": "token_decode",
+          "replays": 1
+        },
+        {
+          "name": "sequence_decode_1",
+          "replays": 8
+        },
+        {
+          "name": "sequence_decode_2",
+          "replays": 12
+        }
+      ],
+      [
+        {
+          "name": "token_decode",
+          "replays": 1
+        },
+        {
+          "name": "sequence_decode_1",
+          "replays": 8
+        },
+        {
+          "name": "sequence_decode_2",
+          "replays": 12
+        }
+      ]
+    ],
+    "uncaptured_forwards": [
+      11,
+      11,
+      11,
+      11,
+      11,
+      11,
+      11,
+      11
+    ]
+  },
+  "fixture_sha256": "9201cd3ac58b5c7d513418c93bd1eec5182eea23551c8bf16883492b75b37ade",
+  "reference_scope": "through_first_eos",
+  "input_lengths": [
+    8176,
+    12,
+    8176,
+    12,
+    8176,
+    12
+  ]
+}
