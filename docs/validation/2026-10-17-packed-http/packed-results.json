@@ -1,0 +1,171 @@
+{
+  "frontend": "vLLM Rust 0.25.1",
+  "mode": "resident request scheduler; compiled prefill and serial decode",
+  "full_fixture_text": true,
+  "sse_agreement": true,
+  "queued_isolation": true,
+  "disconnect_recovery": true,
+  "unsupported_sampling_rejected": true,
+  "results": [
+    {
+      "case": "arithmetic",
+      "text": "1 + 1 = 2",
+      "collected": {
+        "total_ms": 245.97938684746623,
+        "usage": {
+          "prompt_tokens": 12,
+          "total_tokens": 20,
+          "completion_tokens": 8
+        }
+      },
+      "streaming": {
+        "ttft_ms": 112.1879736892879,
+        "text_chunks": 7,
+        "chunk_intervals_ms": [
+          17.454900313168764,
+          17.827992793172598,
+          17.753913067281246,
+          17.807472962886095,
+          17.850922886282206,
+          17.812743317335844
+        ],
+        "total_ms": 236.63350194692612,
+        "usage": {
+          "prompt_tokens": 12,
+          "total_tokens": 20,
+          "completion_tokens": 8
+        }
+      }
+    },
+    {
+      "case": "geography",
+      "text": "The capital of France is Paris.",
+      "collected": {
+        "total_ms": 292.36699687317014,
+        "usage": {
+          "prompt_tokens": 15,
+          "total_tokens": 23,
+          "completion_tokens": 8
+        }
+      },
+      "streaming": {
+        "ttft_ms": 166.58993903547525,
+        "text_chunks": 7,
+        "chunk_intervals_ms": [
+          17.534051090478897,
+          17.828812822699547,
+          17.804133240133524,
+          17.869692761451006,
+          17.786873038858175,
+          17.91593339294195
+        ],
+        "total_ms": 291.34881030768156,
+        "usage": {
+          "prompt_tokens": 15,
+          "total_tokens": 23,
+          "completion_tokens": 8
+        }
+      }
+    },
+    {
+      "case": "chinese",
+      "text": "北京是中国的首都，拥有悠久的历史、丰富的文化遗产和现代化的城市风貌。",
+      "collected": {
+        "total_ms": 436.09319906681776,
+        "usage": {
+          "prompt_tokens": 14,
+          "total_tokens": 31,
+          "completion_tokens": 17
+        }
+      },
+      "streaming": {
+        "ttft_ms": 151.23981283977628,
+        "text_chunks": 16,
+        "chunk_intervals_ms": [
+          17.594682052731514,
+          17.746312078088522,
+          17.77472300454974,
+          17.823392990976572,
+          17.7727616392076,
+          17.80393300577998,
+          17.878024373203516,
+          17.81108183786273,
+          17.817732878029346,
+          17.814673017710447,
+          17.87423389032483,
+          17.817093059420586,
+          17.729851882904768,
+          17.78246322646737,
+          17.78714219108224
+        ],
+        "total_ms": 435.96754781901836,
+        "usage": {
+          "prompt_tokens": 14,
+          "total_tokens": 31,
+          "completion_tokens": 17
+        }
+      }
+    }
+  ],
+  "concurrent_requests": 6,
+  "mixed_residents": {
+    "long_prompt_tokens": 504,
+    "short_finished_before_long": true,
+    "cancellation_during_peer_prefill": true,
+    "short": {
+      "ttft_ms": 215.4151163995266,
+      "text_chunks": 7,
+      "chunk_intervals_ms": [
+        52.15117987245321,
+        52.36882111057639,
+        52.34297085553408,
+        52.35772114247084,
+        52.42936173453927,
+        52.736003883183
+      ],
+      "total_ms": 582.35152810812,
+      "usage": {
+        "prompt_tokens": 12,
+        "total_tokens": 20,
+        "completion_tokens": 8
+      }
+    },
+    "long": {
+      "ttft_ms": 4663.173282984644,
+      "text_chunks": 6,
+      "chunk_intervals_ms": [
+        55.24918111041188,
+        18.49922677502036,
+        18.62110896036029,
+        18.449447117745876,
+        18.55410821735859
+      ],
+      "total_ms": 4792.5796448253095,
+      "usage": {
+        "prompt_tokens": 504,
+        "total_tokens": 512,
+        "completion_tokens": 8
+      }
+    }
+  },
+  "context_overflow_rejected": true,
+  "max_num_seqs": 2,
+  "max_num_batched_tokens": 8,
+  "graceful_sigterm_shutdown": true,
+  "prefill_graph_replays": [
+    175,
+    175,
+    175,
+    175,
+    175,
+    175,
+    175,
+    175
+  ],
+  "scheduler": {
+    "max_active": 2,
+    "mixed_ticks": 25,
+    "consumed_tokens": 862,
+    "token_budget": 8
+  }
+}

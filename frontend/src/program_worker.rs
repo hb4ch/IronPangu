@@ -1,4 +1,4 @@
-//! Continuous admission over resident histories; invocations remain single-token.
+//! Continuous admission with compiled packed prefill and single-token decode.
 use super::{Active, Job, error};
 use std::sync::{
     Arc,
@@ -20,6 +20,17 @@ pub(super) fn validate(req: &GenerateRequest) -> vllm_llm::Result<()> {
     Ok(())
 }
 pub(super) trait ResidentEngine {
+    fn prefill_capacity(&self) -> u32 {
+        1
+    }
+    fn prefill(
+        &mut self,
+        _tokens: &[u32],
+        _position: u32,
+        _sample: bool,
+    ) -> inferfabric_model::Result<Option<u32>> {
+        Err(inferfabric_model::invalid("packed prefill is unavailable"))
+    }
     fn reset(&mut self, slot: u32) -> inferfabric_model::Result<()>;
     fn select(&mut self, slot: u32) -> inferfabric_model::Result<()>;
     fn token(
@@ -30,6 +41,17 @@ pub(super) trait ResidentEngine {
     ) -> inferfabric_model::Result<Option<u32>>;
 }
 impl ResidentEngine for inferfabric_native::program::Engine {
+    fn prefill_capacity(&self) -> u32 {
+        self.prefill_capacity()
+    }
+    fn prefill(
+        &mut self,
+        tokens: &[u32],
+        position: u32,
+        sample: bool,
+    ) -> inferfabric_model::Result<Option<u32>> {
+        self.prefill(tokens, position, sample)
+    }
     fn reset(&mut self, slot: u32) -> inferfabric_model::Result<()> {
         self.reset_resident(slot)
     }
@@ -59,7 +81,11 @@ fn release(slot: &mut Option<Running>, active: &Active) {
         active.lock().unwrap().remove(&r.job.req.request_id);
     }
 }
-fn advance(engine: &mut impl ResidentEngine, r: &mut Running) -> inferfabric_model::Result<bool> {
+fn advance(
+    engine: &mut impl ResidentEngine,
+    r: &mut Running,
+    budget: usize,
+) -> inferfabric_model::Result<(bool, usize)> {
     let prompt = &r.job.req.prompt_token_ids;
     let prefill = (r.position as usize) < prompt.len();
     let token = if prefill {
@@ -68,14 +94,29 @@ fn advance(engine: &mut impl ResidentEngine, r: &mut Running) -> inferfabric_mod
         r.next
             .ok_or_else(|| inferfabric_model::invalid("missing decode input"))?
     };
-    let sample = r.position as usize + 1 >= prompt.len();
-    let next = engine.token(token, r.position, sample)?;
-    r.position += 1;
+    let chunk = engine.prefill_capacity() as usize;
+    let count =
+        if prefill && chunk > 1 && chunk <= budget && prompt.len() - r.position as usize >= chunk {
+            chunk
+        } else {
+            1
+        };
+    let sample = r.position as usize + count >= prompt.len();
+    let next = if count > 1 {
+        engine.prefill(
+            &prompt[r.position as usize..r.position as usize + count],
+            r.position,
+            sample,
+        )?
+    } else {
+        engine.token(token, r.position, sample)?
+    };
+    r.position += count as u32;
     if cancelled(&r.job) {
-        return Ok(true);
+        return Ok((true, count));
     }
     if !sample {
-        return Ok(false);
+        return Ok((false, count));
     }
     let token = next.ok_or_else(|| inferfabric_model::invalid("missing program output token"))?;
     r.next = Some(token);
@@ -105,7 +146,7 @@ fn advance(engine: &mut impl ResidentEngine, r: &mut Running) -> inferfabric_mod
         cached_token_count: 0,
         kv_transfer_params: None,
     };
-    Ok(r.job.tx.try_send(Ok(output)).is_err() || terminal)
+    Ok((r.job.tx.try_send(Ok(output)).is_err() || terminal, count))
 }
 pub(super) fn run(
     engine: &mut impl ResidentEngine,
@@ -121,6 +162,7 @@ pub(super) fn run(
         ));
     }
     let mut slots: Vec<Option<Running>> = (0..residents).map(|_| None).collect();
+    let chunk = engine.prefill_capacity();
     let (mut cursor, mut max_active, mut mixed_ticks, mut consumed) = (0, 0, 0, 0u64);
     let result: inferfabric_model::Result<()> = (|| {
         while !stop.load(Ordering::Acquire) {
@@ -152,7 +194,7 @@ pub(super) fn run(
             if count > max_active {
                 max_active = count;
                 eprintln!(
-                    "program scheduler active={count} capacity={residents} token_budget={token_budget} invocation_tokens=1"
+                    "program scheduler active={count} capacity={residents} token_budget={token_budget} prefill_tokens={chunk} decode_tokens=1"
                 );
             }
             if count == 0 {
@@ -182,9 +224,9 @@ pub(super) fn run(
                     decode += 1;
                 }
                 engine.select(index as u32)?;
-                let finished = advance(engine, r)?;
-                tokens += 1;
-                consumed += 1;
+                let (finished, used) = advance(engine, r, token_budget - tokens)?;
+                tokens += used;
+                consumed += used as u64;
                 cursor = (index + 1) % residents;
                 if finished {
                     release(&mut slots[index], active);
@@ -213,7 +255,7 @@ pub(super) fn run(
     }
     active.lock().unwrap().clear();
     eprintln!(
-        "program scheduler stopped max_active={max_active} mixed_ticks={mixed_ticks} consumed_tokens={consumed} token_budget={token_budget} invocation_tokens=1"
+        "program scheduler stopped max_active={max_active} mixed_ticks={mixed_ticks} consumed_tokens={consumed} token_budget={token_budget} prefill_tokens={chunk} decode_tokens=1"
     );
     result
 }
@@ -249,8 +291,28 @@ mod tests {
         resets: Vec<u32>,
         fail_at: Option<usize>,
         cancel_at: Option<(usize, Arc<AtomicBool>)>,
+        chunk: u32,
+        chunks: Vec<(usize, u32, usize, bool)>,
     }
     impl ResidentEngine for Fake {
+        fn prefill_capacity(&self) -> u32 {
+            self.chunk.max(1)
+        }
+        fn prefill(
+            &mut self,
+            tokens: &[u32],
+            position: u32,
+            sample: bool,
+        ) -> inferfabric_model::Result<Option<u32>> {
+            assert_eq!(tokens.len(), self.chunk as usize);
+            self.chunks
+                .push((self.selected, position, tokens.len(), sample));
+            let mut output = None;
+            for (i, &token) in tokens.iter().enumerate() {
+                output = self.token(token, position + i as u32, sample && i + 1 == tokens.len())?;
+            }
+            Ok(output)
+        }
         fn reset(&mut self, slot: u32) -> inferfabric_model::Result<()> {
             self.resets.push(slot);
             self.position[slot as usize] = 0;
@@ -270,10 +332,10 @@ mod tests {
             if self.fail_at == Some(self.trace.len()) {
                 return Err(inferfabric_model::invalid("injected rank failure"));
             }
-            if let Some((at, flag)) = &self.cancel_at {
-                if *at == self.trace.len() {
-                    flag.store(true, Ordering::Release);
-                }
+            if let Some((at, flag)) = &self.cancel_at
+                && *at == self.trace.len()
+            {
+                flag.store(true, Ordering::Release);
             }
             assert_eq!(position, self.position[self.selected]);
             self.position[self.selected] += 1;
@@ -335,6 +397,90 @@ mod tests {
         assert_eq!(br.try_recv().unwrap().unwrap().token_ids, vec![20]);
         assert_eq!(cr.try_recv().unwrap().unwrap().token_ids, vec![20]);
         assert!(active.lock().unwrap().is_empty());
+    }
+    #[test]
+    fn packed_prefill_obeys_budget_tails_and_decode_fairness() {
+        for budget in [1, 3, 4, 5, 8] {
+            let active = Arc::new(Mutex::new(Default::default()));
+            let (tx, mut rx) = mpsc::channel(4);
+            let (a, mut ar) = job(request("long", vec![1; 9], 2), &active);
+            let (b, mut br) = job(request("short", vec![10], 2), &active);
+            tx.try_send(a).unwrap();
+            tx.try_send(b).unwrap();
+            drop(tx);
+            let mut engine = Fake {
+                chunk: 4,
+                ..Default::default()
+            };
+            run(
+                &mut engine,
+                &mut rx,
+                &active,
+                &Arc::new(AtomicBool::new(false)),
+                2,
+                budget,
+            )
+            .unwrap();
+            assert_eq!(ar.try_recv().unwrap().unwrap().token_ids, vec![9]);
+            assert_eq!(ar.try_recv().unwrap().unwrap().token_ids, vec![18]);
+            assert_eq!(br.try_recv().unwrap().unwrap().token_ids, vec![10]);
+            assert_eq!(br.try_recv().unwrap().unwrap().token_ids, vec![20]);
+            assert!(
+                engine
+                    .trace
+                    .iter()
+                    .position(|&(slot, token)| slot == 1 && token == 10)
+                    .unwrap()
+                    <= 4
+            );
+            if budget < 4 {
+                assert!(engine.chunks.is_empty());
+            } else {
+                assert!(!engine.chunks.is_empty());
+            }
+            assert!(
+                engine
+                    .chunks
+                    .iter()
+                    .all(|&(_, pos, count, sample)| count <= budget
+                        && pos + count as u32 <= 9
+                        && !sample)
+            );
+            assert!(active.lock().unwrap().is_empty());
+        }
+    }
+    #[test]
+    fn final_chunk_samples_once_and_cancelled_chunk_emits_nothing() {
+        for cancel in [false, true] {
+            let active = Arc::new(Mutex::new(Default::default()));
+            let (tx, mut rx) = mpsc::channel(4);
+            let (a, mut ar) = job(request("chunk", vec![2; 8], 1), &active);
+            let flag = a.cancel.clone();
+            tx.try_send(a).unwrap();
+            drop(tx);
+            let mut engine = Fake {
+                chunk: 4,
+                cancel_at: cancel.then_some((1, flag)),
+                ..Default::default()
+            };
+            run(
+                &mut engine,
+                &mut rx,
+                &active,
+                &Arc::new(AtomicBool::new(false)),
+                1,
+                4,
+            )
+            .unwrap();
+            if cancel {
+                assert!(ar.try_recv().is_err());
+                assert_eq!(engine.chunks.len(), 1);
+            } else {
+                assert_eq!(ar.try_recv().unwrap().unwrap().token_ids, vec![16]);
+                assert_eq!(engine.chunks, vec![(0, 0, 4, false), (0, 4, 4, true)]);
+            }
+            assert!(active.lock().unwrap().is_empty());
+        }
     }
     #[test]
     fn rank_failure_reaches_all_residents_and_queued_requests() {

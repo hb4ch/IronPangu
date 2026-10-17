@@ -25,6 +25,7 @@ def main():
     p.add_argument('--port', type=int, default=18085)
     p.add_argument('--max-num-seqs', type=int)
     p.add_argument('--max-num-batched-tokens', type=int)
+    p.add_argument('--expect-prefill', choices=('packed','serial'), help='verify actual graph use, excluding startup warmup')
     p.add_argument('--resident-cases', type=Path, help='serial oracle fixtures for concurrent long-prefill/short-decode qualification')
     args = p.parse_args()
     args.output.mkdir(parents=True, exist_ok=False)
@@ -150,7 +151,7 @@ def main():
                     raise
             else:
                 raise RuntimeError('context overflow was silently accepted')
-            report = dict(frontend='vLLM Rust 0.25.1', mode='resident request scheduler; single-token invocations',
+            report = dict(frontend='vLLM Rust 0.25.1', mode='resident request scheduler; compiled prefill and serial decode',
                           full_fixture_text=True, sse_agreement=True, queued_isolation=True,
                           disconnect_recovery=True, unsupported_sampling_rejected=True, results=results,
                           concurrent_requests=len(concurrent_cases), mixed_residents=mixed,
@@ -169,9 +170,17 @@ def main():
             raise RuntimeError(f'frontend shutdown failed: {server.returncode}')
         report['graceful_sigterm_shutdown'] = True
         manifest = json.loads((args.plan/'serving.json').read_text())
+        report['prefill_graph_replays'] = []
         for rank in range(len(manifest['identity']['devices'])):
             audit = json.loads((args.output/'prepared'/f'rank-{rank}.json').read_text())
             transfers = json.loads((args.output/'transfers'/f'rank-{rank}.json').read_text())
+            packed = [g for g in audit['graphs'] if g['name']=='packed_prefill']
+            replays = sum(g['replays'] for g in packed)
+            if args.expect_prefill=='packed' and (len(packed)!=1 or replays<=1):
+                raise RuntimeError('HTTP did not exercise packed prefill beyond warmup')
+            if args.expect_prefill=='serial' and replays>1:
+                raise RuntimeError('HTTP exceeded serial-only prefill budget')
+            report['prefill_graph_replays'].append(replays)
             if not audit['arena']['frozen'] or not audit['workspace']['planned'] or audit['workspace']['growth_allocations']:
                 raise RuntimeError('HTTP execution violated frozen resource plans')
             if transfers['activation_host_transfers'] or transfers['rejected'] or any(

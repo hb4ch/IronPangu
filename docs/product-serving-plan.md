@@ -1,9 +1,11 @@
 # Product serving execution and scheduling
 
-Latest implementation evidence: [native four-token packed prefill](validation/2026-10-17-packed-prefill/README.md).
+Latest implementation evidence: [native four-token packed prefill](validation/2026-10-17-packed-prefill/README.md)
+and [Rust HTTP chunk scheduling](validation/2026-10-17-packed-http/README.md).
 The frozen TP8/EP8 path passes full output fixtures and chunk/page-boundary
-continuations through the existing 512-token envelope. HTTP chunk scheduling and
-the 64K release gates below remain open.
+continuations through the existing 512-token envelope. HTTP chunk scheduling
+charges actual input tokens to the budget and preserves independent resident
+progress. The 64K release gates below remain open.
 
 Date: 2026-10-17. Status: proposed design and implementation sequence; no new serving capability is claimed by this document.
 

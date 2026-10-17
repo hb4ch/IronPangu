@@ -413,11 +413,12 @@ INFERFABRIC_DECODE_GRAPH=1 inferfabric-server --program \
 
 `max-num-seqs` cannot exceed compiled resident capacity. `max-model-len` is prompt
 plus output and cannot exceed compiled context; lowering it restricts admission
-without shrinking the frozen arena. The token budget bounds sequential invocations
-per scheduling round, with at most one input token per resident per round and a
-rotating cursor when the budget is smaller than active count. This keeps short
-decode work progressing during long prompts, but does not turn the current
-single-token graph into packed prefill or a multi-sequence kernel. The queue holds
+without shrinking the frozen arena. The token budget bounds input tokens
+per scheduling round, with at most one invocation per resident per round and a
+rotating cursor when the budget is smaller than active count. A compiled packed
+prefill invocation consumes its full chunk width; decode, short tails and budgets
+below that width use the declared single-token variant. The default budget is
+configured residents times compiled chunk width. The queue holds
 at most four times the configured resident count; excess admission fails explicitly.
 
 ### Native packed-prefill qualification
@@ -438,5 +439,9 @@ compiling a chunk variant does not prove that a client uses it.
 The C ABI provides `inferfabric_program_prefill_capacity` and
 `inferfabric_program_prefill`; calls accept exactly the compiled number of input
 tokens and sample only the final row when requested. Token tails use the existing
-single-token call. The Rust HTTP adapter does not yet accept these multi-variant
-bundles. See [native evidence and timings](validation/2026-10-17-packed-prefill/README.md).
+single-token call. The Rust HTTP adapter checks the native chunk capacity before
+readiness and schedules this variant within the requested token budget. Use
+`qualify-program-http.py --expect-prefill packed` to require actual packed graph
+use beyond startup, or `--expect-prefill serial` with a one-token budget to verify
+the serial control. See [native evidence and timings](validation/2026-10-17-packed-prefill/README.md)
+and [HTTP qualification](validation/2026-10-17-packed-http/README.md).

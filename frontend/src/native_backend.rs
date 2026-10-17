@@ -135,8 +135,13 @@ impl Backend {
     pub async fn program(bundle: PathBuf, dir: PathBuf, library: PathBuf, options: crate::program_args::ProgramArgs) -> anyhow::Result<Arc<Self>> {
         let defaults = program_defaults()?;
         let manifest = inferfabric_native::program::manifest(&bundle)?;
+        let chunk = inferfabric_native::program::prefill_capacity(&manifest)? as usize;
+        let mut options = options;
+        if options.max_num_batched_tokens.is_none() {
+            options.max_num_batched_tokens = Some(options.max_num_seqs.unwrap_or(manifest.resident_sequences as usize).checked_mul(chunk).ok_or_else(||anyhow::anyhow!("token budget overflow"))?);
+        }
         let (residents, context, token_budget) = options.resolve(manifest.resident_sequences as usize, manifest.variants[0].max_context as usize)?;
-        eprintln!("program scheduler configured max_num_seqs={residents} max_num_batched_tokens={token_budget} max_model_len={context}; single-token invocations, no packed prefill");
+        eprintln!("program scheduler configured max_num_seqs={residents} max_num_batched_tokens={token_budget} max_model_len={context}; compiled_prefill_tokens={chunk}, decode_tokens=1");
         let vocab = manifest.vocab_size;
         let (tx, mut rx) = mpsc::channel::<Job>(residents * 4);
         let (ready_tx, ready_rx) = oneshot::channel();

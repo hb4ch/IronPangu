@@ -85,9 +85,9 @@ test-module placement and nested-if warnings; it is not claimed green.
 
 ## Remaining release work
 
-The Rust HTTP scheduler still uses single-token invocations and rejects the new
-multi-variant manifest. Next integrate the chunk API with its token budget and
-fairness rules, qualify HTTP cancellation and mixed requests, then increase chunk
-efficiency. Dynamic page pools/SWA reclamation, learned DSA, hybrid prefix caching,
+The subsequent [Rust HTTP milestone](../2026-10-17-packed-http/README.md) integrates
+the chunk API with token budgets and fairness and qualifies cancellation and mixed
+requests. Increasing chunk efficiency remains open. Dynamic page pools/SWA
+reclamation, learned DSA, hybrid prefix caching,
 stochastic sampling and the 64K correctness/performance/robustness gates remain
 required. Neither this evidence nor a larger allocator justifies raising context.
