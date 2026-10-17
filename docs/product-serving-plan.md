@@ -243,3 +243,28 @@ prompt processing is not packed prefill, and these measurements do not qualify
 long-context correctness or production throughput. The next hardware gate is
 S2's shared device-state pools, noncontiguous page tables and multi-sequence
 decode; retain this persistent serial backend as its output oracle.
+
+### Implementation record: S2 resource ownership foundation
+
+`inferfabric_runtime::state_pool` now implements host metadata ownership for the
+manifest's per-component/per-rank device pools. Explicit capacities reserve pages
+and recurrent slots as one transaction; a shortage on the final rank leaves every
+free list unchanged. Admission conservatively reserves the requested full length.
+Physical page IDs can be fragmented, and cache append addresses are resolved using
+each component's own page size and row bytes, with request-length bounds.
+
+Opaque pool identities, generations and engine epochs reject cross-pool and stale
+handles. Retirement removes active access immediately. Borrower pins and submitted
+rank tickets retain storage independently; only every rank's completion plus the
+last borrower release permits reuse. A failed rank poisons the group and prevents
+further allocation or reclamation. Usage reports reserved, occupied, retiring and
+borrowed bytes with explicit overlap semantics.
+
+Local tests cover asymmetric all-rank rollback, BF16/C8 page sizes, noncontiguous
+append translation, stale epochs and handles, duplicated completions/releases,
+retirement during restore, rank failure and 400 interleaved request lifetimes.
+The runtime suite and strict runtime Clippy pass. This is an S2 submilestone, not
+hardware paging readiness: the persistent C ABI still uses its serial fixed-state
+bindings. Next connect these resources to preallocated native state and stable
+device tables, then qualify multi-sequence decode. Borrowing certifies ownership
+only; numerical checkpoint completeness and immutability remain separate S6 gates.
