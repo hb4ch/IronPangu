@@ -287,6 +287,18 @@ output headroom rather than accepting 65,536 prompt tokens plus extra generation
 This is a release requirement, not a currently advertised capability. Keep the
 admission limit at the qualified envelope until every relevant gate below passes.
 
+The HTTP qualification must exercise **every** supplied positional reference,
+not select just the longest prompt (early/middle/late cases can have equal
+lengths). Each long case runs alongside a cancelled short stream and a fresh
+short request; the short request must finish before the long one, both completed
+outputs must match the independent reference, and all three usage counts must
+match without prompt truncation. `qualify-program-http.py --resident-cases`
+records each case in `mixed_resident_cases`; `mixed-progress.json` preserves
+partial evidence after failures and is never a passing qualification. This gate
+does not replace simultaneous long-request pressure, prefix restoration, or
+failure/soak testing. Normal-EOS checks must retain the separate full-forced-output
+failures and explicitly report their narrower comparison scope.
+
 - **S2:** size page tables from the compiled context and pool budget, removing the
   fixed 32-entry table assumption. Keep absolute positions distinct from physical
   cache rows. Recycle SWA pages only after their window, borrowers and device events

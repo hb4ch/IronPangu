@@ -27,6 +27,17 @@ def expected_ids(case, eos, respect_eos):
     return ids[:ids.index(eos)+1] if respect_eos and eos in ids else list(ids)
 
 
+def validate_usage(case, metrics, eos, respect_eos):
+    usage = metrics.get('usage')
+    prompt = len(case['input_ids'])
+    completion = len(expected_ids(case, eos, respect_eos))
+    if not usage or any(usage.get(key) != value for key, value in (
+        ('prompt_tokens', prompt), ('completion_tokens', completion),
+        ('total_tokens', prompt + completion),
+    )):
+        raise ValueError('HTTP token usage does not match independent reference')
+
+
 def validate_histories(records, manifest, consumed):
     allowed={(v['numerical_class'],v['max_query_tokens']) for v in manifest['variants'] if v['max_sequences']==1 and v['max_tokens']==v['max_query_tokens']}
     context=max(v['max_context'] for v in manifest['variants'])
@@ -60,7 +71,7 @@ def main():
     p.add_argument('--max-num-seqs', type=int)
     p.add_argument('--max-num-batched-tokens', type=int)
     p.add_argument('--expect-prefill', choices=('packed','serial'), help='verify actual graph use, excluding startup warmup')
-    p.add_argument('--resident-cases', type=Path, help='serial oracle fixtures for concurrent long-prefill/short-decode qualification')
+    p.add_argument('--resident-cases', type=Path, help='Test every serial oracle fixture with concurrent short decode and peer cancellation')
     p.add_argument('--check-overload', action='store_true', help='Burst long streaming requests beyond admission capacity, check 503/retry metadata and recovery')
     p.add_argument('--request-timeout-seconds', type=int, default=120, help='Socket inactivity timeout, not a whole-run deadline; raise for 64K prefill')
     p.add_argument('--respect-eos', action='store_true', help='Test normal serving through first EOS; preserve full references and report the narrower comparison scope')
@@ -85,8 +96,11 @@ def main():
         return tokenizer.decode(ids, skip_special_tokens=True)
     for case in cases:
         expected_text(case)
+    resident_cases = json.loads(args.resident_cases.read_text()) if args.resident_cases else []
     if args.resident_cases:
-        for case in json.loads(args.resident_cases.read_text()):
+        if not resident_cases:
+            p.error('--resident-cases must contain at least one independent reference')
+        for case in resident_cases:
             expected_text(case)
     url = f'http://127.0.0.1:{args.port}'
 
@@ -160,8 +174,7 @@ def main():
                 if text != expected or streamed != text:
                     raise RuntimeError(f"{case['case']} text mismatch: {text!r} / {streamed!r} / {expected!r}")
                 for observed in (collected, metrics):
-                    if observed['usage']['prompt_tokens'] != len(case['input_ids']) or observed['usage']['completion_tokens'] != len(expected_ids(case, eos, args.respect_eos)):
-                        raise RuntimeError('HTTP token usage does not match complete fixture')
+                    validate_usage(case, observed, eos, args.respect_eos)
                 results.append(dict(case=case['case'], text=text, collected=collected, streaming=metrics))
             residents = args.max_num_seqs or json.loads((args.plan/'serving.json').read_text()).get('resident_sequences', 1)
             # Fit the bounded queue even before the worker takes its first job.
@@ -170,16 +183,17 @@ def main():
             with concurrent.futures.ThreadPoolExecutor(max_workers=len(concurrent_cases)) as executor:
                 futures = [executor.submit(request, c) for c in concurrent_cases]
                 for case, future in zip(concurrent_cases, futures):
-                    text, _ = future.result()
+                    text, metrics = future.result()
                     if text != expected_text(case):
                         raise RuntimeError('queued request isolation')
+                    validate_usage(case, metrics, eos, args.respect_eos)
             request(cases[-1], stream=True, disconnect=True)
             text, _ = request(cases[0])
             if text != expected_text(cases[0]):
                 raise RuntimeError('disconnect recovery')
             mixed = None
-            if args.resident_cases:
-                long_case = max(json.loads(args.resident_cases.read_text()), key=lambda c: len(c['input_ids']))
+            mixed_cases = []
+            for long_case in resident_cases:
                 with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
                     long = executor.submit(request, long_case, True)
                     time.sleep(0.25)
@@ -192,8 +206,20 @@ def main():
                     long_text, long_metrics = long.result()
                     if long_text != expected_text(long_case):
                         raise RuntimeError('resident cancellation/reset corrupted long peer')
-                    mixed = dict(long_prompt_tokens=len(long_case['input_ids']), short_finished_before_long=True,
-                                 cancellation_during_peer_prefill=True, short=short_metrics, long=long_metrics)
+                    validate_usage(cases[0], short_metrics, eos, args.respect_eos)
+                    validate_usage(long_case, long_metrics, eos, args.respect_eos)
+                    record = dict(case=long_case['case'], long_prompt_tokens=len(long_case['input_ids']),
+                                  short_finished_before_long=True, cancellation_during_peer_prefill=True,
+                                  short=short_metrics, long=long_metrics)
+                    mixed_cases.append(record)
+                    # Preserve completed cases if a subsequent long run fails.
+                    # This is partial evidence, not the final passing report.
+                    (args.output/'mixed-progress.json').write_text(json.dumps(
+                        dict(complete=False, completed=mixed_cases, expected_cases=len(resident_cases)),
+                        ensure_ascii=False, indent=2)+'\n')
+            if mixed_cases:
+                # Retain the legacy largest-case summary for evidence readers.
+                mixed = max(mixed_cases, key=lambda c: c['long_prompt_tokens'])
             try:
                 request(cases[0], temperature=0.7)
             except urllib.error.HTTPError as e:
@@ -211,7 +237,7 @@ def main():
                 raise RuntimeError('context overflow was silently accepted')
             overload = None
             if args.check_overload:
-                long_case = max(json.loads(args.resident_cases.read_text()), key=lambda c:len(c['input_ids']))
+                long_case = max(resident_cases, key=lambda c:len(c['input_ids']))
                 count = args.max_num_seqs * 8
                 start = threading.Barrier(count)
                 body = json.dumps(dict(model='inferfabric-program', prompt=long_case['input_ids'],
@@ -265,6 +291,7 @@ def main():
                           request_socket_timeout_seconds=args.request_timeout_seconds,
                           disconnect_recovery=True, unsupported_sampling_rejected=True, results=results,
                           concurrent_requests=len(concurrent_cases), mixed_residents=mixed,
+                          mixed_resident_cases=mixed_cases,
                           context_overflow_rejected=True,
                           max_num_seqs=args.max_num_seqs, max_num_batched_tokens=args.max_num_batched_tokens)
             if overload is not None: report['overload'] = overload
