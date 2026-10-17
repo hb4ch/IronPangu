@@ -1,5 +1,42 @@
 # Product serving execution and scheduling
 
+## Current qualified baseline (2026-10-18)
+
+Use the [planned bulk-domain candidate](validation/2026-10-18-bulk-domains/README.md)
+as the current performance baseline; the observations below retain the history of
+older failures and fixes. `IFTOKN09` assigns uncaptured bulk AllReduce to AI_CPU
+and leaves decode graphs and AllGather on HOST. The assignment is encoded and
+visible in the plan viewer. Full 92B native and vLLM Rust 0.25.1 HTTP output pass
+through first EOS at 64K. A 65,520-token uncached prompt executes exactly fifteen
+4096-token forwards and one 4080-token tail, without a prefill graph.
+
+Observed mixed HTTP long TTFT is 11.70–11.75 seconds; short peers receive first
+text in 739–763 ms and finish before the long request. Warm 61,440-token reuse
+has TTFT 2.01–2.07 seconds. Four isolated native decode calls after long context
+have median 22.67 ms; this is not a production latency percentile. Extra HCCL
+resources add approximately 500–506 MB HBM per rank outside the unchanged frozen
+activation arena. The new domain remains compilation opt-in.
+
+Remaining foundation work is ordered by dependency:
+
+1. Requalify repeated **64K**, not just 8K, mixed request churn with fixed output,
+   cancellation, queue and host-resource gates. Keep the 128 MiB post-wave RSS
+   growth bound and stable thread/FD requirements; passing a short run does not
+   prove a long-duration soak.
+2. Cover transport-level slow clients and bounded overload end to end. Internal
+   bounded-channel tests do not prove socket backpressure behavior.
+3. Qualify rank/backend failure, explicit unhealthy state, drain and restart,
+   including page and prefix snapshot ownership. Never continue a damaged rank
+   group through a hidden fallback.
+4. Reduce mixed-request output gaps (currently 508–547 ms text-chunk intervals)
+   while retaining the requested 4K prefill quantum and correct shared scheduling.
+   Compare TTFT/ITL/goodput with matched OmniInfer conditions; isolated decode
+   timings do not close this gate.
+
+Non-greedy 92B sampling, wider prefix-cache budgets, broader quality and sustained
+production SLO evidence also remain release gates. Keep experimental long-context
+and bulk-domain qualification explicit until those applicable gates are met.
+
 ## Execution priority and release gates (2026-10-18)
 
 Work follows this dependency order. Finish the serving foundation before APC or
