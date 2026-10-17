@@ -34,6 +34,29 @@ def run_engine(command, env, output, timeout):
     return (output / 'tokens.jsonl').read_text()
 
 
+def validate_uncaptured_prefill(program, prepared, cases, copy_boundary=None):
+    if not program.get('uncaptured_prefill') or program['prefill_tokens'] != 4096 or program.get('prefill_variants'):
+        raise RuntimeError('invalid uncaptured prefill contract')
+    graphs = prepared['graphs']
+    if len(graphs) != 1 or graphs[0]['name'] != 'token_decode' or graphs[0]['replays'] < 1:
+        raise RuntimeError('uncaptured prefill must preserve decode graph and forbid all prefill graphs')
+    # The engine explicitly prepares the maximum shape twice without capture.
+    forwards, tokens = 2, 8192
+    for case in cases:
+        segments = [len(case['input_ids'])] if copy_boundary is None else [copy_boundary] + [len(case['input_ids']) - copy_boundary] * 2
+        for remaining in segments:
+            if remaining < 1:
+                raise RuntimeError('invalid uncaptured prefill segment')
+            while remaining:
+                query = min(4096, remaining)
+                if query > 1:  # Single-row tails use the ordinary token entry.
+                    forwards += 1
+                    tokens += query
+                remaining -= query
+    if prepared.get('uncaptured_prefill_forwards') != forwards or prepared.get('uncaptured_prefill_tokens') != tokens:
+        raise RuntimeError('uncaptured model forward/token count mismatch')
+
+
 def main():
     p = argparse.ArgumentParser(description=__doc__)
     for name in ('binary', 'plan', 'checkpoint', 'cases', 'output'):
@@ -152,7 +175,9 @@ def main():
         if audit['activation_host_transfers'] or audit['rejected']:
             raise RuntimeError('residency violation')
         prepared = json.loads((args.output / 'prepared' / f'rank-{rank}.json').read_text())
-        if args.packed_prefill:
+        if args.packed_prefill and json.loads((args.plan / 'device-program.json').read_text()).get('uncaptured_prefill'):
+            validate_uncaptured_prefill(json.loads((args.plan / 'device-program.json').read_text()), prepared, cases, args.copy_boundary)
+        elif args.packed_prefill:
             program = json.loads((args.plan / 'device-program.json').read_text())
             family = program.get('prefill_variants', [])
             counts = family or [program['prefill_tokens']]

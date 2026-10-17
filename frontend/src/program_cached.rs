@@ -7,6 +7,13 @@ use inferfabric_model::{Result, invalid};
 use inferfabric_native::{prefix_cache::PrefixCache, program::Engine};
 use vllm_llm::GenerateRequest;
 
+fn uncaptured_checkpoint_boundary(tokens:u32,alignment:u32,chunk:u32)->u32 {
+    let (mut a,mut b)=(alignment,chunk);
+    while b!=0 {let remainder=a%b;a=b;b=remainder;}
+    let aligned_chunk=u64::from(alignment/a)*u64::from(chunk);
+    (u64::from(tokens.saturating_sub(1))/aligned_chunk*aligned_chunk) as u32
+}
+
 pub(super) struct CachedProgram {
     engine: Engine,
     cache: Option<PrefixCache>,
@@ -65,6 +72,10 @@ impl CachedProgram {
         })
     }
     fn boundary(&self, tokens: u32) -> u32 {
+        if self.engine.uncaptured_prefill() {
+            let chunk=self.engine.prefill_capacity().min(self.budget);
+            return uncaptured_checkpoint_boundary(tokens,self.alignment,chunk);
+        }
         tokens.saturating_sub(1) / self.alignment * self.alignment
     }
     fn namespace(&self, request: &GenerateRequest) -> Result<PrefixIdentity> {
@@ -80,7 +91,28 @@ impl CachedProgram {
         Ok(identity)
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::uncaptured_checkpoint_boundary as boundary;
+    #[test]
+    fn publication_does_not_split_uncaptured_forwards() {
+        assert_eq!(boundary(65536,64,4096),61440);
+        assert_eq!(boundary(65520,64,4096),61440);
+        assert_eq!(boundary(4096,64,4096),0);
+        assert_eq!(boundary(4097,64,4096),4096);
+        assert_eq!(boundary(65536,64,4000),64000);
+        for prompt in 1..=65536 {
+            let point=boundary(prompt,64,4096);
+            assert!(point<prompt);
+            assert_eq!(point%4096,0);
+            assert_eq!(point%64,0);
+            assert_eq!(point/4096+(prompt-point).div_ceil(4096),prompt.div_ceil(4096));
+        }
+    }
+}
 impl ResidentEngine for CachedProgram {
+    fn uncaptured_prefill(&self)->bool {self.engine.uncaptured_prefill()}
     fn prefill_capacity(&self) -> u32 {
         self.engine.prefill_capacity()
     }
@@ -129,7 +161,7 @@ impl ResidentEngine for CachedProgram {
             let variant = self
                 .variants
                 .iter()
-                .find(|v| v.max_query_tokens == count && v.max_sequences == 1)
+                .find(|v| v.accepts_query_tokens(count))
                 .ok_or_else(|| invalid("prefix arithmetic variant missing"))?;
             history.append_completed(variant, history.tokens(), count)?;
         }

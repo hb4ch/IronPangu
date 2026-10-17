@@ -30,8 +30,13 @@ int inferfabric_program_token(void *engine, uint32_t token, uint32_t position,
                               uint32_t sample, uint32_t *output);
 // Maximum compiled chunk width, or 1 when no packed variant was compiled.
 int inferfabric_program_prefill_capacity(void *engine, uint32_t *count);
+// 0: exact captured shapes; 1: bounded uncaptured query lengths up to capacity.
+int inferfabric_program_prefill_mode(void *engine, uint32_t *mode);
 // Bit n is set iff exact prefill size n is prepared. Decode uses its own entry point.
 int inferfabric_program_prefill_variants(void *engine, uint32_t *mask);
+// Exact ascending widths, bounded by caller capacity. Unlike the legacy mask,
+// this ABI represents widths >=32 without shifts or truncation.
+int inferfabric_program_prefill_sizes(void *engine, uint32_t *sizes, uint32_t capacity, uint32_t *count);
 int inferfabric_program_shared_pages(void *engine, uint32_t *enabled);
 int inferfabric_program_bind_state(void *engine, uint32_t rank, uint32_t logical_node,
                                   const int32_t *pages, uint32_t count);

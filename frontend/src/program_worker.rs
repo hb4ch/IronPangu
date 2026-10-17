@@ -20,6 +20,7 @@ pub(super) fn validate(req: &GenerateRequest) -> vllm_llm::Result<()> {
     Ok(())
 }
 pub(super) trait ResidentEngine {
+    fn uncaptured_prefill(&self)->bool {false}
     fn restore_prefix(&mut self,_slot:u32,_request:&GenerateRequest)->inferfabric_model::Result<u32> {Ok(0)}
     fn prefill_limit(&self,position:u32,prompt_tokens:u32)->u32 {prompt_tokens-position}
     fn checkpoint(&mut self,_slot:u32,_request:&GenerateRequest,_position:u32)->inferfabric_model::Result<()> {Ok(())}
@@ -55,6 +56,7 @@ pub(super) trait ResidentEngine {
     ) -> inferfabric_model::Result<Option<u32>>;
 }
 impl ResidentEngine for inferfabric_native::program::Engine {
+    fn uncaptured_prefill(&self)->bool { self.uncaptured_prefill() }
     fn prefill_chunk(&self, limit: u32) -> u32 { self.prefill_chunk(limit) }
     fn admit(&mut self, slot: u32, tokens: u32) -> inferfabric_model::Result<()> {
         self.prepare_resident(slot, tokens)
@@ -256,7 +258,23 @@ pub(super) fn run(
                     release(&mut slots[index], active);
                     continue;
                 }
+                // Only this worker produces outputs. A free slot therefore
+                // cannot disappear before advance, except on receiver close.
+                // Preserve state instead of computing and dropping a token.
+                if r.job.tx.capacity()==0 {
+                    continue;
+                }
                 if (r.position as usize) < r.job.req.prompt_token_ids.len() {
+                    if engine.uncaptured_prefill() {
+                        let remaining=r.job.req.prompt_token_ids.len()-r.position as usize;
+                        let quantum=engine.prefill_chunk(remaining.min(token_budget) as u32) as usize;
+                        if quantum>token_budget-tokens {
+                            // Give this resident the next full quantum instead
+                            // of fragmenting its forward after peer decode work.
+                            cursor=index;
+                            break;
+                        }
+                    }
                     prefill += 1;
                 } else {
                     decode += 1;
@@ -276,6 +294,11 @@ pub(super) fn run(
             }
             if prefill > 0 && decode > 0 {
                 mixed_ticks += 1;
+            }
+            if tokens==0 {
+                // All remaining clients may be backpressured. Avoid spinning;
+                // retain bounded cancellation/shutdown polling latency.
+                std::thread::sleep(std::time::Duration::from_millis(2));
             }
         }
         Ok(())
@@ -328,6 +351,7 @@ mod tests {
     }
     #[derive(Default)]
     struct Fake {
+        uncaptured: bool,
         selected: usize,
         position: [u32; 2],
         sum: [u32; 2],
@@ -342,8 +366,11 @@ mod tests {
         checkpoint_at:Option<u32>,
         checkpoints:Vec<u32>,
         cache_cleared:bool,
+        drain_at:Option<(usize,mpsc::Receiver<vllm_llm::Result<GenerateOutput>>)>,
+        drained:Vec<u32>,
     }
     impl ResidentEngine for Fake {
+        fn uncaptured_prefill(&self)->bool {self.uncaptured}
         fn restore_prefix(&mut self,slot:u32,request:&GenerateRequest)->inferfabric_model::Result<u32> {
             self.position[slot as usize]=self.restored;
             self.sum[slot as usize]=request.prompt_token_ids[..self.restored as usize].iter().sum();
@@ -361,6 +388,7 @@ mod tests {
             self.family.last().copied().unwrap_or(self.chunk.max(1))
         }
         fn prefill_chunk(&self, limit: u32) -> u32 {
+            if self.uncaptured {return limit.min(self.chunk);}
             if self.family.is_empty() { if self.chunk>1 && self.chunk<=limit {self.chunk} else {1} }
             else {self.family.iter().rev().copied().find(|&n|n<=limit).unwrap_or(1)}
         }
@@ -370,7 +398,7 @@ mod tests {
             position: u32,
             sample: bool,
         ) -> inferfabric_model::Result<Option<u32>> {
-            assert!(if self.family.is_empty() {tokens.len()==self.chunk as usize} else {self.family.contains(&(tokens.len() as u32))});
+            assert!(if self.uncaptured {tokens.len()<=self.chunk as usize} else if self.family.is_empty() {tokens.len()==self.chunk as usize} else {self.family.contains(&(tokens.len() as u32))});
             self.chunks
                 .push((self.selected, position, tokens.len(), sample));
             let mut output = None;
@@ -403,6 +431,11 @@ mod tests {
             {
                 flag.store(true, Ordering::Release);
             }
+            if let Some((at,receiver))=&mut self.drain_at
+                && *at==self.trace.len()
+            {
+                self.drained.extend(receiver.try_recv().unwrap().unwrap().token_ids);
+            }
             assert_eq!(position, self.position[self.selected]);
             self.position[self.selected] += 1;
             self.sum[self.selected] += token;
@@ -421,6 +454,43 @@ mod tests {
             .unwrap()
             .insert(req.request_id.clone(), cancel.clone());
         (Job { req, tx, cancel }, rx)
+    }
+    #[test]
+    fn backpressured_request_resumes_without_dropping_tokens_or_blocking_peer() {
+        let active=Arc::new(Mutex::new(Default::default()));
+        let (tx,mut rx)=mpsc::channel(2);
+        let (mut slow,_)=job(request("slow",vec![1],2),&active);
+        let (bounded,output)=mpsc::channel(1);slow.tx=bounded;
+        let (peer,mut peer_output)=job(request("peer",vec![10],3),&active);
+        tx.try_send(slow).unwrap();tx.try_send(peer).unwrap();drop(tx);
+        // The peer's second step drains the slow client's first token. This
+        // deterministic consumer event requires no timing assumptions.
+        let mut engine=Fake{drain_at:Some((2,output)),..Default::default()};
+        run(&mut engine,&mut rx,&active,&Arc::new(AtomicBool::new(false)),2,2).unwrap();
+        assert_eq!(engine.trace.iter().map(|(slot,_)|*slot).collect::<Vec<_>>(),vec![0,1,1,0,1]);
+        assert_eq!(engine.drained,vec![1]);
+        let final_output=engine.drain_at.as_mut().unwrap().1.try_recv().unwrap().unwrap();
+        assert_eq!(final_output.token_ids,vec![2]);assert!(final_output.finish_reason.is_some());
+        assert_eq!(peer_output.try_recv().unwrap().unwrap().token_ids,vec![10]);
+        assert_eq!(peer_output.try_recv().unwrap().unwrap().token_ids,vec![20]);
+        assert_eq!(peer_output.try_recv().unwrap().unwrap().token_ids,vec![40]);
+        assert!(active.lock().unwrap().is_empty());assert!(engine.cache_cleared);
+    }
+    #[test]
+    fn full_output_queue_does_not_prevent_request_cancellation() {
+        let active=Arc::new(Mutex::new(Default::default()));
+        let (tx,mut rx)=mpsc::channel(2);
+        let (mut slow,_)=job(request("slow",vec![1],100),&active);
+        let (bounded,mut output)=mpsc::channel(1);slow.tx=bounded;
+        let cancelled=slow.cancel.clone();
+        let (peer,_peer_output)=job(request("peer",vec![10],3),&active);
+        tx.try_send(slow).unwrap();tx.try_send(peer).unwrap();drop(tx);
+        let mut engine=Fake{cancel_at:Some((3,cancelled)),..Default::default()};
+        run(&mut engine,&mut rx,&active,&Arc::new(AtomicBool::new(false)),2,2).unwrap();
+        assert_eq!(engine.trace.iter().map(|(slot,_)|*slot).collect::<Vec<_>>(),vec![0,1,1,1]);
+        assert_eq!(output.try_recv().unwrap().unwrap().token_ids,vec![1]);
+        assert!(matches!(output.try_recv(),Err(mpsc::error::TryRecvError::Disconnected)));
+        assert!(active.lock().unwrap().is_empty());assert!(engine.cache_cleared);
     }
     #[test]
     fn program_admission_forwards_cache_salt_without_enabling_other_features() {
@@ -448,6 +518,42 @@ mod tests {
         assert_eq!(engine.checkpoints,vec![8]);
         assert!(engine.cache_cleared);
         assert!(active.lock().unwrap().is_empty());
+    }
+    #[test]
+    fn uncaptured_4k_forwards_follow_uncached_suffix_and_actual_tail() {
+        for (prompt,restored,expected) in [
+            (65536,0,vec![4096;16]),
+            (65536,61440,vec![4096]),
+            (65520,0,{let mut widths=vec![4096;15];widths.push(4080);widths}),
+            (65536,60001,vec![4096,1439]),
+        ] {
+            let active=Arc::new(Mutex::new(Default::default()));
+            let (tx,mut rx)=mpsc::channel(1);
+            let (job,mut output)=job(request("long",vec![1;prompt],1),&active);
+            tx.try_send(job).unwrap();drop(tx);
+            let mut engine=Fake{uncaptured:true,chunk:4096,restored,..Default::default()};
+            run(&mut engine,&mut rx,&active,&Arc::new(AtomicBool::new(false)),1,4096).unwrap();
+            assert_eq!(engine.chunks.iter().map(|c|c.2).collect::<Vec<_>>(),expected);
+            assert_eq!(engine.trace.len(),prompt-restored as usize);
+            let result=output.try_recv().unwrap().unwrap();
+            assert_eq!(result.token_ids,vec![prompt as u32]);
+            assert_eq!(result.cached_token_count,restored as usize);
+        }
+    }
+    #[test]
+    fn uncaptured_prefill_defers_for_full_quantum_after_peer_decode() {
+        let active=Arc::new(Mutex::new(Default::default()));
+        let (tx,mut rx)=mpsc::channel(2);
+        let (short,mut short_output)=job(request("short",vec![10],3),&active);
+        let (long,mut long_output)=job(request("long",vec![1;8192],1),&active);
+        tx.try_send(short).unwrap();tx.try_send(long).unwrap();drop(tx);
+        let mut engine=Fake{uncaptured:true,chunk:4096,..Default::default()};
+        run(&mut engine,&mut rx,&active,&Arc::new(AtomicBool::new(false)),2,4096).unwrap();
+        assert_eq!(engine.chunks,vec![(1,0,4096,false),(1,4096,4096,true)]);
+        assert_eq!(engine.trace[0],(0,10));
+        assert!(engine.trace[1..engine.trace.len()-1].iter().any(|&(slot,_)|slot==0));
+        for token in [10,20,40] {assert_eq!(short_output.try_recv().unwrap().unwrap().token_ids,vec![token]);}
+        assert_eq!(long_output.try_recv().unwrap().unwrap().token_ids,vec![8192]);
     }
     #[test]
     fn interleaves_long_prefill_with_decode_and_reuses_only_finished_slot() {

@@ -73,7 +73,7 @@ struct Router {
   Router(int64_t b,int64_t h,int64_t e,int64_t k,aclrtStream s):batch(b),hidden(h),experts(e),topk(k),stream(s),
     input({b,h},ACL_FLOAT,4),weight({h,e},ACL_FLOAT,4),bias({e},ACL_FLOAT,4),logits({b,e},ACL_FLOAT,4),
     scores({b,k},ACL_FLOAT,4),ids({b,k},ACL_INT32,4),normalized({b,e},ACL_FLOAT,4) {
-    if(e!=256 || k!=8 || h!=2560 || b<1 || b>16)throw std::runtime_error("unsupported 92B router shape");
+    if(e!=256 || k!=8 || h!=2560 || b<1 || b>4096)throw std::runtime_error("unsupported 92B router shape");
     query_projection();projection.allocate();query_selection();selection.allocate();
   }
   void load(const FloatFixture &w,const FloatFixture &correction) {

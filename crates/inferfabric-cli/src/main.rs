@@ -151,7 +151,7 @@ fn run() -> Result<()> {
                     "--prefill-tokens" if prefill_tokens.is_none() && prefill_variants.is_none() => {
                         let count = options.next().ok_or_else(|| invalid("missing prefill token count"))?
                             .parse::<usize>().map_err(|_| invalid("invalid prefill token count"))?;
-                        if !matches!(count, 1 | 2 | 4 | 8 | 16) { return Err(invalid("prefill tokens must be 1,2,4,8,16")); }
+                        if !matches!(count, 1 | 2 | 4 | 8 | 16 | 32 | 4096) { return Err(invalid("prefill tokens must be 1,2,4,8,16,32 or 4096 (uncaptured)")); }
                         prefill_tokens = Some(count);
                     }
                     _ => return Err(invalid("unknown or duplicate compile-token option")),
@@ -288,7 +288,7 @@ fn run() -> Result<()> {
         }
         _ => {
             return Err(invalid(
-                "usage: inferfabric compile-token MODEL CHECKPOINT OUTPUT_DIR [--allow-stale-index-size] [--resident-sequences N] [--prefill-tokens 1|2|4|8|16 | --prefill-variants 2,4,8,16] [--shared-pages] | plan-openpangu DSL CHECKPOINT OUTPUT.json [--allow-stale-index-size] | bind-openpangu-checkpoint CHECKPOINT_DIR OUTPUT.json [--allow-stale-index-size] | inspect-openpangu CONFIG.json OUTPUT.json | inspect-openpangu-checkpoint CHECKPOINT_DIR OUTPUT.json [--allow-stale-index-size] | explain-model TYPED-PLAN.json --html MODEL.html | plan GRAPH.json OUTPUT.ifplan [--dump-ir DIR] | explain PLAN.ifplan [--html OUTPUT.html] | execute PLAN.ifplan INPUTS.json REPORT.json | npu-model-probe DSL CHECKPOINT LIBRARY DEVICE TOKENS_JSON REPORT | npu-delta-probe LIBRARY DEVICE REPORT | npu-conv-probe CHECKPOINT LIBRARY DEVICE REPORT | npu-layer-probe CHECKPOINT LIBRARY DEVICE REPORT | npu-attention-probe CHECKPOINT LIBRARY DEVICE REPORT | npu-math-probe DSL CHECKPOINT LIBRARY DEVICE REPORT | compile-checkpoint MODEL.inferfabric CHECKPOINT_DIR OUTPUT.json | compile MODEL.inferfabric OUTPUT | inspect ARTIFACT | demo MODEL.inferfabric REQUESTS.json",
+                "usage: inferfabric compile-token MODEL CHECKPOINT OUTPUT_DIR [--allow-stale-index-size] [--resident-sequences N] [--prefill-tokens 1|2|4|8|16|32|4096 (4096 is uncaptured) | --prefill-variants 2,4,8,16,32] [--shared-pages] | plan-openpangu DSL CHECKPOINT OUTPUT.json [--allow-stale-index-size] | bind-openpangu-checkpoint CHECKPOINT_DIR OUTPUT.json [--allow-stale-index-size] | inspect-openpangu CONFIG.json OUTPUT.json | inspect-openpangu-checkpoint CHECKPOINT_DIR OUTPUT.json [--allow-stale-index-size] | explain-model TYPED-PLAN.json --html MODEL.html | plan GRAPH.json OUTPUT.ifplan [--dump-ir DIR] | explain PLAN.ifplan [--html OUTPUT.html] | execute PLAN.ifplan INPUTS.json REPORT.json | npu-model-probe DSL CHECKPOINT LIBRARY DEVICE TOKENS_JSON REPORT | npu-delta-probe LIBRARY DEVICE REPORT | npu-conv-probe CHECKPOINT LIBRARY DEVICE REPORT | npu-layer-probe CHECKPOINT LIBRARY DEVICE REPORT | npu-attention-probe CHECKPOINT LIBRARY DEVICE REPORT | npu-math-probe DSL CHECKPOINT LIBRARY DEVICE REPORT | compile-checkpoint MODEL.inferfabric CHECKPOINT_DIR OUTPUT.json | compile MODEL.inferfabric OUTPUT | inspect ARTIFACT | demo MODEL.inferfabric REQUESTS.json",
             ));
         }
     }

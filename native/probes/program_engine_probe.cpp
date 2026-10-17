@@ -72,14 +72,24 @@ int main(int argc, char **argv) {
       }
       std::cerr<<"binding limits: "<<rejected<<" invalid requests rejected; valid retries passed\n";
     }
-    uint32_t chunk=1,variant_mask=0;
+    uint32_t chunk=1;
+    bool uncaptured=false;
+    std::vector<uint32_t> variants;
     if(std::getenv("INFERFABRIC_PACKED_PREFILL")) {
       check(inferfabric_program_prefill_capacity(engine,&chunk));
-      check(inferfabric_program_prefill_variants(engine,&variant_mask));
+      const auto plan=inferfabric::execution::Plan::read(std::string(argv[1])+"/execution.bin");
+      uncaptured=plan.uncaptured_prefill;
+      variants.resize(plan.prefill_variants.size());
+      uint32_t count=0;
+      check(inferfabric_program_prefill_sizes(engine,variants.data(),variants.size(),&count));
+      if(count!=variants.size() || variants!=plan.prefill_variants)throw std::runtime_error("exact-size ABI differs from executable");
+      if(!variants.empty() && !inferfabric_program_prefill_sizes(engine,variants.data(),variants.size()-1,&count))
+        throw std::runtime_error("undersized prefill capability buffer accepted");
       if(chunk<=1)throw std::runtime_error("packed prefill requires a compiled chunk variant");
     }
     auto choose_chunk=[&](size_t limit) {
-      for(auto n:{16u,8u,4u,2u})if(n<=limit && (variant_mask&(1u<<n)))return n;
+      if(uncaptured)return uint32_t(std::min(limit,size_t(chunk)));
+      for(auto i=variants.rbegin();i!=variants.rend();++i)if(*i<=limit)return *i;
       return 1u;
     };
     if (const char *copy_boundary=std::getenv("INFERFABRIC_TEST_COPY_BOUNDARY")) {

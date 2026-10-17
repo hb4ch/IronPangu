@@ -16,6 +16,28 @@ fn variant(count: u32) -> Variant {
         packed: count > 1,
     }
 }
+#[test]
+fn uncaptured_tails_preserve_actual_shapes_and_do_not_match_graph_history() {
+    let mut bounded=variant(4096);
+    bounded.phase=Phase::Prefill;
+    bounded.graph_capable=false;
+    bounded.numerical_class="uncaptured_prefill_4096_v1".into();
+    let mut history=ArithmeticHistory::default();
+    history.append_completed(&bounded,0,4096).unwrap();
+    history.append_completed(&bounded,4096,1439).unwrap();
+    assert_eq!(history.tokens(),5535);
+    assert_eq!(history.spans().len(),2);
+    assert!(history.prefix(4096).is_ok());
+    assert!(history.prefix(5000).is_err());
+    assert!(history.check_append(&bounded,5535,4097).is_err());
+    assert!(history.check_append(&bounded,5535,0).is_err());
+    let mut captured=bounded.clone();captured.graph_capable=true;
+    let mut other=ArithmeticHistory::default();
+    captured.numerical_class="packed_prefill_4096_v1".into();
+    other.append_completed(&captured,0,4096).unwrap();
+    assert!(!history.same_prefix(&other,4096));
+    assert!(other.check_append(&captured,4096,1439).is_err());
+}
 fn append(history: &mut ArithmeticHistory, count: u32, times: usize) {
     for _ in 0..times {
         history

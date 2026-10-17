@@ -372,7 +372,12 @@ pub fn write_bundle_with_variants(
     prefill_variants: &[usize],
 ) -> Result<()> {
     let plans = initialization_plans(graph, topology, inventory)?;
-    let mut program = crate::token_program::lower(graph, Some(inventory))?.with_resident_sequences(resident_sequences)?.with_prefill_tokens(prefill_tokens)?.with_shared_pages(shared_pages)?;
+    let mut program = crate::token_program::lower(graph, Some(inventory))?.with_resident_sequences(resident_sequences)?;
+    program = if prefill_tokens == 4096 { program.with_uncaptured_prefill()? } else { program.with_prefill_tokens(prefill_tokens)? };
+    program = program.with_shared_pages(shared_pages)?;
+    if prefill_tokens == 4096 && !prefill_variants.is_empty() {
+        return Err(invalid("uncaptured prefill cannot include a captured shape family"));
+    }
     if !prefill_variants.is_empty() {program=program.with_prefill_variants(prefill_variants.to_vec())?;}
     let binary = program.encode()?;
     let physical = crate::token_physical::lower(graph, &topology.devices)?;

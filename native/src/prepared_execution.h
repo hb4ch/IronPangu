@@ -75,6 +75,7 @@ class Context {
   std::vector<Graph> graphs_;
   bool capturing_ = false;
   bool bounded_buffers_ = false;
+  uint64_t uncaptured_prefill_forwards_ = 0, uncaptured_prefill_tokens_ = 0;
   std::vector<std::pair<void *, size_t>> uploads_;
   size_t upload_index_ = 0;
   void *workspace_ = nullptr;
@@ -89,6 +90,8 @@ class Context {
   struct Step {
     int position;
     uint64_t allocations, reuses, boundaries;
+    uint32_t query_tokens = 1;
+    bool uncaptured_prefill = false;
   };
   std::vector<Step> steps_;
   Step before_{};
@@ -437,14 +440,18 @@ public:
     }
     ~InitializationCopies(){context.copies_allowed_=previous;}
   };
-  void begin_step(int position) {
-    before_ = {position, allocations_, reuse_, boundaries_};
+  void begin_step(int position, uint32_t query_tokens=1, bool uncaptured_prefill=false) {
+    before_ = {position, allocations_, reuse_, boundaries_, query_tokens, uncaptured_prefill};
   }
   void clear_step_history() { steps_.clear(); }
   void end_step() {
+    if(before_.uncaptured_prefill) {
+      ++uncaptured_prefill_forwards_;
+      uncaptured_prefill_tokens_+=before_.query_tokens;
+    }
     steps_.push_back({before_.position, allocations_ - before_.allocations,
                       reuse_ - before_.reuses,
-                      boundaries_ - before_.boundaries});
+                      boundaries_ - before_.boundaries, before_.query_tokens, before_.uncaptured_prefill});
   }
   template <class F, class Tuple, size_t... I>
   int query(const char *name, bool repeatable, F function, Tuple &args,
@@ -481,6 +488,8 @@ public:
         << "\"device_allocations\":" << allocations_
         << ",\"device_bytes\":" << allocated_bytes_
         << ",\"buffer_reuses\":" << reuse_
+        << ",\"uncaptured_prefill_forwards\":" << uncaptured_prefill_forwards_
+        << ",\"uncaptured_prefill_tokens\":" << uncaptured_prefill_tokens_
         << ",\"state_copy_operations\":" << state_copy_operations_
         << ",\"state_copy_bytes\":" << state_copy_bytes_
         << ",\"descriptors\":" << descriptors_.size()
@@ -502,6 +511,8 @@ public:
         out << ',';
       first = false;
       out << "{\"position\":" << step.position
+          << ",\"query_tokens\":" << step.query_tokens
+          << ",\"uncaptured_prefill\":" << (step.uncaptured_prefill ? "true" : "false")
           << ",\"device_allocations\":" << step.allocations
           << ",\"buffer_reuses\":" << step.reuses
           << ",\"completion_boundaries\":" << step.boundaries << '}';

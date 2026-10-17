@@ -22,6 +22,7 @@ type BindPages = unsafe extern "C" fn(*mut c_void, u32, *const c_char, *const i3
 type Resident = unsafe extern "C" fn(*mut c_void, u32) -> i32;
 type CopyResident = unsafe extern "C" fn(*mut c_void, u32, u32, u32) -> i32;
 type Capacity = unsafe extern "C" fn(*mut c_void, *mut u32) -> i32;
+type PrefillSizes = unsafe extern "C" fn(*mut c_void, *mut u32, u32, *mut u32) -> i32;
 type BindState = unsafe extern "C" fn(*mut c_void, u32, u32, *const i32, u32) -> i32;
 struct SharedState {
     pool: StatePool,
@@ -102,7 +103,7 @@ pub fn prefill_capacity(m: &Manifest) -> Result<u32> {
         }
     }
     if m.variants.is_empty()
-        || m.variants.len() > 5
+        || m.variants.len() > 6
         || m.variants[0].id != "serial_token_v1"
         || m.variants[0].phase != Phase::Decode
         || m.variants[0].max_sequences != 1
@@ -117,15 +118,16 @@ pub fn prefill_capacity(m: &Manifest) -> Result<u32> {
     let mut maximum=1;
     for v in m.variants.iter().skip(1) {
         let count = v.max_tokens;
-        if !matches!(count, 2 | 4 | 8 | 16) || count<=maximum
-            || v.id != format!("packed_prefill_{count}_v1")
+        let uncaptured = !v.graph_capable;
+        let id = if uncaptured {format!("uncaptured_prefill_{count}_v1")} else {format!("packed_prefill_{count}_v1")};
+        if (if uncaptured { count!=4096 || m.variants.len()!=2 } else { !matches!(count, 2 | 4 | 8 | 16 | 32) }) || count<=maximum
+            || v.id != id
             || v.phase != Phase::Prefill
             || v.max_sequences != 1
             || v.max_query_tokens != count
             || v.max_context != m.variants[0].max_context
-            || !v.graph_capable
             || !v.packed
-            || v.numerical_class != format!("packed_prefill_{count}_v1")
+            || v.numerical_class != id
         {
             return Err(invalid("unsupported packed prefill contract"));
         }
@@ -154,6 +156,7 @@ pub struct Engine {
     token_fn: Token,
     prefill_fn: Option<Prefill>,
     prefill_tokens: u32,
+    uncaptured_prefill: bool,
     prefill_variants: Vec<u32>,
     variants: Vec<Variant>,
     histories: Vec<ArithmeticHistory>,
@@ -213,7 +216,8 @@ impl Engine {
                     .ok()
                     .map(|f| *f),
                 prefill_tokens: prefill_capacity(&contract)?,
-                prefill_variants: contract.variants.iter().skip(1).map(|v|v.max_tokens).collect(),
+                uncaptured_prefill: contract.variants.iter().any(|v|v.phase==Phase::Prefill && !v.graph_capable),
+                prefill_variants: contract.variants.iter().skip(1).filter(|v|v.graph_capable).map(|v|v.max_tokens).collect(),
                 variants: contract.variants.clone(),
                 identity: contract.identity.clone(),
                 histories: vec![ArithmeticHistory::default();contract.resident_sequences as usize],
@@ -283,12 +287,31 @@ impl Engine {
                     "native prefill capacity differs from serving manifest",
                 ));
             }
-            let mut mask=if chunk>1 {1u32<<chunk} else {0};
-            if let Ok(variants)=result._library.get::<Capacity>(b"inferfabric_program_prefill_variants\0") {
-                result.check(variants(result.ptr,&mut mask))?;
+            let mut mode=0;
+            if let Ok(query)=result._library.get::<Capacity>(b"inferfabric_program_prefill_mode\0") {
+                result.check(query(result.ptr,&mut mode))?;
             }
-            let expected=result.prefill_variants.iter().fold(0,|bits,n|bits|(1u32<<n));
-            if mask!=expected {return Err(invalid("native exact prefill variants differ from serving manifest"));}
+            if mode!=u32::from(result.uncaptured_prefill) {
+                return Err(invalid("native prefill execution mode differs from serving manifest"));
+            }
+            if let Ok(sizes)=result._library.get::<PrefillSizes>(b"inferfabric_program_prefill_sizes\0") {
+                let mut observed=vec![0;result.prefill_variants.len()];
+                let mut count=0;
+                result.check(sizes(result.ptr,observed.as_mut_ptr(),observed.len() as u32,&mut count))?;
+                if count as usize!=observed.len() || observed!=result.prefill_variants {
+                    return Err(invalid("native exact prefill sizes differ from serving manifest"));
+                }
+            } else {
+                if chunk>=32 || result.prefill_variants.iter().any(|&n|n>=32) {
+                    return Err(invalid("large prefill requires native exact-size ABI"));
+                }
+                let mut mask=if chunk>1 {1u32<<chunk} else {0};
+                if let Ok(variants)=result._library.get::<Capacity>(b"inferfabric_program_prefill_variants\0") {
+                    result.check(variants(result.ptr,&mut mask))?;
+                }
+                let expected=result.prefill_variants.iter().fold(0,|bits,n|bits|(1u32<<n));
+                if mask!=expected {return Err(invalid("native exact prefill variants differ from serving manifest"));}
+            }
             let mut shared = 0;
             if let Ok(policy) = result
                 ._library
@@ -596,15 +619,17 @@ impl Engine {
     pub fn prefill_capacity(&self) -> u32 {
         self.prefill_tokens
     }
+    pub fn uncaptured_prefill(&self) -> bool { self.uncaptured_prefill }
     pub fn prefill_chunk(&self, limit: u32) -> u32 {
+        if self.uncaptured_prefill {return limit.min(self.prefill_tokens);}
         self.prefill_variants.iter().rev().copied().find(|&n|n<=limit).unwrap_or(1)
     }
     pub fn prefill(&mut self, tokens: &[u32], position: u32, sample: bool) -> Result<Option<u32>> {
         let count=u32::try_from(tokens.len()).map_err(|_|invalid("prefill count overflow"))?;
-        if !self.prefill_variants.contains(&count) {
+        if count<=1 || (!self.uncaptured_prefill && !self.prefill_variants.contains(&count)) || count>self.prefill_tokens {
             return Err(invalid("prefill must match the compiled chunk width"));
         }
-        let variant=self.variants.iter().position(|v|v.max_tokens==count).ok_or_else(||invalid("missing arithmetic variant"))?;
+        let variant=self.variants.iter().position(|v|v.phase==Phase::Prefill && v.accepts_query_tokens(count)).ok_or_else(||invalid("missing arithmetic variant"))?;
         self.histories[self.selected].check_append(&self.variants[variant],position,count)?;
         let prefill = self
             .prefill_fn
@@ -650,6 +675,26 @@ impl Drop for Engine {
 mod tests {
     use super::*;
     #[test]
+    fn uncaptured_envelope_cannot_masquerade_as_captured_variants() {
+        let mut m:Manifest=serde_json::from_str(include_str!("../../../docs/validation/2026-10-17-persistent-serving/serving.json")).unwrap();
+        m.states.clear();
+        m.variants[0].max_context=65536;
+        let mut v=m.variants[0].clone();
+        v.id="uncaptured_prefill_4096_v1".into();v.numerical_class=v.id.clone();
+        v.phase=Phase::Prefill;v.max_tokens=4096;v.max_query_tokens=4096;
+        v.packed=true;v.graph_capable=false;m.variants.push(v);
+        assert_eq!(prefill_capacity(&m).unwrap(),4096);
+        let valid=m.clone();
+        m.variants[1].graph_capable=true;
+        assert!(prefill_capacity(&m).is_err());
+        m=valid.clone();m.variants[1].max_tokens=8192;m.variants[1].max_query_tokens=8192;
+        assert!(prefill_capacity(&m).is_err());
+        m=valid.clone();m.variants[1].numerical_class="packed_prefill_4096_v1".into();
+        assert!(prefill_capacity(&m).is_err());
+        m=valid.clone();m.variants.push(valid.variants[1].clone());
+        assert!(prefill_capacity(&m).is_err());
+    }
+    #[test]
     fn copy_preflight_preserves_completed_history_and_rejects_invalid_destinations() {
         let m:Manifest=serde_json::from_str(include_str!("../../../docs/validation/2026-10-17-persistent-serving/serving.json")).unwrap();
         let mut history=ArithmeticHistory::default();
@@ -681,12 +726,17 @@ mod tests {
         m.variants.push(v);
         assert_eq!(prefill_capacity(&m).unwrap(), 4);
         let valid = m.clone();
-        for count in [8,16] {
+        for count in [8,16,32] {
             let mut v=m.variants[1].clone();
             v.id=format!("packed_prefill_{count}_v1");v.numerical_class=v.id.clone();
             v.max_tokens=count;v.max_query_tokens=count;m.variants.push(v);
         }
-        assert_eq!(prefill_capacity(&m).unwrap(),16);
+        assert_eq!(prefill_capacity(&m).unwrap(),32);
+        let mut full_family=m.clone();
+        let mut two=full_family.variants[1].clone();
+        two.id="packed_prefill_2_v1".into();two.numerical_class=two.id.clone();
+        two.max_tokens=2;two.max_query_tokens=2;full_family.variants.insert(1,two);
+        assert_eq!(prefill_capacity(&full_family).unwrap(),32);
         m.variants.swap(1,2);
         assert!(prefill_capacity(&m).is_err());
         m=valid.clone();

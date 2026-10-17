@@ -38,9 +38,7 @@ impl ArithmeticHistory {
         if position != self.tokens()
             || count == 0
             || variant.numerical_class.is_empty()
-            || variant.max_sequences != 1
-            || count != variant.max_tokens
-            || count != variant.max_query_tokens
+            || !variant.accepts_query_tokens(count)
             || position
                 .checked_add(count)
                 .is_none_or(|end| end > variant.max_context)

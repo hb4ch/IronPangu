@@ -37,6 +37,18 @@ pub struct Variant {
     pub graph_capable: bool,
     pub packed: bool,
 }
+impl Variant {
+    /// Captured single-sequence invocations have exact shapes. An uncaptured
+    /// packed prefill envelope accepts actual query lengths within both bounds.
+    pub fn accepts_query_tokens(&self, count: u32) -> bool {
+        self.max_sequences == 1 && count > 0 && count <= self.max_context &&
+            if self.phase == Phase::Prefill && self.packed && !self.graph_capable {
+                count <= self.max_tokens && count <= self.max_query_tokens
+            } else {
+                count == self.max_tokens && count == self.max_query_tokens
+            }
+    }
+}
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(tag = "kind", rename_all = "snake_case", deny_unknown_fields)]

@@ -34,8 +34,6 @@ inline uint32_t route_origin(const Plan &p,uint32_t id) {
 // Specialization capabilities of the registered Ascend kernels. This validates
 // serialized IR independently of Rust before allocating model/device memory.
 inline void validate_kernels(const Plan &p) {
-  if(p.uncaptured_prefill)
-    throw std::runtime_error("uncaptured 4K prefill requires bounded variable-query arena support; this backend cannot execute that contract yet");
   using T = std::pair<uint32_t, uint32_t>;
   if(p.context>512)for(const auto &n:p.nodes)
     if(n.op=="cache_quantize_append" || n.op=="packed_latent_attention")

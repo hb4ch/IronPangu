@@ -91,7 +91,7 @@ Implemented foundations:
   serving and physical metadata explicitly forbid prefill capture. Compiler
   tests and the Docker C++ reader tests pass, including all valid tail lengths
   and invalid envelopes. The existing execution backend explicitly rejects the
-  new envelope until its full path is ready.
+  new envelope unless the backend exposes the matching execution-mode ABI.
 - A bounded temporary-buffer scope can lease the smallest sufficient free slot
   allowed by the current instruction's frozen binding. It does not change the
   decode allocation policy, tensor extent or persistent storage. Exhaustion
@@ -100,7 +100,20 @@ Implemented foundations:
   all 4,096 tail lengths, live-lease exclusion, instruction ownership, reuse and
   exhaustion; the complete native library builds with this implementation.
 
-Still required: connect uncaptured startup preparation and dispatch, qualify the
-maximum-shape arena against actual operator allocation traces and variable tails,
-integrate the Rust scheduler/APC history, and verify full 92B NPU output and
-performance. The allocator test is not full-model memory or numerical evidence.
+The current candidate connects uncaptured maximum-shape preparation and dispatch,
+the Rust execution-mode handshake, bounded query counts, actual-shape arithmetic
+history and complete prefill quanta in the scheduler. Compile with
+`--prefill-tokens 4096`; this emits the uncaptured contract rather than a graph
+family. The normal decode graph remains enabled. Native audit counters distinguish
+uncaptured forwards/tokens from graph replays. The qualification client requires
+exact forward/token counts and rejects even an unused captured prefill graph.
+
+Local tests cover cold 64K scheduling as 16 forwards, APC suffixes, arbitrary tails,
+mixed decode fairness, cache publication without an extra split, and rejection of
+incompatible arithmetic/mode contracts. The ARM frontend is cross-built locally;
+the complete candidate native library builds in the remote Docker container.
+
+Still required: qualify the maximum-shape arena against actual operator allocation
+traces and variable tails, and verify full 92B NPU output and performance. The first
+NPU capacity-discovery run is in progress; it is not a passed release gate. The
+allocator and scheduler tests are not full-model memory or numerical evidence.

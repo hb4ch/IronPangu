@@ -1309,7 +1309,7 @@ struct Decoder {
     if(!program.supports_prefill(tokens.size()) || tokens.size()<=1)throw std::runtime_error("prefill variant size");
     if(program.uncaptured_prefill && replay)throw std::runtime_error("uncaptured prefill forbids graph replay");
     prepared::Context::BoundedBuffers bounded(execution,program.uncaptured_prefill);
-    set_chunk_inputs(tokens,pos);execution.begin_step(pos);
+    set_chunk_inputs(tokens,pos);execution.begin_step(pos,uint32_t(tokens.size()),program.uncaptured_prefill);
     V output;
     if(replay) {
       auto &variant=prefill_graphs[uint32_t(tokens.size())];

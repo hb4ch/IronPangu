@@ -12,6 +12,23 @@ spec.loader.exec_module(module)
 
 
 class QualificationProcess(unittest.TestCase):
+    def test_uncaptured_forward_audit_rejects_graphs_missing_counts_and_fragmentation(self):
+        program = dict(uncaptured_prefill=True, prefill_tokens=4096, prefill_variants=[])
+        audit = dict(graphs=[dict(name='token_decode', replays=2)],
+                     uncaptured_prefill_forwards=18, uncaptured_prefill_tokens=8192+65536)
+        cases = [dict(input_ids=[0]*65536)]
+        module.validate_uncaptured_prefill(program, audit, cases)
+        for key, value in [('uncaptured_prefill_forwards', 19), ('uncaptured_prefill_tokens', 8192+65535),
+                           ('graphs', [dict(name='packed_prefill', replays=16)]),
+                           ('graphs', [dict(name='token_decode', replays=1),dict(name='packed_prefill', replays=0)])]:
+            with self.assertRaises(RuntimeError):
+                module.validate_uncaptured_prefill(program, dict(audit, **{key:value}), cases)
+        missing = dict(audit); missing.pop('uncaptured_prefill_forwards')
+        with self.assertRaises(RuntimeError):
+            module.validate_uncaptured_prefill(program, missing, cases)
+        tail = dict(audit, uncaptured_prefill_forwards=3, uncaptured_prefill_tokens=8192+4096)
+        module.validate_uncaptured_prefill(program, tail, [dict(input_ids=[0]*4097)])
+
     def test_success(self):
         with tempfile.TemporaryDirectory() as directory:
             out = Path(directory)

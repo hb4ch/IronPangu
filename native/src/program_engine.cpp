@@ -82,16 +82,27 @@ struct Engine {
         if (!dladdr(reinterpret_cast<void *>(&inferfabric_program_abi_version), &library) || !library.dli_fname)
           throw std::runtime_error("native backend identity unavailable");
         auto present = [&](const char *kind) { auto p = sidecar(kind, rank); return std::filesystem::exists(p) ? p : std::string{}; };
+        if(rank==0)std::cerr<<"program preparation rank=0 phase=load_parameters\n";
         inferfabric::token::Decoder decoder(loads[rank], checkpoint, root, program,
             present("arena"), inferfabric::prepared::ArenaLayout::fingerprint_file(bundle + "/execution.bin"),
             present("workspace"), inferfabric::prepared::ArenaLayout::fingerprint_file(library.dli_fname));
         // Same preparation order as the qualified diagnostic client. Warmup
         // constructs all parameter views, graph addresses and output invocations.
+        if(rank==0)std::cerr<<"program preparation rank=0 phase=decode\n";
         auto warm = decoder.token(0, 0, false);
         warm = decoder.token(0, 1, false);
         warm = decoder.token(0, 2, true);
         decoder.emit(warm, 0, false);
         warm = {};
+        if(program.uncaptured_prefill) {
+          std::vector<uint32_t> chunk(program.prefill_tokens,0);
+          for(int pass=0;pass<2;++pass) {
+            if(rank==0)std::cerr<<"program preparation rank=0 phase=uncaptured_prefill query_tokens="<<chunk.size()<<" pass="<<pass<<'\n';
+            decoder.reset_request();
+            auto logits=decoder.prefill(chunk,0,false);
+            decoder.emit(logits,int(chunk.size())-1,false);
+          }
+        }
         for(auto count:program.prefill_variants) {
           std::vector<uint32_t> chunk(count,0);
           for(int pass=0;pass<3;++pass) {
@@ -101,6 +112,7 @@ struct Engine {
           }
         }
         decoder.seal_graphs();
+        if(rank==0)std::cerr<<"program preparation rank=0 phase=complete\n";
         if (const char *dir = std::getenv("INFERFABRIC_PREPARED_AUDIT_DIR")) {
           std::filesystem::create_directories(dir);
           std::ofstream audit(std::filesystem::path(dir) / ("rank-" + std::to_string(rank) + ".json"));
@@ -137,7 +149,7 @@ struct Engine {
             if (want) next = uint32_t(decoder.emit(logits, int(pos), output_diagnostics));
             else decoder.execution.complete();
           } else if(cmd == Command::Prefill) {
-            auto logits=decoder.prefill(chunk_tokens,int(pos),true);
+            auto logits=decoder.prefill(chunk_tokens,int(pos),!program.uncaptured_prefill);
             if(want)next=uint32_t(decoder.emit(logits,int(pos+chunk_tokens.size()-1),output_diagnostics));
             else decoder.execution.complete();
           }
@@ -280,8 +292,18 @@ extern "C" int inferfabric_program_close(void *p) {
 extern "C" int inferfabric_program_prefill_capacity(void *p,uint32_t *count) {
   return call([&]{if(!count)throw std::runtime_error("null prefill capacity");*count=engine(p).program.prefill_tokens;});
 }
+extern "C" int inferfabric_program_prefill_mode(void *p,uint32_t *mode) {
+  return call([&]{if(!mode)throw std::runtime_error("null prefill mode");*mode=engine(p).program.uncaptured_prefill?1:0;});
+}
 extern "C" int inferfabric_program_prefill_variants(void *p,uint32_t *mask) {
-  return call([&]{if(!mask)throw std::runtime_error("null prefill variants");*mask=0;for(auto n:engine(p).program.prefill_variants)*mask|=uint32_t(1)<<n;});
+  return call([&]{if(!mask)throw std::runtime_error("null prefill variants");uint32_t bits=0;for(auto n:engine(p).program.prefill_variants){if(n>=32)throw std::runtime_error("prefill widths require exact-size ABI");bits|=uint32_t(1)<<n;}*mask=bits;});
+}
+extern "C" int inferfabric_program_prefill_sizes(void *p,uint32_t *sizes,uint32_t capacity,uint32_t *count) {
+  return call([&]{const auto &variants=engine(p).program.prefill_variants;
+    if(!count || variants.size()>capacity || (!sizes && !variants.empty()))throw std::runtime_error("prefill sizes output capacity");
+    for(size_t i=0;i<variants.size();++i)sizes[i]=variants[i];
+    *count=uint32_t(variants.size());
+  });
 }
 extern "C" int inferfabric_program_shared_pages(void *p,uint32_t *enabled) {
   return call([&]{if(!enabled)throw std::runtime_error("null page policy output");*enabled=engine(p).program.shared_pages?1:0;});
