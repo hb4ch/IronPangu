@@ -1,0 +1,59 @@
+{
+  "passed": true,
+  "frontend_sha256": "490e770d7fda80942bf725f85309065f8398f2844d972556b6d8c1547086c67d",
+  "prefix_observations": [
+    {
+      "mode": "cold-a",
+      "cached_tokens": 0,
+      "ttft_ms": 9595.149009022862
+    },
+    {
+      "mode": "warm-a",
+      "cached_tokens": 61440,
+      "ttft_ms": 1260.894508101046
+    },
+    {
+      "mode": "cold-b",
+      "cached_tokens": 0,
+      "ttft_ms": 10338.223775848746
+    },
+    {
+      "mode": "warm-b",
+      "cached_tokens": 61440,
+      "ttft_ms": 1245.8874308504164
+    },
+    {
+      "mode": "evicted-a",
+      "cached_tokens": 0,
+      "ttft_ms": 10333.492048084736
+    }
+  ],
+  "mixed_long_ttft_ms": [
+    11012.01984565705,
+    10976.629232987761,
+    11032.592098694295
+  ],
+  "mixed_short_ttft_ms": [
+    742.8142363205552,
+    737.7920183353126,
+    771.5012892149389
+  ],
+  "prefix_shutdown": {
+    "hits": 2,
+    "restored_tokens": 122880,
+    "published": 6,
+    "remaining": 0
+  },
+  "scheduler": {
+    "max_active": 2,
+    "mixed_ticks": 4,
+    "consumed_tokens": 405921,
+    "token_budget": 4096
+  },
+  "shared_pool": {
+    "admissions": 38,
+    "cross_partition_bindings": 5760,
+    "peak_occupied_bytes": 14486298624,
+    "remaining_occupied_bytes": 0
+  }
+}

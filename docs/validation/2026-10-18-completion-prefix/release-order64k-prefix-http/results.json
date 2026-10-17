@@ -1,0 +1,519 @@
+{
+  "frontend": "vLLM Rust 0.25.1",
+  "mode": "resident request scheduler; compiled prefill and native decode",
+  "full_fixture_text": false,
+  "sse_agreement": true,
+  "queued_isolation": true,
+  "reference_comparison_scope": "through_first_eos",
+  "fixture_sha256": "3a05e7ac9bb3a2e4432dc71717262771d35cd817b8d506d303f3d4b0777b926d",
+  "resident_fixture_sha256": "238299829f68743966950409c23a010581b01ff3ba4f864a31cd727439c622d0",
+  "request_socket_timeout_seconds": 300,
+  "disconnect_recovery": true,
+  "unsupported_sampling_rejected": true,
+  "results": [
+    {
+      "case": "arithmetic",
+      "text": "1 + 1 = 2",
+      "collected": {
+        "total_ms": 551.8640140071511,
+        "usage": {
+          "prompt_tokens": 12,
+          "total_tokens": 20,
+          "completion_tokens": 8
+        }
+      },
+      "streaming": {
+        "ttft_ms": 283.6714540608227,
+        "request_started_ms_since_run": 86580.8935421519,
+        "first_text_ms_since_run": 86864.56499621272,
+        "text_chunks": 7,
+        "chunk_intervals_ms": [
+          22.2829757258296,
+          21.638972219079733,
+          21.57227974385023,
+          21.72787208110094,
+          21.79492311552167,
+          21.64817089214921
+        ],
+        "total_ms": 452.3332407698035,
+        "usage": {
+          "prompt_tokens": 12,
+          "total_tokens": 20,
+          "completion_tokens": 8
+        }
+      }
+    },
+    {
+      "case": "geography",
+      "text": "The capital of France is Paris.",
+      "collected": {
+        "total_ms": 457.92283257469535,
+        "usage": {
+          "prompt_tokens": 15,
+          "total_tokens": 23,
+          "completion_tokens": 8
+        }
+      },
+      "streaming": {
+        "ttft_ms": 281.4826578833163,
+        "request_started_ms_since_run": 87491.24054703861,
+        "first_text_ms_since_run": 87772.72320492193,
+        "text_chunks": 7,
+        "chunk_intervals_ms": [
+          22.24026620388031,
+          21.854812745004892,
+          21.56953141093254,
+          21.43168868497014,
+          21.517751272767782,
+          21.4121388271451
+        ],
+        "total_ms": 448.59802396968007,
+        "usage": {
+          "prompt_tokens": 15,
+          "total_tokens": 23,
+          "completion_tokens": 8
+        }
+      }
+    },
+    {
+      "case": "chinese",
+      "text": "北京是中国的首都，拥有悠久的历史、丰富的文化遗产和现代化的城市风貌。",
+      "collected": {
+        "total_ms": 646.478327922523,
+        "usage": {
+          "prompt_tokens": 14,
+          "total_tokens": 31,
+          "completion_tokens": 17
+        }
+      },
+      "streaming": {
+        "ttft_ms": 286.148973274976,
+        "request_started_ms_since_run": 88586.41951996833,
+        "first_text_ms_since_run": 88872.5684932433,
+        "text_chunks": 16,
+        "chunk_intervals_ms": [
+          22.577177733182907,
+          21.851143334060907,
+          22.99623191356659,
+          21.920622792094946,
+          21.710162051022053,
+          21.69490186497569,
+          21.504499949514866,
+          21.491240244358778,
+          21.41368016600609,
+          21.551189944148064,
+          21.658981684595346,
+          21.44828997552395,
+          21.625451277941465,
+          21.449599880725145,
+          22.37348584458232
+        ],
+        "total_ms": 648.8021463155746,
+        "usage": {
+          "prompt_tokens": 14,
+          "total_tokens": 31,
+          "completion_tokens": 17
+        }
+      }
+    },
+    {
+      "case": "access-code-529",
+      "text": "7319",
+      "collected": {
+        "total_ms": 432.3672531172633,
+        "usage": {
+          "prompt_tokens": 529,
+          "total_tokens": 534,
+          "completion_tokens": 5
+        }
+      },
+      "streaming": {
+        "ttft_ms": 274.6155569329858,
+        "request_started_ms_since_run": 89667.68515994772,
+        "first_text_ms_since_run": 89942.30071688071,
+        "text_chunks": 4,
+        "chunk_intervals_ms": [
+          23.519755341112614,
+          22.53053802996874,
+          22.549517918378115
+        ],
+        "total_ms": 387.3697370290756,
+        "usage": {
+          "prompt_tokens": 529,
+          "total_tokens": 534,
+          "completion_tokens": 5
+        }
+      }
+    }
+  ],
+  "concurrent_requests": 8,
+  "mixed_residents": {
+    "case": "retrieval-65536-early",
+    "long_prompt_tokens": 65520,
+    "short_finished_before_long": true,
+    "cancellation_during_peer_prefill": true,
+    "short_first_output_before_long": true,
+    "short": {
+      "ttft_ms": 742.8142363205552,
+      "request_started_ms_since_run": 131977.11997991428,
+      "first_text_ms_since_run": 132719.93421623483,
+      "text_chunks": 7,
+      "chunk_intervals_ms": [
+        511.8953809142113,
+        520.0552507303655,
+        527.0105730742216,
+        540.0287201628089,
+        552.4458019062877,
+        540.2324320748448
+      ],
+      "total_ms": 4491.033897269517,
+      "usage": {
+        "prompt_tokens": 12,
+        "total_tokens": 20,
+        "completion_tokens": 8
+      }
+    },
+    "long": {
+      "ttft_ms": 11012.01984565705,
+      "request_started_ms_since_run": 131032.57042728364,
+      "first_text_ms_since_run": 142044.5902729407,
+      "text_chunks": 4,
+      "chunk_intervals_ms": [
+        28.627623338252306,
+        24.867523927241564,
+        23.682765662670135
+      ],
+      "total_ms": 11928.804452996701,
+      "usage": {
+        "prompt_tokens": 65520,
+        "total_tokens": 65525,
+        "completion_tokens": 5
+      }
+    }
+  },
+  "mixed_resident_cases": [
+    {
+      "case": "retrieval-65536-early",
+      "long_prompt_tokens": 65520,
+      "short_finished_before_long": true,
+      "cancellation_during_peer_prefill": true,
+      "short_first_output_before_long": true,
+      "short": {
+        "ttft_ms": 742.8142363205552,
+        "request_started_ms_since_run": 131977.11997991428,
+        "first_text_ms_since_run": 132719.93421623483,
+        "text_chunks": 7,
+        "chunk_intervals_ms": [
+          511.8953809142113,
+          520.0552507303655,
+          527.0105730742216,
+          540.0287201628089,
+          552.4458019062877,
+          540.2324320748448
+        ],
+        "total_ms": 4491.033897269517,
+        "usage": {
+          "prompt_tokens": 12,
+          "total_tokens": 20,
+          "completion_tokens": 8
+        }
+      },
+      "long": {
+        "ttft_ms": 11012.01984565705,
+        "request_started_ms_since_run": 131032.57042728364,
+        "first_text_ms_since_run": 142044.5902729407,
+        "text_chunks": 4,
+        "chunk_intervals_ms": [
+          28.627623338252306,
+          24.867523927241564,
+          23.682765662670135
+        ],
+        "total_ms": 11928.804452996701,
+        "usage": {
+          "prompt_tokens": 65520,
+          "total_tokens": 65525,
+          "completion_tokens": 5
+        }
+      }
+    },
+    {
+      "case": "retrieval-65536-middle",
+      "long_prompt_tokens": 65520,
+      "short_finished_before_long": true,
+      "cancellation_during_peer_prefill": true,
+      "short_first_output_before_long": true,
+      "short": {
+        "ttft_ms": 737.7920183353126,
+        "request_started_ms_since_run": 143897.96206494793,
+        "first_text_ms_since_run": 144635.75408328325,
+        "text_chunks": 7,
+        "chunk_intervals_ms": [
+          510.6145706959069,
+          515.1270451024175,
+          519.6055578999221,
+          523.9631510339677,
+          528.8247060962021,
+          535.1890940219164
+        ],
+        "total_ms": 4424.332361202687,
+        "usage": {
+          "prompt_tokens": 12,
+          "total_tokens": 20,
+          "completion_tokens": 8
+        }
+      },
+      "long": {
+        "ttft_ms": 10976.629232987761,
+        "request_started_ms_since_run": 142962.13105600327,
+        "first_text_ms_since_run": 153938.76028899103,
+        "text_chunks": 4,
+        "chunk_intervals_ms": [
+          26.802379172295332,
+          23.494765162467957,
+          23.339442908763885
+        ],
+        "total_ms": 11894.045854918659,
+        "usage": {
+          "prompt_tokens": 65520,
+          "total_tokens": 65525,
+          "completion_tokens": 5
+        }
+      }
+    },
+    {
+      "case": "retrieval-65536-late",
+      "long_prompt_tokens": 65520,
+      "short_finished_before_long": true,
+      "cancellation_during_peer_prefill": true,
+      "short_first_output_before_long": true,
+      "short": {
+        "ttft_ms": 771.5012892149389,
+        "request_started_ms_since_run": 155804.5628229156,
+        "first_text_ms_since_run": 156576.06411213055,
+        "text_chunks": 7,
+        "chunk_intervals_ms": [
+          507.897580973804,
+          517.4364820122719,
+          518.7999517656863,
+          523.6956090666354,
+          529.4556710869074,
+          536.9023559615016
+        ],
+        "total_ms": 4458.488515112549,
+        "usage": {
+          "prompt_tokens": 12,
+          "total_tokens": 20,
+          "completion_tokens": 8
+        }
+      },
+      "long": {
+        "ttft_ms": 11032.592098694295,
+        "request_started_ms_since_run": 154857.11848828942,
+        "first_text_ms_since_run": 165889.7105869837,
+        "text_chunks": 4,
+        "chunk_intervals_ms": [
+          29.215657152235508,
+          24.83682380989194,
+          24.366061203181744
+        ],
+        "total_ms": 11946.904277894646,
+        "usage": {
+          "prompt_tokens": 65520,
+          "total_tokens": 65525,
+          "completion_tokens": 5
+        }
+      }
+    }
+  ],
+  "prefix_cases": [
+    {
+      "case": "retrieval-65536-early",
+      "boundary": 61440,
+      "observations": [
+        {
+          "mode": "cold-a",
+          "cached_tokens": 0,
+          "ttft_ms": 9595.149009022862,
+          "request_started_ms_since_run": 93538.85529423133,
+          "first_text_ms_since_run": 103134.00430325419,
+          "text_chunks": 4,
+          "chunk_intervals_ms": [
+            30.43329669162631,
+            23.767107166349888,
+            23.418253753334284
+          ],
+          "total_ms": 10543.701688759029,
+          "usage": {
+            "prompt_tokens": 65520,
+            "total_tokens": 65525,
+            "completion_tokens": 5
+          }
+        },
+        {
+          "mode": "warm-a",
+          "cached_tokens": 61440,
+          "ttft_ms": 1260.894508101046,
+          "request_started_ms_since_run": 104082.68751390278,
+          "first_text_ms_since_run": 105343.58202200383,
+          "text_chunks": 4,
+          "chunk_intervals_ms": [
+            27.13241195306182,
+            23.31934403628111,
+            23.06821197271347
+          ],
+          "total_ms": 2206.096703186631,
+          "usage": {
+            "prompt_tokens": 65520,
+            "total_tokens": 65525,
+            "completion_tokens": 5,
+            "prompt_tokens_details": {
+              "cached_tokens": 61440
+            }
+          }
+        },
+        {
+          "mode": "cold-b",
+          "cached_tokens": 0,
+          "ttft_ms": 10338.223775848746,
+          "request_started_ms_since_run": 106288.93314814195,
+          "first_text_ms_since_run": 116627.1569239907,
+          "text_chunks": 4,
+          "chunk_intervals_ms": [
+            27.730675879865885,
+            24.427662137895823,
+            23.75006629154086
+          ],
+          "total_ms": 11284.154189750552,
+          "usage": {
+            "prompt_tokens": 65520,
+            "total_tokens": 65525,
+            "completion_tokens": 5
+          }
+        },
+        {
+          "mode": "warm-b",
+          "cached_tokens": 61440,
+          "ttft_ms": 1245.8874308504164,
+          "request_started_ms_since_run": 117573.21069901809,
+          "first_text_ms_since_run": 118819.09812986851,
+          "text_chunks": 4,
+          "chunk_intervals_ms": [
+            25.034476071596146,
+            23.159801959991455,
+            22.786119021475315
+          ],
+          "total_ms": 2194.0985321998596,
+          "usage": {
+            "prompt_tokens": 65520,
+            "total_tokens": 65525,
+            "completion_tokens": 5,
+            "prompt_tokens_details": {
+              "cached_tokens": 61440
+            }
+          }
+        },
+        {
+          "mode": "evicted-a",
+          "cached_tokens": 0,
+          "ttft_ms": 10333.492048084736,
+          "request_started_ms_since_run": 119767.43019092828,
+          "first_text_ms_since_run": 130100.92223901302,
+          "text_chunks": 4,
+          "chunk_intervals_ms": [
+            30.455956235527992,
+            24.772023782134056,
+            23.72017689049244
+          ],
+          "total_ms": 11264.291650149971,
+          "usage": {
+            "prompt_tokens": 65520,
+            "total_tokens": 65525,
+            "completion_tokens": 5
+          }
+        }
+      ]
+    }
+  ],
+  "prefix_branch": null,
+  "prefix_branch_fixture_sha256": null,
+  "prefix_fixture_sha256": "d642f2f5ae1e350f672c79b3589234ca91376e017a42209c84d5a6f389fe6548",
+  "context_overflow_rejected": true,
+  "max_num_seqs": 2,
+  "max_num_batched_tokens": 4096,
+  "graceful_sigterm_shutdown": true,
+  "prefix_cache_shutdown": {
+    "hits": 2,
+    "restored_tokens": 122880,
+    "published": 6,
+    "remaining": 0
+  },
+  "prefill_graph_replays": [
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0
+  ],
+  "state_copy_totals": [
+    {
+      "rank": 0,
+      "operations": 1600,
+      "bytes": 6952009728
+    },
+    {
+      "rank": 1,
+      "operations": 1600,
+      "bytes": 6952009728
+    },
+    {
+      "rank": 2,
+      "operations": 1600,
+      "bytes": 6952009728
+    },
+    {
+      "rank": 3,
+      "operations": 1600,
+      "bytes": 6952009728
+    },
+    {
+      "rank": 4,
+      "operations": 1600,
+      "bytes": 6952009728
+    },
+    {
+      "rank": 5,
+      "operations": 1600,
+      "bytes": 6952009728
+    },
+    {
+      "rank": 6,
+      "operations": 1600,
+      "bytes": 6952009728
+    },
+    {
+      "rank": 7,
+      "operations": 1600,
+      "bytes": 6952009728
+    }
+  ],
+  "scheduler": {
+    "max_active": 2,
+    "mixed_ticks": 4,
+    "consumed_tokens": 405921,
+    "token_budget": 4096
+  },
+  "shared_pool": {
+    "admissions": 38,
+    "cross_partition_bindings": 5760,
+    "peak_occupied_bytes": 14486298624,
+    "remaining_occupied_bytes": 0
+  },
+  "arithmetic_history": {
+    "request_histories": 38,
+    "completed_input_tokens": 405921,
+    "all_scheduler_tokens_accounted": true
+  }
+}

@@ -56,8 +56,11 @@ resident release and active-request removal succeed. Injected release failures
 produce errors in both schedulers. The full 24-wave 64K HTTP run passes 120
 reference load/recovery outputs with 71.82 MiB RSS growth, stable threads/FDs and
 complete page reclamation. This establishes a bounded repeated-load gate, not a
-production soak or an explanation of the earlier isolated FD excursion. Prefix
-restore on the updated frontend remains to be requalified.
+production soak or an explanation of the earlier isolated FD excursion. [Prefix
+restoration on the updated frontend](validation/2026-10-18-completion-prefix/README.md)
+now passes: 61,440-token hits, salt isolation, eviction and mixed 64K output,
+with all snapshots/pages reclaimed on shutdown. Warm TTFT in that run is
+1.25–1.26 seconds; broader soak/failure/slow-client gates remain open.
 
 Non-greedy 92B sampling, wider prefix-cache budgets, broader quality and sustained
 production SLO evidence also remain release gates. Keep experimental long-context
