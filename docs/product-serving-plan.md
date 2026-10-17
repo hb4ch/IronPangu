@@ -181,3 +181,35 @@ Target at least the matched OmniInfer setup's SLO goodput and tail latency using
 Fault tests cover exhaustion of each pool independently, in-flight cancellation, rank failure before/after launch, duplicated completion, stale epochs, prefix eviction while pinned, output backpressure and shutdown with active graphs. Verify all allocations return to the expected pool/cache baseline and captured addresses remain stable.
 
 Follow-on work after these gates: optimized EP all-to-all/AGRS alternatives with explicit planner costs, multi-stream overlap with independently planned workspaces, cost-based chunk/bucket tuning, speculative execution, PD with complete device-state transport, and JIT specialization bounded by artifact validation and memory budgets. Host KV offload remains outside this design and cannot be introduced implicitly.
+
+## 11. TensorFold review: additional contracts (2026-10-17)
+
+Source reviewed: TensorFold commit [6ee828c24bf802cdd73507d6fc60bb27a82c0d66](https://github.com/ashhart/TensorFold/tree/6ee828c24bf802cdd73507d6fc60bb27a82c0d66). This is source inspection, not a reproduced performance result. The following refinements are requirements for the milestones above.
+
+### Numerical identity of continuation state (S0, S3, S6)
+
+A token match plus equal storage format is necessary but insufficient. TensorFold's `core/cache_modes.zig` records decoded arithmetic intervals, and `core/prompt_cache.zig` restricts some snapshots to compatible chunk boundaries. Our serving manifest assigns every variant a numerical execution class. Cross-variant state reuse is denied unless a qualification artifact establishes compatibility for the exact backend/program and shape envelope. The initial token executor has one serial-token class and no claim of packed/chunked equivalence.
+
+Record accumulator/output precision, cache encoding, position semantics and any chunk-sensitive reduction policy in that class. Chunk or batch shape enters the identity when it affects the contract. A change of executable, kernels, checkpoint or rank topology invalidates the evidence. Exact deterministic equivalence and tolerance-qualified equivalence are distinct declarations; a tolerance result must not be advertised as bitwise identity. Missing evidence means recompute from a compatible boundary, never guess compatibility. Backend readiness additionally requires the declared state operations to be implemented and qualified.
+
+### Page matches versus resumable checkpoints (S2, S6)
+
+Following `core/prompt_radix_tree.zig`, distinguish pages matched by tokens from nodes carrying complete resumable state. Expose matched token count, complete checkpoint boundary, restored token count and actual skipped token count separately. A split in the radix edge cannot create a convolution/recurrent checkpoint. The final-logit recomputation rule in section 7 applies even to a whole-prompt page match.
+
+Use explicit borrowed handles for restore. Invalidation removes a node from lookup immediately, but physical destruction waits for the last borrower and every relevant device event. Test cancellation between lookup, reservation, restore and publication. Host-side reference release alone is not evidence of NPU completion.
+
+### Persisted hardware cost evidence (S0, S4, S7)
+
+Adapt `core/lanes/cost_cache.zig` and `plan_lanes.zig` as a mechanism, not their speculative-drafting policy. Store versioned measurements keyed by executable/backend hashes, SoC, runtime/operator versions, topology, operation/variant ID, token/sequence/context envelope and precision. Include sample count, timing scope, median, tail and variability. Corrupt, negative, non-finite, stale or incomplete records are unusable. Publish atomically. Runtime selection is limited to qualified variants; recent correction statistics cannot change legality or numerical equivalence. The viewer reports evidence source, predicted/observed time and confidence. Compare complete batch costs, including metadata, communication and state-copy work, not only matrix kernels.
+
+### Qualification harness with fault controls (S2-S7)
+
+Adapt TensorFold's `core/contract/` approach: kernel declarations specify legal shapes, accumulation/output precision, aliasing, non-finite behavior and hardware limits. Cover tail tiles, packed-page boundaries and numerical edge cases. Each gate must reject a deliberately faulty control. Additional Ascend gates reject stale graph metadata, unplanned workspace growth, activation host transfers, premature page reuse and collective-order mismatch. These run in explicit offline qualification tools; production inference does not read intermediate tensors to the host. Existing model-output fixtures remain mandatory alongside component gates.
+
+### Admission fairness and memory observability (S1, S4, S7)
+
+Adapt `core/lane_host_admit.zig`'s bounded bypass: when the queue head cannot fit, fitting requests may bypass only while the older admitted cohort drains; after that, reserve capacity for the blocked head or reject it if it can never fit. Combine with age/deficit fairness for prefill execution. Short-prompt preference alone is insufficient under sustained arrivals. Admission uses the most constrained rank and all required resource classes.
+
+Publish memory metrics with explicit scopes: plan capacity, allocator reservation, occupied bytes, reusable spare, prefix-pinned bytes, pending retirement, observed device use and lifetime peak. Unknown values are absent, not zero; overlapping counters are not summed. Snapshot diagnostics do not reset peaks or change policy. Redact prompt data, paths and host identities. The current memory plan is an allowance, not proof that every future request fits.
+
+These additions preserve the implementation sequence. We retain the generic physical-plan executor, vLLM Rust frontend and device-only state. TensorFold's family-specific execution, disk-backed state and speculative features are not dependencies of this release.
