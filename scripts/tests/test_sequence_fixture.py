@@ -23,6 +23,14 @@ class SequenceFixture(unittest.TestCase):
         self.refs = self.root / 'reference.json'
         self.refs.write_text(json.dumps([dict(case='needle', input_ids=[1, 2, 3], output_ids=[4, 99, 5])]))
 
+    def test_rejects_diagnostic_intervention_as_oracle(self):
+        cases = json.loads(self.refs.read_text())
+        cases[0]['reference_intervention'] = 'changed rotary coefficients'
+        self.refs.write_text(json.dumps(cases))
+        with self.assertRaisesRegex(ValueError, 'not an independent reference'):
+            module.prepare(self.plan, self.refs, self.root / 'bad-intervention')
+        self.assertFalse((self.root / 'bad-intervention').exists())
+
     def test_deterministic_scope_and_independent_page_permutations(self):
         first, second = self.root / 'one', self.root / 'two'
         self.assertEqual(module.prepare(self.plan, self.refs, first)['expected_tokens'], 2)

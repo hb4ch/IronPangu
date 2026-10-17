@@ -9,6 +9,10 @@ module=importlib.util.module_from_spec(spec)
 spec.loader.exec_module(module)
 
 class HttpReferenceScope(unittest.TestCase):
+    def test_rejects_diagnostic_intervention_as_oracle(self):
+        with self.assertRaisesRegex(ValueError, 'not an independent reference'):
+            module.expected_ids({'output_ids': [1], 'reference_intervention': 'changed coefficients'}, 99, True)
+
     def test_extended_reference_requires_correct_code_before_continuation(self):
         case = {'qualification': {'task': 'extended-answer', 'expected_answer': '6077'}}
         module.validate_reference_answer(case, '6077\n1,2,3,4,')

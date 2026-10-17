@@ -82,6 +82,8 @@ def resource_growth(samples, rss_limit_mib):
                 scope='post-wave process counters; not continuous peak or device memory sampling')
 
 def expected_ids(case, eos, respect_eos):
+    if case.get('reference_intervention'):
+        raise ValueError('diagnostic intervention is not an independent reference')
     if case.get('qualification', {}).get('output_is_placeholder'):
         raise ValueError('placeholder outputs are not an independent reference')
     ids = case['output_ids']

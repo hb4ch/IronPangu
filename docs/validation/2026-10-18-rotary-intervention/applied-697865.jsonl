@@ -1,0 +1,1 @@
+{"pid": 697865, "cls": "NPUDeepseekScalingRotaryEmbedding", "positions": 524288, "dimension": 64, "device": "npu:1"}

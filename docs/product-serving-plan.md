@@ -10,6 +10,10 @@ fault-injection and additional performance work. Preserve 4K uncaptured prefill,
 continuous batching and device residency while attributing the first difference.
 The 127-sample isolated decode timing is diagnostic only because output fails.
 Previous short-answer 64K passes remain valid for their narrower fixtures.
+A [controlled RoPE intervention](validation/2026-10-18-rotary-intervention/README.md)
+changes the reference answer but does not reproduce native; coefficient arithmetic
+is a real sensitivity, not yet a sufficient explanation. Inspect reduction
+precision and remaining operation boundaries before changing the physical plan.
 After this gate passes, qualify extended output through the HTTP frontend, then
 resume matched performance and production-hardening gates. Do not spend more
 NPU time on repeated short-answer suites that cannot expose this failure.

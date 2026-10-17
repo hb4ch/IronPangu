@@ -32,6 +32,8 @@ def prepare(plan, references, output, peers=None, peer_case=None):
         raise ValueError('peer case requires peer reference file')
     requests, expected = [], []
     for index, case in enumerate(cases):
+        if case.get('reference_intervention'):
+            raise ValueError('diagnostic intervention is not an independent reference')
         prompt, tokens = case['input_ids'], case['output_ids']
         if not prompt or not tokens or case.get('qualification', {}).get('output_is_placeholder'):
             raise ValueError('empty or placeholder reference')
