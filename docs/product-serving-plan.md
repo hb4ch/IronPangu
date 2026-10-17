@@ -25,7 +25,13 @@ comparisons; neither reference is silently substituted for the other.
 An explicit [BF16 MLA query rotary variant](validation/2026-10-17-query-rotary-bf16/README.md)
 now aligns that precision boundary and removes 46 casts. It passes standard
 fixtures but leaves all boundary output sequences unchanged; collective precision
-is the next isolated contract to compare, not an assumed fix.
+was then [tested separately](validation/2026-10-17-collective-parity/README.md).
+BF16 collectives passed the standard native/HTTP fixtures but matched only 9/14
+one-token reference sequences, versus 10/14 with FP32. The selected experimental
+DSL therefore retains FP32 collectives; the unpromoted variant and failures are
+preserved. Resolve numerical differences using operator-boundary evidence while
+advancing independent long-context state planning; no 64K admission change is
+justified by these short-context experiments.
 
 Date: 2026-10-17. Status: implementation in progress; qualified capabilities and remaining release gates are distinguished below.
 

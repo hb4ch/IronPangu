@@ -1,0 +1,660 @@
+[
+  {
+    "case": "serial_layout_oracle_1",
+    "prompt_tokens": 1,
+    "output_ids": [
+      220,
+      17,
+      15,
+      15,
+      15,
+      15,
+      15,
+      15
+    ],
+    "previous_native": [
+      220,
+      17,
+      15,
+      15,
+      15,
+      15,
+      15,
+      15
+    ],
+    "reference_default": [
+      220,
+      17,
+      15,
+      15,
+      15,
+      15,
+      15,
+      15
+    ],
+    "reference_chunk1": [
+      220,
+      17,
+      15,
+      15,
+      15,
+      15,
+      15,
+      15
+    ],
+    "matches_previous": true,
+    "matches_reference_default": true,
+    "matches_reference_chunk1": true
+  },
+  {
+    "case": "serial_layout_oracle_15",
+    "prompt_tokens": 15,
+    "output_ids": [
+      1114,
+      11786,
+      336,
+      17320,
+      405,
+      21072,
+      13,
+      148902
+    ],
+    "previous_native": [
+      1114,
+      11786,
+      336,
+      17320,
+      405,
+      21072,
+      13,
+      148902
+    ],
+    "reference_default": [
+      1114,
+      11786,
+      336,
+      17320,
+      405,
+      21072,
+      13,
+      148902
+    ],
+    "reference_chunk1": [
+      1114,
+      11786,
+      336,
+      17320,
+      405,
+      21072,
+      13,
+      148902
+    ],
+    "matches_previous": true,
+    "matches_reference_default": true,
+    "matches_reference_chunk1": true
+  },
+  {
+    "case": "serial_layout_oracle_16",
+    "prompt_tokens": 16,
+    "output_ids": [
+      198,
+      3481,
+      715,
+      82070,
+      11239,
+      8255,
+      380,
+      844
+    ],
+    "previous_native": [
+      198,
+      3481,
+      715,
+      82070,
+      11239,
+      8255,
+      380,
+      844
+    ],
+    "reference_default": [
+      198,
+      3481,
+      715,
+      82070,
+      11239,
+      8255,
+      380,
+      844
+    ],
+    "reference_chunk1": [
+      198,
+      3481,
+      715,
+      82070,
+      11239,
+      8255,
+      380,
+      844
+    ],
+    "matches_previous": true,
+    "matches_reference_default": true,
+    "matches_reference_chunk1": true
+  },
+  {
+    "case": "serial_layout_oracle_17",
+    "prompt_tokens": 17,
+    "output_ids": [
+      16,
+      30374,
+      148906,
+      16,
+      10,
+      16,
+      28,
+      17
+    ],
+    "previous_native": [
+      16,
+      30374,
+      220,
+      34755,
+      3711,
+      101744,
+      15580,
+      0
+    ],
+    "reference_default": [
+      16,
+      30374,
+      220,
+      1687,
+      400,
+      1963,
+      76,
+      23212
+    ],
+    "reference_chunk1": [
+      16,
+      30374,
+      148906,
+      16,
+      520,
+      220,
+      16,
+      292
+    ],
+    "matches_previous": false,
+    "matches_reference_default": false,
+    "matches_reference_chunk1": false
+  },
+  {
+    "case": "serial_layout_oracle_31",
+    "prompt_tokens": 31,
+    "output_ids": [
+      1344,
+      198,
+      6884,
+      405,
+      287,
+      11786,
+      336,
+      17320
+    ],
+    "previous_native": [
+      1344,
+      198,
+      6884,
+      405,
+      287,
+      11786,
+      336,
+      17320
+    ],
+    "reference_default": [
+      1344,
+      25,
+      4193,
+      405,
+      287,
+      11786,
+      336,
+      17320
+    ],
+    "reference_chunk1": [
+      1344,
+      25,
+      4193,
+      405,
+      287,
+      11786,
+      336,
+      17320
+    ],
+    "matches_previous": true,
+    "matches_reference_default": false,
+    "matches_reference_chunk1": false
+  },
+  {
+    "case": "serial_layout_oracle_32",
+    "prompt_tokens": 32,
+    "output_ids": [
+      715,
+      82070,
+      11239,
+      8255,
+      380,
+      88047,
+      55245,
+      380
+    ],
+    "previous_native": [
+      715,
+      82070,
+      11239,
+      8255,
+      380,
+      88047,
+      55245,
+      198
+    ],
+    "reference_default": [
+      715,
+      82070,
+      11239,
+      8255,
+      380,
+      88047,
+      55245,
+      198
+    ],
+    "reference_chunk1": [
+      715,
+      82070,
+      11239,
+      8255,
+      380,
+      88047,
+      55245,
+      380
+    ],
+    "matches_previous": false,
+    "matches_reference_default": false,
+    "matches_reference_chunk1": true
+  },
+  {
+    "case": "serial_layout_oracle_33",
+    "prompt_tokens": 33,
+    "output_ids": [
+      98390,
+      198,
+      6337,
+      11,
+      287,
+      1579,
+      405,
+      23212
+    ],
+    "previous_native": [
+      98390,
+      297,
+      39,
+      4086,
+      11,
+      287,
+      1579,
+      1061
+    ],
+    "reference_default": [
+      98390,
+      198,
+      6337,
+      11,
+      287,
+      1579,
+      405,
+      23212
+    ],
+    "reference_chunk1": [
+      98390,
+      297,
+      39,
+      4086,
+      11,
+      287,
+      1579,
+      1061
+    ],
+    "matches_previous": false,
+    "matches_reference_default": true,
+    "matches_reference_chunk1": false
+  },
+  {
+    "case": "serial_layout_oracle_63",
+    "prompt_tokens": 63,
+    "output_ids": [
+      6884,
+      405,
+      287,
+      11786,
+      336,
+      17320,
+      30,
+      148906
+    ],
+    "previous_native": [
+      6884,
+      405,
+      287,
+      11786,
+      336,
+      17320,
+      30,
+      148906
+    ],
+    "reference_default": [
+      6884,
+      405,
+      287,
+      11786,
+      336,
+      17320,
+      30,
+      148906
+    ],
+    "reference_chunk1": [
+      6884,
+      405,
+      287,
+      11786,
+      336,
+      17320,
+      30,
+      148906
+    ],
+    "matches_previous": true,
+    "matches_reference_default": true,
+    "matches_reference_chunk1": true
+  },
+  {
+    "case": "serial_layout_oracle_64",
+    "prompt_tokens": 64,
+    "output_ids": [
+      380,
+      148906,
+      8255,
+      541,
+      33949,
+      65826,
+      305,
+      13209
+    ],
+    "previous_native": [
+      380,
+      148906,
+      8255,
+      541,
+      33949,
+      65826,
+      305,
+      13209
+    ],
+    "reference_default": [
+      380,
+      148906,
+      8255,
+      541,
+      33949,
+      65826,
+      305,
+      13209
+    ],
+    "reference_chunk1": [
+      380,
+      148906,
+      8255,
+      541,
+      17721,
+      48532,
+      1603,
+      305
+    ],
+    "matches_previous": true,
+    "matches_reference_default": true,
+    "matches_reference_chunk1": false
+  },
+  {
+    "case": "serial_layout_oracle_65",
+    "prompt_tokens": 65,
+    "output_ids": [
+      16,
+      30374,
+      148902,
+      148900,
+      297,
+      1114,
+      1297,
+      405
+    ],
+    "previous_native": [
+      16,
+      30374,
+      148902,
+      148900,
+      1114,
+      1297,
+      336,
+      220
+    ],
+    "reference_default": [
+      16,
+      30374,
+      148902,
+      148900,
+      297,
+      16,
+      10,
+      16
+    ],
+    "reference_chunk1": [
+      16,
+      30374,
+      148902,
+      148900,
+      1114,
+      1297,
+      336,
+      220
+    ],
+    "matches_previous": false,
+    "matches_reference_default": false,
+    "matches_reference_chunk1": false
+  },
+  {
+    "case": "serial_layout_oracle_127",
+    "prompt_tokens": 127,
+    "output_ids": [
+      336,
+      17320,
+      30,
+      148902,
+      148900,
+      1114,
+      11786,
+      336
+    ],
+    "previous_native": [
+      336,
+      17320,
+      30,
+      148902,
+      148900,
+      1114,
+      11786,
+      336
+    ],
+    "reference_default": [
+      336,
+      17320,
+      30,
+      148902,
+      148900,
+      1114,
+      11786,
+      336
+    ],
+    "reference_chunk1": [
+      336,
+      17320,
+      30,
+      148902,
+      148900,
+      1114,
+      11786,
+      336
+    ],
+    "matches_previous": true,
+    "matches_reference_default": true,
+    "matches_reference_chunk1": true
+  },
+  {
+    "case": "serial_layout_oracle_255",
+    "prompt_tokens": 255,
+    "output_ids": [
+      3481,
+      715,
+      82070,
+      11239,
+      8255,
+      380,
+      148902,
+      148900
+    ],
+    "previous_native": [
+      3481,
+      715,
+      82070,
+      11239,
+      8255,
+      380,
+      148902,
+      148900
+    ],
+    "reference_default": [
+      3481,
+      715,
+      82070,
+      11239,
+      8255,
+      380,
+      148902,
+      148900
+    ],
+    "reference_chunk1": [
+      3481,
+      715,
+      82070,
+      11239,
+      8255,
+      380,
+      148902,
+      148900
+    ],
+    "matches_previous": true,
+    "matches_reference_default": true,
+    "matches_reference_chunk1": true
+  },
+  {
+    "case": "serial_layout_oracle_480",
+    "prompt_tokens": 480,
+    "output_ids": [
+      148902,
+      148900,
+      148902,
+      148900,
+      148902,
+      148900,
+      148902,
+      148900
+    ],
+    "previous_native": [
+      148902,
+      148900,
+      148902,
+      148900,
+      148902,
+      148900,
+      148902,
+      148900
+    ],
+    "reference_default": [
+      148902,
+      148900,
+      148902,
+      148900,
+      148902,
+      148900,
+      148902,
+      148902
+    ],
+    "reference_chunk1": [
+      148902,
+      148900,
+      148902,
+      148900,
+      148902,
+      148900,
+      148902,
+      148900
+    ],
+    "matches_previous": true,
+    "matches_reference_default": false,
+    "matches_reference_chunk1": true
+  },
+  {
+    "case": "serial_layout_oracle_504",
+    "prompt_tokens": 504,
+    "output_ids": [
+      30,
+      148902,
+      148900,
+      1114,
+      11786,
+      336,
+      17320,
+      405
+    ],
+    "previous_native": [
+      30,
+      148902,
+      148900,
+      1114,
+      11786,
+      336,
+      17320,
+      405
+    ],
+    "reference_default": [
+      30,
+      148902,
+      148900,
+      1114,
+      11786,
+      336,
+      17320,
+      405
+    ],
+    "reference_chunk1": [
+      30,
+      148902,
+      148900,
+      1114,
+      11786,
+      336,
+      17320,
+      405
+    ],
+    "matches_previous": true,
+    "matches_reference_default": true,
+    "matches_reference_chunk1": true
+  }
+]

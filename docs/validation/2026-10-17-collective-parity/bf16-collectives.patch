@@ -1,0 +1,31 @@
+diff --git a/examples/openpangu/92b-tp8-ep8-c8-learned.inferfabric b/examples/openpangu/92b-tp8-ep8-c8-learned.inferfabric
+index f96cbf5..b7a9c1f 100644
+--- a/examples/openpangu/92b-tp8-ep8-c8-learned.inferfabric
++++ b/examples/openpangu/92b-tp8-ep8-c8-learned.inferfabric
+@@ -23,7 +23,7 @@ module DenseFFN(x, w, intermediate, parallel) {
+         swiglu(linear(x, weight = w.gate_proj, paired_weight = w.up_proj,
+                       width = intermediate, paired_width = intermediate, placement = "replicated")));
+     let output = choose(parallel,
+-        allreduce(linear(activated, weight = w.down_proj, width = 2560, placement = "tp_columns")),
++        allreduce(linear(activated, weight = w.down_proj, width = 2560, placement = "tp_columns"), dtype = "bf16"),
+         linear(activated, weight = w.down_proj, width = 2560, placement = "replicated"));
+     yield output;
+ }
+@@ -36,7 +36,7 @@ module RoutedMoE(x, w) {
+                                paired_weight = expert.up_proj, width = 1024);
+     let down = expert_swiglu_down(gate_up, routes, weight = expert.down_proj, width = 2560);
+     let local = expert_reduce(down, routes);
+-    let routed = allreduce(local);
++    let routed = allreduce(local, dtype = "bf16");
+     let shared = DenseFFN(x, w.shared_experts, 1024, false);
+     let output = add(routed, shared);
+     yield output;
+@@ -84,7 +84,7 @@ module MLAAttention(x, w, window, c8, full_indexer, previous_indices) {
+     let value = mla_value(attended, weight = w.kv_b_proj, heads = 48, latent = 512, value = 128);
+     let oc = mome(value, weight = w.o_conv, taps = 3, placement = "tp_channels");
+     let partial = linear(oc, weight = w.o_proj, width = 2560, placement = "tp_columns");
+-    let output = allreduce(partial);
++    let output = allreduce(partial, dtype = "bf16");
+     let result = record(hidden = output, indices = indices);
+     yield result;
+ }
