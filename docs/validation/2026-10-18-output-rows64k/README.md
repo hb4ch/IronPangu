@@ -60,7 +60,38 @@ Output directory: `output-rows64k-http`.
 
 Raw final results, intermediate progress, arithmetic histories, shutdown log and
 per-rank audits are retained. Final results and exit 0 establish completion;
-progress files alone do not. Native 64K batch timing and the post-change collective
-capture are a separate ongoing qualification, not established by this HTTP pass.
+progress files alone do not. The native/collective qualification is recorded below; HTTP and profiler timings have different scopes.
 Production soak, slow-socket behavior, fault recovery and broader quality remain
 release gaps; experimental context/output-row gates remain in place.
+
+## Native 64K and post-change collective capture
+
+The frozen native qualifier also exits 0: six interleaved requests match all
+39 reference tokens through EOS, accounting for 196,629 input tokens. The first
+long request executes 15 × 4096 + 4080 tokens; mixed peers share the 4096-token
+budget and have additional smaller/tail chunks. All ranks preserve the arena,
+workspace, device residency and decode graph contracts.
+
+Exactly one initial 4096-token, zero-sample-row prefill batch is profiled. Its
+completed ABI duration is 2,291,880 us including profiling overhead. On every
+rank the exported HCCL table contains exactly **92 FP32 AllReduce calls and no
+AllGather**. Each reduction has 10,485,760 input elements (40 MiB). This confirms
+that the previous 148 MiB/rank vocabulary AllGather was removed from this call;
+it does not remove the remaining large reductions. Rank 0 task span is 2286.42 ms.
+
+After the profiler stops/finalizes, four pure one-sequence decode batches take
+24.719, 23.145, 22.830 and 22.941 ms: median **23.043 ms**. These completed ABI
+samples include sampling and rank consensus, exclude competing-prefill batches,
+and occur after an earlier profiling window in the same process. There are no
+pure two-/three-sequence samples. They are not a controlled speedup comparison
+or a serving SLO. The slower HTTP observations above remain part of the result.
+
+Reproduce with fresh `output-rows64k-fixture` from the frozen plan, the 64K
+references and arithmetic peers. Run the new `program_engine_probe` through
+`qualify-sequence-serving.py --frozen-only --batch-trace`, output prefix
+`output-rows64k-native`, HCCL base port 42800, and
+`INFERFABRIC_BATCH_PROFILE_DIR=/data/p00603624/inferfabric/openpangu92/output-rows4k-profile`.
+Export with msprof, then use the serving timeline, kernel and collective summary
+scripts. Raw CANN capture remains at that remote Docker path; exported summaries
+here preserve input table hashes. Full native traces, fixture provenance and
+resource audits are included. Export succeeded; cluster tuning was not complete.
