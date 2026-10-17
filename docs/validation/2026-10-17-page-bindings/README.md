@@ -42,3 +42,20 @@ claimed. The short fixtures cross BF16 page boundaries but do not cross a C8
 32-token boundary. Longer boundary probes, batch metadata staging and shared
 native state are the next gates. Packed/chunked prefill, radix prefix reuse and
 long-context reference qualification remain outstanding.
+
+## Follow-up: page boundaries through the current context envelope
+
+`qualify-paged-boundaries.py` now alternates identity/shuffled layouts in the same
+loaded engine for prompt lengths 1, 15, 16, 17, 31, 32, 33, 63, 64, 65, 127, 255,
+480 and 504, each followed by eight generated tokens. All **224 tokens across 28
+requests** match between paired layouts. This crosses both C8 and BF16 page
+boundaries. Inputs are deterministic repetitions of existing fixture token IDs;
+the test proves layout equivalence, not semantic quality against an external
+model reference. Full device-residency and frozen-resource checks passed.
+
+At 504 prompt tokens, engine TTFT is 10.39–10.52 seconds and TPOT 20.93–21.20 ms.
+TTFT includes reset, page-table rebinding and serial token prefill, and excludes
+model load and HTTP. This clearly motivates packed/chunked prefill before the
+required 64K release. `boundary-results.json` preserves all measurements and input
+hashes; `boundary-tokens.jsonl` preserves the paired outputs. These results do
+not qualify execution beyond the current 512-token total context.

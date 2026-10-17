@@ -52,8 +52,12 @@ int main(int argc, char **argv) {
       auto steps = requests[request].steps;
       auto began = std::chrono::steady_clock::now();
       check(inferfabric_program_reset(engine));
-      for(const auto &b:bindings)
-        check(inferfabric_program_bind_pages(engine,b.rank,b.component.c_str(),b.pages.data(),b.pages.size()));
+      for(const auto &b:bindings) {
+        auto pages=b.pages;
+        if(std::getenv("INFERFABRIC_ALTERNATE_PAGE_LAYOUTS") && request%2==0)
+          for(size_t i=0;i<pages.size();++i)pages[i]=int32_t(i);
+        check(inferfabric_program_bind_pages(engine,b.rank,b.component.c_str(),pages.data(),pages.size()));
+      }
       unsigned pos = 0, next = 0;
       for (auto token : prompt) {
         check(inferfabric_program_token(engine, token, pos, pos + 1 == prompt.size(), &next));
